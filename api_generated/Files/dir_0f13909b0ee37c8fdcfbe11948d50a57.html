@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/WhiskerToolbox – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcwhiskertoolbox" id="toc-srcwhiskertoolbox" class="nav-link active" data-scroll-target="#srcwhiskertoolbox">src/WhiskerToolbox</a>
+  <ul class="collapse">
+  <li><a href="#directories" id="toc-directories" class="nav-link" data-scroll-target="#directories">Directories</a></li>
+  <li><a href="#files" id="toc-files" class="nav-link" data-scroll-target="#files">Files</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/WhiskerToolbox</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcwhiskertoolbox" class="level1">
+<h1>src/WhiskerToolbox</h1>
+<section id="directories" class="level2">
+<h2 class="anchored" data-anchor-id="directories">Directories</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_b21f293bcef0eef3e52b1d97ad43b258.html#dir-src/whiskertoolbox/autoparamwidget">src/WhiskerToolbox/AutoParamWidget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_7da3f0a4d53cd1c4c2f81ea29edd64b2.html#dir-src/whiskertoolbox/batchprocessing-widget">src/WhiskerToolbox/BatchProcessing_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_9d09cf8d3441ff89e2d78aa3c75857ae.html#dir-src/whiskertoolbox/collapsible-widget">src/WhiskerToolbox/Collapsible_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_959de10b0d0a4014d89287c65da36e38.html#dir-src/whiskertoolbox/commandlog-widget">src/WhiskerToolbox/CommandLog_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_72b77997fdcbf5c182dce16adf99cbfa.html#dir-src/whiskertoolbox/dataexport-widget">src/WhiskerToolbox/DataExport_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_08664180df448d13b7632a0788ddfc4f.html#dir-src/whiskertoolbox/dataimport-widget">src/WhiskerToolbox/DataImport_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_0fc5841a7c7aa24e8e265a422eb1c4d6.html#dir-src/whiskertoolbox/datainspector-widget">src/WhiskerToolbox/DataInspector_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_8dc7083a229793b7cde178f3ca825b23.html#dir-src/whiskertoolbox/datamanager-widget">src/WhiskerToolbox/DataManager_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_7af1bb030c0fced719778d3126aedcca.html#dir-src/whiskertoolbox/datasynthesizer-widget">src/WhiskerToolbox/DataSynthesizer_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_2737e30e5c4211d623198a5a5c45426f.html#dir-src/whiskertoolbox/datatransform-widget">src/WhiskerToolbox/DataTransform_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_1b458f9acd3d3d12abd22ce725dd9967.html#dir-src/whiskertoolbox/dataviewer">src/WhiskerToolbox/DataViewer</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_3836c164c87c321ac2017e2e2e43ac19.html#dir-src/whiskertoolbox/dataviewer-widget">src/WhiskerToolbox/DataViewer_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_0069252b497877bdde732df17afbb933.html#dir-src/whiskertoolbox/deeplearning-widget">src/WhiskerToolbox/DeepLearning_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_685df979e56ba56b2c1f9bed78735750.html#dir-src/whiskertoolbox/editorstate">src/WhiskerToolbox/EditorState</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_ade0a7a60bb92ac532e5d2f9daffdb9e.html#dir-src/whiskertoolbox/export-widgets">src/WhiskerToolbox/Export_Widgets</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_3d60b1b42b2e538a871b56ce734504f6.html#dir-src/whiskertoolbox/feature-table-widget">src/WhiskerToolbox/Feature_Table_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_2b1fe5bf72627c969696d9d28f263ad1.html#dir-src/whiskertoolbox/feature-tree-widget">src/WhiskerToolbox/Feature_Tree_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_0790f5c710eab1bacf04db1464091496.html#dir-src/whiskertoolbox/fileexplorer-widgets">src/WhiskerToolbox/FileExplorer_Widgets</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_de627cda58fc54ea64aaccd22cac468e.html#dir-src/whiskertoolbox/grabcut-widget">src/WhiskerToolbox/Grabcut_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_955d81a503fb283cbafc6a21fbc5ea0a.html#dir-src/whiskertoolbox/groupcontextmenu">src/WhiskerToolbox/GroupContextMenu</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_b97e153e369b3764006ba42f85cdb9ef.html#dir-src/whiskertoolbox/groupmanagementwidget">src/WhiskerToolbox/GroupManagementWidget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_2e8fb34905bbfdc941fce94b376d230c.html#dir-src/whiskertoolbox/keybindingeditor">src/WhiskerToolbox/KeybindingEditor</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_5609b2f48de1f0a136f3d9862f6e2213.html#dir-src/whiskertoolbox/keymapsystem">src/WhiskerToolbox/KeymapSystem</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_fd672d96ab3fe4ea3709de204ff2abd1.html#dir-src/whiskertoolbox/layouttesting">src/WhiskerToolbox/LayoutTesting</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_aec3437be6c1066b37fda06453bcddd8.html#dir-src/whiskertoolbox/magic-eraser-widget">src/WhiskerToolbox/Magic_Eraser_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_6ed78417accacb350ae54379a6849cd3.html#dir-src/whiskertoolbox/main-window">src/WhiskerToolbox/Main_Window</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_1164033a20f8a0b51c72559ad0e94011.html#dir-src/whiskertoolbox/media-widget">src/WhiskerToolbox/Media_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_a269bdcd02d267d7bdc2e60a27713864.html#dir-src/whiskertoolbox/mediaexport">src/WhiskerToolbox/MediaExport</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_56a846e4242b176264a7f7f2af780fc3.html#dir-src/whiskertoolbox/mlcore-widget">src/WhiskerToolbox/MLCore_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_2c4e221ec010686d1f01c0dda6b28081.html#dir-src/whiskertoolbox/plots">src/WhiskerToolbox/Plots</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_8e3f6dada740f26389eaedbc2045e672.html#dir-src/whiskertoolbox/python-widget">src/WhiskerToolbox/Python_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_d1125e63f7477d39370e0a80bc6263fe.html#dir-src/whiskertoolbox/scaling-widget">src/WhiskerToolbox/Scaling_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_07b8dbc408bfbbc074cb8f973da412e1.html#dir-src/whiskertoolbox/statemanagement">src/WhiskerToolbox/StateManagement</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_ae392e19eaaa98b941aad25e0c3fc872.html#dir-src/whiskertoolbox/tabledesignerwidget">src/WhiskerToolbox/TableDesignerWidget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_65b92a534f27bad014a08667fb2d1dac.html#dir-src/whiskertoolbox/tableviewerwidget">src/WhiskerToolbox/TableViewerWidget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_27560cf0171f96e2bb0471b44bd20eea.html#dir-src/whiskertoolbox/terminal-widget">src/WhiskerToolbox/Terminal_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_33fcc24a46b0fe7282333ccc963d8afb.html#dir-src/whiskertoolbox/test-widget">src/WhiskerToolbox/Test_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_ec755a7b4bd9c9afbcf629d731a83aac.html#dir-src/whiskertoolbox/timeframe-table-widget">src/WhiskerToolbox/TimeFrame_Table_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_e5d322edf13ea5512f1f538e1b1ad743.html#dir-src/whiskertoolbox/timescrollbar">src/WhiskerToolbox/TimeScrollBar</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_2b8d3ca10457971b572ac7bd68d388b1.html#dir-src/whiskertoolbox/tongue-widget">src/WhiskerToolbox/Tongue_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_c5b902b4839e5540e70d13cbb6a9cf75.html#dir-src/whiskertoolbox/transformsv2-widget">src/WhiskerToolbox/TransformsV2_Widget</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_a947f42eb4b58917b83fd8fb6448e35a.html#dir-src/whiskertoolbox/triagesession-widget">src/WhiskerToolbox/TriageSession_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_93e290f4986c89db66f8ce83b95450f9.html#dir-src/whiskertoolbox/utils">src/WhiskerToolbox/utils</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/dir_3108fb1b2b1937f5a7103e80e84aaa92.html#dir-src/whiskertoolbox/whisker-widget">src/WhiskerToolbox/Whisker_Widget</a></strong></td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/dir_f09468bc57b9a5e37cfebd1a23589fe2.html#dir-src/whiskertoolbox/zonemanager">src/WhiskerToolbox/ZoneManager</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="files" class="level2">
+<h2 class="anchored" data-anchor-id="files">Files</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Files/color__scheme_8hpp.html#file-color-scheme.hpp">src/WhiskerToolbox/color_scheme.hpp</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Files/main_8cpp.html#file-main.cpp">src/WhiskerToolbox/main.cpp</a></strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:25 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

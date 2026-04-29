@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>settings_widget_roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#settings-widget-design-roadmap" id="toc-settings-widget-design-roadmap" class="nav-link active" data-scroll-target="#settings-widget-design-roadmap">Settings Widget — Design &amp; Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#progress-summary" id="toc-progress-summary" class="nav-link" data-scroll-target="#progress-summary">Progress Summary</a></li>
+  <li><a href="#problem-statement" id="toc-problem-statement" class="nav-link" data-scroll-target="#problem-statement">1. Problem Statement</a>
+  <ul class="collapse">
+  <li><a href="#goals" id="toc-goals" class="nav-link" data-scroll-target="#goals">Goals</a></li>
+  </ul></li>
+  <li><a href="#architecture-overview" id="toc-architecture-overview" class="nav-link" data-scroll-target="#architecture-overview">2. Architecture Overview</a>
+  <ul class="collapse">
+  <li><a href="#high-level-design" id="toc-high-level-design" class="nav-link" data-scroll-target="#high-level-design">2.1 High-Level Design</a></li>
+  <li><a href="#state-persistence-model" id="toc-state-persistence-model" class="nav-link" data-scroll-target="#state-persistence-model">2.2 State &amp; Persistence Model</a></li>
+  <li><a href="#where-settings-live" id="toc-where-settings-live" class="nav-link" data-scroll-target="#where-settings-live">2.3 Where Settings Live</a></li>
+  </ul></li>
+  <li><a href="#detailed-design" id="toc-detailed-design" class="nav-link" data-scroll-target="#detailed-design">3. Detailed Design</a>
+  <ul class="collapse">
+  <li><a href="#settingswidget-registration-phase-1" id="toc-settingswidget-registration-phase-1" class="nav-link" data-scroll-target="#settingswidget-registration-phase-1">3.1 SettingsWidget Registration (Phase 1)</a></li>
+  <li><a href="#built-in-settings-pages-phase-12" id="toc-built-in-settings-pages-phase-12" class="nav-link" data-scroll-target="#built-in-settings-pages-phase-12">3.2 Built-In Settings Pages (Phase 1–2)</a></li>
+  <li><a href="#widget-contributed-settings-pages-phase-3" id="toc-widget-contributed-settings-pages-phase-3" class="nav-link" data-scroll-target="#widget-contributed-settings-pages-phase-3">3.3 Widget-Contributed Settings Pages (Phase 3)</a></li>
+  <li><a href="#appearance-system-phase-2" id="toc-appearance-system-phase-2" class="nav-link" data-scroll-target="#appearance-system-phase-2">3.4 Appearance System (Phase 2)</a></li>
+  <li><a href="#keybinding-system-phase-45" id="toc-keybinding-system-phase-45" class="nav-link" data-scroll-target="#keybinding-system-phase-45">3.5 Keybinding System (Phase 4–5)</a></li>
+  </ul></li>
+  <li><a href="#migration-plan-output-directory" id="toc-migration-plan-output-directory" class="nav-link" data-scroll-target="#migration-plan-output-directory">4. Migration Plan: Output Directory</a>
+  <ul class="collapse">
+  <li><a href="#current-flow" id="toc-current-flow" class="nav-link" data-scroll-target="#current-flow">Current Flow</a></li>
+  <li><a href="#target-flow" id="toc-target-flow" class="nav-link" data-scroll-target="#target-flow">Target Flow</a></li>
+  <li><a href="#migration-steps" id="toc-migration-steps" class="nav-link" data-scroll-target="#migration-steps">Migration Steps</a></li>
+  </ul></li>
+  <li><a href="#implementation-roadmap" id="toc-implementation-roadmap" class="nav-link" data-scroll-target="#implementation-roadmap">5. Implementation Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#phase-1-settingswidget-shell-apppreferences-pages" id="toc-phase-1-settingswidget-shell-apppreferences-pages" class="nav-link" data-scroll-target="#phase-1-settingswidget-shell-apppreferences-pages">Phase 1: SettingsWidget Shell &amp; AppPreferences Pages</a></li>
+  <li><a href="#phase-2-appearance-settings-theme-typography" id="toc-phase-2-appearance-settings-theme-typography" class="nav-link" data-scroll-target="#phase-2-appearance-settings-theme-typography">Phase 2: Appearance Settings (Theme &amp; Typography)</a></li>
+  <li><a href="#phase-3-widget-contributed-settings-pages" id="toc-phase-3-widget-contributed-settings-pages" class="nav-link" data-scroll-target="#phase-3-widget-contributed-settings-pages">Phase 3: Widget-Contributed Settings Pages</a></li>
+  <li><a href="#phase-4-keybinding-editor" id="toc-phase-4-keybinding-editor" class="nav-link" data-scroll-target="#phase-4-keybinding-editor">Phase 4: Keybinding Editor</a></li>
+  <li><a href="#phase-5-keybindingcommand-integration" id="toc-phase-5-keybindingcommand-integration" class="nav-link" data-scroll-target="#phase-5-keybindingcommand-integration">Phase 5: Keybinding–Command Integration</a></li>
+  </ul></li>
+  <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">6. Open Questions</a></li>
+  <li><a href="#dependency-graph" id="toc-dependency-graph" class="nav-link" data-scroll-target="#dependency-graph">7. Dependency Graph</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">8. References</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="settings-widget-design-roadmap" class="level1">
+<h1>Settings Widget — Design &amp; Roadmap</h1>
+<section id="progress-summary" class="level2">
+<h2 class="anchored" data-anchor-id="progress-summary">Progress Summary</h2>
+<p><em>Last updated: 2026-03-21</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 36%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Phase 1:</strong> SettingsWidget Shell &amp; AppPreferences Page</td>
+<td>Not Started</td>
+<td>Register SettingsWidget in EditorRegistry. Migrate output directory from DataManager_Widget. Surface all existing AppPreferences fields.</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 2:</strong> Appearance Settings (Theme &amp; Typography)</td>
+<td>Not Started</td>
+<td>Dark/light/system theme. Font size. QSS stylesheet loading. Extend AppPreferencesData.</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 3:</strong> Widget-Contributed Settings Pages</td>
+<td>Not Started</td>
+<td><code>EditorTypeInfo</code> extension for settings page factories. Per-widget settings rendered in Settings.</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 4:</strong> Keybinding Editor</td>
+<td>Not Started</td>
+<td>KeybindingMap in AppPreferences. Keybinding resolver in MainWindow. Global + widget-scoped shortcuts. Settings UI for editing.</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 5:</strong> Keybinding–Command Integration</td>
+<td>Not Started</td>
+<td>Map keybindings to Command Architecture commands. Context-aware dispatch. Macro triggers.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">1. Problem Statement</h2>
+<p>WhiskerToolbox has a growing number of application-level and widget-level preferences distributed across multiple widgets and systems:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Preference</th>
+<th>Current Location</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Output directory</td>
+<td><code>DataManager_Widget</code> (OutputDirectoryWidget)</td>
+<td>Belongs in global settings, not the data manager</td>
+</tr>
+<tr class="even">
+<td>Python environment path</td>
+<td><code>PythonPropertiesWidget</code> reading <code>AppPreferences</code></td>
+<td>Discoverable only if user opens the Python widget</td>
+</tr>
+<tr class="odd">
+<td>Default import/export directories</td>
+<td><code>AppPreferences</code> (no dedicated UI)</td>
+<td>No centralized place to edit them</td>
+</tr>
+<tr class="even">
+<td>Default TimeFrame key</td>
+<td><code>AppPreferences</code> (no dedicated UI)</td>
+<td>No centralized place to edit it</td>
+</tr>
+<tr class="odd">
+<td>UI theme (dark/light)</td>
+<td><strong>Not implemented</strong></td>
+<td>Frequently requested</td>
+</tr>
+<tr class="even">
+<td>Font size / scaling</td>
+<td><strong>Not implemented</strong></td>
+<td>Accessibility concern</td>
+</tr>
+<tr class="odd">
+<td>Keyboard shortcuts</td>
+<td><strong>Hardcoded</strong> per widget</td>
+<td>No customization; scattered <code>keyPressEvent</code> overrides</td>
+</tr>
+</tbody>
+</table>
+<p>Users have no single place to discover and configure these options. Settings that are logically application-global are hidden inside data-specific widgets. Additionally, the application lacks any customizable keyboard shortcut system — shortcuts are hardcoded in <code>Media_Window::keyPressEvent()</code>, <code>Whisker_Widget::keyPressEvent()</code>, and various <code>eventFilter</code> implementations with no way for users to change them.</p>
+<section id="goals" class="level3">
+<h3 class="anchored" data-anchor-id="goals">Goals</h3>
+<ol type="1">
+<li><strong>Centralized settings access:</strong> One widget where users can discover and modify all application preferences.</li>
+<li><strong>Widget-contributed settings pages:</strong> Widgets can optionally contribute a settings panel rendered inside the Settings widget, following the same pattern as <code>create_properties</code> in the editor registry.</li>
+<li><strong>Appearance customization:</strong> Dark mode, light mode, system-follow, and font size.</li>
+<li><strong>Customizable keybindings:</strong> Users can remap keyboard shortcuts. The keybinding system integrates with the Command Architecture so command-based actions can be triggered by hotkeys.</li>
+<li><strong>Persistence:</strong> All settings persist in the existing <code>AppPreferences</code> JSON system with debounced auto-save.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="architecture-overview" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-overview">2. Architecture Overview</h2>
+<section id="high-level-design" class="level3">
+<h3 class="anchored" data-anchor-id="high-level-design">2.1 High-Level Design</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                        SettingsWidget (View)                        │
+│  ┌─────────────┐  ┌──────────────────────────────────────────────┐  │
+│  │ Category     │  │  Active Settings Page                       │  │
+│  │ List         │  │                                             │  │
+│  │              │  │  (QStackedWidget — one page per category)   │  │
+│  │ ▸ General    │  │                                             │  │
+│  │   Appearance │  │  ┌─────────────────────────────────────┐    │  │
+│  │   Paths      │  │  │  GeneralSettingsPage                │    │  │
+│  │   Python     │  │  │  ─────────────────────              │    │  │
+│  │   Keybindings│  │  │  Default TimeFrame Key: [________]  │    │  │
+│  │ ────────────│  │  │  Output Directory: [/path/...] [📁] │    │  │
+│  │ ▸ Widgets   │  │  └─────────────────────────────────────┘    │  │
+│  │   Media     │  │                                             │  │
+│  │   Line Plot │  │  ┌─────────────────────────────────────┐    │  │
+│  │              │  │  │  (widget-contributed pages here)    │    │  │
+│  └─────────────┘  │  └─────────────────────────────────────┘    │  │
+│                    └──────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Layout:</strong> A left-hand category list (QListWidget or QTreeWidget) with a right-hand QStackedWidget displaying the active settings page. This mirrors the standard settings UI pattern used by Qt Creator, VS Code, and most desktop applications.</p>
+</section>
+<section id="state-persistence-model" class="level3">
+<h3 class="anchored" data-anchor-id="state-persistence-model">2.2 State &amp; Persistence Model</h3>
+<p>The Settings widget does <strong>not</strong> own its own <code>EditorState</code> in the traditional sense — it is a view over <code>AppPreferences</code> and widget-contributed settings providers. However, it is registered in the <code>EditorRegistry</code> for consistent lifecycle management and can be opened via the menu system.</p>
+<pre><code>                           ┌──────────────────┐
+                           │  AppPreferences   │ ← Existing (preferences.json)
+                           │  (Global prefs)   │
+                           └────────┬─────────┘
+                                    │ reads/writes
+┌──────────────────┐       ┌────────▼─────────┐
+│  EditorRegistry  │◄──────│ SettingsWidget    │
+│  (type registry) │       │ (View)            │
+└──────┬───────────┘       └────────┬─────────┘
+       │                            │ queries for settings pages
+       │ EditorTypeInfo             │
+       │ .create_settings           ▼
+       │ (new factory fn)    ┌─────────────────┐
+       └────────────────────►│ Widget-Provided  │
+                             │ Settings Pages   │
+                             └─────────────────┘</code></pre>
+</section>
+<section id="where-settings-live" class="level3">
+<h3 class="anchored" data-anchor-id="where-settings-live">2.3 Where Settings Live</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting Kind</th>
+<th>Storage</th>
+<th>Provider</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Global app settings (paths, theme, font)</td>
+<td><code>AppPreferencesData</code></td>
+<td>Built-in SettingsWidget pages</td>
+<td>Application-scoped, machine-specific</td>
+</tr>
+<tr class="even">
+<td>Keybinding map</td>
+<td><code>AppPreferencesData</code></td>
+<td>Built-in KeybindingEditorPage</td>
+<td>Application-scoped, user-customizable</td>
+</tr>
+<tr class="odd">
+<td>Widget-specific defaults</td>
+<td><code>AppPreferencesData</code> (subsections) or separate JSON section</td>
+<td>Widget <code>create_settings</code> factory</td>
+<td>Defaults for new instances of that widget type</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important design decision:</strong> Widget-contributed settings are <em>defaults for new instances</em>, not per-instance configuration. Per-instance settings remain in each widget’s <code>EditorState</code> and are edited via that widget’s properties panel. The Settings widget surfaces only the “what should a new instance of this widget look like by default?” question.</p>
+<hr>
+</section>
+</section>
+<section id="detailed-design" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-design">3. Detailed Design</h2>
+<section id="settingswidget-registration-phase-1" class="level3">
+<h3 class="anchored" data-anchor-id="settingswidget-registration-phase-1">3.1 SettingsWidget Registration (Phase 1)</h3>
+<p>Register the Settings widget in the <code>EditorRegistry</code> like any other editor:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SettingsWidgetState <span class="op">:</span> <span class="kw">public</span> EditorState <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> getTypeName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">"SettingsWidget"</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Minimal state — tracks which settings page is currently selected</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> fromJson<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> selectedPageIndex<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setSelectedPageIndex<span class="op">(</span><span class="dt">int</span> index<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// SettingsWidgetRegistration.cpp</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> SettingsWidgetModule<span class="op">::</span>registerTypes<span class="op">(</span>EditorRegistry <span class="op">*</span> registry<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                                         AppPreferences <span class="op">*</span> preferences<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">-&gt;</span>registerType<span class="op">({</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>type_id <span class="op">=</span> <span class="st">"SettingsWidget"</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>display_name <span class="op">=</span> <span class="st">"Settings"</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>menu_path <span class="op">=</span> <span class="st">"Edit/Settings"</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>preferred_zone <span class="op">=</span> Zone<span class="op">::</span>Center<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>properties_zone <span class="op">=</span> Zone<span class="op">::</span>Center<span class="op">,</span>  <span class="co">// No separate properties panel</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>allow_multiple <span class="op">=</span> <span class="kw">false</span><span class="op">,</span>          <span class="co">// Singleton — only one settings window</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>create_state <span class="op">=</span> <span class="op">[]()</span> <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>SettingsWidgetState<span class="op">&gt;();</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>create_view <span class="op">=</span> <span class="op">[</span>preferences<span class="op">](</span><span class="kw">auto</span> state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">new</span> SettingsWidget<span class="op">(</span>state<span class="op">,</span> preferences<span class="op">);</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>create_properties <span class="op">=</span> <span class="kw">nullptr</span><span class="op">,</span>  <span class="co">// No properties panel</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Menu access:</strong> <code>Edit → Settings</code> (standard location). Also consider <code>Ctrl+,</code> as a default keybinding (matching VS Code convention).</p>
+</section>
+<section id="built-in-settings-pages-phase-12" class="level3">
+<h3 class="anchored" data-anchor-id="built-in-settings-pages-phase-12">3.2 Built-In Settings Pages (Phase 1–2)</h3>
+<p>Each built-in page is a QWidget reading/writing <code>AppPreferences</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Page</th>
+<th>Fields</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>General</strong></td>
+<td>Default TimeFrame key, output directory</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td><strong>Paths</strong></td>
+<td>Default import directory, default export directory</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td><strong>Python</strong></td>
+<td>Python environment search paths, preferred Python env</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td><strong>Appearance</strong></td>
+<td>Theme (light/dark/system), font size, font family</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td><strong>Keybindings</strong></td>
+<td>Keybinding table editor</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>General page</strong> absorbs the <code>OutputDirectoryWidget</code> currently in <code>DataManager_Widget</code>. The <code>OutputDirectoryWidget</code> itself can be reused as a composable component — its <code>dirChanged</code> signal simply wires to <code>AppPreferences::setDefaultExportDirectory()</code> instead of <code>DataManager::setOutputPath()</code>.</p>
+</section>
+<section id="widget-contributed-settings-pages-phase-3" class="level3">
+<h3 class="anchored" data-anchor-id="widget-contributed-settings-pages-phase-3">3.3 Widget-Contributed Settings Pages (Phase 3)</h3>
+<section id="option-a-extend-editortypeinfo-with-a-settings-factory-recommended" class="level4">
+<h4 class="anchored" data-anchor-id="option-a-extend-editortypeinfo-with-a-settings-factory-recommended">Option A: Extend <code>EditorTypeInfo</code> with a Settings Factory (Recommended)</h4>
+<p>Add an optional <code>create_settings</code> factory function to <code>EditorTypeInfo</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> EditorTypeInfo <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Optional: Factory to create a settings page for this editor type.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The page configures default preferences for new instances.</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Returns nullptr if this editor type has no configurable defaults.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span><span class="ex">QWidget</span><span class="op">*(</span>AppPreferences<span class="op">*)&gt;</span> create_settings<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When the SettingsWidget initializes, it queries all registered editor types:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> SettingsWidget<span class="op">::</span>_buildWidgetSettingsPages<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>type_id<span class="op">,</span> info<span class="op">]</span> <span class="op">:</span> _registry<span class="op">-&gt;</span>registeredTypes<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>info<span class="op">.</span>create_settings<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QWidget</span> <span class="op">*</span> page <span class="op">=</span> info<span class="op">.</span>create_settings<span class="op">(</span>_preferences<span class="op">);</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            _addPage<span class="op">(</span><span class="st">"Widgets/"</span> <span class="op">+</span> info<span class="op">.</span>display_name<span class="op">,</span> page<span class="op">);</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Advantages:</strong> - Follows the existing <code>create_view</code> / <code>create_properties</code> factory pattern exactly. - Widgets opt-in with zero coupling to the Settings widget itself. - New widgets get a settings page simply by providing the factory.</p>
+</section>
+<section id="option-b-editorstate-provides-settings-rejected" class="level4">
+<h4 class="anchored" data-anchor-id="option-b-editorstate-provides-settings-rejected">Option B: EditorState Provides Settings (Rejected)</h4>
+<p>An alternative considered was having <code>EditorState</code> subclasses provide a <code>createSettingsWidget()</code> method. This was rejected because: - Settings pages configure <em>type-level defaults</em>, not instance-level state. - <code>EditorState</code> instances are per-editor-instance; type-level configuration belongs in <code>EditorTypeInfo</code>. - It would require instantiating a temporary <code>EditorState</code> just to create a settings page.</p>
+</section>
+<section id="widget-settings-data-flow" class="level4">
+<h4 class="anchored" data-anchor-id="widget-settings-data-flow">Widget Settings Data Flow</h4>
+<p>For widgets that contribute a settings page:</p>
+<pre><code>┌────────────────────┐     reads/writes      ┌──────────────────────┐
+│ MediaWidgetSettings │ ──────────────────── │ AppPreferencesData   │
+│ Page (in Settings) │                       │ .widget_defaults     │
+└────────────────────┘                       │   .media_widget {    │
+                                             │     default_zoom: 1  │
+                                             │     show_overlays: t │
+                                             │   }                  │
+┌────────────────────┐     reads on creation │                      │
+│ New MediaWidget    │ ◄──────────────────── │                      │
+│ Instance           │                       └──────────────────────┘
+└────────────────────┘</code></pre>
+<p>Widget-specific defaults are stored as nested structs in <code>AppPreferencesData</code>. Each widget type defines its own defaults struct:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MediaWidgetDefaults <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> default_zoom <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_overlays <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AppPreferencesData <span class="op">{</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Widget Defaults ===</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>MediaWidgetDefaults<span class="op">&gt;</span> media_widget_defaults<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Additional widget defaults added as needed</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Since <code>AppPreferencesData</code> uses reflect-cpp, new optional fields deserialize gracefully from old config files (missing → <code>std::nullopt</code> → use hardcoded defaults).</p>
+</section>
+</section>
+<section id="appearance-system-phase-2" class="level3">
+<h3 class="anchored" data-anchor-id="appearance-system-phase-2">3.4 Appearance System (Phase 2)</h3>
+<section id="theme-architecture" class="level4">
+<h4 class="anchored" data-anchor-id="theme-architecture">Theme Architecture</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// New fields in AppPreferencesData</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AppearancePreferences <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string theme <span class="op">=</span> <span class="st">"system"</span><span class="op">;</span>  <span class="co">// "light", "dark", "system"</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> font_size <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>            <span class="co">// Base font point size</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string font_family<span class="op">;</span>       <span class="co">// Empty = system default</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AppPreferencesData <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    AppearancePreferences appearance<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Theme application flow:</strong></p>
+<pre><code>AppPreferences::preferenceChanged("appearance.theme")
+        │
+        ▼
+ThemeManager::applyTheme(theme_name)
+        │
+        ├── Load QSS stylesheet from resources (:/themes/dark.qss)
+        ├── QApplication::setStyleSheet(...)
+        ├── QPalette adjustments for system theme
+        └── Emit themeChanged() for widgets needing manual updates</code></pre>
+<p>The <code>ThemeManager</code> is a small non-widget class owned by <code>MainWindow</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ThemeManager <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> applyTheme<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> theme_name<span class="op">);</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setFontSize<span class="op">(</span><span class="dt">int</span> point_size<span class="op">);</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> themeChanged<span class="op">(</span><span class="ex">QString</span> theme_name<span class="op">);</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Stylesheets are embedded as Qt resources (<code>:/themes/light.qss</code>, <code>:/themes/dark.qss</code>). The “system” option reads <code>QPalette</code> from the platform and applies minimal overrides.</p>
+</section>
+</section>
+<section id="keybinding-system-phase-45" class="level3">
+<h3 class="anchored" data-anchor-id="keybinding-system-phase-45">3.5 Keybinding System (Phase 4–5)</h3>
+<p>The keybinding system has three components: <strong>storage</strong>, <strong>resolution</strong>, and <strong>editing UI</strong>.</p>
+<section id="keybinding-storage" class="level4">
+<h4 class="anchored" data-anchor-id="keybinding-storage">3.5.1 Keybinding Storage</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> KeybindingEntry <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string action_id<span class="op">;</span>      <span class="co">// Unique identifier for the action</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string key_sequence<span class="op">;</span>   <span class="co">// Qt key sequence string, e.g. "Ctrl+Shift+T"</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string scope<span class="op">;</span>          <span class="co">// "global", or editor type_id for widget-scoped</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AppPreferencesData <span class="op">{</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>KeybindingEntry<span class="op">&gt;</span> keybindings<span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Default keybindings</strong> are defined in code (not in the JSON). User customizations <em>override</em> defaults. The JSON only stores user-modified bindings. At resolution time, defaults are merged with user overrides.</p>
+</section>
+<section id="keybinding-registry-resolution" class="level4">
+<h4 class="anchored" data-anchor-id="keybinding-registry-resolution">3.5.2 Keybinding Registry &amp; Resolution</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@brief</span><span class="co"> Central registry for keyboard shortcuts</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// Owned by MainWindow. Queries AppPreferences for user overrides.</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> KeybindingManager <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Register a default keybinding for an action</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerDefault<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                         <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> display_name<span class="op">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                         <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> default_key_sequence<span class="op">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                         <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> scope <span class="op">=</span> <span class="st">"global"</span><span class="op">);</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Resolve: given a key event and active editor context,</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// return the action_id to invoke (if any)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> resolve<span class="op">(</span><span class="ex">QKeyEvent</span> <span class="at">const</span> <span class="op">*</span> event<span class="op">,</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                                        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">active_editor_type</span><span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Get effective key sequence for an action (user override or default)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string effectiveKeySequence<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Get all registered actions (for the settings UI)</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>KeybindingInfo<span class="op">&gt;</span> allBindings<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set a user override</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setUserBinding<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">,</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key_sequence<span class="op">);</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Reset an action to its default</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> resetToDefault<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">);</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Resolution priority:</strong></p>
+<pre><code>Key Press Event
+    │
+    ▼
+1. Check widget-scoped bindings for the active editor type
+    │  (e.g., "T" → "trace_whisker" only when WhiskerWidget is focused)
+    │
+    ▼  (no match)
+2. Check global bindings
+    │  (e.g., "Ctrl+," → "open_settings")
+    │
+    ▼  (no match)
+3. Fall through to Qt's default event handling</code></pre>
+<p><strong>Scope model:</strong> - <strong>Global:</strong> Active regardless of which widget has focus. Installed as a QShortcut on MainWindow or via a top-level event filter. - <strong>Widget-scoped:</strong> Active only when a specific editor type has focus. The <code>KeybindingManager</code> checks <code>SelectionContext::activeEditorId()</code> to determine the active editor type.</p>
+</section>
+<section id="integration-with-command-architecture" class="level4">
+<h4 class="anchored" data-anchor-id="integration-with-command-architecture">3.5.3 Integration with Command Architecture</h4>
+<p>Actions fall into two categories:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Example</th>
+<th>Dispatch Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Command actions</strong></td>
+<td>“Save current data”, “Run pipeline”</td>
+<td><code>CommandFactory::createCommand()</code> → <code>execute(ctx)</code></td>
+</tr>
+<tr class="even">
+<td><strong>UI actions</strong></td>
+<td>“Open Settings”, “Toggle sidebar”, “Zoom in”</td>
+<td>Direct slot invocation via <code>QAction::trigger()</code> or signal</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@brief</span><span class="co"> Dispatches resolved keybinding actions</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ActionDispatcher <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Register a UI action (non-command)</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerUIAction<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>                          <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">()&gt;</span> callback<span class="op">);</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Register a command action (dispatches through Command Architecture)</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerCommandAction<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> command_name<span class="op">,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> default_params_json<span class="op">);</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Dispatch an action by ID</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> dispatch<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> action_id<span class="op">);</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Wire-up in MainWindow:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Global event filter in MainWindow</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> MainWindow<span class="op">::</span>eventFilter<span class="op">(</span><span class="ex">QObject</span> <span class="op">*</span> obj<span class="op">,</span> <span class="ex">QEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>event<span class="op">-&gt;</span>type<span class="op">()</span> <span class="op">==</span> <span class="ex">QEvent::KeyPress</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> key_event <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="ex">QKeyEvent</span> <span class="op">*&gt;(</span>event<span class="op">);</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="dt">active_type</span> <span class="op">=</span> _registry<span class="op">-&gt;</span>activeEditorType<span class="op">();</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> action <span class="op">=</span> _keybinding_manager<span class="op">-&gt;</span>resolve<span class="op">(</span>key_event<span class="op">,</span> <span class="dt">active_type</span><span class="op">);</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>action<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>            _action_dispatcher<span class="op">-&gt;</span>dispatch<span class="op">(*</span>action<span class="op">);</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span>  <span class="co">// consumed</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ex">QMainWindow::eventFilter</span><span class="op">(</span>obj<span class="op">,</span> event<span class="op">);</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="migrating-existing-hardcoded-shortcuts" class="level4">
+<h4 class="anchored" data-anchor-id="migrating-existing-hardcoded-shortcuts">3.5.4 Migrating Existing Hardcoded Shortcuts</h4>
+<p>Existing <code>keyPressEvent</code> overrides become registered defaults:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before (in Media_Window):</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> Media_Window<span class="op">::</span>keyPressEvent<span class="op">(</span><span class="ex">QKeyEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key <span class="op">&gt;=</span> <span class="ex">Qt::Key_1</span> <span class="op">&amp;&amp;</span> key <span class="op">&lt;=</span> <span class="ex">Qt::Key_9</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Assign to group</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">// After (in MediaWidgetModule::registerTypes):</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>keybinding_manager<span class="op">-&gt;</span>registerDefault<span class="op">(</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"media.assign_group_1"</span><span class="op">,</span> <span class="st">"Assign to Group 1"</span><span class="op">,</span> <span class="st">"1"</span><span class="op">,</span> <span class="st">"MediaWidget"</span><span class="op">);</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>keybinding_manager<span class="op">-&gt;</span>registerDefault<span class="op">(</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"media.assign_group_2"</span><span class="op">,</span> <span class="st">"Assign to Group 2"</span><span class="op">,</span> <span class="st">"2"</span><span class="op">,</span> <span class="st">"MediaWidget"</span><span class="op">);</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Media_Window no longer overrides keyPressEvent.</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">// The KeybindingManager resolves "1" → "media.assign_group_1"</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">// and ActionDispatcher calls the assign-to-group logic.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="keybinding-editor-page-settings-ui" class="level4">
+<h4 class="anchored" data-anchor-id="keybinding-editor-page-settings-ui">3.5.5 Keybinding Editor Page (Settings UI)</h4>
+<p>The keybinding page in the Settings widget displays a filterable table:</p>
+<pre><code>┌────────────────────────────────────────────────────────────┐
+│  Keybindings                                   [Search: ] │
+├──────────────────────────┬──────────┬─────────────────────┤
+│  Action                  │ Shortcut │ Scope               │
+├──────────────────────────┼──────────┼─────────────────────┤
+│  Open Settings           │ Ctrl+,   │ Global              │
+│  Undo                    │ Ctrl+Z   │ Global              │
+│  Redo                    │ Ctrl+Y   │ Global              │
+│  Trace Whisker           │ T        │ Whisker Widget      │
+│  Assign to Group 1       │ 1        │ Media Widget        │
+│  Assign to Group 2       │ 2        │ Media Widget        │
+│  ...                     │          │                     │
+├──────────────────────────┴──────────┴─────────────────────┤
+│  Double-click a shortcut cell to record a new key combo.  │
+│  [Reset All to Defaults]                                  │
+└────────────────────────────────────────────────────────────┘</code></pre>
+<p>Editing flow: 1. User double-clicks a shortcut cell. 2. Cell enters “recording” mode — next key combo is captured. 3. If the combo conflicts with another binding, a warning is shown. 4. User confirms or cancels. 5. Override is saved to <code>AppPreferences</code>.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="migration-plan-output-directory" class="level2">
+<h2 class="anchored" data-anchor-id="migration-plan-output-directory">4. Migration Plan: Output Directory</h2>
+<p>The output directory is currently set via <code>OutputDirectoryWidget</code> embedded in <code>DataManager_Widget</code>, which then calls <code>DataManager::setOutputPath()</code>. This should migrate to the Settings widget.</p>
+<section id="current-flow" class="level3">
+<h3 class="anchored" data-anchor-id="current-flow">Current Flow</h3>
+<pre><code>DataManager_Widget
+    └── OutputDirectoryWidget
+            │ dirChanged(path)
+            ▼
+    DataManager_Widget::_changeOutputDir()
+            │ setOutputPath(path)
+            ▼
+    DataManager::setOutputPath()</code></pre>
+</section>
+<section id="target-flow" class="level3">
+<h3 class="anchored" data-anchor-id="target-flow">Target Flow</h3>
+<pre><code>SettingsWidget → GeneralSettingsPage
+    └── OutputDirectoryWidget (reused component)
+            │ dirChanged(path)
+            ▼
+    AppPreferences::setDefaultExportDirectory(path)
+            │ preferenceChanged("default_export_directory")
+            ▼
+    DataManager observes AppPreferences and syncs its output path</code></pre>
+</section>
+<section id="migration-steps" class="level3">
+<h3 class="anchored" data-anchor-id="migration-steps">Migration Steps</h3>
+<ol type="1">
+<li>Add <code>AppPreferences</code> observation in <code>DataManager</code> (or in <code>MainWindow</code> as glue code) so that changes to <code>default_export_directory</code> automatically update <code>DataManager::setOutputPath()</code>.</li>
+<li>Move <code>OutputDirectoryWidget</code> from <code>DataManager_Widget</code> to the General settings page.</li>
+<li>Remove output directory UI from <code>DataManager_Widget</code>.</li>
+<li>Existing <code>DataManager_Widget</code> code that reads the output path continues to work via <code>DataManager::getOutputPath()</code>.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="implementation-roadmap" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-roadmap">5. Implementation Roadmap</h2>
+<section id="phase-1-settingswidget-shell-apppreferences-pages" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-settingswidget-shell-apppreferences-pages">Phase 1: SettingsWidget Shell &amp; AppPreferences Pages</h3>
+<p><strong>Goal:</strong> Users can open a Settings widget and edit all existing <code>AppPreferences</code> fields.</p>
+<p><strong>Tasks:</strong></p>
+<ol type="1">
+<li>Create <code>SettingsWidgetState</code> (minimal — just tracks selected page index).</li>
+<li>Create <code>SettingsWidget</code> view with QListWidget + QStackedWidget layout.</li>
+<li>Create built-in pages:
+<ul>
+<li><strong>GeneralSettingsPage</strong> — Default TimeFrame key, output directory (reuse <code>OutputDirectoryWidget</code>).</li>
+<li><strong>PathsSettingsPage</strong> — Default import directory, default export directory.</li>
+<li><strong>PythonSettingsPage</strong> — Python env search paths, preferred env.</li>
+</ul></li>
+<li>Register <code>SettingsWidget</code> in <code>EditorRegistry</code> with <code>Zone::Center</code>, <code>allow_multiple = false</code>.</li>
+<li>Wire <code>AppPreferences</code> signals so the pages read initial values and react to external changes.</li>
+<li>Migrate output directory out of <code>DataManager_Widget</code>.</li>
+<li>Add menu entry: <code>Edit → Settings</code>.</li>
+</ol>
+<p><strong>Files to create:</strong> - <code>src/WhiskerToolbox/SettingsWidget/SettingsWidgetState.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/SettingsWidget.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/SettingsWidgetRegistration.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/Pages/GeneralSettingsPage.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/Pages/PathsSettingsPage.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/Pages/PythonSettingsPage.hpp/.cpp</code></p>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/DataManager_Widget/</code> — Remove output directory section. - <code>src/WhiskerToolbox/Main_Window/mainwindow.cpp</code> — Add Settings registration and menu entry. - <code>src/CMakeLists.txt</code> — Add SettingsWidget to build.</p>
+<p><strong>Dependencies:</strong> None beyond existing infrastructure.</p>
+<hr>
+</section>
+<section id="phase-2-appearance-settings-theme-typography" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-appearance-settings-theme-typography">Phase 2: Appearance Settings (Theme &amp; Typography)</h3>
+<p><strong>Goal:</strong> Users can switch between light/dark themes and adjust font size.</p>
+<p><strong>Tasks:</strong></p>
+<ol type="1">
+<li>Extend <code>AppPreferencesData</code> with <code>AppearancePreferences</code> struct.</li>
+<li>Create <code>ThemeManager</code> class (loads QSS, applies palette).</li>
+<li>Create light and dark QSS stylesheets as Qt resources.</li>
+<li>Create <code>AppearanceSettingsPage</code> in the Settings widget.</li>
+<li>Wire <code>ThemeManager</code> to <code>AppPreferences</code> changes.</li>
+<li>Add font size control (<code>QApplication::setFont()</code>).</li>
+</ol>
+<p><strong>Files to create:</strong> - <code>src/WhiskerToolbox/SettingsWidget/Pages/AppearanceSettingsPage.hpp/.cpp</code> - <code>src/WhiskerToolbox/ThemeManager/ThemeManager.hpp/.cpp</code> - <code>resources/themes/light.qss</code> - <code>resources/themes/dark.qss</code></p>
+<p><strong>Risk:</strong> Global QSS can conflict with widget-specific stylesheets (currently used for status label coloring). Audit and convert those to dynamic palette queries.</p>
+<hr>
+</section>
+<section id="phase-3-widget-contributed-settings-pages" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-widget-contributed-settings-pages">Phase 3: Widget-Contributed Settings Pages</h3>
+<p><strong>Goal:</strong> Widgets can optionally contribute a settings page surfaced in the Settings widget.</p>
+<p><strong>Tasks:</strong></p>
+<ol type="1">
+<li>Add <code>create_settings</code> field to <code>EditorTypeInfo</code>.</li>
+<li>Modify <code>SettingsWidget</code> to query registered types and build “Widgets” category.</li>
+<li>Define widget defaults structs (e.g., <code>MediaWidgetDefaults</code>).</li>
+<li>Add optional widget defaults fields to <code>AppPreferencesData</code>.</li>
+<li>Implement <code>create_settings</code> for 1–2 pilot widgets (e.g., Media widget, DataViewer).</li>
+<li>Wire widget constructors to read defaults from <code>AppPreferences</code> on creation.</li>
+</ol>
+<p><strong>Design decision needed:</strong> Whether widget defaults in <code>AppPreferencesData</code> should be a <code>std::map&lt;std::string, std::string&gt;</code> (type_id → JSON blob) for full extensibility, or individual typed optional structs. The typed approach is safer (schema-validated at compile time) but requires modifying <code>AppPreferencesData</code> for each new widget. The map approach is open for extension but loses compile-time safety. <strong>Recommendation:</strong> Start with typed optionals. If the number of widgets with settings pages exceeds ~5, refactor to a map approach.</p>
+<hr>
+</section>
+<section id="phase-4-keybinding-editor" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4-keybinding-editor">Phase 4: Keybinding Editor</h3>
+<p><strong>Goal:</strong> Users can view and customize keyboard shortcuts.</p>
+<p><strong>Tasks:</strong></p>
+<ol type="1">
+<li>Add <code>std::vector&lt;KeybindingEntry&gt;</code> to <code>AppPreferencesData</code>.</li>
+<li>Create <code>KeybindingManager</code> (registry of defaults, resolution logic, user overrides).</li>
+<li>Install global event filter in <code>MainWindow</code> for keybinding dispatch.</li>
+<li>Create <code>ActionDispatcher</code> for UI and command action dispatch.</li>
+<li>Create <code>KeybindingEditorPage</code> in Settings widget (table view, recording, conflict detection).</li>
+<li>Register default keybindings for existing QActions (undo, redo, save, etc.).</li>
+<li>Migrate existing hardcoded shortcuts:
+<ul>
+<li><code>Media_Window::keyPressEvent()</code> — group assignment (1–9).</li>
+<li><code>Whisker_Widget::keyPressEvent()</code> — trace (‘T’).</li>
+<li><code>PlotDockWidgetContent::eventFilter()</code> — plot key handling.</li>
+</ul></li>
+</ol>
+<p><strong>Files to create:</strong> - <code>src/WhiskerToolbox/KeybindingManager/KeybindingManager.hpp/.cpp</code> - <code>src/WhiskerToolbox/KeybindingManager/ActionDispatcher.hpp/.cpp</code> - <code>src/WhiskerToolbox/SettingsWidget/Pages/KeybindingEditorPage.hpp/.cpp</code></p>
+<p><strong>Risk:</strong> Event filter ordering. The global keybinding filter must not swallow events meant for text input widgets (QLineEdit, QTextEdit, QSpinBox). The filter should skip resolution when a text-input widget has focus, unless the key sequence includes a modifier (Ctrl, Alt, Meta).</p>
+<hr>
+</section>
+<section id="phase-5-keybindingcommand-integration" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5-keybindingcommand-integration">Phase 5: Keybinding–Command Integration</h3>
+<p><strong>Goal:</strong> Keybindings can directly trigger Command Architecture commands with variable substitution.</p>
+<p><strong>Tasks:</strong></p>
+<ol type="1">
+<li>Extend <code>ActionDispatcher</code> to create and execute commands via <code>CommandFactory</code>.</li>
+<li>Define <code>CommandContext</code> population from the active editor state (current frame, selected data, etc.).</li>
+<li>Register command-triggered keybindings (e.g., “Ctrl+Shift+S” → <code>SaveData</code> command with <code>${active_data_key}</code>).</li>
+<li>Add “Record Macro” functionality — capture a sequence of keybinding-triggered commands as a <code>CommandSequenceDescriptor</code>.</li>
+<li>Allow macro sequences to be assigned to keybindings.</li>
+<li>Integrate with <code>CommandRecorder</code> for action journal logging.</li>
+</ol>
+<p><strong>Dependencies:</strong> Command Architecture Phases 3+ (SaveData, LoadData commands).</p>
+<hr>
+</section>
+</section>
+<section id="open-questions" class="level2">
+<h2 class="anchored" data-anchor-id="open-questions">6. Open Questions</h2>
+<ol type="1">
+<li><p><strong>Settings widget zone placement.</strong> Is <code>Zone::Center</code> the right default? Some applications dock settings in a side panel. Given the potentially large keybinding table, Center seems appropriate for the view, but it could also work as a modal dialog instead of a docked widget.</p></li>
+<li><p><strong>Settings vs.&nbsp;Preferences naming.</strong> Qt conventions use “Preferences” (macOS) while Windows uses “Settings”. The codebase already uses <code>AppPreferences</code> for the data model. The widget can be called “Settings” in the UI (matching modern convention) while the data model remains <code>AppPreferences</code>.</p></li>
+<li><p><strong>Widget defaults granularity.</strong> Should the Settings widget allow configuring every property of an <code>EditorState</code> as a default, or just a curated subset? Recommendation: curated subset. Each widget author chooses which fields make sense as “defaults” by controlling what their <code>create_settings</code> factory exposes.</p></li>
+<li><p><strong>Keybinding conflict resolution.</strong> When a user assigns a key combo that conflicts with an existing binding: show a warning and require explicit override? Or automatically unbind the old action? Recommendation: show a warning with the conflicting action name and let the user choose.</p></li>
+<li><p><strong>Text input passthrough.</strong> The global event filter must not intercept keystrokes intended for text editing. Rule: if the focused widget is a <code>QLineEdit</code>, <code>QTextEdit</code>, <code>QPlainTextEdit</code>, <code>QSpinBox</code>, <code>QDoubleSpinBox</code>, or <code>QComboBox</code> (editable), only process key sequences that include <code>Ctrl</code>, <code>Alt</code>, or <code>Meta</code> modifiers. Bare keys (letters, digits) pass through to the text widget.</p></li>
+</ol>
+<hr>
+</section>
+<section id="dependency-graph" class="level2">
+<h2 class="anchored" data-anchor-id="dependency-graph">7. Dependency Graph</h2>
+<pre><code>Phase 1 ─── Phase 2
+  │             │
+  └──── Phase 3 ┘
+           │
+        Phase 4
+           │
+        Phase 5 ──── Command Architecture (Phase 3+)</code></pre>
+<p>Phases 1 and 2 are independent of each other but both must precede Phase 3 (which builds on the Settings widget shell). Phase 4 depends on the Settings widget existing. Phase 5 depends on both the keybinding system and the Command Architecture’s persistence commands.</p>
+<hr>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">8. References</h2>
+<ul>
+<li><a href="STATE_MANAGEMENT_ROADMAP.md">State Management Roadmap</a> — AppPreferences, SessionStore, WorkspaceManager design</li>
+<li><a href="COMMAND_ARCHITECTURE_ROADMAP.md">Command Architecture Roadmap</a> — ICommand, CommandFactory, variable substitution, triage workflows</li>
+<li><code>src/WhiskerToolbox/EditorState/</code> — EditorState, EditorRegistry, ZoneTypes, SelectionContext</li>
+<li><code>src/WhiskerToolbox/StateManagement/</code> — AppPreferences, AppPreferencesData, SessionStore</li>
+<li><code>src/WhiskerToolbox/DataManager_Widget/OutputDirectoryWidget/</code> — Composable output dir picker (to be migrated)</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

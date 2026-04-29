@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcdatamanagertransformslinesline_kalman_groupingline_kalman_grouping.test.cpp" id="toc-srcdatamanagertransformslinesline_kalman_groupingline_kalman_grouping.test.cpp" class="nav-link active" data-scroll-target="#srcdatamanagertransformslinesline_kalman_groupingline_kalman_grouping.test.cpp">src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp</a>
+  <ul class="collapse">
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-test_case_method" id="toc-function-test_case_method" class="nav-link" data-scroll-target="#function-test_case_method">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-1" id="toc-function-test_case_method-1" class="nav-link" data-scroll-target="#function-test_case_method-1">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-2" id="toc-function-test_case_method-2" class="nav-link" data-scroll-target="#function-test_case_method-2">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case" id="toc-function-test_case" class="nav-link" data-scroll-target="#function-test_case">function TEST_CASE</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcdatamanagertransformslinesline_kalman_groupingline_kalman_grouping.test.cpp" class="level1">
+<h1>src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp</h1>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classLineKalmanGroupingTestFixture.html">LineKalmanGroupingTestFixture</a></strong> <br>Test fixture for <a href="../../api_generated/Classes/structLine.html">Line</a> Kalman Grouping functionality.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/line__kalman__grouping_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(<a href="../../api_generated/Classes/classLineKalmanGroupingTestFixture.html">LineKalmanGroupingTestFixture</a> , “LineKalmanGrouping - Basic Functionality” , “” [LineKalmanGrouping])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/line__kalman__grouping_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(<a href="../../api_generated/Classes/classLineKalmanGroupingTestFixture.html">LineKalmanGroupingTestFixture</a> , “LineKalmanGrouping - Full Algorithm Test” , “” [LineKalmanGrouping])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/line__kalman__grouping_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(<a href="../../api_generated/Classes/classLineKalmanGroupingTestFixture.html">LineKalmanGroupingTestFixture</a> , “LineKalmanGrouping - Edge Cases” , “” [LineKalmanGrouping])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/line__kalman__grouping_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“LineKalmanGrouping - Transform Operation Interface” , “” [LineKalmanGrouping])</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-test_case_method" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    LineKalmanGroupingTestFixture <span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"LineKalmanGrouping - Basic Functionality"</span> <span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>LineKalmanGrouping<span class="op">]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-1">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    LineKalmanGroupingTestFixture <span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"LineKalmanGrouping - Full Algorithm Test"</span> <span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>LineKalmanGrouping<span class="op">]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-2">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    LineKalmanGroupingTestFixture <span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"LineKalmanGrouping - Edge Cases"</span> <span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>LineKalmanGrouping<span class="op">]</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"LineKalmanGrouping - Transform Operation Interface"</span> <span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>LineKalmanGrouping<span class="op">]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/lines.hpp"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/points.hpp"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityGroupManager.hpp"</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityRegistry.hpp"</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/entity_id.hpp"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/StrongTimeTypes.hpp"</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_approx.hpp&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineKalmanGroupingTestFixture <span class="op">{</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    LineKalmanGroupingTestFixture<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Initialize DataManager</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        data_manager <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create EntityGroupManager</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        group_manager <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>EntityGroupManager<span class="op">&gt;();</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create a TimeFrame (100 frames)</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> timeValues <span class="op">=</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;();</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            timeValues<span class="op">.</span>push_back<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> timeframe <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;(</span>timeValues<span class="op">);</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        data_manager<span class="op">-&gt;</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"test_timeframe"</span><span class="op">),</span> timeframe<span class="op">);</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create LineData</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        data_manager<span class="op">-&gt;</span>setData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"test_lines"</span><span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"test_timeframe"</span><span class="op">));</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        line_data <span class="op">=</span> data_manager<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"test_lines"</span><span class="op">);</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create two groups for testing</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        group1_id <span class="op">=</span> group_manager<span class="op">-&gt;</span>createGroup<span class="op">(</span><span class="st">"Line Group 1"</span><span class="op">,</span> <span class="st">"First test group"</span><span class="op">);</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        group2_id <span class="op">=</span> group_manager<span class="op">-&gt;</span>createGroup<span class="op">(</span><span class="st">"Line Group 2"</span><span class="op">,</span> <span class="st">"Second test group"</span><span class="op">);</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        generateTestData<span class="op">();</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> generateTestData<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Generate two lines that move in predictable patterns</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Line 1: starts at (100, 100) and moves right with small vertical oscillation</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Line 2: starts at (100, 200) and moves right with small vertical oscillation</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> frame <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> <span class="op">++</span>frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Line 1: horizontal movement with sine wave vertical component</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>            Line2D line1<span class="op">;</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> base_x1 <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">+</span> frame <span class="op">*</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span>                  <span class="co">// moves 2 pixels right per frame</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> base_y1 <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">+</span> <span class="fl">10.0</span><span class="bu">f</span> <span class="op">*</span> <span class="bu">std::</span>sin<span class="op">(</span>frame <span class="op">*</span> <span class="fl">0.1</span><span class="bu">f</span><span class="op">);</span><span class="co">// small oscillation</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Create a short horizontal line segment</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>                line1<span class="op">.</span>push_back<span class="op">({</span>base_x1 <span class="op">+</span> i<span class="op">,</span> base_y1<span class="op">});</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Line 2: similar movement but offset vertically</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>            Line2D line2<span class="op">;</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> base_x2 <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">+</span> frame <span class="op">*</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> base_y2 <span class="op">=</span> <span class="fl">200.0</span><span class="bu">f</span> <span class="op">+</span> <span class="fl">8.0</span><span class="bu">f</span> <span class="op">*</span> <span class="bu">std::</span>sin<span class="op">(</span>frame <span class="op">*</span> <span class="fl">0.15</span><span class="bu">f</span> <span class="op">+</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span><span class="co">// different phase</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>                line2<span class="op">.</span>push_back<span class="op">({</span>base_x2 <span class="op">+</span> i<span class="op">,</span> base_y2<span class="op">});</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Add lines to data</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>            line_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>frame<span class="op">),</span> line1<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>            line_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>frame<span class="op">),</span> line2<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get all entity IDs (should be 200 total: 2 per frame * 100 frames)</span></span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_entity_ids <span class="op">=</span> get_all_entity_ids<span class="op">(*</span>line_data<span class="op">);</span></span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>all_entity_ids<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">200</span><span class="op">);</span></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Store entity IDs for each line and frame for easy access</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> frame <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> <span class="op">++</span>frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_at_frame <span class="op">=</span> line_data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>frame<span class="op">));</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>entities_at_frame<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Sort by line position to ensure consistent assignment</span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> sorted_entities<span class="op">(</span>entities_at_frame<span class="op">.</span>begin<span class="op">(),</span> entities_at_frame<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>sort<span class="op">(</span>sorted_entities<span class="op">.</span>begin<span class="op">(),</span> sorted_entities<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>                      <span class="op">[</span><span class="kw">this</span><span class="op">](</span>EntityId a<span class="op">,</span> EntityId b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>                          <span class="kw">auto</span> line_a <span class="op">=</span> line_data<span class="op">-&gt;</span>getDataByEntityId<span class="op">(</span>a<span class="op">);</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>                          <span class="kw">auto</span> line_b <span class="op">=</span> line_data<span class="op">-&gt;</span>getDataByEntityId<span class="op">(</span>b<span class="op">);</span></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>                          <span class="cf">if</span> <span class="op">(!</span>line_a <span class="op">||</span> <span class="op">!</span>line_b<span class="op">)</span> <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// Sort by Y coordinate (line 1 has lower Y than line 2)</span></span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>                          <span class="dt">float</span> y_a <span class="op">=</span> line_a<span class="op">-&gt;</span>get<span class="op">().</span>empty<span class="op">()</span> <span class="op">?</span> <span class="fl">0.0</span><span class="bu">f</span> <span class="op">:</span> line_a<span class="op">-&gt;</span>get<span class="op">().</span>front<span class="op">().</span>y<span class="op">;</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>                          <span class="dt">float</span> y_b <span class="op">=</span> line_b<span class="op">-&gt;</span>get<span class="op">().</span>empty<span class="op">()</span> <span class="op">?</span> <span class="fl">0.0</span><span class="bu">f</span> <span class="op">:</span> line_b<span class="op">-&gt;</span>get<span class="op">().</span>front<span class="op">().</span>y<span class="op">;</span></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>                          <span class="cf">return</span> y_a <span class="op">&lt;</span> y_b<span class="op">;</span></span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>                      <span class="op">});</span></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>            line1_entities<span class="op">[</span>frame<span class="op">]</span> <span class="op">=</span> sorted_entities<span class="op">[</span><span class="dv">0</span><span class="op">];</span></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>            line2_entities<span class="op">[</span>frame<span class="op">]</span> <span class="op">=</span> sorted_entities<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add ground truth labels at specific frames (every 10 frames)</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> frame <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> frame <span class="op">+=</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group1_id<span class="op">,</span> line1_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group2_id<span class="op">,</span> line2_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>            ground_truth_frames<span class="op">.</span>push_back<span class="op">(</span>frame<span class="op">);</span></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> data_manager<span class="op">;</span></span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>EntityGroupManager<span class="op">&gt;</span> group_manager<span class="op">;</span></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> line_data<span class="op">;</span></span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    GroupId group1_id<span class="op">;</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>    GroupId group2_id<span class="op">;</span></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> EntityId<span class="op">&gt;</span> line1_entities<span class="op">;</span><span class="co">// frame -&gt; entity_id for line 1</span></span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> EntityId<span class="op">&gt;</span> line2_entities<span class="op">;</span><span class="co">// frame -&gt; entity_id for line 2</span></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> ground_truth_frames<span class="op">;</span></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>LineKalmanGroupingTestFixture<span class="op">,</span> <span class="st">"LineKalmanGrouping - Basic Functionality"</span><span class="op">,</span> <span class="st">"[LineKalmanGrouping]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test fixture setup is correct"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify we have the expected data structure</span></span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>line_data <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>group_manager <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check that we have lines at all frames</span></span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> frame <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> <span class="op">++</span>frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities <span class="op">=</span> line_data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>frame<span class="op">));</span></span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>entities<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check ground truth labels</span></span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>ground_truth_frames<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span><span class="co">// Every 10 frames</span></span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> group1_entities <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group1_id<span class="op">);</span></span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> group2_entities <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group2_id<span class="op">);</span></span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>group1_entities<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>group2_entities<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>LineKalmanGroupingTestFixture<span class="op">,</span> <span class="st">"LineKalmanGrouping - Full Algorithm Test"</span><span class="op">,</span> <span class="st">"[LineKalmanGrouping]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Basic grouping with default parameters"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create parameters</span></span>
+<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Count ungrouped entities before</span></span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_entities <span class="op">=</span> get_all_entity_ids<span class="op">(*</span>line_data<span class="op">);</span></span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_before<span class="op">;</span></span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>            grouped_before<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> ungrouped_before <span class="op">=</span> all_entities<span class="op">.</span>size<span class="op">()</span> <span class="op">-</span> grouped_before<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Run the algorithm</span></span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Should return the same line_data pointer</span></span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> line_data<span class="op">);</span></span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Count grouped entities after (include putative groups)</span></span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_after<span class="op">;</span></span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> descriptors <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> findPutativeFor <span class="op">=</span> <span class="op">[&amp;](</span>GroupId base_group<span class="op">)</span> <span class="op">-&gt;</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>GroupId<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_group<span class="op">);</span></span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">.</span>has_value<span class="op">())</span> <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="cf">return</span> d<span class="op">.</span>id<span class="op">;</span></span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> p1 <span class="op">=</span> findPutativeFor<span class="op">(</span>group1_id<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(*</span>p1<span class="op">);</span></span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> p2 <span class="op">=</span> findPutativeFor<span class="op">(</span>group2_id<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(*</span>p2<span class="op">);</span></span>
+<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-195"><a href="#cb5-195" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-196"><a href="#cb5-196" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> ungrouped_after <span class="op">=</span> all_entities<span class="op">.</span>size<span class="op">()</span> <span class="op">-</span> grouped_after<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb5-197"><a href="#cb5-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-198"><a href="#cb5-198" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Should have assigned more entities to groups</span></span>
+<span id="cb5-199"><a href="#cb5-199" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>ungrouped_after <span class="op">&lt;</span> ungrouped_before<span class="op">);</span></span>
+<span id="cb5-200"><a href="#cb5-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-201"><a href="#cb5-201" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Most entities should be assigned (at least 50% improvement)</span></span>
+<span id="cb5-202"><a href="#cb5-202" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>ungrouped_after <span class="op">&lt;=</span> ungrouped_before <span class="op">/</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-203"><a href="#cb5-203" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-204"><a href="#cb5-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-205"><a href="#cb5-205" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Verify correct line assignment"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-206"><a href="#cb5-206" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create parameters with verbose output for debugging</span></span>
+<span id="cb5-207"><a href="#cb5-207" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">true</span><span class="op">;</span><span class="co">// Enable for debugging</span></span>
+<span id="cb5-209"><a href="#cb5-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Debug: Check initial state</span></span>
+<span id="cb5-211"><a href="#cb5-211" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_entities_before <span class="op">=</span> get_all_entity_ids<span class="op">(*</span>line_data<span class="op">);</span></span>
+<span id="cb5-212"><a href="#cb5-212" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_before<span class="op">;</span></span>
+<span id="cb5-213"><a href="#cb5-213" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-214"><a href="#cb5-214" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-215"><a href="#cb5-215" aria-hidden="true" tabindex="-1"></a>            grouped_before<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-216"><a href="#cb5-216" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-217"><a href="#cb5-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-218"><a href="#cb5-218" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Total entities: "</span> <span class="op">&lt;&lt;</span> all_entities_before<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-219"><a href="#cb5-219" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Grouped before: "</span> <span class="op">&lt;&lt;</span> grouped_before<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-220"><a href="#cb5-220" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Ground truth frames: "</span> <span class="op">&lt;&lt;</span> ground_truth_frames<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-221"><a href="#cb5-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-222"><a href="#cb5-222" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Run the algorithm</span></span>
+<span id="cb5-223"><a href="#cb5-223" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-224"><a href="#cb5-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-225"><a href="#cb5-225" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Debug: Check final state</span></span>
+<span id="cb5-226"><a href="#cb5-226" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_after<span class="op">;</span></span>
+<span id="cb5-227"><a href="#cb5-227" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-228"><a href="#cb5-228" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-229"><a href="#cb5-229" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-230"><a href="#cb5-230" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-231"><a href="#cb5-231" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> descriptors <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-232"><a href="#cb5-232" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> findPutativeFor <span class="op">=</span> <span class="op">[&amp;](</span>GroupId base_group<span class="op">)</span> <span class="op">-&gt;</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>GroupId<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-233"><a href="#cb5-233" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_group<span class="op">);</span></span>
+<span id="cb5-234"><a href="#cb5-234" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">.</span>has_value<span class="op">())</span> <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb5-235"><a href="#cb5-235" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-236"><a href="#cb5-236" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-237"><a href="#cb5-237" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="cf">return</span> d<span class="op">.</span>id<span class="op">;</span></span>
+<span id="cb5-238"><a href="#cb5-238" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-239"><a href="#cb5-239" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb5-240"><a href="#cb5-240" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb5-241"><a href="#cb5-241" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> put_g1 <span class="op">=</span> findPutativeFor<span class="op">(</span>group1_id<span class="op">);</span></span>
+<span id="cb5-242"><a href="#cb5-242" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> put_g2 <span class="op">=</span> findPutativeFor<span class="op">(</span>group2_id<span class="op">);</span></span>
+<span id="cb5-243"><a href="#cb5-243" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>put_g1<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-244"><a href="#cb5-244" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(*</span>put_g1<span class="op">);</span></span>
+<span id="cb5-245"><a href="#cb5-245" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-246"><a href="#cb5-246" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-247"><a href="#cb5-247" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>put_g2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-248"><a href="#cb5-248" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(*</span>put_g2<span class="op">);</span></span>
+<span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a>            grouped_after<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-250"><a href="#cb5-250" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-251"><a href="#cb5-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-252"><a href="#cb5-252" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Grouped after: "</span> <span class="op">&lt;&lt;</span> grouped_after<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-253"><a href="#cb5-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-254"><a href="#cb5-254" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check that lines are correctly assigned to their respective groups</span></span>
+<span id="cb5-255"><a href="#cb5-255" aria-hidden="true" tabindex="-1"></a>        <span class="co">// We'll check a sample of frames to verify correct assignment</span></span>
+<span id="cb5-256"><a href="#cb5-256" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> test_frames <span class="op">=</span> <span class="op">{</span><span class="dv">5</span><span class="op">,</span> <span class="dv">15</span><span class="op">,</span> <span class="dv">25</span><span class="op">,</span> <span class="dv">35</span><span class="op">,</span> <span class="dv">45</span><span class="op">,</span> <span class="dv">55</span><span class="op">,</span> <span class="dv">65</span><span class="op">,</span> <span class="dv">75</span><span class="op">,</span> <span class="dv">85</span><span class="op">,</span> <span class="dv">95</span><span class="op">};</span></span>
+<span id="cb5-257"><a href="#cb5-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-258"><a href="#cb5-258" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> correct_assignments_group1 <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-259"><a href="#cb5-259" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> correct_assignments_group2 <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-260"><a href="#cb5-260" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> total_assignments_group1 <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-261"><a href="#cb5-261" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> total_assignments_group2 <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-262"><a href="#cb5-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-263"><a href="#cb5-263" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame<span class="op">:</span> test_frames<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-264"><a href="#cb5-264" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Check if line1_entity is in group1 or its putative group</span></span>
+<span id="cb5-265"><a href="#cb5-265" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> groups_for_line1 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupsContainingEntity<span class="op">(</span>line1_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-266"><a href="#cb5-266" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>groups_for_line1<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-267"><a href="#cb5-267" aria-hidden="true" tabindex="-1"></a>                total_assignments_group1<span class="op">++;</span></span>
+<span id="cb5-268"><a href="#cb5-268" aria-hidden="true" tabindex="-1"></a>                <span class="dt">bool</span> in_correct <span class="op">=</span> <span class="bu">std::</span>find<span class="op">(</span>groups_for_line1<span class="op">.</span>begin<span class="op">(),</span> groups_for_line1<span class="op">.</span>end<span class="op">(),</span> group1_id<span class="op">)</span> <span class="op">!=</span> groups_for_line1<span class="op">.</span>end<span class="op">();</span></span>
+<span id="cb5-269"><a href="#cb5-269" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>in_correct <span class="op">&amp;&amp;</span> put_g1<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-270"><a href="#cb5-270" aria-hidden="true" tabindex="-1"></a>                    in_correct <span class="op">=</span> <span class="bu">std::</span>find<span class="op">(</span>groups_for_line1<span class="op">.</span>begin<span class="op">(),</span> groups_for_line1<span class="op">.</span>end<span class="op">(),</span> <span class="op">*</span>put_g1<span class="op">)</span> <span class="op">!=</span> groups_for_line1<span class="op">.</span>end<span class="op">();</span></span>
+<span id="cb5-271"><a href="#cb5-271" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-272"><a href="#cb5-272" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>in_correct<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-273"><a href="#cb5-273" aria-hidden="true" tabindex="-1"></a>                    correct_assignments_group1<span class="op">++;</span></span>
+<span id="cb5-274"><a href="#cb5-274" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-275"><a href="#cb5-275" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-276"><a href="#cb5-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-277"><a href="#cb5-277" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Check if line2_entity is in group2 or its putative group</span></span>
+<span id="cb5-278"><a href="#cb5-278" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> groups_for_line2 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupsContainingEntity<span class="op">(</span>line2_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-279"><a href="#cb5-279" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>groups_for_line2<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-280"><a href="#cb5-280" aria-hidden="true" tabindex="-1"></a>                total_assignments_group2<span class="op">++;</span></span>
+<span id="cb5-281"><a href="#cb5-281" aria-hidden="true" tabindex="-1"></a>                <span class="dt">bool</span> in_correct2 <span class="op">=</span> <span class="bu">std::</span>find<span class="op">(</span>groups_for_line2<span class="op">.</span>begin<span class="op">(),</span> groups_for_line2<span class="op">.</span>end<span class="op">(),</span> group2_id<span class="op">)</span> <span class="op">!=</span> groups_for_line2<span class="op">.</span>end<span class="op">();</span></span>
+<span id="cb5-282"><a href="#cb5-282" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>in_correct2 <span class="op">&amp;&amp;</span> put_g2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-283"><a href="#cb5-283" aria-hidden="true" tabindex="-1"></a>                    in_correct2 <span class="op">=</span> <span class="bu">std::</span>find<span class="op">(</span>groups_for_line2<span class="op">.</span>begin<span class="op">(),</span> groups_for_line2<span class="op">.</span>end<span class="op">(),</span> <span class="op">*</span>put_g2<span class="op">)</span> <span class="op">!=</span> groups_for_line2<span class="op">.</span>end<span class="op">();</span></span>
+<span id="cb5-284"><a href="#cb5-284" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-285"><a href="#cb5-285" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>in_correct2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-286"><a href="#cb5-286" aria-hidden="true" tabindex="-1"></a>                    correct_assignments_group2<span class="op">++;</span></span>
+<span id="cb5-287"><a href="#cb5-287" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-288"><a href="#cb5-288" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-289"><a href="#cb5-289" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-290"><a href="#cb5-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Total assignments group1: "</span> <span class="op">&lt;&lt;</span> total_assignments_group1<span class="op">);</span></span>
+<span id="cb5-292"><a href="#cb5-292" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Correct assignments group1: "</span> <span class="op">&lt;&lt;</span> correct_assignments_group1<span class="op">);</span></span>
+<span id="cb5-293"><a href="#cb5-293" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Total assignments group2: "</span> <span class="op">&lt;&lt;</span> total_assignments_group2<span class="op">);</span></span>
+<span id="cb5-294"><a href="#cb5-294" aria-hidden="true" tabindex="-1"></a>        INFO<span class="op">(</span><span class="st">"Correct assignments group2: "</span> <span class="op">&lt;&lt;</span> correct_assignments_group2<span class="op">);</span></span>
+<span id="cb5-295"><a href="#cb5-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-296"><a href="#cb5-296" aria-hidden="true" tabindex="-1"></a>        <span class="co">// More lenient requirement - just check that some assignments were made</span></span>
+<span id="cb5-297"><a href="#cb5-297" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped_after<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;</span> grouped_before<span class="op">.</span>size<span class="op">());</span><span class="co">// Should make some assignments</span></span>
+<span id="cb5-298"><a href="#cb5-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-299"><a href="#cb5-299" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If assignments were made, at least 50% should be correct (relaxed from 70%)</span></span>
+<span id="cb5-300"><a href="#cb5-300" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>total_assignments_group1 <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-301"><a href="#cb5-301" aria-hidden="true" tabindex="-1"></a>            <span class="dt">double</span> accuracy1 <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>correct_assignments_group1<span class="op">)</span> <span class="op">/</span> total_assignments_group1<span class="op">;</span></span>
+<span id="cb5-302"><a href="#cb5-302" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>accuracy1 <span class="op">&gt;=</span> <span class="fl">0.5</span><span class="op">);</span></span>
+<span id="cb5-303"><a href="#cb5-303" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-304"><a href="#cb5-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-305"><a href="#cb5-305" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>total_assignments_group2 <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-306"><a href="#cb5-306" aria-hidden="true" tabindex="-1"></a>            <span class="dt">double</span> accuracy2 <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>correct_assignments_group2<span class="op">)</span> <span class="op">/</span> total_assignments_group2<span class="op">;</span></span>
+<span id="cb5-307"><a href="#cb5-307" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>accuracy2 <span class="op">&gt;=</span> <span class="fl">0.5</span><span class="op">);</span></span>
+<span id="cb5-308"><a href="#cb5-308" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-309"><a href="#cb5-309" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-310"><a href="#cb5-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-311"><a href="#cb5-311" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test with different parameter settings"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-312"><a href="#cb5-312" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with stricter distance threshold</span></span>
+<span id="cb5-313"><a href="#cb5-313" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters strict_params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-314"><a href="#cb5-314" aria-hidden="true" tabindex="-1"></a>        strict_params<span class="op">.</span>process_noise_position <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span>
+<span id="cb5-315"><a href="#cb5-315" aria-hidden="true" tabindex="-1"></a>        strict_params<span class="op">.</span>measurement_noise_position <span class="op">=</span> <span class="fl">2.0</span><span class="op">;</span></span>
+<span id="cb5-316"><a href="#cb5-316" aria-hidden="true" tabindex="-1"></a>        strict_params<span class="op">.</span>measurement_noise_length <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span>
+<span id="cb5-317"><a href="#cb5-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-318"><a href="#cb5-318" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result1 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>strict_params<span class="op">);</span></span>
+<span id="cb5-319"><a href="#cb5-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-320"><a href="#cb5-320" aria-hidden="true" tabindex="-1"></a>        <span class="co">// With strict parameters, fewer assignments should be made</span></span>
+<span id="cb5-321"><a href="#cb5-321" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_entities <span class="op">=</span> get_all_entity_ids<span class="op">(*</span>line_data<span class="op">);</span></span>
+<span id="cb5-322"><a href="#cb5-322" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_strict<span class="op">;</span></span>
+<span id="cb5-323"><a href="#cb5-323" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-324"><a href="#cb5-324" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-325"><a href="#cb5-325" aria-hidden="true" tabindex="-1"></a>            grouped_strict<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-326"><a href="#cb5-326" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-327"><a href="#cb5-327" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Include putative groups</span></span>
+<span id="cb5-328"><a href="#cb5-328" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-329"><a href="#cb5-329" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-330"><a href="#cb5-330" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-331"><a href="#cb5-331" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-332"><a href="#cb5-332" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-333"><a href="#cb5-333" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-334"><a href="#cb5-334" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-335"><a href="#cb5-335" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-336"><a href="#cb5-336" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-337"><a href="#cb5-337" aria-hidden="true" tabindex="-1"></a>                        grouped_strict<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-338"><a href="#cb5-338" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-339"><a href="#cb5-339" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-340"><a href="#cb5-340" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-341"><a href="#cb5-341" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-342"><a href="#cb5-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-343"><a href="#cb5-343" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Reset groups for next test</span></span>
+<span id="cb5-344"><a href="#cb5-344" aria-hidden="true" tabindex="-1"></a>        group_manager<span class="op">-&gt;</span>clearGroup<span class="op">(</span>group1_id<span class="op">);</span></span>
+<span id="cb5-345"><a href="#cb5-345" aria-hidden="true" tabindex="-1"></a>        group_manager<span class="op">-&gt;</span>clearGroup<span class="op">(</span>group2_id<span class="op">);</span></span>
+<span id="cb5-346"><a href="#cb5-346" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Delete any putative groups created in strict run</span></span>
+<span id="cb5-347"><a href="#cb5-347" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-348"><a href="#cb5-348" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors2 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-349"><a href="#cb5-349" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-350"><a href="#cb5-350" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name<span class="op">.</span>rfind<span class="op">(</span><span class="st">"Putative:"</span><span class="op">,</span> <span class="dv">0</span><span class="op">)</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-351"><a href="#cb5-351" aria-hidden="true" tabindex="-1"></a>                    group_manager<span class="op">-&gt;</span>deleteGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-352"><a href="#cb5-352" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-353"><a href="#cb5-353" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-354"><a href="#cb5-354" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-355"><a href="#cb5-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-356"><a href="#cb5-356" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Re-add ground truth</span></span>
+<span id="cb5-357"><a href="#cb5-357" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame<span class="op">:</span> ground_truth_frames<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-358"><a href="#cb5-358" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group1_id<span class="op">,</span> line1_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-359"><a href="#cb5-359" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group2_id<span class="op">,</span> line2_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-360"><a href="#cb5-360" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-361"><a href="#cb5-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-362"><a href="#cb5-362" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with lenient distance threshold</span></span>
+<span id="cb5-363"><a href="#cb5-363" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters lenient_params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-364"><a href="#cb5-364" aria-hidden="true" tabindex="-1"></a>        lenient_params<span class="op">.</span>process_noise_position <span class="op">=</span> <span class="fl">20.0</span><span class="op">;</span></span>
+<span id="cb5-365"><a href="#cb5-365" aria-hidden="true" tabindex="-1"></a>        lenient_params<span class="op">.</span>measurement_noise_position <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span></span>
+<span id="cb5-366"><a href="#cb5-366" aria-hidden="true" tabindex="-1"></a>        lenient_params<span class="op">.</span>measurement_noise_length <span class="op">=</span> <span class="fl">20.0</span><span class="op">;</span></span>
+<span id="cb5-367"><a href="#cb5-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-368"><a href="#cb5-368" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result2 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>lenient_params<span class="op">);</span></span>
+<span id="cb5-369"><a href="#cb5-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-370"><a href="#cb5-370" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped_lenient<span class="op">;</span></span>
+<span id="cb5-371"><a href="#cb5-371" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-372"><a href="#cb5-372" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-373"><a href="#cb5-373" aria-hidden="true" tabindex="-1"></a>            grouped_lenient<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-374"><a href="#cb5-374" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-375"><a href="#cb5-375" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Include putative groups</span></span>
+<span id="cb5-376"><a href="#cb5-376" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-377"><a href="#cb5-377" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors3 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-378"><a href="#cb5-378" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-379"><a href="#cb5-379" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-380"><a href="#cb5-380" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-381"><a href="#cb5-381" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-382"><a href="#cb5-382" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors3<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-383"><a href="#cb5-383" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-384"><a href="#cb5-384" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-385"><a href="#cb5-385" aria-hidden="true" tabindex="-1"></a>                        grouped_lenient<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-386"><a href="#cb5-386" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-387"><a href="#cb5-387" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-388"><a href="#cb5-388" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-389"><a href="#cb5-389" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-390"><a href="#cb5-390" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-391"><a href="#cb5-391" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Lenient parameters should generally result in more assignments</span></span>
+<span id="cb5-392"><a href="#cb5-392" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped_lenient<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> grouped_strict<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-393"><a href="#cb5-393" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-394"><a href="#cb5-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-395"><a href="#cb5-395" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test auto-estimation parameters"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-396"><a href="#cb5-396" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with auto-estimation enabled</span></span>
+<span id="cb5-397"><a href="#cb5-397" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters auto_params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-398"><a href="#cb5-398" aria-hidden="true" tabindex="-1"></a>        auto_params<span class="op">.</span>auto_estimate_static_noise <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-399"><a href="#cb5-399" aria-hidden="true" tabindex="-1"></a>        auto_params<span class="op">.</span>auto_estimate_measurement_noise <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-400"><a href="#cb5-400" aria-hidden="true" tabindex="-1"></a>        auto_params<span class="op">.</span>static_noise_percentile <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span></span>
+<span id="cb5-401"><a href="#cb5-401" aria-hidden="true" tabindex="-1"></a>        auto_params<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">true</span><span class="op">;</span><span class="co">// To see estimation output</span></span>
+<span id="cb5-402"><a href="#cb5-402" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-403"><a href="#cb5-403" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>auto_params<span class="op">);</span></span>
+<span id="cb5-404"><a href="#cb5-404" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> line_data<span class="op">);</span></span>
+<span id="cb5-405"><a href="#cb5-405" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-406"><a href="#cb5-406" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Should still make some assignments</span></span>
+<span id="cb5-407"><a href="#cb5-407" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped<span class="op">;</span></span>
+<span id="cb5-408"><a href="#cb5-408" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-409"><a href="#cb5-409" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-410"><a href="#cb5-410" aria-hidden="true" tabindex="-1"></a>            grouped<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-411"><a href="#cb5-411" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-412"><a href="#cb5-412" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Include putative groups</span></span>
+<span id="cb5-413"><a href="#cb5-413" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-414"><a href="#cb5-414" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors4 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-415"><a href="#cb5-415" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-416"><a href="#cb5-416" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-417"><a href="#cb5-417" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-418"><a href="#cb5-418" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-419"><a href="#cb5-419" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors4<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-420"><a href="#cb5-420" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-421"><a href="#cb5-421" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-422"><a href="#cb5-422" aria-hidden="true" tabindex="-1"></a>                        grouped<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-423"><a href="#cb5-423" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-424"><a href="#cb5-424" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-425"><a href="#cb5-425" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-426"><a href="#cb5-426" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-427"><a href="#cb5-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-428"><a href="#cb5-428" aria-hidden="true" tabindex="-1"></a>        <span class="co">// At minimum, ground truth should still be grouped</span></span>
+<span id="cb5-429"><a href="#cb5-429" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> ground_truth_frames<span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-430"><a href="#cb5-430" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-431"><a href="#cb5-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-432"><a href="#cb5-432" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test static feature noise scale parameter"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-433"><a href="#cb5-433" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with different static noise scales</span></span>
+<span id="cb5-434"><a href="#cb5-434" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params1<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-435"><a href="#cb5-435" aria-hidden="true" tabindex="-1"></a>        params1<span class="op">.</span>static_feature_process_noise_scale <span class="op">=</span> <span class="fl">0.001</span><span class="op">;</span><span class="co">// Very small</span></span>
+<span id="cb5-436"><a href="#cb5-436" aria-hidden="true" tabindex="-1"></a>        params1<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-437"><a href="#cb5-437" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-438"><a href="#cb5-438" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result1 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params1<span class="op">);</span></span>
+<span id="cb5-439"><a href="#cb5-439" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-440"><a href="#cb5-440" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped1<span class="op">;</span></span>
+<span id="cb5-441"><a href="#cb5-441" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-442"><a href="#cb5-442" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-443"><a href="#cb5-443" aria-hidden="true" tabindex="-1"></a>            grouped1<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-444"><a href="#cb5-444" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-445"><a href="#cb5-445" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-446"><a href="#cb5-446" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors5 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-447"><a href="#cb5-447" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-448"><a href="#cb5-448" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-449"><a href="#cb5-449" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-450"><a href="#cb5-450" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-451"><a href="#cb5-451" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors5<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-452"><a href="#cb5-452" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-453"><a href="#cb5-453" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-454"><a href="#cb5-454" aria-hidden="true" tabindex="-1"></a>                        grouped1<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-455"><a href="#cb5-455" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-456"><a href="#cb5-456" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-457"><a href="#cb5-457" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-458"><a href="#cb5-458" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-459"><a href="#cb5-459" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-460"><a href="#cb5-460" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Reset groups</span></span>
+<span id="cb5-461"><a href="#cb5-461" aria-hidden="true" tabindex="-1"></a>        group_manager<span class="op">-&gt;</span>clearGroup<span class="op">(</span>group1_id<span class="op">);</span></span>
+<span id="cb5-462"><a href="#cb5-462" aria-hidden="true" tabindex="-1"></a>        group_manager<span class="op">-&gt;</span>clearGroup<span class="op">(</span>group2_id<span class="op">);</span></span>
+<span id="cb5-463"><a href="#cb5-463" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> frame<span class="op">:</span> ground_truth_frames<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-464"><a href="#cb5-464" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group1_id<span class="op">,</span> line1_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-465"><a href="#cb5-465" aria-hidden="true" tabindex="-1"></a>            group_manager<span class="op">-&gt;</span>addEntityToGroup<span class="op">(</span>group2_id<span class="op">,</span> line2_entities<span class="op">[</span>frame<span class="op">]);</span></span>
+<span id="cb5-466"><a href="#cb5-466" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-467"><a href="#cb5-467" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-468"><a href="#cb5-468" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with larger static noise scale</span></span>
+<span id="cb5-469"><a href="#cb5-469" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params2<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-470"><a href="#cb5-470" aria-hidden="true" tabindex="-1"></a>        params2<span class="op">.</span>static_feature_process_noise_scale <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span><span class="co">// Larger</span></span>
+<span id="cb5-471"><a href="#cb5-471" aria-hidden="true" tabindex="-1"></a>        params2<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-472"><a href="#cb5-472" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-473"><a href="#cb5-473" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result2 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params2<span class="op">);</span></span>
+<span id="cb5-474"><a href="#cb5-474" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-475"><a href="#cb5-475" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped2<span class="op">;</span></span>
+<span id="cb5-476"><a href="#cb5-476" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-477"><a href="#cb5-477" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-478"><a href="#cb5-478" aria-hidden="true" tabindex="-1"></a>            grouped2<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-479"><a href="#cb5-479" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-480"><a href="#cb5-480" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-481"><a href="#cb5-481" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors6 <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-482"><a href="#cb5-482" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-483"><a href="#cb5-483" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-484"><a href="#cb5-484" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-485"><a href="#cb5-485" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-486"><a href="#cb5-486" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors6<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-487"><a href="#cb5-487" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-488"><a href="#cb5-488" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-489"><a href="#cb5-489" aria-hidden="true" tabindex="-1"></a>                        grouped2<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-490"><a href="#cb5-490" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-491"><a href="#cb5-491" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-492"><a href="#cb5-492" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-493"><a href="#cb5-493" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-494"><a href="#cb5-494" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-495"><a href="#cb5-495" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Both should make some assignments</span></span>
+<span id="cb5-496"><a href="#cb5-496" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped1<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;</span> ground_truth_frames<span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-497"><a href="#cb5-497" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped2<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;</span> ground_truth_frames<span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-498"><a href="#cb5-498" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-499"><a href="#cb5-499" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-500"><a href="#cb5-500" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test per-feature measurement noise"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-501"><a href="#cb5-501" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-502"><a href="#cb5-502" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>measurement_noise_position <span class="op">=</span> <span class="fl">2.0</span><span class="op">;</span><span class="co">// Low noise for position</span></span>
+<span id="cb5-503"><a href="#cb5-503" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>measurement_noise_length <span class="op">=</span> <span class="fl">20.0</span><span class="op">;</span> <span class="co">// High noise for length</span></span>
+<span id="cb5-504"><a href="#cb5-504" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>verbose_output <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-505"><a href="#cb5-505" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-506"><a href="#cb5-506" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-507"><a href="#cb5-507" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> line_data<span class="op">);</span></span>
+<span id="cb5-508"><a href="#cb5-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-509"><a href="#cb5-509" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Build combined set of assigned entity IDs across ground truth and putative groups</span></span>
+<span id="cb5-510"><a href="#cb5-510" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> grouped<span class="op">;</span></span>
+<span id="cb5-511"><a href="#cb5-511" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> group_id<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-512"><a href="#cb5-512" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> entities_in_group <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb5-513"><a href="#cb5-513" aria-hidden="true" tabindex="-1"></a>            grouped<span class="op">.</span>insert<span class="op">(</span>entities_in_group<span class="op">.</span>begin<span class="op">(),</span> entities_in_group<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-514"><a href="#cb5-514" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-515"><a href="#cb5-515" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb5-516"><a href="#cb5-516" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> descriptors <span class="op">=</span> group_manager<span class="op">-&gt;</span>getAllGroupDescriptors<span class="op">();</span></span>
+<span id="cb5-517"><a href="#cb5-517" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> base_gid<span class="op">:</span> <span class="op">{</span>group1_id<span class="op">,</span> group2_id<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-518"><a href="#cb5-518" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> desc <span class="op">=</span> group_manager<span class="op">-&gt;</span>getGroupDescriptor<span class="op">(</span>base_gid<span class="op">);</span></span>
+<span id="cb5-519"><a href="#cb5-519" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>desc<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-520"><a href="#cb5-520" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string expected <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span><span class="st">"Putative:"</span><span class="op">)</span> <span class="op">+</span> desc<span class="op">-&gt;</span>name<span class="op">;</span></span>
+<span id="cb5-521"><a href="#cb5-521" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> d<span class="op">:</span> descriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-522"><a href="#cb5-522" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>d<span class="op">.</span>name <span class="op">==</span> expected<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-523"><a href="#cb5-523" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> ents <span class="op">=</span> group_manager<span class="op">-&gt;</span>getEntitiesInGroup<span class="op">(</span>d<span class="op">.</span>id<span class="op">);</span></span>
+<span id="cb5-524"><a href="#cb5-524" aria-hidden="true" tabindex="-1"></a>                        grouped<span class="op">.</span>insert<span class="op">(</span>ents<span class="op">.</span>begin<span class="op">(),</span> ents<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-525"><a href="#cb5-525" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-526"><a href="#cb5-526" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-527"><a href="#cb5-527" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-528"><a href="#cb5-528" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-529"><a href="#cb5-529" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-530"><a href="#cb5-530" aria-hidden="true" tabindex="-1"></a>        <span class="co">// At minimum, anchors should be present; often there will be more assignments</span></span>
+<span id="cb5-531"><a href="#cb5-531" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>grouped<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> ground_truth_frames<span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb5-532"><a href="#cb5-532" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-533"><a href="#cb5-533" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-534"><a href="#cb5-534" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-535"><a href="#cb5-535" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>LineKalmanGroupingTestFixture<span class="op">,</span> <span class="st">"LineKalmanGrouping - Edge Cases"</span><span class="op">,</span> <span class="st">"[LineKalmanGrouping]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-536"><a href="#cb5-536" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-537"><a href="#cb5-537" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty line data"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-538"><a href="#cb5-538" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> empty_line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;();</span></span>
+<span id="cb5-539"><a href="#cb5-539" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-540"><a href="#cb5-540" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-541"><a href="#cb5-541" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>empty_line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-542"><a href="#cb5-542" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> empty_line_data<span class="op">);</span></span>
+<span id="cb5-543"><a href="#cb5-543" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-544"><a href="#cb5-544" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-545"><a href="#cb5-545" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"No existing groups"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-546"><a href="#cb5-546" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> empty_group_manager <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>EntityGroupManager<span class="op">&gt;();</span></span>
+<span id="cb5-547"><a href="#cb5-547" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>empty_group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-548"><a href="#cb5-548" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-549"><a href="#cb5-549" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-550"><a href="#cb5-550" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> line_data<span class="op">);</span></span>
+<span id="cb5-551"><a href="#cb5-551" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-552"><a href="#cb5-552" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No assignments should be made since there are no groups to track</span></span>
+<span id="cb5-553"><a href="#cb5-553" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_entities <span class="op">=</span> get_all_entity_ids<span class="op">(*</span>line_data<span class="op">);</span></span>
+<span id="cb5-554"><a href="#cb5-554" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> entity_id<span class="op">:</span> all_entities<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-555"><a href="#cb5-555" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> groups <span class="op">=</span> empty_group_manager<span class="op">-&gt;</span>getGroupsContainingEntity<span class="op">(</span>entity_id<span class="op">);</span></span>
+<span id="cb5-556"><a href="#cb5-556" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>groups<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb5-557"><a href="#cb5-557" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-558"><a href="#cb5-558" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-559"><a href="#cb5-559" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-560"><a href="#cb5-560" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid parameters"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-561"><a href="#cb5-561" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with null group manager</span></span>
+<span id="cb5-562"><a href="#cb5-562" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result1 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>line_data<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-563"><a href="#cb5-563" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result1 <span class="op">==</span> line_data<span class="op">);</span></span>
+<span id="cb5-564"><a href="#cb5-564" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-565"><a href="#cb5-565" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with null line data</span></span>
+<span id="cb5-566"><a href="#cb5-566" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">(</span>group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-567"><a href="#cb5-567" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result2 <span class="op">=</span> lineKalmanGrouping<span class="op">(</span><span class="kw">nullptr</span><span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-568"><a href="#cb5-568" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result2 <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-569"><a href="#cb5-569" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-570"><a href="#cb5-570" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-571"><a href="#cb5-571" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-572"><a href="#cb5-572" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"LineKalmanGrouping - Transform Operation Interface"</span><span class="op">,</span> <span class="st">"[LineKalmanGrouping]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-573"><a href="#cb5-573" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-574"><a href="#cb5-574" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Transform operation basic functionality"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-575"><a href="#cb5-575" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingOperation operation<span class="op">;</span></span>
+<span id="cb5-576"><a href="#cb5-576" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-577"><a href="#cb5-577" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test getName</span></span>
+<span id="cb5-578"><a href="#cb5-578" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>operation<span class="op">.</span>getName<span class="op">()</span> <span class="op">==</span> <span class="st">"Group Lines using Kalman Filtering"</span><span class="op">);</span></span>
+<span id="cb5-579"><a href="#cb5-579" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-580"><a href="#cb5-580" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test getTargetInputTypeIndex</span></span>
+<span id="cb5-581"><a href="#cb5-581" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="dt">target_type</span> <span class="op">=</span> operation<span class="op">.</span>getTargetInputTypeIndex<span class="op">();</span></span>
+<span id="cb5-582"><a href="#cb5-582" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span><span class="dt">target_type</span> <span class="op">==</span> <span class="bu">std::</span>type_index<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;)));</span></span>
+<span id="cb5-583"><a href="#cb5-583" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-584"><a href="#cb5-584" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test getDefaultParameters (should return actual parameters with null group manager)</span></span>
+<span id="cb5-585"><a href="#cb5-585" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> default_params <span class="op">=</span> operation<span class="op">.</span>getDefaultParameters<span class="op">();</span></span>
+<span id="cb5-586"><a href="#cb5-586" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>default_params <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-587"><a href="#cb5-587" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-588"><a href="#cb5-588" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cast to the specific parameter type to verify it's the right type</span></span>
+<span id="cb5-589"><a href="#cb5-589" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> kalman_params <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineKalmanGroupingParameters<span class="op">*&gt;(</span>default_params<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-590"><a href="#cb5-590" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>kalman_params <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-591"><a href="#cb5-591" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>kalman_params<span class="op">-&gt;</span>hasValidGroupManager<span class="op">());</span> <span class="co">// Should have null group manager initially</span></span>
+<span id="cb5-592"><a href="#cb5-592" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-593"><a href="#cb5-593" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test that we can set the group manager</span></span>
+<span id="cb5-594"><a href="#cb5-594" aria-hidden="true" tabindex="-1"></a>        kalman_params<span class="op">-&gt;</span>setGroupManager<span class="op">(</span><span class="kw">nullptr</span><span class="op">);</span> <span class="co">// Test with null first</span></span>
+<span id="cb5-595"><a href="#cb5-595" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>kalman_params<span class="op">-&gt;</span>hasValidGroupManager<span class="op">());</span></span>
+<span id="cb5-596"><a href="#cb5-596" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-597"><a href="#cb5-597" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test with actual group manager (using a mock one)</span></span>
+<span id="cb5-598"><a href="#cb5-598" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mock_group_manager <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>EntityGroupManager<span class="op">&gt;();</span></span>
+<span id="cb5-599"><a href="#cb5-599" aria-hidden="true" tabindex="-1"></a>        kalman_params<span class="op">-&gt;</span>setGroupManager<span class="op">(</span>mock_group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-600"><a href="#cb5-600" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>kalman_params<span class="op">-&gt;</span>hasValidGroupManager<span class="op">());</span></span>
+<span id="cb5-601"><a href="#cb5-601" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>kalman_params<span class="op">-&gt;</span>getGroupManager<span class="op">()</span> <span class="op">==</span> mock_group_manager<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb5-602"><a href="#cb5-602" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-603"><a href="#cb5-603" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-604"><a href="#cb5-604" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Test execution with null group manager"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-605"><a href="#cb5-605" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create a simple test scenario</span></span>
+<span id="cb5-606"><a href="#cb5-606" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> test_line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;();</span></span>
+<span id="cb5-607"><a href="#cb5-607" aria-hidden="true" tabindex="-1"></a>        Line2D test_line<span class="op">;</span></span>
+<span id="cb5-608"><a href="#cb5-608" aria-hidden="true" tabindex="-1"></a>        test_line<span class="op">.</span>push_back<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb5-609"><a href="#cb5-609" aria-hidden="true" tabindex="-1"></a>        test_line<span class="op">.</span>push_back<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb5-610"><a href="#cb5-610" aria-hidden="true" tabindex="-1"></a>        test_line_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> test_line<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb5-611"><a href="#cb5-611" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-612"><a href="#cb5-612" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create parameters without group manager</span></span>
+<span id="cb5-613"><a href="#cb5-613" aria-hidden="true" tabindex="-1"></a>        LineKalmanGroupingParameters params<span class="op">;</span> <span class="co">// No group manager set (defaults to nullptr)</span></span>
+<span id="cb5-614"><a href="#cb5-614" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>params<span class="op">.</span>hasValidGroupManager<span class="op">());</span></span>
+<span id="cb5-615"><a href="#cb5-615" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-616"><a href="#cb5-616" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Execution should fail gracefully</span></span>
+<span id="cb5-617"><a href="#cb5-617" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> lineKalmanGrouping<span class="op">(</span>test_line_data<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb5-618"><a href="#cb5-618" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">==</span> test_line_data<span class="op">);</span> <span class="co">// Should return original data unchanged</span></span>
+<span id="cb5-619"><a href="#cb5-619" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-620"><a href="#cb5-620" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:24 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>SeriesOptionsRegistry – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#seriesoptionsregistry" id="toc-seriesoptionsregistry" class="nav-link active" data-scroll-target="#seriesoptionsregistry">SeriesOptionsRegistry</a>
+  <ul class="collapse">
+  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
+  <ul class="collapse">
+  <li><a href="#signal-optionschanged" id="toc-signal-optionschanged" class="nav-link" data-scroll-target="#signal-optionschanged">signal optionsChanged</a></li>
+  <li><a href="#signal-optionsremoved" id="toc-signal-optionsremoved" class="nav-link" data-scroll-target="#signal-optionsremoved">signal optionsRemoved</a></li>
+  <li><a href="#signal-visibilitychanged" id="toc-signal-visibilitychanged" class="nav-link" data-scroll-target="#signal-visibilitychanged">signal visibilityChanged</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-seriesoptionsregistry" id="toc-function-seriesoptionsregistry" class="nav-link" data-scroll-target="#function-seriesoptionsregistry">function SeriesOptionsRegistry</a></li>
+  <li><a href="#function-seriesoptionsregistry-1" id="toc-function-seriesoptionsregistry-1" class="nav-link" data-scroll-target="#function-seriesoptionsregistry-1">function ~SeriesOptionsRegistry</a></li>
+  <li><a href="#function-set" id="toc-function-set" class="nav-link" data-scroll-target="#function-set">function set</a></li>
+  <li><a href="#function-get" id="toc-function-get" class="nav-link" data-scroll-target="#function-get">function get</a></li>
+  <li><a href="#function-getmutable" id="toc-function-getmutable" class="nav-link" data-scroll-target="#function-getmutable">function getMutable</a></li>
+  <li><a href="#function-remove" id="toc-function-remove" class="nav-link" data-scroll-target="#function-remove">function remove</a></li>
+  <li><a href="#function-has" id="toc-function-has" class="nav-link" data-scroll-target="#function-has">function has</a></li>
+  <li><a href="#function-keys" id="toc-function-keys" class="nav-link" data-scroll-target="#function-keys">function keys</a></li>
+  <li><a href="#function-visiblekeys" id="toc-function-visiblekeys" class="nav-link" data-scroll-target="#function-visiblekeys">function visibleKeys</a></li>
+  <li><a href="#function-count" id="toc-function-count" class="nav-link" data-scroll-target="#function-count">function count</a></li>
+  <li><a href="#function-setvisible" id="toc-function-setvisible" class="nav-link" data-scroll-target="#function-setvisible">function setVisible</a></li>
+  <li><a href="#function-isvisible" id="toc-function-isvisible" class="nav-link" data-scroll-target="#function-isvisible">function isVisible</a></li>
+  <li><a href="#function-notifychanged" id="toc-function-notifychanged" class="nav-link" data-scroll-target="#function-notifychanged">function notifyChanged</a></li>
+  <li><a href="#function-set-1" id="toc-function-set-1" class="nav-link" data-scroll-target="#function-set-1">function set</a></li>
+  <li><a href="#function-set-2" id="toc-function-set-2" class="nav-link" data-scroll-target="#function-set-2">function set</a></li>
+  <li><a href="#function-set-3" id="toc-function-set-3" class="nav-link" data-scroll-target="#function-set-3">function set</a></li>
+  <li><a href="#function-get-1" id="toc-function-get-1" class="nav-link" data-scroll-target="#function-get-1">function get</a></li>
+  <li><a href="#function-get-2" id="toc-function-get-2" class="nav-link" data-scroll-target="#function-get-2">function get</a></li>
+  <li><a href="#function-get-3" id="toc-function-get-3" class="nav-link" data-scroll-target="#function-get-3">function get</a></li>
+  <li><a href="#function-getmutable-1" id="toc-function-getmutable-1" class="nav-link" data-scroll-target="#function-getmutable-1">function getMutable</a></li>
+  <li><a href="#function-getmutable-2" id="toc-function-getmutable-2" class="nav-link" data-scroll-target="#function-getmutable-2">function getMutable</a></li>
+  <li><a href="#function-getmutable-3" id="toc-function-getmutable-3" class="nav-link" data-scroll-target="#function-getmutable-3">function getMutable</a></li>
+  <li><a href="#function-remove-1" id="toc-function-remove-1" class="nav-link" data-scroll-target="#function-remove-1">function remove</a></li>
+  <li><a href="#function-remove-2" id="toc-function-remove-2" class="nav-link" data-scroll-target="#function-remove-2">function remove</a></li>
+  <li><a href="#function-remove-3" id="toc-function-remove-3" class="nav-link" data-scroll-target="#function-remove-3">function remove</a></li>
+  <li><a href="#function-has-1" id="toc-function-has-1" class="nav-link" data-scroll-target="#function-has-1">function has</a></li>
+  <li><a href="#function-has-2" id="toc-function-has-2" class="nav-link" data-scroll-target="#function-has-2">function has</a></li>
+  <li><a href="#function-has-3" id="toc-function-has-3" class="nav-link" data-scroll-target="#function-has-3">function has</a></li>
+  <li><a href="#function-keys-1" id="toc-function-keys-1" class="nav-link" data-scroll-target="#function-keys-1">function keys</a></li>
+  <li><a href="#function-keys-2" id="toc-function-keys-2" class="nav-link" data-scroll-target="#function-keys-2">function keys</a></li>
+  <li><a href="#function-keys-3" id="toc-function-keys-3" class="nav-link" data-scroll-target="#function-keys-3">function keys</a></li>
+  <li><a href="#function-visiblekeys-1" id="toc-function-visiblekeys-1" class="nav-link" data-scroll-target="#function-visiblekeys-1">function visibleKeys</a></li>
+  <li><a href="#function-visiblekeys-2" id="toc-function-visiblekeys-2" class="nav-link" data-scroll-target="#function-visiblekeys-2">function visibleKeys</a></li>
+  <li><a href="#function-visiblekeys-3" id="toc-function-visiblekeys-3" class="nav-link" data-scroll-target="#function-visiblekeys-3">function visibleKeys</a></li>
+  <li><a href="#function-count-1" id="toc-function-count-1" class="nav-link" data-scroll-target="#function-count-1">function count</a></li>
+  <li><a href="#function-count-2" id="toc-function-count-2" class="nav-link" data-scroll-target="#function-count-2">function count</a></li>
+  <li><a href="#function-count-3" id="toc-function-count-3" class="nav-link" data-scroll-target="#function-count-3">function count</a></li>
+  <li><a href="#function-notifychanged-1" id="toc-function-notifychanged-1" class="nav-link" data-scroll-target="#function-notifychanged-1">function notifyChanged</a></li>
+  <li><a href="#function-notifychanged-2" id="toc-function-notifychanged-2" class="nav-link" data-scroll-target="#function-notifychanged-2">function notifyChanged</a></li>
+  <li><a href="#function-notifychanged-3" id="toc-function-notifychanged-3" class="nav-link" data-scroll-target="#function-notifychanged-3">function notifyChanged</a></li>
+  <li><a href="#function-set-4" id="toc-function-set-4" class="nav-link" data-scroll-target="#function-set-4">function set</a></li>
+  <li><a href="#function-set-5" id="toc-function-set-5" class="nav-link" data-scroll-target="#function-set-5">function set</a></li>
+  <li><a href="#function-set-6" id="toc-function-set-6" class="nav-link" data-scroll-target="#function-set-6">function set</a></li>
+  <li><a href="#function-get-4" id="toc-function-get-4" class="nav-link" data-scroll-target="#function-get-4">function get</a></li>
+  <li><a href="#function-get-5" id="toc-function-get-5" class="nav-link" data-scroll-target="#function-get-5">function get</a></li>
+  <li><a href="#function-get-6" id="toc-function-get-6" class="nav-link" data-scroll-target="#function-get-6">function get</a></li>
+  <li><a href="#function-getmutable-4" id="toc-function-getmutable-4" class="nav-link" data-scroll-target="#function-getmutable-4">function getMutable</a></li>
+  <li><a href="#function-getmutable-5" id="toc-function-getmutable-5" class="nav-link" data-scroll-target="#function-getmutable-5">function getMutable</a></li>
+  <li><a href="#function-getmutable-6" id="toc-function-getmutable-6" class="nav-link" data-scroll-target="#function-getmutable-6">function getMutable</a></li>
+  <li><a href="#function-remove-4" id="toc-function-remove-4" class="nav-link" data-scroll-target="#function-remove-4">function remove</a></li>
+  <li><a href="#function-remove-5" id="toc-function-remove-5" class="nav-link" data-scroll-target="#function-remove-5">function remove</a></li>
+  <li><a href="#function-remove-6" id="toc-function-remove-6" class="nav-link" data-scroll-target="#function-remove-6">function remove</a></li>
+  <li><a href="#function-has-4" id="toc-function-has-4" class="nav-link" data-scroll-target="#function-has-4">function has</a></li>
+  <li><a href="#function-has-5" id="toc-function-has-5" class="nav-link" data-scroll-target="#function-has-5">function has</a></li>
+  <li><a href="#function-has-6" id="toc-function-has-6" class="nav-link" data-scroll-target="#function-has-6">function has</a></li>
+  <li><a href="#function-keys-4" id="toc-function-keys-4" class="nav-link" data-scroll-target="#function-keys-4">function keys</a></li>
+  <li><a href="#function-keys-5" id="toc-function-keys-5" class="nav-link" data-scroll-target="#function-keys-5">function keys</a></li>
+  <li><a href="#function-keys-6" id="toc-function-keys-6" class="nav-link" data-scroll-target="#function-keys-6">function keys</a></li>
+  <li><a href="#function-visiblekeys-4" id="toc-function-visiblekeys-4" class="nav-link" data-scroll-target="#function-visiblekeys-4">function visibleKeys</a></li>
+  <li><a href="#function-visiblekeys-5" id="toc-function-visiblekeys-5" class="nav-link" data-scroll-target="#function-visiblekeys-5">function visibleKeys</a></li>
+  <li><a href="#function-visiblekeys-6" id="toc-function-visiblekeys-6" class="nav-link" data-scroll-target="#function-visiblekeys-6">function visibleKeys</a></li>
+  <li><a href="#function-count-4" id="toc-function-count-4" class="nav-link" data-scroll-target="#function-count-4">function count</a></li>
+  <li><a href="#function-count-5" id="toc-function-count-5" class="nav-link" data-scroll-target="#function-count-5">function count</a></li>
+  <li><a href="#function-count-6" id="toc-function-count-6" class="nav-link" data-scroll-target="#function-count-6">function count</a></li>
+  <li><a href="#function-notifychanged-4" id="toc-function-notifychanged-4" class="nav-link" data-scroll-target="#function-notifychanged-4">function notifyChanged</a></li>
+  <li><a href="#function-notifychanged-5" id="toc-function-notifychanged-5" class="nav-link" data-scroll-target="#function-notifychanged-5">function notifyChanged</a></li>
+  <li><a href="#function-notifychanged-6" id="toc-function-notifychanged-6" class="nav-link" data-scroll-target="#function-notifychanged-6">function notifyChanged</a></li>
+  <li><a href="#function-typename" id="toc-function-typename" class="nav-link" data-scroll-target="#function-typename">function typeName</a></li>
+  <li><a href="#function-typename-1" id="toc-function-typename-1" class="nav-link" data-scroll-target="#function-typename-1">function typeName</a></li>
+  <li><a href="#function-typename-2" id="toc-function-typename-2" class="nav-link" data-scroll-target="#function-typename-2">function typeName</a></li>
+  <li><a href="#function-typename-3" id="toc-function-typename-3" class="nav-link" data-scroll-target="#function-typename-3">function typeName</a></li>
+  <li><a href="#function-typename-4" id="toc-function-typename-4" class="nav-link" data-scroll-target="#function-typename-4">function typeName</a></li>
+  <li><a href="#function-typename-5" id="toc-function-typename-5" class="nav-link" data-scroll-target="#function-typename-5">function typeName</a></li>
+  <li><a href="#function-typename-6" id="toc-function-typename-6" class="nav-link" data-scroll-target="#function-typename-6">function typeName</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">SeriesOptionsRegistry</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="seriesoptionsregistry" class="level1">
+<h1>SeriesOptionsRegistry</h1>
+<p>Generic registry for all series display option types. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;SeriesOptionsRegistry.hpp&gt;</code></p>
+<p>Inherits from QObject</p>
+<section id="public-signals" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#signal-optionschanged">optionsChanged</a></strong>(QString const &amp; key, QString const &amp; type_name)<br>Emitted when display options are set or modified.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#signal-optionsremoved">optionsRemoved</a></strong>(QString const &amp; key, QString const &amp; type_name)<br>Emitted when display options are removed.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#signal-visibilitychanged">visibilityChanged</a></strong>(QString const &amp; key, QString const &amp; type_name, bool visible)<br>Emitted when visibility changes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-seriesoptionsregistry">SeriesOptionsRegistry</a></strong>(<a href="../../api_generated/Classes/structDataViewerStateData.html">DataViewerStateData</a> * data, QObject * parent =nullptr)<br>Construct a <a href="../../api_generated/Classes/classSeriesOptionsRegistry.html">SeriesOptionsRegistry</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-~seriesoptionsregistry">~SeriesOptionsRegistry</a></strong>() override =default</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, T const &amp; options)<br>Set display options for a key.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>T const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const<br>Get display options for a key.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>T *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)<br>Get mutable display options for a key.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)<br>Remove display options for a key.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const<br>Check if options exist for a key.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const<br>Get all keys that have options of a given type.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const<br>Get keys where options have is_visible == true.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const<br>Get count of options for a given type.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-setvisible">setVisible</a></strong>(QString const &amp; key, QString const &amp; type_name, bool visible)<br>Set visibility for options by key and type name.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-isvisible">isVisible</a></strong>(QString const &amp; key, QString const &amp; type_name) const<br>Get visibility for options by key and type name.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)<br>Manually emit optionsChanged signal.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set</a></strong>(QString const &amp; key, <a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> const &amp; options)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-get">get</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-remove">remove</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-has">has</a></strong>(QString const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-keys">keys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-visiblekeys">visibleKeys</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-count">count</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged</a></strong>(QString const &amp; key)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()<br>Get the type name string for a display options type.</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-typename">typeName</a></strong>()</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SeriesOptionsRegistry<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Generic registry for all series display option types.</p>
+<p>Provides a unified API for managing <a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a>, <a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html">DigitalEventSeriesOptionsData</a>, and <a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html">DigitalIntervalSeriesOptionsData</a>.</p>
+</section>
+<section id="public-signals-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
+<section id="signal-optionschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-optionschanged">signal optionsChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> optionsChanged<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> type_name</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when display options are set or modified.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+<li><strong>type_name</strong> The type name (“analog”, “event”, “interval”)</li>
+</ul>
+</section>
+<section id="signal-optionsremoved" class="level3">
+<h3 class="anchored" data-anchor-id="signal-optionsremoved">signal optionsRemoved</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> optionsRemoved<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> type_name</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when display options are removed.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+<li><strong>type_name</strong> The type name</li>
+</ul>
+</section>
+<section id="signal-visibilitychanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-visibilitychanged">signal visibilityChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> visibilityChanged<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> type_name<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> visible</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when visibility changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+<li><strong>type_name</strong> The type name</li>
+<li><strong>visible</strong> New visibility state</li>
+</ul>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-seriesoptionsregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-seriesoptionsregistry">function SeriesOptionsRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> SeriesOptionsRegistry<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    DataViewerStateData <span class="op">*</span> data<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a <a href="../../api_generated/Classes/classSeriesOptionsRegistry.html">SeriesOptionsRegistry</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> Non-owning pointer to the underlying state data</li>
+<li><strong>parent</strong> Parent QObject (typically <a href="../../api_generated/Classes/classDataViewerState.html">DataViewerState</a>)</li>
+</ul>
+</section>
+<section id="function-seriesoptionsregistry-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-seriesoptionsregistry-1">function ~SeriesOptionsRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>SeriesOptionsRegistry<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set" class="level3">
+<h3 class="anchored" data-anchor-id="function-set">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set display options for a key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key (e.g., “channel_1”)</li>
+<li><strong>options</strong> The display options to store</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type (<a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html">AnalogSeriesOptionsData</a>, etc.)</li>
+</ul>
+<p>The type is inferred from the options argument. Emits optionsChanged signal.</p>
+</section>
+<section id="function-get" class="level3">
+<h3 class="anchored" data-anchor-id="function-get">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>T <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get display options for a key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type to retrieve</li>
+</ul>
+<p><strong>Return</strong>: Pointer to options, or nullptr if not found</p>
+</section>
+<section id="function-getmutable" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>T <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get mutable display options for a key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type to retrieve</li>
+</ul>
+<p><strong>Return</strong>: Pointer to options, or nullptr if not found</p>
+<p>Use sparingly - prefer <a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-set">set()</a> to ensure signals are emitted. Call <a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-notifychanged">notifyChanged()</a> after modifying the returned options.</p>
+</section>
+<section id="function-remove" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove display options for a key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type to remove</li>
+</ul>
+<p><strong>Return</strong>: true if options were found and removed</p>
+<p>Emits optionsRemoved signal if options existed.</p>
+</section>
+<section id="function-has" class="level3">
+<h3 class="anchored" data-anchor-id="function-has">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if options exist for a key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type to check</li>
+</ul>
+<p><strong>Return</strong>: true if options exist</p>
+</section>
+<section id="function-keys" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all keys that have options of a given type.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type</li>
+</ul>
+<p><strong>Return</strong>: List of keys</p>
+</section>
+<section id="function-visiblekeys" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get keys where options have is_visible == true.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type</li>
+</ul>
+<p><strong>Return</strong>: List of visible keys</p>
+</section>
+<section id="function-count" class="level3">
+<h3 class="anchored" data-anchor-id="function-count">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get count of options for a given type.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type</li>
+</ul>
+<p><strong>Return</strong>: Number of stored options</p>
+</section>
+<section id="function-setvisible" class="level3">
+<h3 class="anchored" data-anchor-id="function-setvisible">function setVisible</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> setVisible<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> type_name<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> visible</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set visibility for options by key and type name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+<li><strong>type_name</strong> Type name (“analog”, “event”, “interval”)</li>
+<li><strong>visible</strong> New visibility state</li>
+</ul>
+<p><strong>Return</strong>: true if options were found and updated</p>
+</section>
+<section id="function-isvisible" class="level3">
+<h3 class="anchored" data-anchor-id="function-isvisible">function isVisible</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isVisible<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> type_name</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get visibility for options by key and type name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+<li><strong>type_name</strong> Type name</li>
+</ul>
+<p><strong>Return</strong>: true if options exist and are visible</p>
+</section>
+<section id="function-notifychanged" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Manually emit optionsChanged signal.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type that was modified</li>
+</ul>
+<p>Call this after using <a href="../../api_generated/Classes/classSeriesOptionsRegistry.html#function-getmutable">getMutable()</a> to modify options in-place.</p>
+</section>
+<section id="function-set-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-1">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    AnalogSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-2">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-3">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-1">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>AnalogSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-2">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>DigitalEventSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-3">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>DigitalIntervalSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-1">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>AnalogSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-2">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>DigitalEventSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-3">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>DigitalIntervalSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-1">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-2">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-3">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-1">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-2">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-3">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-1">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-2">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-3">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-1">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-2">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-3">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-1">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-2">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-3">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-1">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-2">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-3">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-4">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    AnalogSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-5">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-set-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-set-6">function set</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeriesOptionsData <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-4">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>AnalogSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-5">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>DigitalEventSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-get-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-get-6">function get</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>DigitalIntervalSeriesOptionsData <span class="at">const</span> <span class="op">*</span> get<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-4">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>AnalogSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-5">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>DigitalEventSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getmutable-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutable-6">function getMutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>DigitalIntervalSeriesOptionsData <span class="op">*</span> getMutable<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-4">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-5">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-remove-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-remove-6">function remove</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> remove<span class="op">(</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-4">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-5">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-has-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-has-6">function has</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-4">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-5">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-keys-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-keys-6">function keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-4">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-5">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-visiblekeys-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-visiblekeys-6">function visibleKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> visibleKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-4">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-5">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-count-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-count-6">function count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> count<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-4">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-5">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifychanged-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifychanged-6">function notifyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyChanged<span class="op">(</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the type name string for a display options type.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Display options type</li>
+</ul>
+<p><strong>Return</strong>: Type name (“analog”, “event”, “interval”)</p>
+</section>
+<section id="function-typename-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-1">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-2">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-3">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-4">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-5">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-typename-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-typename-6">function typeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> typeName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:21 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

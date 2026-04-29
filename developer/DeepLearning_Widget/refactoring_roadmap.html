@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>refactoring_roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#deeplearning_widget-refactoring-roadmap" id="toc-deeplearning_widget-refactoring-roadmap" class="nav-link active" data-scroll-target="#deeplearning_widget-refactoring-roadmap">DeepLearning_Widget Refactoring Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#current-state-after-phase-3.1" id="toc-current-state-after-phase-3.1" class="nav-link" data-scroll-target="#current-state-after-phase-3.1">Current State (after Phase 3.1)</a>
+  <ul class="collapse">
+  <li><a href="#current-directory-structure" id="toc-current-directory-structure" class="nav-link" data-scroll-target="#current-directory-structure">Current directory structure</a></li>
+  </ul></li>
+  <li><a href="#design-goals" id="toc-design-goals" class="nav-link" data-scroll-target="#design-goals">Design Goals</a></li>
+  <li><a href="#phase-0-preparatory-infrastructure-completed" id="toc-phase-0-preparatory-infrastructure-completed" class="nav-link" data-scroll-target="#phase-0-preparatory-infrastructure-completed">Phase 0 — Preparatory Infrastructure ✅ COMPLETED</a>
+  <ul class="collapse">
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul></li>
+  <li><a href="#phase-1-extract-sub-widgets-completed" id="toc-phase-1-extract-sub-widgets-completed" class="nav-link" data-scroll-target="#phase-1-extract-sub-widgets-completed">Phase 1 — Extract Sub-Widgets ✅ COMPLETED</a></li>
+  <li><a href="#phase-2-extract-inference-controllers" id="toc-phase-2-extract-inference-controllers" class="nav-link" data-scroll-target="#phase-2-extract-inference-controllers">Phase 2 — Extract Inference Controllers</a>
+  <ul class="collapse">
+  <li><a href="#inferencecontroller-completed" id="toc-inferencecontroller-completed" class="nav-link" data-scroll-target="#inferencecontroller-completed">2.1 — <code>InferenceController</code> ✅ COMPLETED</a></li>
+  <li><a href="#resultprocessor-completed" id="toc-resultprocessor-completed" class="nav-link" data-scroll-target="#resultprocessor-completed">2.2 — <code>ResultProcessor</code> ✅ COMPLETED</a></li>
+  <li><a href="#open-question-for-phase-2" id="toc-open-question-for-phase-2" class="nav-link" data-scroll-target="#open-question-for-phase-2">Open question for Phase 2</a></li>
+  </ul></li>
+  <li><a href="#phase-3-extract-state-synchronization" id="toc-phase-3-extract-state-synchronization" class="nav-link" data-scroll-target="#phase-3-extract-state-synchronization">Phase 3 — Extract State Synchronization</a>
+  <ul class="collapse">
+  <li><a href="#bindingconversion-completed" id="toc-bindingconversion-completed" class="nav-link" data-scroll-target="#bindingconversion-completed">3.1 — <code>BindingConversion</code> ✅ COMPLETED</a></li>
+  <li><a href="#constraintenforcer-pure-functions-completed" id="toc-constraintenforcer-pure-functions-completed" class="nav-link" data-scroll-target="#constraintenforcer-pure-functions-completed">3.2 — <code>ConstraintEnforcer</code> (pure functions) ✅ COMPLETED</a></li>
+  </ul></li>
+  <li><a href="#phase-4-test-coverage" id="toc-phase-4-test-coverage" class="nav-link" data-scroll-target="#phase-4-test-coverage">Phase 4 — Test Coverage</a></li>
+  <li><a href="#phase-5-polish-and-cleanup" id="toc-phase-5-polish-and-cleanup" class="nav-link" data-scroll-target="#phase-5-polish-and-cleanup">Phase 5 — Polish and Cleanup</a></li>
+  <li><a href="#phase-6-bugs-validation-fixes" id="toc-phase-6-bugs-validation-fixes" class="nav-link" data-scroll-target="#phase-6-bugs-validation-fixes">Phase 6 — Bugs &amp; Validation Fixes</a>
+  <ul class="collapse">
+  <li><a href="#move-point_key-into-spatialpointmoduleparams-ui-parameter-scoping-completed" id="toc-move-point_key-into-spatialpointmoduleparams-ui-parameter-scoping-completed" class="nav-link" data-scroll-target="#move-point_key-into-spatialpointmoduleparams-ui-parameter-scoping-completed">6.1 — Move <code>point_key</code> into <code>SpatialPointModuleParams</code> (UI parameter scoping) ✅ COMPLETED</a></li>
+  <li><a href="#gate-weight-loading-on-encoder-shape-being-set-completed" id="toc-gate-weight-loading-on-encoder-shape-being-set-completed" class="nav-link" data-scroll-target="#gate-weight-loading-on-encoder-shape-being-set-completed">6.2 — Gate weight loading on encoder shape being set ✅ COMPLETED</a></li>
+  <li><a href="#validate-loaded-weights-against-configured-shape-completed" id="toc-validate-loaded-weights-against-configured-shape-completed" class="nav-link" data-scroll-target="#validate-loaded-weights-against-configured-shape-completed">6.3 — Validate loaded weights against configured shape ✅ COMPLETED</a></li>
+  <li><a href="#bug-single-frame-inference-fails-with-globalavgpool-post-encoder-completed" id="toc-bug-single-frame-inference-fails-with-globalavgpool-post-encoder-completed" class="nav-link" data-scroll-target="#bug-single-frame-inference-fails-with-globalavgpool-post-encoder-completed">6.4 — BUG: Single-frame inference fails with GlobalAvgPool post-encoder ✅ COMPLETED</a></li>
+  <li><a href="#phase-6.5-tensordata-frame-indexed-upsert-for-accumulating-inference-results-completed" id="toc-phase-6.5-tensordata-frame-indexed-upsert-for-accumulating-inference-results-completed" class="nav-link" data-scroll-target="#phase-6.5-tensordata-frame-indexed-upsert-for-accumulating-inference-results-completed">Phase 6.5 — TensorData Frame-Indexed Upsert for Accumulating Inference Results ✅ COMPLETED</a></li>
+  </ul></li>
+  <li><a href="#phase-7-command-architecture-integration" id="toc-phase-7-command-architecture-integration" class="nav-link" data-scroll-target="#phase-7-command-architecture-integration">Phase 7 — Command Architecture Integration</a>
+  <ul class="collapse">
+  <li><a href="#design-considerations" id="toc-design-considerations" class="nav-link" data-scroll-target="#design-considerations">Design Considerations</a></li>
+  <li><a href="#runinference-command-batch-mode" id="toc-runinference-command-batch-mode" class="nav-link" data-scroll-target="#runinference-command-batch-mode">7.1 — <code>RunInference</code> Command (Batch Mode)</a></li>
+  <li><a href="#runrecurrentinference-command-recurrent-mode" id="toc-runrecurrentinference-command-recurrent-mode" class="nav-link" data-scroll-target="#runrecurrentinference-command-recurrent-mode">7.2 — <code>RunRecurrentInference</code> Command (Recurrent Mode)</a></li>
+  <li><a href="#pipeline-integration-examples" id="toc-pipeline-integration-examples" class="nav-link" data-scroll-target="#pipeline-integration-examples">7.3 — Pipeline Integration Examples</a></li>
+  <li><a href="#future-async-command-execution" id="toc-future-async-command-execution" class="nav-link" data-scroll-target="#future-async-command-execution">7.4 — Future: Async Command Execution</a></li>
+  </ul></li>
+  <li><a href="#execution-order-remaining" id="toc-execution-order-remaining" class="nav-link" data-scroll-target="#execution-order-remaining">Execution Order (Remaining)</a></li>
+  <li><a href="#expected-outcomes" id="toc-expected-outcomes" class="nav-link" data-scroll-target="#expected-outcomes">Expected Outcomes</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="deeplearning_widget-refactoring-roadmap" class="level1">
+<h1>DeepLearning_Widget Refactoring Roadmap</h1>
+<section id="current-state-after-phase-3.1" class="level2">
+<h2 class="anchored" data-anchor-id="current-state-after-phase-3.1">Current State (after Phase 3.1)</h2>
+<p><code>DeepLearningPropertiesWidget</code> has been reduced from <strong>2716 lines to ~1603 lines</strong> (Phase 1) and further by Phase 2.1. All seven slot-type sub-widgets are in <code>UI/Helpers/</code>. Inference orchestration is now in <code>InferenceController</code>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Responsibility</th>
+<th>Methods still in widget</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>UI construction (fixed)</td>
+<td><code>_buildUi</code>, <code>_rebuildSlotPanels</code>, <code>_clearDynamicContent</code></td>
+</tr>
+<tr class="even">
+<td>Boolean mask panel</td>
+<td><code>_buildBooleanMaskGroup</code>, <code>_populateDataSourceCombo</code></td>
+</tr>
+<tr class="odd">
+<td>State sync (UI → State)</td>
+<td><code>_syncBindingsFromUi</code> (now uses <code>dl::conversion</code>)</td>
+</tr>
+<tr class="even">
+<td>Model selection + weights</td>
+<td><code>_populateModelCombo</code>, <code>_onModelComboChanged</code>, <code>_loadModelIfReady</code>, <code>_updateWeightsStatus</code></td>
+</tr>
+<tr class="odd">
+<td>Run button handlers</td>
+<td><code>_onRunSingleFrame</code>, <code>_onRunBatch</code>, <code>_onRunRecurrentSequence</code>, <code>_onPredictCurrentFrame</code> — thin wrappers that show dialogs, call <code>_syncBindingsFromUi</code>, then delegate to <code>InferenceController</code></td>
+</tr>
+<tr class="even">
+<td>Result merging</td>
+<td>In <code>ResultProcessor</code> (merge timer + <code>_pending_feature_rows</code>)</td>
+</tr>
+<tr class="odd">
+<td>Constraints</td>
+<td><code>_updateBatchSizeConstraint</code>, <code>_enforcePostEncoderDecoderConsistency</code></td>
+</tr>
+<tr class="even">
+<td>Static capture coordination</td>
+<td><code>_onCaptureStaticInput</code>, <code>_onCaptureSequenceEntry</code></td>
+</tr>
+</tbody>
+</table>
+<section id="current-directory-structure" class="level3">
+<h3 class="anchored" data-anchor-id="current-directory-structure">Current directory structure</h3>
+<pre><code>DeepLearning_Widget/
+├── CMakeLists.txt
+├── DeepLearningWidgetRegistration.hpp/cpp
+├── Core/
+│   ├── BatchInferenceResult.hpp
+│   ├── DeepLearningBindingData.hpp        ← flat fields for state serialization
+│   ├── BindingConversion.hpp/cpp          ← pure params&lt;-&gt;binding mapping
+│   ├── ConstraintEnforcer.hpp/cpp         ← pure batch-size and decoder-compat constraints
+│   ├── DeepLearningParamSchemas.hpp/cpp   ← widget-level variant + slot param structs
+│   ├── DeepLearningState.hpp/cpp
+│   ├── SlotAssembler.hpp/cpp              ← PIMPL firewall; all libtorch usage here
+│   ├── ResultProcessor.hpp/cpp
+│   └── WriteReservation.hpp
+└── UI/
+    ├── DeepLearningPropertiesWidget.hpp/cpp  ← coordinator; delegates inference to InferenceController
+    ├── DeepLearningViewWidget.hpp/cpp
+    ├── InferenceController.hpp/cpp        ← Phase 2.1: owns BatchInferenceWorker and delegates result processing
+    └── Helpers/
+        ├── DataSourceComboHelper.hpp/cpp   ← keysForTypes(), typesFromHint() utilities
+        ├── DynamicInputSlotWidget.hpp/cpp
+        ├── EncoderShapeWidget.hpp/cpp
+        ├── OutputSlotWidget.hpp/cpp
+        ├── PostEncoderWidget.hpp/cpp
+        ├── RecurrentBindingWidget.hpp/cpp
+        ├── SequenceSlotWidget.hpp/cpp
+        └── StaticInputSlotWidget.hpp/cpp</code></pre>
+<hr>
+</section>
+</section>
+<section id="design-goals" class="level2">
+<h2 class="anchored" data-anchor-id="design-goals">Design Goals</h2>
+<ol type="1">
+<li><strong>Separation of concerns</strong>: Each distinct responsibility lives in its own class/file.</li>
+<li><strong>Leverage ParameterSchema + AutoParamWidget</strong>: Replace hand-built form construction and manual <code>findChild</code>-based marshaling with schema-driven auto-generated forms where possible.</li>
+<li><strong>Testability</strong>: Core logic (binding assembly, constraint enforcement, result processing) should be unit-testable without Qt widgets.</li>
+<li><strong>Incremental delivery</strong>: Each phase is independently shippable and testable. No big-bang rewrite.</li>
+<li><strong>Preserve PIMPL firewall</strong>: All libtorch usage continues to be confined to <code>SlotAssembler.cpp</code>.</li>
+</ol>
+<hr>
+</section>
+<section id="phase-0-preparatory-infrastructure-completed" class="level2">
+<h2 class="anchored" data-anchor-id="phase-0-preparatory-infrastructure-completed">Phase 0 — Preparatory Infrastructure ✅ COMPLETED</h2>
+<section id="summary" class="level3">
+<h3 class="anchored" data-anchor-id="summary">Summary</h3>
+<p>All four sub-phases completed:</p>
+<ul>
+<li><p><strong>0.0</strong> — The DeepLearning library was refactored to use per-component param structs (<code>MaskDecoderParams</code>, <code>Point2DEncoderParams</code>, <code>SpatialPointModuleParams</code>, etc.) with runtime context separated into <code>DecoderContext</code> / <code>EncoderContext</code>. Three companion <code>*ParamSchemas.hpp</code> headers provide <code>ParameterUIHints</code> specializations. <code>DeepLearningBindingData</code> retains flat fields for backward-compatible serialization; <code>SlotAssembler</code> maps internally.</p></li>
+<li><p><strong>0.1</strong> — Widget-level variant types defined in <code>DeepLearningParamSchemas.hpp</code>: <code>EncoderVariant</code>, <code>DecoderVariant</code>, <code>PostEncoderVariant</code>, <code>RecurrentInitVariant</code>, <code>SequenceEntryVariant</code>, and composite slot param structs (<code>DynamicInputSlotParams</code>, <code>StaticInputSlotParams</code>, <code>OutputSlotParams</code>, <code>PostEncoderSlotParams</code>, <code>EncoderShapeParams</code>).</p></li>
+<li><p><strong>0.2</strong> — <code>AutoParamWidget</code> extended with <code>updateAllowedValues()</code>, <code>updateVariantAlternatives()</code>, and <code>dynamic_combo</code> / <code>include_none_sentinel</code> descriptor flags. <code>SlotBindingWidget</code> superseded (deprecated). 15 test cases added in <code>tests/WhiskerToolbox/AutoParamWidget/</code>.</p></li>
+<li><p><strong>0.3</strong> — <code>DataSourceComboHelper</code> created with <code>keysForTypes()</code> and <code>typesFromHint()</code> utilities for feeding <code>updateAllowedValues()</code>. Combo-tracking methods less central after the unified-struct approach.</p></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-1-extract-sub-widgets-completed" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-extract-sub-widgets-completed">Phase 1 — Extract Sub-Widgets ✅ COMPLETED</h2>
+<p>All seven slot-type sub-widgets extracted into <code>UI/Helpers/</code>. Each owns its AutoParamWidget form, emits a <code>bindingChanged()</code> signal, and has a dedicated test binary.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sub-widget</th>
+<th>Key API</th>
+<th>Test file</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DynamicInputSlotWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>toSlotBindingData()</code>, <code>refreshDataSources()</code></td>
+<td><code>DynamicInputSlotWidget.test.cpp</code></td>
+</tr>
+<tr class="even">
+<td><code>StaticInputSlotWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>toStaticInputData()</code>, <code>setCapturedStatus()</code>, <code>setModelReady()</code></td>
+<td><code>StaticInputSlotWidget.test.cpp</code></td>
+</tr>
+<tr class="odd">
+<td><code>SequenceSlotWidget</code></td>
+<td><code>getStaticInputs()</code>, <code>getRecurrentBindings()</code>, <code>setEntriesFromState()</code>, <code>refreshOutputSlots()</code></td>
+<td><code>SequenceSlotWidget.test.cpp</code></td>
+</tr>
+<tr class="even">
+<td><code>OutputSlotWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>toOutputBindingData()</code>, <code>updateDecoderAlternatives()</code></td>
+<td><code>OutputSlotWidget.test.cpp</code></td>
+</tr>
+<tr class="odd">
+<td><code>RecurrentBindingWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>toRecurrentBindingData()</code>, <code>refreshOutputSlots()</code></td>
+<td><code>RecurrentBindingWidget.test.cpp</code></td>
+</tr>
+<tr class="even">
+<td><code>PostEncoderWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>moduleTypeForState()</code>, <code>paramsFromState()</code></td>
+<td><code>PostEncoderWidget.test.cpp</code></td>
+</tr>
+<tr class="odd">
+<td><code>EncoderShapeWidget</code></td>
+<td><code>params()</code>, <code>setParams()</code>, <code>applyFromState()</code>, <code>applyEncoderShapeToAssembler()</code></td>
+<td><code>EncoderShapeWidget.test.cpp</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>_rebuildSlotPanels()</code> now instantiates sub-widgets instead of calling inline <code>_build*()</code> methods. <code>_syncBindingsFromUi()</code> reads typed structs from sub-widgets rather than <code>findChild&lt;&gt;</code> lookups, though it still exists as a coordinator method. <code>_buildBooleanMaskGroup()</code> and <code>_populateDataSourceCombo()</code> were <strong>not</strong> extracted (boolean masks are a minor slot type, handled inline).</p>
+<p><strong>UX constraint direction implemented:</strong> Encoder → Source (selecting encoder type filters DataManager keys to compatible types).</p>
+<hr>
+</section>
+<section id="phase-2-extract-inference-controllers" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-extract-inference-controllers">Phase 2 — Extract Inference Controllers</h2>
+<section id="inferencecontroller-completed" class="level3">
+<h3 class="anchored" data-anchor-id="inferencecontroller-completed">2.1 — <code>InferenceController</code> ✅ COMPLETED</h3>
+<p>All inference orchestration has been extracted into <code>InferenceController</code> (<code>UI/InferenceController.hpp/cpp</code>), which owns the worker thread lifecycle and delegates incremental/final result processing to <code>ResultProcessor</code>.</p>
+<p><strong>Extracted from <code>DeepLearningPropertiesWidget</code>:</strong> - <code>_onRunSingleFrame</code>, <code>_onRunBatch</code>, <code>_onRunRecurrentSequence</code>, <code>_onPredictCurrentFrame</code> logic - <code>_setBatchRunning</code>, <code>_onCancelBatch</code>, <code>_onBatchFinished</code> - <code>_batch_worker</code> (<code>QThread*</code>) and cancellation - Delegation wiring to <code>ResultProcessor</code> for progressive geometry writes and feature-vector accumulation</p>
+<p><strong>API (as implemented):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> InferenceController <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    InferenceController<span class="op">(</span>SlotAssembler<span class="op">*</span> assembler<span class="op">,</span>\</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> dm<span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DeepLearningState<span class="op">&gt;</span> state<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                        <span class="ex">QObject</span><span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isRunning<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="ex">slots</span><span class="op">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> runSingleFrame<span class="op">(</span><span class="dt">int</span> frame<span class="op">);</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> runBatch<span class="op">(</span><span class="dt">int</span> start<span class="op">,</span> <span class="dt">int</span> end<span class="op">,</span> <span class="dt">int</span> batch_size<span class="op">);</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> runRecurrentSequence<span class="op">(</span><span class="dt">int</span> start<span class="op">,</span> <span class="dt">int</span> frame_count<span class="op">);</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> cancel<span class="op">();</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> batchProgressChanged<span class="op">(</span><span class="dt">int</span> current<span class="op">,</span> <span class="dt">int</span> total<span class="op">);</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> recurrentProgressChanged<span class="op">(</span><span class="dt">int</span> current<span class="op">,</span> <span class="dt">int</span> total<span class="op">);</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> batchFinished<span class="op">(</span><span class="dt">bool</span> success<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> error_message<span class="op">);</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> runningChanged<span class="op">(</span><span class="dt">bool</span> running<span class="op">);</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The properties widget holds an <code>InferenceController*</code>, connects button clicks (after dialogs) to controller slots, and forwards progress signals to <code>DeepLearningViewWidget</code>. Pre-run sync: widget calls <code>_syncBindingsFromUi()</code> before delegating (Option 1).</p>
+</section>
+<section id="resultprocessor-completed" class="level3">
+<h3 class="anchored" data-anchor-id="resultprocessor-completed">2.2 — <code>ResultProcessor</code> ✅ COMPLETED</h3>
+<p>Extract result merging and feature-vector accumulation into a dedicated class.</p>
+<p><strong>Absorbs from <code>DeepLearningPropertiesWidget</code>:</strong> - <code>_pending_feature_rows</code> accumulation (<code>std::map&lt;std::string, std::vector&lt;std::pair&lt;int, std::vector&lt;float&gt;&gt;&gt;&gt;</code> for <code>std::vector&lt;float&gt;</code> feature outputs) - <code>_merge_timer</code> (<code>QTimer*</code>) lifecycle - Drains <code>WriteReservation</code> results, writing geometry immediately (Mask/Point/Line) and deferring TensorData feature-vector flush</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ResultProcessor <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ResultProcessor<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> dm<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DeepLearningState<span class="op">&gt;</span> state<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                    <span class="ex">QObject</span><span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> acceptResults<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>FrameResult<span class="op">&gt;</span> results<span class="op">);</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> flushFeatureVectors<span class="op">();</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> clear<span class="op">();</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setReservation<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>WriteReservation<span class="op">&gt;</span> reservation<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> startMergeTimer<span class="op">();</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> stopMergeTimer<span class="op">();</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> resultsWritten<span class="op">(</span><span class="dt">int</span> count<span class="op">);</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>InferenceController</code> owns a <code>std::unique_ptr&lt;ResultProcessor&gt;</code> and uses it to start/stop the merge timer; <code>ResultProcessor</code> remains Qt-free regarding libtorch usage and writes decoded outputs into DataManager.</p>
+</section>
+<section id="open-question-for-phase-2" class="level3">
+<h3 class="anchored" data-anchor-id="open-question-for-phase-2">Open question for Phase 2</h3>
+<p><code>_syncBindingsFromUi()</code> is currently called at the start of every inference run to push the current UI state into <code>DeepLearningState</code> before the assembler reads it. After Phase 2, <code>InferenceController</code> will call the assembler directly. Two options: 1. <strong>Keep the pre-run sync</strong>: Properties widget still calls <code>_syncBindingsFromUi()</code> before delegating to the controller. 2. <strong>Live state</strong>: Phase 3.1 extracts conversion logic and keeps state live via <code>bindingChanged</code> updates; removing the redundant pre-run call can be done later.</p>
+<p>Option 2 is cleaner but depends on Phase 3.1. Implementing Phase 2 with option 1 first is still safe because the pre-run sync is now a short conversion loop.</p>
+<hr>
+</section>
+</section>
+<section id="phase-3-extract-state-synchronization" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-extract-state-synchronization">Phase 3 — Extract State Synchronization</h2>
+<section id="bindingconversion-completed" class="level3">
+<h3 class="anchored" data-anchor-id="bindingconversion-completed">3.1 — <code>BindingConversion</code> ✅ COMPLETED</h3>
+<p><code>_syncBindingsFromUi()</code> now delegates all params&lt;-&gt;binding mapping to a new pure conversion module:</p>
+<ul>
+<li>Added <code>Core/BindingConversion.hpp/.cpp</code> (<code>dl::conversion</code>) with pure conversion functions.</li>
+<li>Refactored these sub-widgets to delegate their <code>to*BindingData()</code> and <code>paramsFromBinding()</code> logic to <code>dl::conversion</code>:
+<ul>
+<li><code>DynamicInputSlotWidget</code></li>
+<li><code>StaticInputSlotWidget</code></li>
+<li><code>OutputSlotWidget</code></li>
+<li><code>SequenceSlotWidget</code> (both <code>getStaticInputs()</code> and <code>getRecurrentBindings()</code>)</li>
+<li><code>RecurrentBindingWidget</code></li>
+</ul></li>
+<li><code>_syncBindingsFromUi()</code> is now a short loop over sub-widgets calling conversion functions.</li>
+</ul>
+<p>Live state updates remain enabled because <code>_rebuildSlotPanels()</code> already connects each sub-widget’s <code>bindingChanged()</code> to <code>_syncBindingsFromUi()</code>. Run handlers still call <code>_syncBindingsFromUi()</code> before delegating; the next phase can remove this redundancy once Phase 2/2.2/3.2 changes stabilize.</p>
+</section>
+<section id="constraintenforcer-pure-functions-completed" class="level3">
+<h3 class="anchored" data-anchor-id="constraintenforcer-pure-functions-completed">3.2 — <code>ConstraintEnforcer</code> (pure functions) ✅ COMPLETED</h3>
+<p>Batch-size and decoder-consistency constraint logic extracted as testable pure functions in <code>Core/ConstraintEnforcer.hpp/.cpp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> dl<span class="op">::</span>constraints <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> BatchSizeConstraint <span class="op">{</span> <span class="dt">int</span> min<span class="op">;</span> <span class="dt">int</span> max<span class="op">;</span> <span class="dt">bool</span> forced_by_recurrent<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    BatchSizeConstraint computeBatchSizeConstraint<span class="op">(</span>ModelDisplayInfo <span class="at">const</span><span class="op">&amp;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>RecurrentBindingData<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;);</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> validDecodersForModule<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> <span class="dt">module_type</span><span class="op">);</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace dl::constraints</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Changes made:</strong> - <code>Core/ConstraintEnforcer.hpp/.cpp</code> created with the two functions above. - <code>_updateBatchSizeConstraint()</code> now calls <code>computeBatchSizeConstraint(*_current_info,   _state-&gt;recurrentBindings())</code> and applies the result to the spinbox. The manual widget-traversal loop (querying <code>_sequence_slot_widgets</code> and <code>_recurrent_binding_widgets</code> directly) is gone; instead the live-state bindings from Phase 3.1 are used. - <code>_enforcePostEncoderDecoderConsistency()</code> now calls <code>validDecodersForModule(module_type)</code> and passes the returned list to each output slot widget. - 15 unit tests added in <code>tests/WhiskerToolbox/DeepLearning_Widget/ConstraintEnforcer.test.cpp</code> covering both functions, all batch-mode variants, active/inactive bindings, and all module-type strings. - New test binary <code>test_dl_constraint_enforcer</code> registered in the test <code>CMakeLists.txt</code>.</p>
+<hr>
+</section>
+</section>
+<section id="phase-4-test-coverage" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-test-coverage">Phase 4 — Test Coverage</h2>
+<p>Sub-widget tests are in place (8 test binaries, ~1,700 lines of tests total). Remaining gaps:</p>
+<ul>
+<li><strong>Phase 3.1 tests</strong> — <code>BindingConversion</code> round-trips: <code>DynamicInputSlotParams ↔︎ SlotBindingData</code>, <code>OutputSlotParams ↔︎ OutputBindingData</code>, edge cases (empty keys, default values).</li>
+<li><strong>Phase 3.2 tests</strong> — <code>ConstraintEnforcer</code>: batch size with/without recurrent bindings, decoder validity per module type.</li>
+<li><strong>Phase 2 tests</strong> — <code>InferenceController</code> and <code>ResultProcessor</code> can be tested with a mock <code>SlotAssembler</code> or minimal DataManager.</li>
+<li><strong>DeepLearningParamSchemas</strong> — schema extraction and JSON round-trips for all widget-level variant types (<code>EncoderVariant</code>, <code>DecoderVariant</code>, etc.).</li>
+</ul>
+<hr>
+</section>
+<section id="phase-5-polish-and-cleanup" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-polish-and-cleanup">Phase 5 — Polish and Cleanup</h2>
+<ul>
+<li><strong><code>_buildBooleanMaskGroup</code> / <code>_populateDataSourceCombo</code></strong> — decide whether to extract into a <code>BooleanMaskSlotWidget</code> (matching the sub-widget pattern) or leave inline. Boolean mask slots appear to be a minor type; the case for extraction is consistency, not complexity.</li>
+<li><strong>State migration</strong> — Verify <code>DeepLearningState::fromJson()</code> deserializes workspaces saved before the refactoring. The serialized format should not change (binding data flat fields are preserved).</li>
+<li><strong>Developer documentation</strong> — Update <code>docs/developer/DeepLearning_Widget/</code> with the final architecture.</li>
+<li><strong>Rename <code>UI/Helpers/</code> to <code>UI/Slots/</code></strong> (optional) — The original roadmap envisioned <code>UI/Slots/</code> for slot sub-widgets and <code>UI/Helpers/</code> for utilities. Currently both live in <code>UI/Helpers/</code>. This is a cosmetic rename; decide whether the distinction is worth the churn.</li>
+</ul>
+<hr>
+</section>
+<section id="phase-6-bugs-validation-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-bugs-validation-fixes">Phase 6 — Bugs &amp; Validation Fixes</h2>
+<p>Issues discovered during post-refactoring validation testing.</p>
+<section id="move-point_key-into-spatialpointmoduleparams-ui-parameter-scoping-completed" class="level3">
+<h3 class="anchored" data-anchor-id="move-point_key-into-spatialpointmoduleparams-ui-parameter-scoping-completed">6.1 — Move <code>point_key</code> into <code>SpatialPointModuleParams</code> (UI parameter scoping) ✅ COMPLETED</h3>
+<p><strong>Problem:</strong> <code>PostEncoderSlotParams</code> had <code>point_key</code> as a top-level field alongside the <code>PostEncoderVariant module</code> discriminant, making the “Point Key” combo always visible regardless of which module variant is selected. It is now correctly scoped inside <code>SpatialPointModuleParams</code>, so it only appears when Spatial Point Extraction is selected.</p>
+<p><strong>Changes made:</strong> - <code>SpatialPointModuleParams</code> now has <code>point_key</code> field. - <code>ParameterUIHints&lt;SpatialPointModuleParams&gt;</code> annotates <code>point_key</code> with <code>dynamic_combo = true</code> and <code>include_none_sentinel = true</code>. - <code>PostEncoderParamSchemas.hpp</code> is included in <code>PostEncoderWidget.cpp</code> so the hints are applied during schema extraction. - <code>PostEncoderSlotParams</code> reduced to just <code>PostEncoderVariant module</code>. - <code>PostEncoderWidget::paramsFromState()</code> sets <code>point_key</code> inside <code>SpatialPointModuleParams</code>. - <code>PostEncoderWidget::_applyToStateAndAssembler()</code> extracts <code>point_key</code> from the variant visitor. - <code>AutoParamWidget::updateAllowedValues("point_key", ...)</code> already searched variant sub-rows, so <code>refreshDataSources()</code> required no change. - All tests updated and passing.</p>
+<p><strong>Original problem description:</strong> <code>PostEncoderSlotParams</code> currently has <code>point_key</code> as a top-level field alongside the <code>PostEncoderVariant module</code> discriminant. This means the “Point Key” combo is always visible in the Post-Encoder section regardless of which module variant is selected (None, GlobalAvgPool, or SpatialPoint). It should only appear when SpatialPoint is the active variant.</p>
+<p><strong>Root cause:</strong> The field is defined in <code>PostEncoderSlotParams</code> (widget-level struct) rather than inside <code>SpatialPointModuleParams</code> (library-level struct).</p>
+<p><strong>Affected files:</strong> - <code>src/DeepLearning/post_encoder/PostEncoderModuleFactory.hpp</code> — <code>SpatialPointModuleParams</code> struct - <code>src/DeepLearning/post_encoder/PostEncoderParamSchemas.hpp</code> — <code>ParameterUIHints&lt;SpatialPointModuleParams&gt;</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp</code> — <code>PostEncoderSlotParams</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp</code> — <code>ParameterUIHints&lt;PostEncoderSlotParams&gt;</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/PostEncoderWidget.cpp</code> — <code>refreshDataSources()</code>, <code>_applyToStateAndAssembler()</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/BindingConversion.hpp/cpp</code> — any conversion referencing <code>point_key</code></p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><p><strong>Add <code>point_key</code> to <code>SpatialPointModuleParams</code>:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SpatialPointModuleParams <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    InterpolationMode interpolation <span class="op">=</span> InterpolationMode<span class="op">::</span>Nearest<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string point_key<span class="op">;</span>  <span class="co">// DataManager key for PointData (dynamic combo)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Update <code>ParameterUIHints&lt;SpatialPointModuleParams&gt;</code></strong> to annotate <code>point_key</code> with <code>dynamic_combo = true</code> and <code>include_none_sentinel = true</code> (moved from <code>PostEncoderSlotParams</code> hints).</p></li>
+<li><p><strong>Remove <code>point_key</code> from <code>PostEncoderSlotParams</code></strong> — it becomes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PostEncoderSlotParams <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    PostEncoderVariant <span class="kw">module</span> <span class="op">=</span> NoPostEncoderParams<span class="op">{};</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Update <code>PostEncoderWidget::refreshDataSources()</code></strong> — call <code>updateAllowedValues()</code> targeting the nested <code>SpatialPointModuleParams.point_key</code> path within the variant. AutoParamWidget already supports nested field paths for variant children — verify this or extend if needed.</p></li>
+<li><p><strong>Update <code>PostEncoderWidget::_applyToStateAndAssembler()</code></strong> — extract <code>point_key</code> from inside the variant visitor instead of from the top-level struct.</p></li>
+<li><p><strong>Update <code>BindingConversion</code></strong> — adjust any <code>PostEncoderSlotParams ↔︎ binding</code> conversion that reads/writes <code>point_key</code>.</p></li>
+<li><p><strong>Update tests</strong> — <code>PostEncoderWidget.test.cpp</code> round-trip tests for the new nesting.</p></li>
+</ol>
+<p><strong>Verification:</strong> With SpatialPoint selected, the Point Key combo should appear. With None or GlobalAvgPool selected, it should be hidden.</p>
+<hr>
+</section>
+<section id="gate-weight-loading-on-encoder-shape-being-set-completed" class="level3">
+<h3 class="anchored" data-anchor-id="gate-weight-loading-on-encoder-shape-being-set-completed">6.2 — Gate weight loading on encoder shape being set ✅ COMPLETED</h3>
+<p><strong>Problem:</strong> For <code>general_encoder</code> models, the user can browse and load weights before setting the encoder input/output shape. If the shape hasn’t been configured, the loaded weights may be silently incompatible, or the model may initialize with wrong default dimensions (224×224 / 384×7×7). The weights file selector and load logic should be disabled until the shape has been explicitly applied.</p>
+<p><strong>Root cause:</strong> <code>_loadModelIfReady()</code> only gates on <code>!path.empty() &amp;&amp; !_assembler-&gt;currentModelId().empty()</code>. It does not check whether shape has been configured for <code>general_encoder</code>.</p>
+<p><strong>Affected files:</strong> - <code>src/WhiskerToolbox/DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp</code> — <code>_loadModelIfReady()</code>, <code>_updateWeightsStatus()</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningState.hpp/cpp</code> — may need a <code>shapeConfigured()</code> query - <code>src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp/cpp</code> — <code>shapeApplied</code> signal already exists</p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><strong>Add shape-configured state tracking:</strong> Add a <code>bool _shape_applied</code> flag (or derive it from <code>encoder_output_shape</code> being non-empty) in <code>DeepLearningState</code>. It becomes <code>true</code> after <code>EncoderShapeWidget::_onApplyClicked()</code> or when restoring from saved state with non-empty shape fields.</li>
+<li><strong>Gate UI in <code>_updateWeightsStatus()</code>:</strong>
+<ul>
+<li>If <code>model_id == "general_encoder"</code> and shape is not configured, disable the weights path edit and browse button. Show status: “Set encoder shape first”.</li>
+<li>For non-general-encoder models (which have fixed shapes), no gating needed.</li>
+</ul></li>
+<li><strong>Gate <code>_loadModelIfReady()</code>:</strong> Add an early return if <code>general_encoder</code> and shape not set.</li>
+<li><strong>Connect <code>shapeApplied</code> signal</strong> to re-evaluate <code>_loadModelIfReady()</code> so that once the user applies shape, weights auto-load if a path was previously entered.</li>
+<li><strong>Update <code>_onModelComboChanged()</code>:</strong> When switching to <code>general_encoder</code>, check whether saved state already has shape configured. If so, the gate is already satisfied (shape was restored from state).</li>
+</ol>
+<p><strong>Verification:</strong> Select <code>general_encoder</code> → weights browse button should be disabled → set shape and click Apply → weights browse becomes enabled → load weights succeeds.</p>
+<hr>
+</section>
+<section id="validate-loaded-weights-against-configured-shape-completed" class="level3">
+<h3 class="anchored" data-anchor-id="validate-loaded-weights-against-configured-shape-completed">6.3 — Validate loaded weights against configured shape ✅ COMPLETED</h3>
+<p><strong>Problem:</strong> After loading weights, there is no proactive validation that the weights are compatible with the specified encoder input/output shape. Mismatches are only caught at inference time (via libtorch exceptions), which gives poor user feedback. A dummy forward pass at load time would catch mismatches early.</p>
+<p><strong>Changes made:</strong> - <code>SlotAssembler::validateWeights()</code> added to <code>Core/SlotAssembler.hpp/.cpp</code>. Creates zero tensors for all input slots (batch_size=1), calls <code>forward()</code> with <code>torch::NoGradGuard</code>, checks all expected output slots are present and non-empty. Returns empty string on success or a diagnostic message on failure. - <code>DeepLearningPropertiesWidget</code> gains a <code>_weights_validation_error</code> member (cleared on model change and at the start of each <code>_loadModelIfReady()</code> call). - <code>_loadModelIfReady()</code> calls <code>validateWeights()</code> after a successful <code>loadWeights()</code> and stores the result. - <code>_updateWeightsStatus()</code> now shows “✓ Loaded &amp; validated” (green) on success or “⚠ Shape mismatch: <message>” (orange) on validation failure.</message></p>
+<p><strong>Original problem description:</strong> After loading weights, there is no proactive validation that the weights are compatible with the specified encoder input/output shape. Mismatches are only caught at inference time (via libtorch exceptions), which gives poor user feedback.</p>
+<p><strong>Verification:</strong> Load weights with correct shape → “✓ Loaded &amp; validated”. Load weights with wrong shape → “⚠ Shape mismatch: …”. All existing inference paths are unchanged (validation is a read-only forward pass on zero tensors).</p>
+<p><strong>Affected files:</strong> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.hpp/cpp</code> — new <code>validateWeights()</code> method - <code>src/WhiskerToolbox/DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp</code> — call validation after load</p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><p><strong>Add <code>SlotAssembler::validateWeights()</code> method</strong> behind the PIMPL:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@brief</span><span class="co"> Run a dummy forward pass to validate weight compatibility.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@return</span><span class="co"> Empty string on success, or error message on mismatch.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@pre</span><span class="co"> Model must be loaded and weights must be loaded.</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string validateWeights<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Implementation</strong> (in <code>SlotAssembler.cpp</code>):</p>
+<ul>
+<li>Create a dummy input tensor matching each input slot’s shape (zeros, batch_size=1).</li>
+<li>Call <code>_impl-&gt;model-&gt;forward(dummy_inputs)</code> inside a try/catch.</li>
+<li>On success, verify output tensor shapes match <code>model.outputSlots()</code>.</li>
+<li>On failure, return the exception message formatted for display.</li>
+<li>Use <code>torch::NoGradGuard</code> to avoid unnecessary gradient computation.</li>
+</ul></li>
+<li><p><strong>Call from <code>_loadModelIfReady()</code></strong> after <code>_assembler-&gt;loadWeights(path)</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> validation_error <span class="op">=</span> _assembler<span class="op">-&gt;</span>validateWeights<span class="op">();</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(!</span>validation_error<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    _weights_status_label<span class="op">-&gt;</span>setText<span class="op">(</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">tr</span><span class="op">(</span><span class="st">"⚠ Shape mismatch: %1"</span><span class="op">).</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>validation_error<span class="op">)));</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    _weights_status_label<span class="op">-&gt;</span>setStyleSheet<span class="op">(</span><span class="st">"color: orange;"</span><span class="op">);</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Weights are loaded but user is warned — don't block, but flag the issue</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Update <code>_updateWeightsStatus()</code></strong> to show a validated-OK state (e.g., “✓ Loaded &amp; validated”) vs just “✓ Loaded”.</p></li>
+</ol>
+<p><strong>Verification:</strong> Load weights with correct shape → “✓ Loaded &amp; validated”. Load weights with wrong output_shape → “⚠ Shape mismatch: expected [768,16,16], got [384,7,7]”.</p>
+<p><strong>Note:</strong> This depends on 6.2 (shape is set before weights load). Implement 6.2 first.</p>
+<hr>
+</section>
+<section id="bug-single-frame-inference-fails-with-globalavgpool-post-encoder-completed" class="level3">
+<h3 class="anchored" data-anchor-id="bug-single-frame-inference-fails-with-globalavgpool-post-encoder-completed">6.4 — BUG: Single-frame inference fails with GlobalAvgPool post-encoder ✅ COMPLETED</h3>
+<p><strong>Problem:</strong> When using <code>GlobalAvgPoolModule</code> as the post-encoder, single-frame inference (“Run Frame”, “Predict Current”) with <code>TensorToFeatureVector</code> decoder fails silently, but batch inference works. Additionally, <code>runSingleFrame()</code> never calls <code>updateSpatialPoint()</code>, breaking spatial point extraction in single-frame mode.</p>
+<p><strong>Root cause analysis (revised):</strong></p>
+<p>Three distinct bugs were identified:</p>
+<ol type="1">
+<li><p><strong><code>decodeOutputs()</code> TensorToFeatureVector branch silently drops results after first call.</strong> The code only creates a <code>TensorData</code> if one doesn’t already exist. On subsequent single-frame calls (or after a previous batch run created the key), the decoded feature vector is silently discarded. The batch path doesn’t have this issue because <code>decodeOutputsToBuffer</code> always returns <code>FrameResult</code> objects, and <code>ResultProcessor::flushFeatureVectors()</code> always replaces the <code>TensorData</code> via <code>setData</code>.</p></li>
+<li><p><strong><code>runSingleFrame()</code> does not call <code>updateSpatialPoint()</code>.</strong> Both <code>runBatchRange()</code> and <code>runBatchRangeOffline()</code> call <code>updateSpatialPoint()</code> before each forward pass when a spatial point post-encoder is configured. <code>runSingleFrame()</code> was missing this call, meaning spatial point extraction produced wrong results (default point) in single-frame mode.</p></li>
+<li><p><strong>No rank guard for spatial decoders with rank-reduced tensors.</strong> If a misconfiguration passes a 2D <code>[B, C]</code> tensor (after GlobalAvgPool) to a spatial decoder expecting 4D <code>[B, C, H, W]</code>, the decoder would crash. The UI constraint (<code>_enforcePostEncoderDecoderConsistency</code>) already prevents this in the UI, but no runtime guard existed.</p></li>
+</ol>
+<p><strong>Changes made:</strong></p>
+<ul>
+<li><strong><code>decodeOutputs()</code> TensorToFeatureVector branch</strong>: Now always creates/replaces a 1-row <code>TensorData</code> via <code>setData</code>, instead of only writing when the key doesn’t exist. This ensures every single-frame inference produces a visible result.</li>
+<li><strong><code>runSingleFrame()</code></strong>: Added <code>updateSpatialPoint()</code> call before <code>assembleInputs()</code>, matching the pattern used in <code>runBatchRange()</code> and <code>runBatchRangeOffline()</code>.</li>
+<li><strong><code>runRecurrentSequence()</code></strong>: Added <code>updateSpatialPoint()</code> call before each frame’s <code>assembleInputs()</code>, for consistency with the batch paths.</li>
+<li><strong>Rank guard in <code>decodeOutputs()</code> and <code>decodeOutputsToBuffer()</code></strong>: Both functions now check <code>tensor.dim() &lt; 4</code> before dispatching to spatial decoders (<code>TensorToMask2D</code>, <code>TensorToPoint2D</code>, <code>TensorToLine2D</code>). If the tensor rank is insufficient, the decoder is skipped with a diagnostic message to <code>stderr</code>.</li>
+<li><strong>Pre-existing test fix</strong>: Updated <code>DeepLearningParamSchemas.test.cpp</code> to expect 2 fields in <code>SpatialPointModuleParams</code> (was checking for 1 after Phase 6.1 added <code>point_key</code>).</li>
+</ul>
+<p><strong>Affected files:</strong> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp</code> — <code>decodeOutputs()</code>, <code>decodeOutputsToBuffer()</code>, <code>runSingleFrame()</code>, <code>runRecurrentSequence()</code> - <code>tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp</code> — updated <code>SpatialPointModuleParams</code> field count</p>
+<p><strong>Verification:</strong> Single-frame inference with GlobalAvgPool + TensorToFeatureVector now produces correct results on every invocation. Spatial decoders with rank-reduced tensors are gracefully skipped with a diagnostic message.</p>
+<hr>
+</section>
+<section id="phase-6.5-tensordata-frame-indexed-upsert-for-accumulating-inference-results-completed" class="level3">
+<h3 class="anchored" data-anchor-id="phase-6.5-tensordata-frame-indexed-upsert-for-accumulating-inference-results-completed">Phase 6.5 — TensorData Frame-Indexed Upsert for Accumulating Inference Results ✅ COMPLETED</h3>
+<p><strong>Problem:</strong> After Phase 6.4 fixed single-frame inference, <code>TensorToFeatureVector</code> output was still being entirely replaced on each run. Running batch inference on frames 1–10 and then frames 5–15 would discard the first batch entirely instead of merging the results.</p>
+<p>MaskData and PointData use per-frame <code>addAtTime()</code> which naturally accumulates, but TensorData had no frame-indexed upsert — only <code>appendRow</code> (ordinal) and <code>insertRow</code> (ordinal/interval). <code>TimeFrameIndex</code> rows were immutable, making frame-indexed mutation impossible without rebuilding.</p>
+<p><strong>Root cause:</strong> <code>ResultProcessor::flushFeatureVectors()</code> called <code>setData&lt;TensorData&gt;()</code> to replace the entire tensor. <code>decodeOutputs()</code> (single-frame path) similarly replaced the tensor. Neither path attempted to merge with existing data.</p>
+<p><strong>Changes made:</strong></p>
+<ul>
+<li><p><strong><code>setRow(index, row_data)</code> added to storage backends</strong> — Overwrites an existing row in-place for <code>ArmadilloTensorStorage</code> (2D only) and <code>DenseTensorStorage</code> (2D only). Validates bounds and column count.</p></li>
+<li><p><strong><code>upsertRows(frame_rows, time_frame)</code> added to <code>TensorData</code></strong> — Frame-indexed merge operation. Takes <code>std::vector&lt;std::pair&lt;int, std::vector&lt;float&gt;&gt;&gt;</code> mapping frame indices to row data, plus a <code>TimeFrame</code> for constructing <code>TimeIndexStorage</code>. Semantics:</p>
+<ul>
+<li>Reads existing frame→row mapping (from <code>TimeFrameIndex</code> or treats ordinal indices as frame IDs)</li>
+<li>Overlays new rows using <code>std::map</code> for sorted-merge behavior</li>
+<li>Rebuilds storage in-place via <code>makeStorage()</code> + <code>TimeIndexStorageFactory::createFromTimeIndices()</code></li>
+<li>Preserves column names</li>
+<li>Handles empty tensor (first initialization)</li>
+</ul></li>
+<li><p><strong><code>ResultProcessor::flushFeatureVectors()</code></strong> — Changed from creating a brand-new <code>TensorData</code> via <code>setData</code> to get-or-create in DataManager then calling <code>upsertRows()</code> on the existing tensor.</p></li>
+<li><p><strong><code>SlotAssembler::decodeOutputs()</code> TensorToFeatureVector branch</strong> — Changed from creating a 1-row replacement <code>TensorData</code> to get-or-create then <code>upsertRows()</code> with a single-element frame_rows vector.</p></li>
+</ul>
+<p><strong>Affected files:</strong> - <code>src/DataObjects/Tensors/storage/ArmadilloTensorStorage.hpp/cpp</code> — <code>setRow()</code> added - <code>src/DataObjects/Tensors/storage/DenseTensorStorage.hpp/cpp</code> — <code>setRow()</code> added - <code>src/DataObjects/Tensors/TensorData.hpp/cpp</code> — <code>setRow()</code> and <code>upsertRows()</code> added - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/ResultProcessor.cpp</code> — uses <code>upsertRows()</code> - <code>src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp</code> — uses <code>upsertRows()</code></p>
+<p><strong>Tests:</strong> 15 new test cases in <code>TensorData.test.cpp</code> covering <code>setRow</code> (5 tests) and <code>upsertRows</code> (10 tests), including the critical batch1-then-batch2 overlap scenario.</p>
+<p><strong>Verification:</strong> Batch inference on frames 1–10 then 5–15 now produces a merged tensor with frames 1–15 (frames 5–10 overwritten, 11–15 appended, 1–4 preserved).</p>
+<hr>
+</section>
+</section>
+<section id="phase-7-command-architecture-integration" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-command-architecture-integration">Phase 7 — Command Architecture Integration</h2>
+<p>Integrate deep learning inference into the Command architecture so that inference can be invoked from TriageSession pipelines, JSON command sequences, and programmatic workflows without the widget.</p>
+<section id="design-considerations" class="level3">
+<h3 class="anchored" data-anchor-id="design-considerations">Design Considerations</h3>
+<p><strong>Current state:</strong> Inference is widget-driven — <code>DeepLearningPropertiesWidget</code> orchestrates <code>InferenceController</code> which calls <code>SlotAssembler</code>. All configuration (model selection, shape, weights, slot bindings, decoders) lives in <code>DeepLearningState</code>, which is a widget-level concern.</p>
+<p><strong>Goal:</strong> A <code>RunInference</code> command that can be fully specified in JSON and executed headlessly via <code>CommandContext</code>, independent of any widget.</p>
+<p><strong>Challenges:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Challenge</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>SlotAssembler lifetime</strong></td>
+<td>Create inside <code>execute()</code>, destroy on return. Stateless per-execution.</td>
+</tr>
+<tr class="even">
+<td><strong>libtorch dependency</strong></td>
+<td>The <code>Commands</code> library currently has no torch dependency. Add an optional DL command module gated behind <code>ENABLE_DL_COMMANDS</code> CMake flag, similar to <code>ENABLE_BENCHMARK</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Model shape + weights</strong></td>
+<td>Serialized as command params. <code>execute()</code> calls <code>loadModel → configureModelShape → loadWeights</code> in sequence.</td>
+</tr>
+<tr class="even">
+<td><strong>Slot bindings</strong></td>
+<td>The existing <code>SlotBindingData</code>, <code>OutputBindingData</code>, <code>StaticInputData</code>, <code>RecurrentBindingData</code> structs are already reflect-cpp serializable — reuse directly as command params.</td>
+</tr>
+<tr class="odd">
+<td><strong>Progress / cancellation</strong></td>
+<td>Use <code>CommandContext::on_progress</code> for reporting. Cancellation is not yet in the command architecture; add an <code>std::atomic&lt;bool&gt;*</code> to <code>CommandContext</code> in the future.</td>
+</tr>
+<tr class="even">
+<td><strong>Post-encoder Module</strong></td>
+<td>Serialized as a string (<code>"none"</code>, <code>"global_avg_pool"</code>, <code>"spatial_point"</code>) + params. Applied after model load.</td>
+</tr>
+<tr class="odd">
+<td><strong>Output handling</strong></td>
+<td>Direct writes to DataManager via decoders (same as <code>runBatchRange</code>). No <code>ResultProcessor</code> or <code>WriteReservation</code> needed (synchronous execution).</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="runinference-command-batch-mode" class="level3">
+<h3 class="anchored" data-anchor-id="runinference-command-batch-mode">7.1 — <code>RunInference</code> Command (Batch Mode)</h3>
+<p><strong>Params struct:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RunInferenceParams <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string model_id<span class="op">;</span>                              <span class="co">// e.g. "general_encoder"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string weights_path<span class="op">;</span>                          <span class="co">// filesystem path to .pt/.pt2</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> input_height<span class="op">;</span>                   <span class="co">// for general_encoder</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> input_width<span class="op">;</span>                    <span class="co">// for general_encoder</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> output_shape<span class="op">;</span>           <span class="co">// e.g. "768,16,16"</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string post_encoder_module <span class="op">=</span> <span class="st">"none"</span><span class="op">;</span>          <span class="co">// "none"|"global_avg_pool"|"spatial_point"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> post_encoder_point_key<span class="op">;</span> <span class="co">// for spatial_point</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> interpolation<span class="op">;</span>          <span class="co">// "nearest"|"bilinear"</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>SlotBindingData<span class="op">&gt;</span> input_bindings<span class="op">;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>StaticInputData<span class="op">&gt;</span> static_inputs<span class="op">;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>OutputBindingData<span class="op">&gt;</span> output_bindings<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><p><strong>Create <code>src/Commands/DL/RunInference.hpp/cpp</code></strong> with the params struct and <code>ICommand</code> implementation.</p></li>
+<li><p><strong>Gated CMake integration:</strong> Add <code>ENABLE_DL_COMMANDS</code> option. When ON, add <code>src/Commands/DL/</code> to the build. Link <code>Commands</code> against <code>SlotAssembler</code> (which links libtorch via PIMPL).</p></li>
+<li><p><strong><code>execute()</code> implementation:</strong></p>
+<pre><code>a. Create SlotAssembler
+b. loadModel(model_id)
+c. If general_encoder: configureModelShape(height, width, output_shape)
+d. configurePostEncoderModule(post_encoder_module, source_size, interpolation)
+e. loadWeights(weights_path)
+f. validateWeights() — fail early if mismatch (depends on 6.3)
+g. Resolve source_image_size from MediaData in input_bindings
+h. runBatchRange(dm, input_bindings, ..., start_frame, end_frame, source_size, on_progress)
+i. Return CommandResult::ok(affected_keys)</code></pre></li>
+<li><p><strong>Register in <code>CommandFactory</code></strong> (gated by <code>ENABLE_DL_COMMANDS</code>).</p></li>
+<li><p><strong>Add <code>CommandInfo</code></strong> with schema from <code>extractParameterSchema&lt;RunInferenceParams&gt;()</code>.</p></li>
+<li><p><strong>Variable substitution support:</strong> <code>start_frame</code> and <code>end_frame</code> can use <code>${mark_frame}</code> and <code>${current_frame}</code> from TriageSession.</p></li>
+</ol>
+</section>
+<section id="runrecurrentinference-command-recurrent-mode" class="level3">
+<h3 class="anchored" data-anchor-id="runrecurrentinference-command-recurrent-mode">7.2 — <code>RunRecurrentInference</code> Command (Recurrent Mode)</h3>
+<p>Handled as a separate command because the params differ significantly (recurrent bindings, no batch range).</p>
+<p><strong>Params struct:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RunRecurrentInferenceParams <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string model_id<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string weights_path<span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> input_height<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> input_width<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> output_shape<span class="op">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string post_encoder_module <span class="op">=</span> <span class="st">"none"</span><span class="op">;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_count <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>SlotBindingData<span class="op">&gt;</span> input_bindings<span class="op">;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>StaticInputData<span class="op">&gt;</span> static_inputs<span class="op">;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>OutputBindingData<span class="op">&gt;</span> output_bindings<span class="op">;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>RecurrentBindingData<span class="op">&gt;</span> recurrent_bindings<span class="op">;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Steps:</strong> 1. Create <code>src/Commands/DL/RunRecurrentInference.hpp/cpp</code>. 2. <code>execute()</code> calls <code>runRecurrentSequence()</code> synchronously. 3. Register in factory alongside <code>RunInference</code>.</p>
+</section>
+<section id="pipeline-integration-examples" class="level3">
+<h3 class="anchored" data-anchor-id="pipeline-integration-examples">7.3 — Pipeline Integration Examples</h3>
+<p>With the commands registered, TriageSession pipelines can use inference:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"commands"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"RunInference"</span><span class="fu">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"params"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"model_id"</span><span class="fu">:</span> <span class="st">"general_encoder"</span><span class="fu">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"weights_path"</span><span class="fu">:</span> <span class="st">"/models/convnext_encoder.pt2"</span><span class="fu">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"input_height"</span><span class="fu">:</span> <span class="dv">256</span><span class="fu">,</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"input_width"</span><span class="fu">:</span> <span class="dv">256</span><span class="fu">,</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_shape"</span><span class="fu">:</span> <span class="st">"768,16,16"</span><span class="fu">,</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"post_encoder_module"</span><span class="fu">:</span> <span class="st">"global_avg_pool"</span><span class="fu">,</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span><span class="fu">,</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"input_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span><span class="dt">"slot_name"</span><span class="fu">:</span> <span class="st">"image"</span><span class="fu">,</span> <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"video"</span><span class="fu">,</span> <span class="dt">"encoder_id"</span><span class="fu">:</span> <span class="st">"ImageEncoder"</span><span class="fu">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span><span class="dt">"slot_name"</span><span class="fu">:</span> <span class="st">"features"</span><span class="fu">,</span> <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"embeddings"</span><span class="fu">,</span> <span class="dt">"decoder_id"</span><span class="fu">:</span> <span class="st">"TensorToFeatureVector"</span><span class="fu">}</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"params"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"embeddings"</span><span class="fu">,</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"numpy"</span><span class="fu">,</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_path"</span><span class="fu">:</span> <span class="st">"/results/embeddings.npy"</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="future-async-command-execution" class="level3">
+<h3 class="anchored" data-anchor-id="future-async-command-execution">7.4 — Future: Async Command Execution</h3>
+<p>The current command architecture is synchronous. For long-running inference pipelines, future work could add:</p>
+<ul>
+<li><code>std::atomic&lt;bool&gt; * cancel_flag</code> to <code>CommandContext</code></li>
+<li>An <code>AsyncCommandRunner</code> that executes a command sequence on a background thread</li>
+<li>Progress aggregation across multiple commands in a sequence</li>
+</ul>
+<p>This is out of scope for the initial integration but should be designed for when adding <code>RunInference</code>.</p>
+<hr>
+</section>
+</section>
+<section id="execution-order-remaining" class="level2">
+<h2 class="anchored" data-anchor-id="execution-order-remaining">Execution Order (Remaining)</h2>
+<pre><code>Phase 3.2  ConstraintEnforcer       ✅ COMPLETED
+Phase 4    Fill test gaps           — after each phase above
+Phase 5    Cleanup / docs           — final pass
+Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED
+Phase 6.2  Gate weight loading on shape set             ✅ COMPLETED
+Phase 6.3  Validate weights via dummy forward pass      ✅ COMPLETED
+Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat ✅ COMPLETED
+Phase 6.5  TensorData frame-indexed upsert for accumulation ✅ COMPLETED
+Phase 7.1  RunInference command     — batch mode
+Phase 7.2  RunRecurrentInference    — recurrent mode
+Phase 7.3  Pipeline examples + docs</code></pre>
+<hr>
+</section>
+<section id="expected-outcomes" class="level2">
+<h2 class="anchored" data-anchor-id="expected-outcomes">Expected Outcomes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Before Phase 1</th>
+<th>After Phase 1</th>
+<th>After Phase 2.1</th>
+<th>After All Phases</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DeepLearningPropertiesWidget.cpp</code> lines</td>
+<td>2716</td>
+<td>~1603</td>
+<td>~1200</td>
+<td>~300-400</td>
+</tr>
+<tr class="even">
+<td>Number of classes</td>
+<td>1 monolithic</td>
+<td>9 focused</td>
+<td>10 (+InferenceController)</td>
+<td>~15 focused</td>
+</tr>
+<tr class="odd">
+<td>Lines covered by unit tests</td>
+<td>0</td>
+<td>~1,700</td>
+<td>~1,700</td>
+<td>~3,000+</td>
+</tr>
+<tr class="even">
+<td><code>findChild</code> lookup count</td>
+<td>~40</td>
+<td>~0</td>
+<td>~0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Adding a new slot type</td>
+<td>Edit monolith in 5+ places</td>
+<td>Create one sub-widget</td>
+<td>Create one sub-widget</td>
+<td>Create one sub-widget</td>
+</tr>
+<tr class="even">
+<td>Pre-run state sync required</td>
+<td>Yes (findChild flush)</td>
+<td>Yes (<code>_syncBindingsFromUi</code>)</td>
+<td>Yes (<code>_syncBindingsFromUi</code>)</td>
+<td>No (live updates)</td>
+</tr>
+<tr class="odd">
+<td>Headless inference via commands</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes (JSON pipelines)</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

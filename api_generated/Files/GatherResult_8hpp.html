@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/GatherResult/GatherResult.hpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcgatherresultgatherresult.hpp" id="toc-srcgatherresultgatherresult.hpp" class="nav-link active" data-scroll-target="#srcgatherresultgatherresult.hpp">src/GatherResult/GatherResult.hpp</a>
+  <ul class="collapse">
+  <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
+  <li><a href="#supported-types" id="toc-supported-types" class="nav-link" data-scroll-target="#supported-types">Supported Types</a></li>
+  <li><a href="#example-usage" id="toc-example-usage" class="nav-link" data-scroll-target="#example-usage">Example Usage</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-gather" id="toc-function-gather" class="nav-link" data-scroll-target="#function-gather">function gather</a></li>
+  <li><a href="#function-gather-1" id="toc-function-gather-1" class="nav-link" data-scroll-target="#function-gather-1">function gather</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/GatherResult/GatherResult.hpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcgatherresultgatherresult.hpp" class="level1">
+<h1>src/GatherResult/GatherResult.hpp</h1>
+<p>Container for collected views created by gather operations. <a href="#detailed-description">More…</a></p>
+<section id="namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a></strong></td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">WhiskerToolbox::Gather</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of.html">WhiskerToolbox::Gather::element_type_of</a></strong> <br>Helper to get element type from a data container.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01DigitalEventSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; DigitalEventSeries &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01AnalogTimeSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; AnalogTimeSeries &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01DigitalIntervalSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; DigitalIntervalSeries &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></strong> <br>Container for collected views created by gather operations.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Files/GatherResult_8hpp.html#function-gather">gather</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T ,typename IntervalSourceT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Files/GatherResult_8hpp.html#function-gather">gather</a></strong>(std::shared_ptr&lt; T &gt; source, IntervalSourceT &amp; interval_source)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<p>Container for collected views created by gather operations.</p>
+<p>This file provides the <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> template class and <a href="../../api_generated/Files/GatherResult_8hpp.html#function-gather">gather()</a> function for creating collections of view-backed data types from interval alignments.</p>
+</section>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> is designed for operations like raster plots, trial-aligned analysis, and other scenarios where you need to create many views of a source data type based on alignment intervals. Unlike registering each view in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> keeps the collection self-contained.</p>
+</section>
+<section id="key-features" class="level2">
+<h2 class="anchored" data-anchor-id="key-features">Key Features</h2>
+<ul>
+<li><strong>Zero-copy views</strong>: Each element is a view into the source data</li>
+<li><strong>Range interface</strong>: Standard begin()/end() for range-based for loops</li>
+<li><strong>Transform helper</strong>: Apply functions to all views with transform()</li>
+<li><strong>Source tracking</strong>: Access to source data and alignment intervals</li>
+<li><strong>Self-contained</strong>: Does not pollute <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>’s registry</li>
+</ul>
+</section>
+<section id="supported-types" class="level2">
+<h2 class="anchored" data-anchor-id="supported-types">Supported Types</h2>
+<p>Any type T that has a static createView() method with signature:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T <span class="at">const</span><span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This includes:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></li>
+<li><a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a></li>
+<li><a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a></li>
+</ul>
+<p>For RaggedTimeSeries-based types (<a href="../../api_generated/Classes/classMaskData.html">MaskData</a>, <a href="../../api_generated/Classes/classLineData.html">LineData</a>, <a href="../../api_generated/Classes/classPointData.html">PointData</a>), use createTimeRangeCopy() which creates owning copies rather than views.</p>
+</section>
+<section id="example-usage" class="level2">
+<h2 class="anchored" data-anchor-id="example-usage">Example Usage</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create raster plot data from spike times aligned to trial intervals</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> spikes <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span><span class="st">"spikes"</span><span class="op">);</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> trials <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"trials"</span><span class="op">);</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> raster <span class="op">=</span> gather<span class="op">(</span>spikes<span class="op">,</span> trials<span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Iterate over trial-aligned spike views</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> trial_spikes <span class="op">:</span> raster<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> event <span class="op">:</span> trial_spikes<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Each event retains its EntityId from the source</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply analysis to all trials</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> spike_counts <span class="op">=</span> raster<span class="op">.</span>transform<span class="op">([](</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> trial<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trial<span class="op">-&gt;</span>size<span class="op">();</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Get the interval for a specific trial</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>Interval trial_3_interval <span class="op">=</span> raster<span class="op">.</span>intervalAt<span class="op">(</span><span class="dv">3</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> for alignment interval storage</p>
+<p><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">DigitalEventSeries::createView()</a> for event series views</p>
+<p><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-createview">AnalogTimeSeries::createView()</a> for analog series views</p>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-gather" class="level3">
+<h3 class="anchored" data-anchor-id="function-gather">function gather</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gather-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gather-1">function gather</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">,</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> IntervalSourceT <span class="op">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    IntervalSourceT <span class="op">&amp;</span> interval_source</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef GATHER_RESULT_HPP</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATHER_RESULT_HPP</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/Analog_Time_Series.hpp"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Event_Series.hpp"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/StrongTimeTypes.hpp"</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/interval_data.hpp"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/PipelineValueStore.hpp"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/extension/IntervalAdapters.hpp"</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/extension/ValueProjectionTypes.hpp"</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/extension/ViewAdaptorTypes.hpp"</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;concepts&gt;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;functional&gt;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iterator&gt;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;numeric&gt;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ranges&gt;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;type_traits&gt;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">// Concepts for View Creation</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Gather <span class="op">{</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> ViewableDataType <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> T<span class="op">::</span>createView<span class="op">(</span>source<span class="op">,</span> start<span class="op">,</span> end<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>same_as<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;&gt;;</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> ViewableDataTypeInt64 <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> start<span class="op">,</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> T<span class="op">::</span>createView<span class="op">(</span>source<span class="op">,</span> start<span class="op">,</span> end<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>same_as<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;&gt;;</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> CopyableTimeRangeDataType <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        T <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> source<span class="op">.</span>createTimeRangeCopy<span class="op">(</span>start<span class="op">,</span> end<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>same_as<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> HasElementType <span class="op">=</span> <span class="kw">requires</span> <span class="op">{</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typename</span> T<span class="op">::</span><span class="dt">element_type</span><span class="op">;</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> HasTimeFrameAccess <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>T <span class="at">const</span><span class="op">&amp;</span> t<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> t<span class="op">.</span>getTimeFrame<span class="op">()</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>same_as<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;&gt;;</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> HasTimeFrame <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>T <span class="at">const</span><span class="op">&amp;</span> t<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> t<span class="op">.</span>getTimeFrame<span class="op">()</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>same_as<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;&gt;;</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> element_type_of <span class="op">{</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Primary template: attempt to use T::element_type if available</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> <span class="kw">typename</span> T<span class="op">::</span><span class="dt">element_type</span><span class="op">;</span></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: DigitalEventSeries uses EventWithId</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> element_type_of<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> EventWithId<span class="op">;</span></span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: AnalogTimeSeries uses TimeValuePoint</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> element_type_of<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> AnalogTimeSeries<span class="op">::</span>TimeValuePoint<span class="op">;</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: DigitalIntervalSeries uses IntervalWithId  </span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> element_type_of<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> IntervalWithId<span class="op">;</span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="dt">element_type_of_t</span> <span class="op">=</span> <span class="kw">typename</span> element_type_of<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Gather</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a><span class="co">// GatherResult Template</span></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GatherResult <span class="op">{</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="dt">value_type</span> <span class="op">=</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> const_iterator <span class="op">=</span> <span class="kw">typename</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">value_type</span><span class="op">&gt;::</span>const_iterator<span class="op">;</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="dt">size_type</span> <span class="op">=</span> <span class="kw">typename</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">value_type</span><span class="op">&gt;::</span><span class="dt">size_type</span><span class="op">;</span></span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="dt">element_type</span> <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span><span class="dt">element_type_of_t</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Constructors ==========</span></span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Factory Methods ==========</span></span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">&gt;</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;</span></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> intervals<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">);</span></span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> view <span class="op">=</span> U<span class="op">::</span>createView<span class="op">(</span></span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>                    source<span class="op">,</span></span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">.</span>start<span class="op">),</span></span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">));</span></span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">&gt;</span></span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataTypeInt64<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;)</span></span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> intervals<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">);</span></span>
+<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> view <span class="op">=</span> U<span class="op">::</span>createView<span class="op">(</span></span>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>                    source<span class="op">,</span></span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>                    interval<span class="op">.</span>interval<span class="op">.</span>start<span class="op">,</span></span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>                    interval<span class="op">.</span>interval<span class="op">.</span>end<span class="op">);</span></span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">));</span></span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">&gt;</span></span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>CopyableTimeRangeDataType<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataTypeInt64<span class="op">&lt;</span>U<span class="op">&gt;)</span></span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>intervals<span class="op">-&gt;</span>size<span class="op">());</span></span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> intervals<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">);</span></span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> copy <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>U<span class="op">&gt;(</span>source<span class="op">-&gt;</span>createTimeRangeCopy<span class="op">(</span></span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">.</span>start<span class="op">),</span></span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>interval<span class="op">.</span>end<span class="op">)));</span></span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Inherit TimeFrame and ImageSize from source</span></span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>            copy<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>source<span class="op">-&gt;</span>getTimeFrame<span class="op">());</span></span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>            copy<span class="op">-&gt;</span>setImageSize<span class="op">(</span>source<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>copy<span class="op">));</span></span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Factory Methods for Interval Adapters ==========</span></span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a>                 WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>IntervalSource<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-195"><a href="#cb5-195" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-196"><a href="#cb5-196" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-197"><a href="#cb5-197" aria-hidden="true" tabindex="-1"></a>            IntervalSourceT <span class="at">const</span><span class="op">&amp;</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-198"><a href="#cb5-198" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-199"><a href="#cb5-199" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-200"><a href="#cb5-200" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-201"><a href="#cb5-201" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-202"><a href="#cb5-202" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_alignment_times<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-203"><a href="#cb5-203" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-204"><a href="#cb5-204" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Resolve TimeFrames for absolute-time conversion</span></span>
+<span id="cb5-205"><a href="#cb5-205" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> source_tf <span class="op">=</span> source <span class="op">?</span> source<span class="op">-&gt;</span>getTimeFrame<span class="op">()</span> <span class="op">:</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-206"><a href="#cb5-206" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> adapter_tf <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-207"><a href="#cb5-207" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrameAccess<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a>            adapter_tf <span class="op">=</span> interval_source<span class="op">.</span>getTimeFrame<span class="op">();</span></span>
+<span id="cb5-209"><a href="#cb5-209" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-211"><a href="#cb5-211" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> aligned_interval <span class="op">:</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-212"><a href="#cb5-212" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> view_start<span class="op">,</span> view_end<span class="op">,</span> alignment_abs_time<span class="op">;</span></span>
+<span id="cb5-213"><a href="#cb5-213" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-214"><a href="#cb5-214" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>adapter_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-215"><a href="#cb5-215" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Adapter yields indices in its own TimeFrame; convert to</span></span>
+<span id="cb5-216"><a href="#cb5-216" aria-hidden="true" tabindex="-1"></a>                <span class="co">// absolute time, then to source-TF indices for view creation.</span></span>
+<span id="cb5-217"><a href="#cb5-217" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-218"><a href="#cb5-218" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>alignment_time<span class="op">));</span></span>
+<span id="cb5-219"><a href="#cb5-219" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> start_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-220"><a href="#cb5-220" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>start<span class="op">));</span></span>
+<span id="cb5-221"><a href="#cb5-221" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> end_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-222"><a href="#cb5-222" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb5-223"><a href="#cb5-223" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb5-224"><a href="#cb5-224" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-225"><a href="#cb5-225" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-226"><a href="#cb5-226" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>start_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-227"><a href="#cb5-227" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-228"><a href="#cb5-228" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>end_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-229"><a href="#cb5-229" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-230"><a href="#cb5-230" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> start_abs<span class="op">;</span></span>
+<span id="cb5-231"><a href="#cb5-231" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> end_abs<span class="op">;</span></span>
+<span id="cb5-232"><a href="#cb5-232" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-233"><a href="#cb5-233" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-234"><a href="#cb5-234" aria-hidden="true" tabindex="-1"></a>                <span class="co">// No adapter TF: adapter values are already in absolute time.</span></span>
+<span id="cb5-235"><a href="#cb5-235" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Convert directly to source-TF indices.</span></span>
+<span id="cb5-236"><a href="#cb5-236" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-237"><a href="#cb5-237" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-238"><a href="#cb5-238" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>start<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-239"><a href="#cb5-239" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-240"><a href="#cb5-240" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>end<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-241"><a href="#cb5-241" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-242"><a href="#cb5-242" aria-hidden="true" tabindex="-1"></a>                <span class="co">// No TimeFrame at all: raw indices are the only option</span></span>
+<span id="cb5-243"><a href="#cb5-243" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-244"><a href="#cb5-244" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> aligned_interval<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb5-245"><a href="#cb5-245" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> aligned_interval<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb5-246"><a href="#cb5-246" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-247"><a href="#cb5-247" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-248"><a href="#cb5-248" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span>view_start<span class="op">,</span> view_end<span class="op">});</span></span>
+<span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_alignment_times<span class="op">.</span>push_back<span class="op">(</span>alignment_abs_time<span class="op">);</span></span>
+<span id="cb5-250"><a href="#cb5-250" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-251"><a href="#cb5-251" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> view <span class="op">=</span> U<span class="op">::</span>createView<span class="op">(</span></span>
+<span id="cb5-252"><a href="#cb5-252" aria-hidden="true" tabindex="-1"></a>                    source<span class="op">,</span></span>
+<span id="cb5-253"><a href="#cb5-253" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>view_start<span class="op">),</span></span>
+<span id="cb5-254"><a href="#cb5-254" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>view_end<span class="op">));</span></span>
+<span id="cb5-255"><a href="#cb5-255" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">));</span></span>
+<span id="cb5-256"><a href="#cb5-256" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-257"><a href="#cb5-257" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-258"><a href="#cb5-258" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-259"><a href="#cb5-259" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-260"><a href="#cb5-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-261"><a href="#cb5-261" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-262"><a href="#cb5-262" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataTypeInt64<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-263"><a href="#cb5-263" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-264"><a href="#cb5-264" aria-hidden="true" tabindex="-1"></a>                 WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>IntervalSource<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-265"><a href="#cb5-265" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-266"><a href="#cb5-266" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-267"><a href="#cb5-267" aria-hidden="true" tabindex="-1"></a>            IntervalSourceT <span class="at">const</span><span class="op">&amp;</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-268"><a href="#cb5-268" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-269"><a href="#cb5-269" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-270"><a href="#cb5-270" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-271"><a href="#cb5-271" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-272"><a href="#cb5-272" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_alignment_times<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-273"><a href="#cb5-273" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-274"><a href="#cb5-274" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Resolve TimeFrames for absolute-time conversion</span></span>
+<span id="cb5-275"><a href="#cb5-275" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> source_tf <span class="op">=</span> source <span class="op">?</span> source<span class="op">-&gt;</span>getTimeFrame<span class="op">()</span> <span class="op">:</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-276"><a href="#cb5-276" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> adapter_tf <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-277"><a href="#cb5-277" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrameAccess<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-278"><a href="#cb5-278" aria-hidden="true" tabindex="-1"></a>            adapter_tf <span class="op">=</span> interval_source<span class="op">.</span>getTimeFrame<span class="op">();</span></span>
+<span id="cb5-279"><a href="#cb5-279" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-280"><a href="#cb5-280" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-281"><a href="#cb5-281" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> aligned_interval <span class="op">:</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-282"><a href="#cb5-282" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> view_start<span class="op">,</span> view_end<span class="op">,</span> alignment_abs_time<span class="op">;</span></span>
+<span id="cb5-283"><a href="#cb5-283" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-284"><a href="#cb5-284" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>adapter_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-285"><a href="#cb5-285" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-286"><a href="#cb5-286" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>alignment_time<span class="op">));</span></span>
+<span id="cb5-287"><a href="#cb5-287" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> start_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-288"><a href="#cb5-288" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>start<span class="op">));</span></span>
+<span id="cb5-289"><a href="#cb5-289" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> end_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-290"><a href="#cb5-290" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb5-292"><a href="#cb5-292" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-293"><a href="#cb5-293" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-294"><a href="#cb5-294" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>start_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-295"><a href="#cb5-295" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-296"><a href="#cb5-296" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>end_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-297"><a href="#cb5-297" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-298"><a href="#cb5-298" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> start_abs<span class="op">;</span></span>
+<span id="cb5-299"><a href="#cb5-299" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> end_abs<span class="op">;</span></span>
+<span id="cb5-300"><a href="#cb5-300" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-301"><a href="#cb5-301" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-302"><a href="#cb5-302" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-303"><a href="#cb5-303" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-304"><a href="#cb5-304" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>start<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-305"><a href="#cb5-305" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-306"><a href="#cb5-306" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>end<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-307"><a href="#cb5-307" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-308"><a href="#cb5-308" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-309"><a href="#cb5-309" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> aligned_interval<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb5-310"><a href="#cb5-310" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> aligned_interval<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb5-311"><a href="#cb5-311" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-312"><a href="#cb5-312" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-313"><a href="#cb5-313" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span>view_start<span class="op">,</span> view_end<span class="op">});</span></span>
+<span id="cb5-314"><a href="#cb5-314" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_alignment_times<span class="op">.</span>push_back<span class="op">(</span>alignment_abs_time<span class="op">);</span></span>
+<span id="cb5-315"><a href="#cb5-315" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-316"><a href="#cb5-316" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> view <span class="op">=</span> U<span class="op">::</span>createView<span class="op">(</span></span>
+<span id="cb5-317"><a href="#cb5-317" aria-hidden="true" tabindex="-1"></a>                    source<span class="op">,</span></span>
+<span id="cb5-318"><a href="#cb5-318" aria-hidden="true" tabindex="-1"></a>                    view_start<span class="op">,</span></span>
+<span id="cb5-319"><a href="#cb5-319" aria-hidden="true" tabindex="-1"></a>                    view_end<span class="op">);</span></span>
+<span id="cb5-320"><a href="#cb5-320" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">));</span></span>
+<span id="cb5-321"><a href="#cb5-321" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-322"><a href="#cb5-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-323"><a href="#cb5-323" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-324"><a href="#cb5-324" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-325"><a href="#cb5-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-326"><a href="#cb5-326" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U <span class="op">=</span> T<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-327"><a href="#cb5-327" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>CopyableTimeRangeDataType<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-328"><a href="#cb5-328" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataType<span class="op">&lt;</span>U<span class="op">&gt;)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-329"><a href="#cb5-329" aria-hidden="true" tabindex="-1"></a>                 <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewableDataTypeInt64<span class="op">&lt;</span>U<span class="op">&gt;)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb5-330"><a href="#cb5-330" aria-hidden="true" tabindex="-1"></a>                 WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>IntervalSource<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-331"><a href="#cb5-331" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> GatherResult create<span class="op">(</span></span>
+<span id="cb5-332"><a href="#cb5-332" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-333"><a href="#cb5-333" aria-hidden="true" tabindex="-1"></a>            IntervalSourceT <span class="at">const</span><span class="op">&amp;</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-334"><a href="#cb5-334" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-335"><a href="#cb5-335" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> source<span class="op">;</span></span>
+<span id="cb5-336"><a href="#cb5-336" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-337"><a href="#cb5-337" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-338"><a href="#cb5-338" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_alignment_times<span class="op">.</span>reserve<span class="op">(</span>interval_source<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-339"><a href="#cb5-339" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-340"><a href="#cb5-340" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Resolve TimeFrames for absolute-time conversion</span></span>
+<span id="cb5-341"><a href="#cb5-341" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> source_tf <span class="op">=</span> source <span class="op">?</span> source<span class="op">-&gt;</span>getTimeFrame<span class="op">()</span> <span class="op">:</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-342"><a href="#cb5-342" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> adapter_tf <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-343"><a href="#cb5-343" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrameAccess<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-344"><a href="#cb5-344" aria-hidden="true" tabindex="-1"></a>            adapter_tf <span class="op">=</span> interval_source<span class="op">.</span>getTimeFrame<span class="op">();</span></span>
+<span id="cb5-345"><a href="#cb5-345" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-346"><a href="#cb5-346" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-347"><a href="#cb5-347" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> aligned_interval <span class="op">:</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-348"><a href="#cb5-348" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> view_start<span class="op">,</span> view_end<span class="op">,</span> alignment_abs_time<span class="op">;</span></span>
+<span id="cb5-349"><a href="#cb5-349" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-350"><a href="#cb5-350" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>adapter_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-351"><a href="#cb5-351" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-352"><a href="#cb5-352" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>alignment_time<span class="op">));</span></span>
+<span id="cb5-353"><a href="#cb5-353" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> start_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-354"><a href="#cb5-354" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>start<span class="op">));</span></span>
+<span id="cb5-355"><a href="#cb5-355" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int64_t</span> end_abs <span class="op">=</span> adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span></span>
+<span id="cb5-356"><a href="#cb5-356" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>aligned_interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb5-357"><a href="#cb5-357" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb5-358"><a href="#cb5-358" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-359"><a href="#cb5-359" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-360"><a href="#cb5-360" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>start_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-361"><a href="#cb5-361" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-362"><a href="#cb5-362" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>end_abs<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-363"><a href="#cb5-363" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-364"><a href="#cb5-364" aria-hidden="true" tabindex="-1"></a>                    view_start <span class="op">=</span> start_abs<span class="op">;</span></span>
+<span id="cb5-365"><a href="#cb5-365" aria-hidden="true" tabindex="-1"></a>                    view_end <span class="op">=</span> end_abs<span class="op">;</span></span>
+<span id="cb5-366"><a href="#cb5-366" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-367"><a href="#cb5-367" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>source_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-368"><a href="#cb5-368" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-369"><a href="#cb5-369" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-370"><a href="#cb5-370" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>start<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-371"><a href="#cb5-371" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span></span>
+<span id="cb5-372"><a href="#cb5-372" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>aligned_interval<span class="op">.</span>end<span class="op">)).</span>getValue<span class="op">();</span></span>
+<span id="cb5-373"><a href="#cb5-373" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-374"><a href="#cb5-374" aria-hidden="true" tabindex="-1"></a>                alignment_abs_time <span class="op">=</span> aligned_interval<span class="op">.</span>alignment_time<span class="op">;</span></span>
+<span id="cb5-375"><a href="#cb5-375" aria-hidden="true" tabindex="-1"></a>                view_start <span class="op">=</span> aligned_interval<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb5-376"><a href="#cb5-376" aria-hidden="true" tabindex="-1"></a>                view_end <span class="op">=</span> aligned_interval<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb5-377"><a href="#cb5-377" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-378"><a href="#cb5-378" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-379"><a href="#cb5-379" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_intervals<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span>view_start<span class="op">,</span> view_end<span class="op">});</span></span>
+<span id="cb5-380"><a href="#cb5-380" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_alignment_times<span class="op">.</span>push_back<span class="op">(</span>alignment_abs_time<span class="op">);</span></span>
+<span id="cb5-381"><a href="#cb5-381" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb5-382"><a href="#cb5-382" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> copy <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>U<span class="op">&gt;(</span>source<span class="op">-&gt;</span>createTimeRangeCopy<span class="op">(</span></span>
+<span id="cb5-383"><a href="#cb5-383" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>view_start<span class="op">),</span></span>
+<span id="cb5-384"><a href="#cb5-384" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex<span class="op">(</span>view_end<span class="op">)));</span></span>
+<span id="cb5-385"><a href="#cb5-385" aria-hidden="true" tabindex="-1"></a>            copy<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>source<span class="op">-&gt;</span>getTimeFrame<span class="op">());</span></span>
+<span id="cb5-386"><a href="#cb5-386" aria-hidden="true" tabindex="-1"></a>            copy<span class="op">-&gt;</span>setImageSize<span class="op">(</span>source<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
+<span id="cb5-387"><a href="#cb5-387" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>copy<span class="op">));</span></span>
+<span id="cb5-388"><a href="#cb5-388" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-389"><a href="#cb5-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-390"><a href="#cb5-390" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-391"><a href="#cb5-391" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-392"><a href="#cb5-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-393"><a href="#cb5-393" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Range Interface ==========</span></span>
+<span id="cb5-394"><a href="#cb5-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-395"><a href="#cb5-395" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> const_iterator begin<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>begin<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-396"><a href="#cb5-396" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-397"><a href="#cb5-397" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> const_iterator end<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>end<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-398"><a href="#cb5-398" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-399"><a href="#cb5-399" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> const_iterator cbegin<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>cbegin<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-400"><a href="#cb5-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-401"><a href="#cb5-401" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> const_iterator cend<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>cend<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-402"><a href="#cb5-402" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-403"><a href="#cb5-403" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">size_type</span> size<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>size<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-404"><a href="#cb5-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-405"><a href="#cb5-405" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> empty<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>empty<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-406"><a href="#cb5-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-407"><a href="#cb5-407" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">[](</span><span class="dt">size_type</span> i<span class="op">)</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">[</span>i<span class="op">];</span> <span class="op">}</span></span>
+<span id="cb5-408"><a href="#cb5-408" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-409"><a href="#cb5-409" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;</span> at<span class="op">(</span><span class="dt">size_type</span> i<span class="op">)</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>at<span class="op">(</span>i<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb5-410"><a href="#cb5-410" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-411"><a href="#cb5-411" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;</span> front<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>front<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-412"><a href="#cb5-412" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-413"><a href="#cb5-413" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;</span> back<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _views<span class="op">.</span>back<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb5-414"><a href="#cb5-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-415"><a href="#cb5-415" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Source Access ==========</span></span>
+<span id="cb5-416"><a href="#cb5-416" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-417"><a href="#cb5-417" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> _source<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-418"><a href="#cb5-418" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-419"><a href="#cb5-419" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _intervals<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-420"><a href="#cb5-420" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-421"><a href="#cb5-421" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> Interval intervalAt<span class="op">(</span><span class="dt">size_type</span> i<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-422"><a href="#cb5-422" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;=</span> _intervals<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-423"><a href="#cb5-423" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">(</span><span class="st">"GatherResult::intervalAt: index out of range"</span><span class="op">);</span></span>
+<span id="cb5-424"><a href="#cb5-424" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-425"><a href="#cb5-425" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _intervals<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb5-426"><a href="#cb5-426" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-427"><a href="#cb5-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-428"><a href="#cb5-428" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int64_t</span> alignmentTimeAt<span class="op">(</span><span class="dt">size_type</span> i<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-429"><a href="#cb5-429" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;=</span> _intervals<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-430"><a href="#cb5-430" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">(</span><span class="st">"GatherResult::alignmentTimeAt: index out of range"</span><span class="op">);</span></span>
+<span id="cb5-431"><a href="#cb5-431" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-432"><a href="#cb5-432" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle potential reordering from sortBy()/reorder()</span></span>
+<span id="cb5-433"><a href="#cb5-433" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_type</span> orig_idx <span class="op">=</span> <span class="op">!</span>_reorder_indices<span class="op">.</span>empty<span class="op">()</span> <span class="op">?</span> _reorder_indices<span class="op">[</span>i<span class="op">]</span> <span class="op">:</span> i<span class="op">;</span></span>
+<span id="cb5-434"><a href="#cb5-434" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-435"><a href="#cb5-435" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use alignment_times if available, otherwise fall back to interval start</span></span>
+<span id="cb5-436"><a href="#cb5-436" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_alignment_times<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> orig_idx <span class="op">&lt;</span> _alignment_times<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-437"><a href="#cb5-437" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _alignment_times<span class="op">[</span>orig_idx<span class="op">];</span></span>
+<span id="cb5-438"><a href="#cb5-438" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-439"><a href="#cb5-439" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _intervals<span class="op">[</span>orig_idx<span class="op">].</span>start<span class="op">;</span></span>
+<span id="cb5-440"><a href="#cb5-440" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-441"><a href="#cb5-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-442"><a href="#cb5-442" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Convenience Methods ==========</span></span>
+<span id="cb5-443"><a href="#cb5-443" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-444"><a href="#cb5-444" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> views<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-445"><a href="#cb5-445" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::all<span class="op">(</span>_views<span class="op">);</span></span>
+<span id="cb5-446"><a href="#cb5-446" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-447"><a href="#cb5-447" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-448"><a href="#cb5-448" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">&gt;</span></span>
+<span id="cb5-449"><a href="#cb5-449" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> transform<span class="op">(</span>F <span class="op">&amp;&amp;</span> func<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-450"><a href="#cb5-450" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> ResultType <span class="op">=</span> <span class="bu">std::</span>invoke_result_t<span class="op">&lt;</span>F<span class="op">,</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;&gt;;</span></span>
+<span id="cb5-451"><a href="#cb5-451" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>ResultType<span class="op">&gt;</span> results<span class="op">;</span></span>
+<span id="cb5-452"><a href="#cb5-452" aria-hidden="true" tabindex="-1"></a>        results<span class="op">.</span>reserve<span class="op">(</span>_views<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-453"><a href="#cb5-453" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> view <span class="op">:</span> _views<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-454"><a href="#cb5-454" aria-hidden="true" tabindex="-1"></a>            results<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>invoke<span class="op">(</span><span class="bu">std::</span>forward<span class="op">&lt;</span>F<span class="op">&gt;(</span>func<span class="op">),</span> view<span class="op">));</span></span>
+<span id="cb5-455"><a href="#cb5-455" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-456"><a href="#cb5-456" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> results<span class="op">;</span></span>
+<span id="cb5-457"><a href="#cb5-457" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-458"><a href="#cb5-458" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-459"><a href="#cb5-459" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">&gt;</span></span>
+<span id="cb5-460"><a href="#cb5-460" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> transformWithInterval<span class="op">(</span>F <span class="op">&amp;&amp;</span> func<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-461"><a href="#cb5-461" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> ResultType <span class="op">=</span> <span class="bu">std::</span>invoke_result_t<span class="op">&lt;</span>F<span class="op">,</span> <span class="dt">value_type</span> <span class="at">const</span> <span class="op">&amp;,</span> Interval <span class="at">const</span> <span class="op">&amp;&gt;;</span></span>
+<span id="cb5-462"><a href="#cb5-462" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>ResultType<span class="op">&gt;</span> results<span class="op">;</span></span>
+<span id="cb5-463"><a href="#cb5-463" aria-hidden="true" tabindex="-1"></a>        results<span class="op">.</span>reserve<span class="op">(</span>_views<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-464"><a href="#cb5-464" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-465"><a href="#cb5-465" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> idx <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> idx <span class="op">&lt;</span> _views<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-466"><a href="#cb5-466" aria-hidden="true" tabindex="-1"></a>            results<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>invoke<span class="op">(</span></span>
+<span id="cb5-467"><a href="#cb5-467" aria-hidden="true" tabindex="-1"></a>                    <span class="bu">std::</span>forward<span class="op">&lt;</span>F<span class="op">&gt;(</span>func<span class="op">),</span></span>
+<span id="cb5-468"><a href="#cb5-468" aria-hidden="true" tabindex="-1"></a>                    _views<span class="op">[</span>idx<span class="op">],</span></span>
+<span id="cb5-469"><a href="#cb5-469" aria-hidden="true" tabindex="-1"></a>                    _intervals<span class="op">[</span>idx<span class="op">]));</span></span>
+<span id="cb5-470"><a href="#cb5-470" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-471"><a href="#cb5-471" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> results<span class="op">;</span></span>
+<span id="cb5-472"><a href="#cb5-472" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-473"><a href="#cb5-473" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-474"><a href="#cb5-474" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult materialize<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-475"><a href="#cb5-475" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-476"><a href="#cb5-476" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> _source<span class="op">;</span></span>
+<span id="cb5-477"><a href="#cb5-477" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals <span class="op">=</span> _intervals<span class="op">;</span></span>
+<span id="cb5-478"><a href="#cb5-478" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>_views<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-479"><a href="#cb5-479" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-480"><a href="#cb5-480" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> view <span class="op">:</span> _views<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-481"><a href="#cb5-481" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="kw">requires</span> <span class="op">{</span> view<span class="op">-&gt;</span>materialize<span class="op">();</span> <span class="op">})</span> <span class="op">{</span></span>
+<span id="cb5-482"><a href="#cb5-482" aria-hidden="true" tabindex="-1"></a>                result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span>view<span class="op">-&gt;</span>materialize<span class="op">());</span></span>
+<span id="cb5-483"><a href="#cb5-483" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-484"><a href="#cb5-484" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Type doesn't have materialize(), just copy the shared_ptr</span></span>
+<span id="cb5-485"><a href="#cb5-485" aria-hidden="true" tabindex="-1"></a>                result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span>view<span class="op">);</span></span>
+<span id="cb5-486"><a href="#cb5-486" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-487"><a href="#cb5-487" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-488"><a href="#cb5-488" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-489"><a href="#cb5-489" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-490"><a href="#cb5-490" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-491"><a href="#cb5-491" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-492"><a href="#cb5-492" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Pipeline Integration Methods ==========</span></span>
+<span id="cb5-493"><a href="#cb5-493" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-494"><a href="#cb5-494" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore buildTrialStore<span class="op">(</span><span class="dt">size_type</span> trial_idx<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-495"><a href="#cb5-495" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>trial_idx <span class="op">&gt;=</span> size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-496"><a href="#cb5-496" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">(</span><span class="st">"GatherResult::buildTrialStore: index out of range"</span><span class="op">);</span></span>
+<span id="cb5-497"><a href="#cb5-497" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-498"><a href="#cb5-498" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-499"><a href="#cb5-499" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> interval <span class="op">=</span> intervalAtReordered<span class="op">(</span>trial_idx<span class="op">);</span></span>
+<span id="cb5-500"><a href="#cb5-500" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_type</span> orig_idx <span class="op">=</span> originalIndex<span class="op">(</span>trial_idx<span class="op">);</span></span>
+<span id="cb5-501"><a href="#cb5-501" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-502"><a href="#cb5-502" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use stored alignment time if available, otherwise default to interval start</span></span>
+<span id="cb5-503"><a href="#cb5-503" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> alignment_time <span class="op">=</span> <span class="op">!</span>_alignment_times<span class="op">.</span>empty<span class="op">()</span></span>
+<span id="cb5-504"><a href="#cb5-504" aria-hidden="true" tabindex="-1"></a>            <span class="op">?</span> _alignment_times<span class="op">[</span>orig_idx<span class="op">]</span></span>
+<span id="cb5-505"><a href="#cb5-505" aria-hidden="true" tabindex="-1"></a>            <span class="op">:</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>interval<span class="op">.</span>start<span class="op">);</span></span>
+<span id="cb5-506"><a href="#cb5-506" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-507"><a href="#cb5-507" aria-hidden="true" tabindex="-1"></a>        WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore store<span class="op">;</span></span>
+<span id="cb5-508"><a href="#cb5-508" aria-hidden="true" tabindex="-1"></a>        store<span class="op">.</span>set<span class="op">(</span><span class="st">"alignment_time"</span><span class="op">,</span> alignment_time<span class="op">);</span></span>
+<span id="cb5-509"><a href="#cb5-509" aria-hidden="true" tabindex="-1"></a>        store<span class="op">.</span>set<span class="op">(</span><span class="st">"trial_index"</span><span class="op">,</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>orig_idx<span class="op">));</span></span>
+<span id="cb5-510"><a href="#cb5-510" aria-hidden="true" tabindex="-1"></a>        store<span class="op">.</span>set<span class="op">(</span><span class="st">"trial_duration"</span><span class="op">,</span> interval<span class="op">.</span>end <span class="op">-</span> interval<span class="op">.</span>start<span class="op">);</span></span>
+<span id="cb5-511"><a href="#cb5-511" aria-hidden="true" tabindex="-1"></a>        store<span class="op">.</span>set<span class="op">(</span><span class="st">"end_time"</span><span class="op">,</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb5-512"><a href="#cb5-512" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-513"><a href="#cb5-513" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> store<span class="op">;</span></span>
+<span id="cb5-514"><a href="#cb5-514" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-515"><a href="#cb5-515" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-516"><a href="#cb5-516" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Value<span class="op">&gt;</span></span>
+<span id="cb5-517"><a href="#cb5-517" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> project<span class="op">(</span></span>
+<span id="cb5-518"><a href="#cb5-518" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ValueProjectionFactoryV2<span class="op">&lt;</span><span class="dt">element_type</span><span class="op">,</span> Value<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> factory<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-519"><a href="#cb5-519" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> ProjectionFn <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ValueProjectionFn<span class="op">&lt;</span><span class="dt">element_type</span><span class="op">,</span> Value<span class="op">&gt;;</span></span>
+<span id="cb5-520"><a href="#cb5-520" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>ProjectionFn<span class="op">&gt;</span> projections<span class="op">;</span></span>
+<span id="cb5-521"><a href="#cb5-521" aria-hidden="true" tabindex="-1"></a>        projections<span class="op">.</span>reserve<span class="op">(</span>size<span class="op">());</span></span>
+<span id="cb5-522"><a href="#cb5-522" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-523"><a href="#cb5-523" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_type</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-524"><a href="#cb5-524" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> store <span class="op">=</span> buildTrialStore<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb5-525"><a href="#cb5-525" aria-hidden="true" tabindex="-1"></a>            projections<span class="op">.</span>push_back<span class="op">(</span>factory<span class="op">(</span>store<span class="op">));</span></span>
+<span id="cb5-526"><a href="#cb5-526" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-527"><a href="#cb5-527" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-528"><a href="#cb5-528" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> projections<span class="op">;</span></span>
+<span id="cb5-529"><a href="#cb5-529" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-530"><a href="#cb5-530" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-531"><a href="#cb5-531" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb5-532"><a href="#cb5-532" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Scalar<span class="op">&gt;</span> reduce<span class="op">(</span></span>
+<span id="cb5-533"><a href="#cb5-533" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ReducerFactoryV2<span class="op">&lt;</span><span class="dt">element_type</span><span class="op">,</span> Scalar<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> reducer_factory<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-534"><a href="#cb5-534" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Scalar<span class="op">&gt;</span> results<span class="op">;</span></span>
+<span id="cb5-535"><a href="#cb5-535" aria-hidden="true" tabindex="-1"></a>        results<span class="op">.</span>reserve<span class="op">(</span>size<span class="op">());</span></span>
+<span id="cb5-536"><a href="#cb5-536" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-537"><a href="#cb5-537" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_type</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-538"><a href="#cb5-538" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> store <span class="op">=</span> buildTrialStore<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb5-539"><a href="#cb5-539" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> reducer <span class="op">=</span> reducer_factory<span class="op">(</span>store<span class="op">);</span></span>
+<span id="cb5-540"><a href="#cb5-540" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-541"><a href="#cb5-541" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Materialize view into vector for reducer (takes span)</span></span>
+<span id="cb5-542"><a href="#cb5-542" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> view <span class="op">=</span> _views<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">();</span></span>
+<span id="cb5-543"><a href="#cb5-543" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">element_type</span><span class="op">&gt;</span> elements<span class="op">(</span>view<span class="op">.</span>begin<span class="op">(),</span> view<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb5-544"><a href="#cb5-544" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-545"><a href="#cb5-545" aria-hidden="true" tabindex="-1"></a>            results<span class="op">.</span>push_back<span class="op">(</span>reducer<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span><span class="dt">element_type</span> <span class="at">const</span><span class="op">&gt;{</span>elements<span class="op">}));</span></span>
+<span id="cb5-546"><a href="#cb5-546" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-547"><a href="#cb5-547" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-548"><a href="#cb5-548" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> results<span class="op">;</span></span>
+<span id="cb5-549"><a href="#cb5-549" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-550"><a href="#cb5-550" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-551"><a href="#cb5-551" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb5-552"><a href="#cb5-552" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> sortIndicesBy<span class="op">(</span></span>
+<span id="cb5-553"><a href="#cb5-553" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ReducerFactoryV2<span class="op">&lt;</span><span class="dt">element_type</span><span class="op">,</span> Scalar<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> reducer_factory<span class="op">,</span></span>
+<span id="cb5-554"><a href="#cb5-554" aria-hidden="true" tabindex="-1"></a>            <span class="dt">bool</span> ascending <span class="op">=</span> <span class="kw">true</span><span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-555"><a href="#cb5-555" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-556"><a href="#cb5-556" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> values <span class="op">=</span> reduce<span class="op">(</span>reducer_factory<span class="op">);</span></span>
+<span id="cb5-557"><a href="#cb5-557" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-558"><a href="#cb5-558" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> indices<span class="op">(</span>size<span class="op">());</span></span>
+<span id="cb5-559"><a href="#cb5-559" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>iota<span class="op">(</span>indices<span class="op">.</span>begin<span class="op">(),</span> indices<span class="op">.</span>end<span class="op">(),</span> <span class="dt">size_type</span><span class="op">{</span><span class="dv">0</span><span class="op">});</span></span>
+<span id="cb5-560"><a href="#cb5-560" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-561"><a href="#cb5-561" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>ascending<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-562"><a href="#cb5-562" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>stable_sort<span class="op">(</span>indices<span class="op">.</span>begin<span class="op">(),</span> indices<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb5-563"><a href="#cb5-563" aria-hidden="true" tabindex="-1"></a>                <span class="op">[&amp;</span>values<span class="op">](</span><span class="dt">size_type</span> a<span class="op">,</span> <span class="dt">size_type</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-564"><a href="#cb5-564" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Handle NaN: NaN values sort to end</span></span>
+<span id="cb5-565"><a href="#cb5-565" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_floating_point_v<span class="op">&lt;</span>Scalar<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-566"><a href="#cb5-566" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>isnan<span class="op">(</span>values<span class="op">[</span>a<span class="op">]))</span> <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-567"><a href="#cb5-567" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>isnan<span class="op">(</span>values<span class="op">[</span>b<span class="op">]))</span> <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-568"><a href="#cb5-568" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-569"><a href="#cb5-569" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> values<span class="op">[</span>a<span class="op">]</span> <span class="op">&lt;</span> values<span class="op">[</span>b<span class="op">];</span></span>
+<span id="cb5-570"><a href="#cb5-570" aria-hidden="true" tabindex="-1"></a>                <span class="op">});</span></span>
+<span id="cb5-571"><a href="#cb5-571" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-572"><a href="#cb5-572" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>stable_sort<span class="op">(</span>indices<span class="op">.</span>begin<span class="op">(),</span> indices<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb5-573"><a href="#cb5-573" aria-hidden="true" tabindex="-1"></a>                <span class="op">[&amp;</span>values<span class="op">](</span><span class="dt">size_type</span> a<span class="op">,</span> <span class="dt">size_type</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-574"><a href="#cb5-574" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Handle NaN: NaN values sort to end</span></span>
+<span id="cb5-575"><a href="#cb5-575" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_floating_point_v<span class="op">&lt;</span>Scalar<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-576"><a href="#cb5-576" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>isnan<span class="op">(</span>values<span class="op">[</span>a<span class="op">]))</span> <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-577"><a href="#cb5-577" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>isnan<span class="op">(</span>values<span class="op">[</span>b<span class="op">]))</span> <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-578"><a href="#cb5-578" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-579"><a href="#cb5-579" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> values<span class="op">[</span>a<span class="op">]</span> <span class="op">&gt;</span> values<span class="op">[</span>b<span class="op">];</span></span>
+<span id="cb5-580"><a href="#cb5-580" aria-hidden="true" tabindex="-1"></a>                <span class="op">});</span></span>
+<span id="cb5-581"><a href="#cb5-581" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-582"><a href="#cb5-582" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-583"><a href="#cb5-583" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> indices<span class="op">;</span></span>
+<span id="cb5-584"><a href="#cb5-584" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-585"><a href="#cb5-585" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-586"><a href="#cb5-586" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult reorder<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> indices<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-587"><a href="#cb5-587" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>indices<span class="op">.</span>size<span class="op">()</span> <span class="op">!=</span> size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-588"><a href="#cb5-588" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>invalid_argument<span class="op">(</span></span>
+<span id="cb5-589"><a href="#cb5-589" aria-hidden="true" tabindex="-1"></a>                <span class="st">"GatherResult::reorder: indices size must match result size"</span><span class="op">);</span></span>
+<span id="cb5-590"><a href="#cb5-590" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-591"><a href="#cb5-591" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-592"><a href="#cb5-592" aria-hidden="true" tabindex="-1"></a>        GatherResult result<span class="op">;</span></span>
+<span id="cb5-593"><a href="#cb5-593" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_source <span class="op">=</span> _source<span class="op">;</span></span>
+<span id="cb5-594"><a href="#cb5-594" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Note: We keep the original intervals - reordering is logical only</span></span>
+<span id="cb5-595"><a href="#cb5-595" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_intervals <span class="op">=</span> _intervals<span class="op">;</span></span>
+<span id="cb5-596"><a href="#cb5-596" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_alignment_times <span class="op">=</span> _alignment_times<span class="op">;</span></span>
+<span id="cb5-597"><a href="#cb5-597" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_views<span class="op">.</span>reserve<span class="op">(</span>size<span class="op">());</span></span>
+<span id="cb5-598"><a href="#cb5-598" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>_reorder_indices <span class="op">=</span> indices<span class="op">;</span>  <span class="co">// Store the reorder mapping</span></span>
+<span id="cb5-599"><a href="#cb5-599" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-600"><a href="#cb5-600" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> idx <span class="op">:</span> indices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-601"><a href="#cb5-601" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>idx <span class="op">&gt;=</span> size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-602"><a href="#cb5-602" aria-hidden="true" tabindex="-1"></a>                <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">(</span></span>
+<span id="cb5-603"><a href="#cb5-603" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"GatherResult::reorder: index out of range"</span><span class="op">);</span></span>
+<span id="cb5-604"><a href="#cb5-604" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-605"><a href="#cb5-605" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>_views<span class="op">.</span>push_back<span class="op">(</span>_views<span class="op">[</span>idx<span class="op">]);</span></span>
+<span id="cb5-606"><a href="#cb5-606" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-607"><a href="#cb5-607" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-608"><a href="#cb5-608" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-609"><a href="#cb5-609" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-610"><a href="#cb5-610" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-611"><a href="#cb5-611" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">size_type</span> originalIndex<span class="op">(</span><span class="dt">size_type</span> reordered_idx<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-612"><a href="#cb5-612" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>reordered_idx <span class="op">&gt;=</span> size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-613"><a href="#cb5-613" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">(</span><span class="st">"GatherResult::originalIndex: index out of range"</span><span class="op">);</span></span>
+<span id="cb5-614"><a href="#cb5-614" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-615"><a href="#cb5-615" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_reorder_indices<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-616"><a href="#cb5-616" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> reordered_idx<span class="op">;</span>  <span class="co">// Not reordered</span></span>
+<span id="cb5-617"><a href="#cb5-617" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-618"><a href="#cb5-618" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _reorder_indices<span class="op">[</span>reordered_idx<span class="op">];</span></span>
+<span id="cb5-619"><a href="#cb5-619" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-620"><a href="#cb5-620" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-621"><a href="#cb5-621" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isReordered<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb5-622"><a href="#cb5-622" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">!</span>_reorder_indices<span class="op">.</span>empty<span class="op">();</span></span>
+<span id="cb5-623"><a href="#cb5-623" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-624"><a href="#cb5-624" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-625"><a href="#cb5-625" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> Interval intervalAtReordered<span class="op">(</span><span class="dt">size_type</span> reordered_idx<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb5-626"><a href="#cb5-626" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> intervalAt<span class="op">(</span>originalIndex<span class="op">(</span>reordered_idx<span class="op">));</span></span>
+<span id="cb5-627"><a href="#cb5-627" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-628"><a href="#cb5-628" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-629"><a href="#cb5-629" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb5-630"><a href="#cb5-630" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-631"><a href="#cb5-631" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrame<span class="op">&lt;</span>U<span class="op">&gt;</span></span>
+<span id="cb5-632"><a href="#cb5-632" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">(</span><span class="dt">int64_t</span><span class="op">)&gt;</span> getTimeConverter<span class="op">(</span></span>
+<span id="cb5-633"><a href="#cb5-633" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb5-634"><a href="#cb5-634" aria-hidden="true" tabindex="-1"></a>            IntervalSourceT <span class="at">const</span><span class="op">&amp;</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-635"><a href="#cb5-635" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-636"><a href="#cb5-636" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get TimeFrames</span></span>
+<span id="cb5-637"><a href="#cb5-637" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> source_tf <span class="op">=</span> source <span class="op">?</span> source<span class="op">-&gt;</span>getTimeFrame<span class="op">()</span> <span class="op">:</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-638"><a href="#cb5-638" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-639"><a href="#cb5-639" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check if adapter has TimeFrame access</span></span>
+<span id="cb5-640"><a href="#cb5-640" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> adapter_tf <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-641"><a href="#cb5-641" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrameAccess<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb5-642"><a href="#cb5-642" aria-hidden="true" tabindex="-1"></a>            adapter_tf <span class="op">=</span> interval_source<span class="op">.</span>getTimeFrame<span class="op">();</span></span>
+<span id="cb5-643"><a href="#cb5-643" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-644"><a href="#cb5-644" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-645"><a href="#cb5-645" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If both have TimeFrames and they're different, need conversion</span></span>
+<span id="cb5-646"><a href="#cb5-646" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>source_tf <span class="op">&amp;&amp;</span> adapter_tf <span class="op">&amp;&amp;</span> source_tf<span class="op">.</span>get<span class="op">()</span> <span class="op">!=</span> adapter_tf<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-647"><a href="#cb5-647" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Return a converting function</span></span>
+<span id="cb5-648"><a href="#cb5-648" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">[</span>source_tf<span class="op">,</span> adapter_tf<span class="op">](</span><span class="dt">int64_t</span> time<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">int64_t</span> <span class="op">{</span></span>
+<span id="cb5-649"><a href="#cb5-649" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Convert from adapter's TimeFrame to source's TimeFrame</span></span>
+<span id="cb5-650"><a href="#cb5-650" aria-hidden="true" tabindex="-1"></a>                <span class="co">// adapter_tf: index -&gt; absolute time via getTimeAtIndex</span></span>
+<span id="cb5-651"><a href="#cb5-651" aria-hidden="true" tabindex="-1"></a>                <span class="co">// source_tf: absolute time -&gt; index via getIndexAtTime</span></span>
+<span id="cb5-652"><a href="#cb5-652" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> absolute_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span></span>
+<span id="cb5-653"><a href="#cb5-653" aria-hidden="true" tabindex="-1"></a>                    adapter_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>TimeFrameIndex<span class="op">(</span>time<span class="op">)));</span></span>
+<span id="cb5-654"><a href="#cb5-654" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> source_tf<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>absolute_time<span class="op">).</span>getValue<span class="op">();</span></span>
+<span id="cb5-655"><a href="#cb5-655" aria-hidden="true" tabindex="-1"></a>            <span class="op">};</span></span>
+<span id="cb5-656"><a href="#cb5-656" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-657"><a href="#cb5-657" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-658"><a href="#cb5-658" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No conversion needed - return identity</span></span>
+<span id="cb5-659"><a href="#cb5-659" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">[](</span><span class="dt">int64_t</span> time<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">int64_t</span> <span class="op">{</span> <span class="cf">return</span> time<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb5-660"><a href="#cb5-660" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-661"><a href="#cb5-661" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-662"><a href="#cb5-662" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> U<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-663"><a href="#cb5-663" aria-hidden="true" tabindex="-1"></a>        <span class="kw">requires</span> <span class="op">(!</span>WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>HasTimeFrame<span class="op">&lt;</span>U<span class="op">&gt;)</span></span>
+<span id="cb5-664"><a href="#cb5-664" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">(</span><span class="dt">int64_t</span><span class="op">)&gt;</span> getTimeConverter<span class="op">(</span></span>
+<span id="cb5-665"><a href="#cb5-665" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> <span class="co">/*source*/</span><span class="op">,</span></span>
+<span id="cb5-666"><a href="#cb5-666" aria-hidden="true" tabindex="-1"></a>            IntervalSourceT <span class="at">const</span><span class="op">&amp;</span> <span class="co">/*interval_source*/</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-667"><a href="#cb5-667" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">[](</span><span class="dt">int64_t</span> time<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">int64_t</span> <span class="op">{</span> <span class="cf">return</span> time<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb5-668"><a href="#cb5-668" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-669"><a href="#cb5-669" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-670"><a href="#cb5-670" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> _source<span class="op">;</span></span>
+<span id="cb5-671"><a href="#cb5-671" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> _intervals<span class="op">;</span>         <span class="co">// Stored intervals (no merging)</span></span>
+<span id="cb5-672"><a href="#cb5-672" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">value_type</span><span class="op">&gt;</span> _views<span class="op">;</span></span>
+<span id="cb5-673"><a href="#cb5-673" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> _reorder_indices<span class="op">;</span>  <span class="co">// Maps reordered position → original index</span></span>
+<span id="cb5-674"><a href="#cb5-674" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span> _alignment_times<span class="op">;</span>    <span class="co">// Per-trial alignment times (optional)</span></span>
+<span id="cb5-675"><a href="#cb5-675" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-676"><a href="#cb5-676" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-677"><a href="#cb5-677" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-678"><a href="#cb5-678" aria-hidden="true" tabindex="-1"></a><span class="co">// Free Function: gather()</span></span>
+<span id="cb5-679"><a href="#cb5-679" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-680"><a href="#cb5-680" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-681"><a href="#cb5-681" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-682"><a href="#cb5-682" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb5-683"><a href="#cb5-683" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-684"><a href="#cb5-684" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-685"><a href="#cb5-685" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span>source<span class="op">,</span> intervals<span class="op">);</span></span>
+<span id="cb5-686"><a href="#cb5-686" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-687"><a href="#cb5-687" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-688"><a href="#cb5-688" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-689"><a href="#cb5-689" aria-hidden="true" tabindex="-1"></a><span class="co">// Free Functions: gather() with Interval Adapters</span></span>
+<span id="cb5-690"><a href="#cb5-690" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-691"><a href="#cb5-691" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-692"><a href="#cb5-692" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-693"><a href="#cb5-693" aria-hidden="true" tabindex="-1"></a>    <span class="kw">requires</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>IntervalSource<span class="op">&lt;</span>IntervalSourceT<span class="op">&gt;</span></span>
+<span id="cb5-694"><a href="#cb5-694" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb5-695"><a href="#cb5-695" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-696"><a href="#cb5-696" aria-hidden="true" tabindex="-1"></a>        IntervalSourceT <span class="op">&amp;</span> interval_source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-697"><a href="#cb5-697" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span>source<span class="op">,</span> interval_source<span class="op">);</span></span>
+<span id="cb5-698"><a href="#cb5-698" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-699"><a href="#cb5-699" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-700"><a href="#cb5-700" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// GATHER_RESULT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:25 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

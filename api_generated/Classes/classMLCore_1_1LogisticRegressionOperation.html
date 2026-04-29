@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>MLCore::LogisticRegressionOperation – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#mlcorelogisticregressionoperation" id="toc-mlcorelogisticregressionoperation" class="nav-link active" data-scroll-target="#mlcorelogisticregressionoperation">MLCore::LogisticRegressionOperation</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#usage" id="toc-usage" class="nav-link" data-scroll-target="#usage">Usage</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-logisticregressionoperation" id="toc-function-logisticregressionoperation" class="nav-link" data-scroll-target="#function-logisticregressionoperation">function LogisticRegressionOperation</a></li>
+  <li><a href="#function-logisticregressionoperation-1" id="toc-function-logisticregressionoperation-1" class="nav-link" data-scroll-target="#function-logisticregressionoperation-1">function ~LogisticRegressionOperation</a></li>
+  <li><a href="#function-logisticregressionoperation-2" id="toc-function-logisticregressionoperation-2" class="nav-link" data-scroll-target="#function-logisticregressionoperation-2">function LogisticRegressionOperation</a></li>
+  <li><a href="#function-operator" id="toc-function-operator" class="nav-link" data-scroll-target="#function-operator">function operator=</a></li>
+  <li><a href="#function-logisticregressionoperation-3" id="toc-function-logisticregressionoperation-3" class="nav-link" data-scroll-target="#function-logisticregressionoperation-3">function LogisticRegressionOperation</a></li>
+  <li><a href="#function-operator-1" id="toc-function-operator-1" class="nav-link" data-scroll-target="#function-operator-1">function operator=</a></li>
+  <li><a href="#function-getname" id="toc-function-getname" class="nav-link" data-scroll-target="#function-getname">function getName</a></li>
+  <li><a href="#function-gettasktype" id="toc-function-gettasktype" class="nav-link" data-scroll-target="#function-gettasktype">function getTaskType</a></li>
+  <li><a href="#function-getdefaultparameters" id="toc-function-getdefaultparameters" class="nav-link" data-scroll-target="#function-getdefaultparameters">function getDefaultParameters</a></li>
+  <li><a href="#function-train" id="toc-function-train" class="nav-link" data-scroll-target="#function-train">function train</a></li>
+  <li><a href="#function-predict" id="toc-function-predict" class="nav-link" data-scroll-target="#function-predict">function predict</a></li>
+  <li><a href="#function-predictprobabilities" id="toc-function-predictprobabilities" class="nav-link" data-scroll-target="#function-predictprobabilities">function predictProbabilities</a></li>
+  <li><a href="#function-save" id="toc-function-save" class="nav-link" data-scroll-target="#function-save">function save</a></li>
+  <li><a href="#function-load" id="toc-function-load" class="nav-link" data-scroll-target="#function-load">function load</a></li>
+  <li><a href="#function-istrained" id="toc-function-istrained" class="nav-link" data-scroll-target="#function-istrained">function isTrained</a></li>
+  <li><a href="#function-numclasses" id="toc-function-numclasses" class="nav-link" data-scroll-target="#function-numclasses">function numClasses</a></li>
+  <li><a href="#function-numfeatures" id="toc-function-numfeatures" class="nav-link" data-scroll-target="#function-numfeatures">function numFeatures</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">MLCore::LogisticRegressionOperation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="mlcorelogisticregressionoperation" class="level1">
+<h1>MLCore::LogisticRegressionOperation</h1>
+<p>Logistic Regression classifier wrapping mlpack::LogisticRegression. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;LogisticRegressionOperation.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html">MLCore::MLModelOperation</a></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LogisticRegressionOperation_1_1Impl.html">Impl</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-logisticregressionoperation">LogisticRegressionOperation</a></strong>()</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-~logisticregressionoperation">~LogisticRegressionOperation</a></strong>() override</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-logisticregressionoperation">LogisticRegressionOperation</a></strong>(<a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> const &amp; ) =delete</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> const &amp; ) =delete</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-logisticregressionoperation">LogisticRegressionOperation</a></strong>(<a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> &amp;&amp; )</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">LogisticRegressionOperation</a> &amp;&amp; )</td>
+</tr>
+<tr class="odd">
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getname">getName</a></strong>() const override<br>Unique human-readable name for this model (e.g., “Random Forest”)</td>
+</tr>
+<tr class="even">
+<td>virtual <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a></td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-gettasktype">getTaskType</a></strong>() const override<br>The ML task type this operation supports.</td>
+</tr>
+<tr class="odd">
+<td>virtual std::unique_ptr&lt; <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getdefaultparameters">getDefaultParameters</a></strong>() const override<br>Create a default parameter set for this model.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-train">train</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, arma::Row&lt; std::size_t &gt; const &amp; labels, <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> const * params) override<br>Train the model on labeled data.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-predict">predict</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, arma::Row&lt; std::size_t &gt; &amp; predictions) override<br>Predict class labels for new observations.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-predictprobabilities">predictProbabilities</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &amp; probabilities) override<br>Predict class probabilities for new observations.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-save">save</a></strong>(std::ostream &amp; out) const override<br>Save the trained model to a stream.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-load">load</a></strong>(std::istream &amp; in) override<br>Load a previously saved model from a stream.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-istrained">isTrained</a></strong>() const override<br>Whether the model has been trained (supervised) or fit (unsupervised)</td>
+</tr>
+<tr class="even">
+<td>virtual std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numclasses">numClasses</a></strong>() const override<br>Number of classes (supervised) or clusters (unsupervised)</td>
+</tr>
+<tr class="odd">
+<td>virtual std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numfeatures">numFeatures</a></strong>() const override<br>Number of features the model was trained on.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html">MLCore::MLModelOperation</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>virtual</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-~mlmodeloperation">~MLModelOperation</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-trainsequences">trainSequences</a></strong>(std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; const &amp; featureSequences, std::vector&lt; arma::Row&lt; std::size_t &gt; &gt; const &amp; labelSequences, <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> const * params)<br>Train the model on pre-segmented temporal sequences.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predictsequences">predictSequences</a></strong>(std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; const &amp; featureSequences, std::vector&lt; arma::Row&lt; std::size_t &gt; &gt; &amp; predictionSequences)<br>Predict labels for pre-segmented temporal sequences.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predictsequencesconstrained">predictSequencesConstrained</a></strong>(std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; const &amp; featureSequences, std::vector&lt; arma::Row&lt; std::size_t &gt; &gt; &amp; predictionSequences, std::vector&lt; std::optional&lt; std::size_t &gt; &gt; const &amp; initial_state_constraints)<br>Predict labels with per-sequence initial state constraints.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predictsequencesbidirectionalconstrained">predictSequencesBidirectionalConstrained</a></strong>(std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; const &amp; featureSequences, std::vector&lt; arma::Row&lt; std::size_t &gt; &gt; &amp; predictionSequences, std::vector&lt; std::optional&lt; std::size_t &gt; &gt; const &amp; initial_state_constraints, std::vector&lt; std::optional&lt; std::size_t &gt; &gt; const &amp; terminal_state_constraints)<br>Predict labels with both initial and terminal state constraints.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predictprobabilitiespersequence">predictProbabilitiesPerSequence</a></strong>(std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; const &amp; featureSequences, std::vector&lt; <a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> &gt; &amp; probabilitySequences, std::vector&lt; std::optional&lt; std::size_t &gt; &gt; const &amp; initial_state_constraints, std::vector&lt; std::optional&lt; std::size_t &gt; &gt; const &amp; terminal_state_constraints)<br>Compute per-sequence state probabilities with boundary constraints.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-issequencemodel">isSequenceModel</a></strong>() const<br>Whether this model natively handles temporal sequences.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-fit">fit</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> const * params)<br>Fit the model to unlabeled data (unsupervised)</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-assignclusters">assignClusters</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, arma::Row&lt; std::size_t &gt; &amp; assignments)<br>Assign cluster labels to observations.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MLCore<span class="op">::</span>LogisticRegressionOperation<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Logistic Regression classifier wrapping mlpack::LogisticRegression.</p>
+<p>Binary supervised classification using L2-regularized logistic regression. Naturally outputs calibrated probability estimates (sigmoid of linear model).</p>
+</section>
+<section id="usage" class="level2">
+<h2 class="anchored" data-anchor-id="usage">Usage</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation lr<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>LogisticRegressionParameters params<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>params<span class="op">.</span>lambda <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>params<span class="op">.</span>max_iterations <span class="op">=</span> <span class="dv">10000</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>lr<span class="op">.</span>train<span class="op">(</span>features<span class="op">,</span> labels<span class="op">,</span> <span class="op">&amp;</span>params<span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>lr<span class="op">.</span>predict<span class="op">(</span>new_features<span class="op">,</span> predictions<span class="op">);</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Get well-calibrated per-class probabilities</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>arma<span class="op">::</span>mat probs<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>lr<span class="op">.</span>predictProbabilities<span class="op">(</span>new_features<span class="op">,</span> probs<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-logisticregressionoperation" class="level3">
+<h3 class="anchored" data-anchor-id="function-logisticregressionoperation">function LogisticRegressionOperation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-logisticregressionoperation-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-logisticregressionoperation-1">function ~LogisticRegressionOperation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>LogisticRegressionOperation<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-logisticregressionoperation-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-logisticregressionoperation-2">function LogisticRegressionOperation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    LogisticRegressionOperation <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    LogisticRegressionOperation <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-logisticregressionoperation-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-logisticregressionoperation-3">function LogisticRegressionOperation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    LogisticRegressionOperation <span class="op">&amp;&amp;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator-1">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>LogisticRegressionOperation <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    LogisticRegressionOperation <span class="op">&amp;&amp;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getname" class="level3">
+<h3 class="anchored" data-anchor-id="function-getname">function getName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Unique human-readable name for this model (e.g., “Random Forest”)</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-getname">MLCore::MLModelOperation::getName</a></p>
+<p>Used as the key in <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> and displayed in the UI.</p>
+</section>
+<section id="function-gettasktype" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettasktype">function getTaskType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> MLTaskType getTaskType<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The ML task type this operation supports.</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-gettasktype">MLCore::MLModelOperation::getTaskType</a></p>
+<p>Enables the registry to filter models by task (classification vs clustering).</p>
+</section>
+<section id="function-getdefaultparameters" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdefaultparameters">function getDefaultParameters</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> MLModelParametersBase <span class="op">&gt;</span> getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a default parameter set for this model.</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-getdefaultparameters">MLCore::MLModelOperation::getDefaultParameters</a></p>
+<p>Returns a new instance with algorithm-specific defaults. The caller owns the returned pointer.</p>
+</section>
+<section id="function-train" class="level3">
+<h3 class="anchored" data-anchor-id="function-train">function train</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> train<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> features<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>Row<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> labels<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    MLModelParametersBase <span class="at">const</span> <span class="op">*</span> params</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on labeled data.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>features</strong> Feature matrix (features × observations). Each column is one observation with <code>features.n_rows</code> feature values.</li>
+<li><strong>labels</strong> Label row vector (1 × observations). Each element is a class index in [0, num_classes).</li>
+<li><strong>params</strong> Algorithm-specific parameters. May be nullptr to use defaults. Must be castable to the concrete parameter type expected by this model.</li>
+</ul>
+<p><strong>Return</strong>: true if training succeeded</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>features must not be empty (enforcement: runtime_check)</li>
+<li>features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]</li>
+<li>labels.n_elem must equal features.n_cols (enforcement: none) [IMPORTANT]</li>
+<li>Features are expected to be z-score normalized for scale-sensitive classifiers (Logistic Regression, Softmax Regression). Tree-based methods (Random Forest) are scale-invariant. (enforcement: none) [IMPORTANT]</li>
+</ul>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-train">MLCore::MLModelOperation::train</a></p>
+<p>After successful training, <code>[isTrained()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-istrained)</code> returns true, and <code>[numClasses()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-numclasses)</code> and <code>[numFeatures()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-numfeatures)</code> reflect the training data dimensions.</p>
+<p>The default implementation returns false (unsupervised models).</p>
+</section>
+<section id="function-predict" class="level3">
+<h3 class="anchored" data-anchor-id="function-predict">function predict</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> predict<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> features<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>Row<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="op">&amp;</span> predictions</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict class labels for new observations.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>features</strong> Feature matrix (features × observations)</li>
+<li><strong>predictions</strong> [out] Predicted label row vector (1 × observations)</li>
+</ul>
+<p><strong>Return</strong>: true if prediction succeeded</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-istrained">isTrained()</a> must be true (enforcement: runtime_check)</li>
+<li>features.n_rows must equal <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numfeatures">numFeatures()</a> (enforcement: none) [IMPORTANT]</li>
+<li>features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]</li>
+<li>Features must be z-score normalized using the SAME parameters (mean/std) that were used for the training data passed to <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-train">train()</a>. Use FeatureConverter::applyZscoreNormalization() with stored parameters. (enforcement: none) [IMPORTANT]</li>
+</ul>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predict">MLCore::MLModelOperation::predict</a></p>
+<p>The default implementation returns false (unsupervised models).</p>
+</section>
+<section id="function-predictprobabilities" class="level3">
+<h3 class="anchored" data-anchor-id="function-predictprobabilities">function predictProbabilities</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> predictProbabilities<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> features<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="op">&amp;</span> probabilities</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict class probabilities for new observations.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>features</strong> Feature matrix (features × observations)</li>
+<li><strong>probabilities</strong> [out] Probability matrix (num_classes × observations). Each column sums to 1.0.</li>
+</ul>
+<p><strong>Return</strong>: true if probability estimation is supported and succeeded</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-predictprobabilities">MLCore::MLModelOperation::predictProbabilities</a></p>
+<p>Not all models support probability output. The default returns false. Models that do support it (e.g., Logistic Regression, Random Forest) override this method.</p>
+</section>
+<section id="function-save" class="level3">
+<h3 class="anchored" data-anchor-id="function-save">function save</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> save<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>ostream <span class="op">&amp;</span> out</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save the trained model to a stream.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>out</strong> Output stream (binary or text, model-dependent)</li>
+</ul>
+<p><strong>Return</strong>: true if save succeeded</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-save">MLCore::MLModelOperation::save</a></p>
+<p>The default implementation returns false (no persistence support).</p>
+</section>
+<section id="function-load" class="level3">
+<h3 class="anchored" data-anchor-id="function-load">function load</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> load<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>istream <span class="op">&amp;</span> in</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a previously saved model from a stream.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>in</strong> Input stream</li>
+</ul>
+<p><strong>Return</strong>: true if load succeeded</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-load">MLCore::MLModelOperation::load</a></p>
+<p>After successful loading, <code>[isTrained()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-istrained)</code> should return true. The default implementation returns false (no persistence support).</p>
+</section>
+<section id="function-istrained" class="level3">
+<h3 class="anchored" data-anchor-id="function-istrained">function isTrained</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> isTrained<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether the model has been trained (supervised) or fit (unsupervised)</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-istrained">MLCore::MLModelOperation::isTrained</a></p>
+<p>Returns true after a successful <code>[train()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-train)</code> or <code>[fit()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-fit)</code> call, or after a successful <code>[load()](/api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.md#function-load)</code>.</p>
+</section>
+<section id="function-numclasses" class="level3">
+<h3 class="anchored" data-anchor-id="function-numclasses">function numClasses</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>size_t numClasses<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of classes (supervised) or clusters (unsupervised)</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-numclasses">MLCore::MLModelOperation::numClasses</a></p>
+<p>Returns 0 if the model has not been trained/fit. For binary classification, returns 2.</p>
+</section>
+<section id="function-numfeatures" class="level3">
+<h3 class="anchored" data-anchor-id="function-numfeatures">function numFeatures</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>size_t numFeatures<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of features the model was trained on.</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-numfeatures">MLCore::MLModelOperation::numFeatures</a></p>
+<p>Returns 0 if the model has not been trained/fit. Used for validating that prediction data has the correct dimensionality.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

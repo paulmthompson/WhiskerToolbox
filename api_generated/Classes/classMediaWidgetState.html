@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>MediaWidgetState – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#mediawidgetstate" id="toc-mediawidgetstate" class="nav-link active" data-scroll-target="#mediawidgetstate">MediaWidgetState</a>
+  <ul class="collapse">
+  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#signal-categories" id="toc-signal-categories" class="nav-link" data-scroll-target="#signal-categories">Signal Categories</a></li>
+  <li><a href="#thread-safety" id="toc-thread-safety" class="nav-link" data-scroll-target="#thread-safety">Thread Safety</a></li>
+  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
+  <ul class="collapse">
+  <li><a href="#signal-displayeddatakeychanged" id="toc-signal-displayeddatakeychanged" class="nav-link" data-scroll-target="#signal-displayeddatakeychanged">signal displayedDataKeyChanged</a></li>
+  <li><a href="#signal-zoomchanged" id="toc-signal-zoomchanged" class="nav-link" data-scroll-target="#signal-zoomchanged">signal zoomChanged</a></li>
+  <li><a href="#signal-panchanged" id="toc-signal-panchanged" class="nav-link" data-scroll-target="#signal-panchanged">signal panChanged</a></li>
+  <li><a href="#signal-canvassizechanged" id="toc-signal-canvassizechanged" class="nav-link" data-scroll-target="#signal-canvassizechanged">signal canvasSizeChanged</a></li>
+  <li><a href="#signal-viewportchanged" id="toc-signal-viewportchanged" class="nav-link" data-scroll-target="#signal-viewportchanged">signal viewportChanged</a></li>
+  <li><a href="#signal-canvascoordinatesystemchanged" id="toc-signal-canvascoordinatesystemchanged" class="nav-link" data-scroll-target="#signal-canvascoordinatesystemchanged">signal canvasCoordinateSystemChanged</a></li>
+  <li><a href="#signal-featureenabledchanged" id="toc-signal-featureenabledchanged" class="nav-link" data-scroll-target="#signal-featureenabledchanged">signal featureEnabledChanged</a></li>
+  <li><a href="#signal-displayoptionschanged" id="toc-signal-displayoptionschanged" class="nav-link" data-scroll-target="#signal-displayoptionschanged">signal displayOptionsChanged</a></li>
+  <li><a href="#signal-displayoptionsremoved" id="toc-signal-displayoptionsremoved" class="nav-link" data-scroll-target="#signal-displayoptionsremoved">signal displayOptionsRemoved</a></li>
+  <li><a href="#signal-interactionprefschanged" id="toc-signal-interactionprefschanged" class="nav-link" data-scroll-target="#signal-interactionprefschanged">signal interactionPrefsChanged</a></li>
+  <li><a href="#signal-textoverlayschanged" id="toc-signal-textoverlayschanged" class="nav-link" data-scroll-target="#signal-textoverlayschanged">signal textOverlaysChanged</a></li>
+  <li><a href="#signal-toolmodeschanged" id="toc-signal-toolmodeschanged" class="nav-link" data-scroll-target="#signal-toolmodeschanged">signal toolModesChanged</a></li>
+  <li><a href="#signal-canvasimagechanged" id="toc-signal-canvasimagechanged" class="nav-link" data-scroll-target="#signal-canvasimagechanged">signal canvasImageChanged</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-mediawidgetstate" id="toc-function-mediawidgetstate" class="nav-link" data-scroll-target="#function-mediawidgetstate">function MediaWidgetState</a></li>
+  <li><a href="#function-mediawidgetstate-1" id="toc-function-mediawidgetstate-1" class="nav-link" data-scroll-target="#function-mediawidgetstate-1">function ~MediaWidgetState</a></li>
+  <li><a href="#function-gettypename" id="toc-function-gettypename" class="nav-link" data-scroll-target="#function-gettypename">function getTypeName</a></li>
+  <li><a href="#function-getdisplayname" id="toc-function-getdisplayname" class="nav-link" data-scroll-target="#function-getdisplayname">function getDisplayName</a></li>
+  <li><a href="#function-setdisplayname" id="toc-function-setdisplayname" class="nav-link" data-scroll-target="#function-setdisplayname">function setDisplayName</a></li>
+  <li><a href="#function-tojson" id="toc-function-tojson" class="nav-link" data-scroll-target="#function-tojson">function toJson</a></li>
+  <li><a href="#function-fromjson" id="toc-function-fromjson" class="nav-link" data-scroll-target="#function-fromjson">function fromJson</a></li>
+  <li><a href="#function-data" id="toc-function-data" class="nav-link" data-scroll-target="#function-data">function data</a></li>
+  <li><a href="#function-displayoptions" id="toc-function-displayoptions" class="nav-link" data-scroll-target="#function-displayoptions">function displayOptions</a></li>
+  <li><a href="#function-displayoptions-1" id="toc-function-displayoptions-1" class="nav-link" data-scroll-target="#function-displayoptions-1">function displayOptions</a></li>
+  <li><a href="#function-setdisplayeddatakey" id="toc-function-setdisplayeddatakey" class="nav-link" data-scroll-target="#function-setdisplayeddatakey">function setDisplayedDataKey</a></li>
+  <li><a href="#function-displayeddatakey" id="toc-function-displayeddatakey" class="nav-link" data-scroll-target="#function-displayeddatakey">function displayedDataKey</a></li>
+  <li><a href="#function-setzoom" id="toc-function-setzoom" class="nav-link" data-scroll-target="#function-setzoom">function setZoom</a></li>
+  <li><a href="#function-zoom" id="toc-function-zoom" class="nav-link" data-scroll-target="#function-zoom">function zoom</a></li>
+  <li><a href="#function-setpan" id="toc-function-setpan" class="nav-link" data-scroll-target="#function-setpan">function setPan</a></li>
+  <li><a href="#function-pan" id="toc-function-pan" class="nav-link" data-scroll-target="#function-pan">function pan</a></li>
+  <li><a href="#function-setcanvassize" id="toc-function-setcanvassize" class="nav-link" data-scroll-target="#function-setcanvassize">function setCanvasSize</a></li>
+  <li><a href="#function-canvassize" id="toc-function-canvassize" class="nav-link" data-scroll-target="#function-canvassize">function canvasSize</a></li>
+  <li><a href="#function-viewport" id="toc-function-viewport" class="nav-link" data-scroll-target="#function-viewport">function viewport</a></li>
+  <li><a href="#function-setviewport" id="toc-function-setviewport" class="nav-link" data-scroll-target="#function-setviewport">function setViewport</a></li>
+  <li><a href="#function-canvascoordinatesystem" id="toc-function-canvascoordinatesystem" class="nav-link" data-scroll-target="#function-canvascoordinatesystem">function canvasCoordinateSystem</a></li>
+  <li><a href="#function-setcanvascoordinatesystem" id="toc-function-setcanvascoordinatesystem" class="nav-link" data-scroll-target="#function-setcanvascoordinatesystem">function setCanvasCoordinateSystem</a></li>
+  <li><a href="#function-iscanvascoordoverrideactive" id="toc-function-iscanvascoordoverrideactive" class="nav-link" data-scroll-target="#function-iscanvascoordoverrideactive">function isCanvasCoordOverrideActive</a></li>
+  <li><a href="#function-setcanvascoordoverride" id="toc-function-setcanvascoordoverride" class="nav-link" data-scroll-target="#function-setcanvascoordoverride">function setCanvasCoordOverride</a></li>
+  <li><a href="#function-clearcanvascoordoverride" id="toc-function-clearcanvascoordoverride" class="nav-link" data-scroll-target="#function-clearcanvascoordoverride">function clearCanvasCoordOverride</a></li>
+  <li><a href="#function-setfeatureenabled" id="toc-function-setfeatureenabled" class="nav-link" data-scroll-target="#function-setfeatureenabled">function setFeatureEnabled</a></li>
+  <li><a href="#function-isfeatureenabled" id="toc-function-isfeatureenabled" class="nav-link" data-scroll-target="#function-isfeatureenabled">function isFeatureEnabled</a></li>
+  <li><a href="#function-enabledfeatures" id="toc-function-enabledfeatures" class="nav-link" data-scroll-target="#function-enabledfeatures">function enabledFeatures</a></li>
+  <li><a href="#function-lineprefs" id="toc-function-lineprefs" class="nav-link" data-scroll-target="#function-lineprefs">function linePrefs</a></li>
+  <li><a href="#function-setlineprefs" id="toc-function-setlineprefs" class="nav-link" data-scroll-target="#function-setlineprefs">function setLinePrefs</a></li>
+  <li><a href="#function-maskprefs" id="toc-function-maskprefs" class="nav-link" data-scroll-target="#function-maskprefs">function maskPrefs</a></li>
+  <li><a href="#function-setmaskprefs" id="toc-function-setmaskprefs" class="nav-link" data-scroll-target="#function-setmaskprefs">function setMaskPrefs</a></li>
+  <li><a href="#function-pointprefs" id="toc-function-pointprefs" class="nav-link" data-scroll-target="#function-pointprefs">function pointPrefs</a></li>
+  <li><a href="#function-setpointprefs" id="toc-function-setpointprefs" class="nav-link" data-scroll-target="#function-setpointprefs">function setPointPrefs</a></li>
+  <li><a href="#function-textoverlays" id="toc-function-textoverlays" class="nav-link" data-scroll-target="#function-textoverlays">function textOverlays</a></li>
+  <li><a href="#function-addtextoverlay" id="toc-function-addtextoverlay" class="nav-link" data-scroll-target="#function-addtextoverlay">function addTextOverlay</a></li>
+  <li><a href="#function-removetextoverlay" id="toc-function-removetextoverlay" class="nav-link" data-scroll-target="#function-removetextoverlay">function removeTextOverlay</a></li>
+  <li><a href="#function-updatetextoverlay" id="toc-function-updatetextoverlay" class="nav-link" data-scroll-target="#function-updatetextoverlay">function updateTextOverlay</a></li>
+  <li><a href="#function-cleartextoverlays" id="toc-function-cleartextoverlays" class="nav-link" data-scroll-target="#function-cleartextoverlays">function clearTextOverlays</a></li>
+  <li><a href="#function-gettextoverlay" id="toc-function-gettextoverlay" class="nav-link" data-scroll-target="#function-gettextoverlay">function getTextOverlay</a></li>
+  <li><a href="#function-setactivelinemode" id="toc-function-setactivelinemode" class="nav-link" data-scroll-target="#function-setactivelinemode">function setActiveLineMode</a></li>
+  <li><a href="#function-activelinemode" id="toc-function-activelinemode" class="nav-link" data-scroll-target="#function-activelinemode">function activeLineMode</a></li>
+  <li><a href="#function-setactivemaskmode" id="toc-function-setactivemaskmode" class="nav-link" data-scroll-target="#function-setactivemaskmode">function setActiveMaskMode</a></li>
+  <li><a href="#function-activemaskmode" id="toc-function-activemaskmode" class="nav-link" data-scroll-target="#function-activemaskmode">function activeMaskMode</a></li>
+  <li><a href="#function-setactivepointmode" id="toc-function-setactivepointmode" class="nav-link" data-scroll-target="#function-setactivepointmode">function setActivePointMode</a></li>
+  <li><a href="#function-activepointmode" id="toc-function-activepointmode" class="nav-link" data-scroll-target="#function-activepointmode">function activePointMode</a></li>
+  <li><a href="#function-setcanvasimage" id="toc-function-setcanvasimage" class="nav-link" data-scroll-target="#function-setcanvasimage">function setCanvasImage</a></li>
+  <li><a href="#function-canvasimage" id="toc-function-canvasimage" class="nav-link" data-scroll-target="#function-canvasimage">function canvasImage</a></li>
+  </ul></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-current_position" id="toc-variable-current_position" class="nav-link" data-scroll-target="#variable-current_position">variable current_position</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">MediaWidgetState</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="mediawidgetstate" class="level1">
+<h1>MediaWidgetState</h1>
+<p>State class for <a href="">Media_Widget</a>. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;MediaWidgetState.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>, QObject</p>
+<section id="public-signals" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-displayeddatakeychanged">displayedDataKeyChanged</a></strong>(QString const &amp; key)<br>Emitted when the displayed data key changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-zoomchanged">zoomChanged</a></strong>(double zoom)<br>Emitted when zoom changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-panchanged">panChanged</a></strong>(double x, double y)<br>Emitted when pan position changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-canvassizechanged">canvasSizeChanged</a></strong>(int width, int height)<br>Emitted when canvas size changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-viewportchanged">viewportChanged</a></strong>()<br>Emitted when any viewport property changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-canvascoordinatesystemchanged">canvasCoordinateSystemChanged</a></strong>(<a href="../../api_generated/Classes/structCanvasCoordinateSystem.html">CanvasCoordinateSystem</a> const &amp; coord_system)<br>Emitted when the canvas coordinate system changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-featureenabledchanged">featureEnabledChanged</a></strong>(QString const &amp; data_key, QString const &amp; data_type, bool enabled)<br>Emitted when a feature’s enabled state changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-displayoptionschanged">displayOptionsChanged</a></strong>(QString const &amp; data_key, QString const &amp; data_type)<br>Emitted when display options for a feature change.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-displayoptionsremoved">displayOptionsRemoved</a></strong>(QString const &amp; data_key, QString const &amp; data_type)<br>Emitted when display options for a feature are removed.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-interactionprefschanged">interactionPrefsChanged</a></strong>(QString const &amp; category)<br>Emitted when any interaction preferences change (consolidated)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-textoverlayschanged">textOverlaysChanged</a></strong>()<br>Emitted when any text overlay operation occurs (consolidated)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-toolmodeschanged">toolModesChanged</a></strong>(QString const &amp; category)<br>Emitted when any active tool mode changes (consolidated)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#signal-canvasimagechanged">canvasImageChanged</a></strong>(QImage const &amp; image)<br>Emitted when the rendered canvas image changes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-mediawidgetstate">MediaWidgetState</a></strong>(QObject * parent =nullptr)<br>Construct a new <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-~mediawidgetstate">~MediaWidgetState</a></strong>() override =default</td>
+</tr>
+<tr class="odd">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-gettypename">getTypeName</a></strong>() const override<br>Get the type name for this state.</td>
+</tr>
+<tr class="even">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-getdisplayname">getDisplayName</a></strong>() const override<br>Get the display name for UI.</td>
+</tr>
+<tr class="odd">
+<td>virtual void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setdisplayname">setDisplayName</a></strong>(QString const &amp; name) override<br>Set the display name.</td>
+</tr>
+<tr class="even">
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-tojson">toJson</a></strong>() const override<br>Serialize state to JSON.</td>
+</tr>
+<tr class="odd">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-fromjson">fromJson</a></strong>(std::string const &amp; json) override<br>Restore state from JSON.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structMediaWidgetStateData.html">MediaWidgetStateData</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-data">data</a></strong>() const<br>Get const reference to underlying data for efficiency.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classDisplayOptionsRegistry.html">DisplayOptionsRegistry</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-displayoptions">displayOptions</a></strong>()<br>Get the display options registry for generic access.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classDisplayOptionsRegistry.html">DisplayOptionsRegistry</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-displayoptions">displayOptions</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setdisplayeddatakey">setDisplayedDataKey</a></strong>(QString const &amp; key)<br>Set the displayed data key.</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-displayeddatakey">displayedDataKey</a></strong>() const<br>Get the displayed data key.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setzoom">setZoom</a></strong>(double zoom)<br>Set the zoom level.</td>
+</tr>
+<tr class="even">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-zoom">zoom</a></strong>() const<br>Get the zoom level.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setpan">setPan</a></strong>(double x, double y)<br>Set the pan offset.</td>
+</tr>
+<tr class="even">
+<td>std::pair&lt; double, double &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-pan">pan</a></strong>() const<br>Get the pan offset.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setcanvassize">setCanvasSize</a></strong>(int width, int height)<br>Set the canvas size.</td>
+</tr>
+<tr class="even">
+<td>std::pair&lt; int, int &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-canvassize">canvasSize</a></strong>() const<br>Get the canvas size.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structViewportState.html">ViewportState</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-viewport">viewport</a></strong>() const<br>Get the complete viewport state.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setviewport">setViewport</a></strong>(<a href="../../api_generated/Classes/structViewportState.html">ViewportState</a> const &amp; viewport)<br>Set the complete viewport state.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structCanvasCoordinateSystem.html">CanvasCoordinateSystem</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-canvascoordinatesystem">canvasCoordinateSystem</a></strong>() const<br>Get the current canvas coordinate system.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setcanvascoordinatesystem">setCanvasCoordinateSystem</a></strong>(<a href="../../api_generated/Classes/structCanvasCoordinateSystem.html">CanvasCoordinateSystem</a> const &amp; coord_system)<br>Set the resolved canvas coordinate system (called by <a href="">Media_Window</a>)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-iscanvascoordoverrideactive">isCanvasCoordOverrideActive</a></strong>() const<br>Check if the user has manually overridden the coordinate system.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setcanvascoordoverride">setCanvasCoordOverride</a></strong>(int width, int height)<br>Set a manual canvas coordinate system override.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-clearcanvascoordoverride">clearCanvasCoordOverride</a></strong>()<br>Clear the manual canvas coordinate system override.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setfeatureenabled">setFeatureEnabled</a></strong>(QString const &amp; data_key, QString const &amp; data_type, bool enabled)<br>Enable or disable a feature.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-isfeatureenabled">isFeatureEnabled</a></strong>(QString const &amp; data_key, QString const &amp; data_type) const<br>Check if a feature is enabled.</td>
+</tr>
+<tr class="even">
+<td>QStringList</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-enabledfeatures">enabledFeatures</a></strong>(QString const &amp; data_type) const<br>Get list of enabled features for a data type.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structLineInteractionPrefs.html">LineInteractionPrefs</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-lineprefs">linePrefs</a></strong>() const<br>Get line interaction preferences.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setlineprefs">setLinePrefs</a></strong>(<a href="../../api_generated/Classes/structLineInteractionPrefs.html">LineInteractionPrefs</a> const &amp; prefs)<br>Set line interaction preferences.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structMaskInteractionPrefs.html">MaskInteractionPrefs</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-maskprefs">maskPrefs</a></strong>() const<br>Get mask interaction preferences.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setmaskprefs">setMaskPrefs</a></strong>(<a href="../../api_generated/Classes/structMaskInteractionPrefs.html">MaskInteractionPrefs</a> const &amp; prefs)<br>Set mask interaction preferences.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structPointInteractionPrefs.html">PointInteractionPrefs</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-pointprefs">pointPrefs</a></strong>() const<br>Get point interaction preferences.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setpointprefs">setPointPrefs</a></strong>(<a href="../../api_generated/Classes/structPointInteractionPrefs.html">PointInteractionPrefs</a> const &amp; prefs)<br>Set point interaction preferences.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structTextOverlayData.html">TextOverlayData</a> &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-textoverlays">textOverlays</a></strong>() const<br>Get all text overlays.</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-addtextoverlay">addTextOverlay</a></strong>(<a href="../../api_generated/Classes/structTextOverlayData.html">TextOverlayData</a> overlay)<br>Add a text overlay.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-removetextoverlay">removeTextOverlay</a></strong>(int overlay_id)<br>Remove a text overlay by ID.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-updatetextoverlay">updateTextOverlay</a></strong>(int overlay_id, <a href="../../api_generated/Classes/structTextOverlayData.html">TextOverlayData</a> const &amp; overlay)<br>Update an existing text overlay.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-cleartextoverlays">clearTextOverlays</a></strong>()<br>Clear all text overlays.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structTextOverlayData.html">TextOverlayData</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-gettextoverlay">getTextOverlay</a></strong>(int overlay_id) const<br>Get a text overlay by ID.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setactivelinemode">setActiveLineMode</a></strong>(<a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-linetoolmode">LineToolMode</a> mode)<br>Set the active line tool mode.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-linetoolmode">LineToolMode</a></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-activelinemode">activeLineMode</a></strong>() const<br>Get the active line tool mode.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setactivemaskmode">setActiveMaskMode</a></strong>(<a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-masktoolmode">MaskToolMode</a> mode)<br>Set the active mask tool mode.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-masktoolmode">MaskToolMode</a></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-activemaskmode">activeMaskMode</a></strong>() const<br>Get the active mask tool mode.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setactivepointmode">setActivePointMode</a></strong>(<a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-pointtoolmode">PointToolMode</a> mode)<br>Set the active point tool mode.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-pointtoolmode">PointToolMode</a></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-activepointmode">activePointMode</a></strong>() const<br>Get the active point tool mode.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-setcanvasimage">setCanvasImage</a></strong>(QImage const &amp; image)<br>Set the current canvas image.</td>
+</tr>
+<tr class="even">
+<td>QImage const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#function-canvasimage">canvasImage</a></strong>() const<br>Get the current canvas image.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structTimePosition.html">TimePosition</a></td>
+<td><strong><a href="../../api_generated/Classes/classMediaWidgetState.html#variable-current-position">current_position</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Signals inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-statechanged">stateChanged</a></strong>()<br>Emitted when any state property changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-displaynamechanged">displayNameChanged</a></strong>(QString const &amp; newName)<br>Emitted when display name changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-dirtychanged">dirtyChanged</a></strong>(bool isDirty)<br>Emitted when dirty state changes.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-editorstate">EditorState</a></strong>(QObject * parent =nullptr)<br>Construct a new <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-~editorstate">~EditorState</a></strong>() override =default<br>Virtual destructor.</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-getinstanceid">getInstanceId</a></strong>() const<br>Get unique instance ID.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-isdirty">isDirty</a></strong>() const<br>Check if state has unsaved changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markclean">markClean</a></strong>()<br>Mark state as clean (after save)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Protected Functions inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markdirty">markDirty</a></strong>()<br>Mark state as modified.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-setinstanceid">setInstanceId</a></strong>(QString const &amp; id)<br>Set instance ID (for deserialization)</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-generateinstanceid">generateInstanceId</a></strong>()<br>Generate a new unique instance ID.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaWidgetState<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>State class for <a href="">Media_Widget</a>.</p>
+<p><a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a> is the Qt wrapper around <a href="../../api_generated/Classes/structMediaWidgetStateData.html">MediaWidgetStateData</a> that provides typed accessors and Qt signals for all state properties.</p>
+</section>
+<section id="signal-categories" class="level2">
+<h2 class="anchored" data-anchor-id="signal-categories">Signal Categories</h2>
+<ul>
+<li><strong>Viewport</strong>: zoomChanged, panChanged, canvasSizeChanged</li>
+<li><strong>Features</strong>: featureEnabledChanged, displayOptionsChanged</li>
+<li><strong>Interaction</strong>: linePrefsChanged, maskPrefsChanged, pointPrefsChanged</li>
+<li><strong>Text Overlays</strong>: textOverlayAdded, textOverlayRemoved, textOverlayUpdated</li>
+<li><strong>Tool Modes</strong>: activeLineModeChanged, activeMaskModeChanged, activePointModeChanged</li>
+</ul>
+</section>
+<section id="thread-safety" class="level2">
+<h2 class="anchored" data-anchor-id="thread-safety">Thread Safety</h2>
+<p>This class is NOT thread-safe. All access should be from the main/GUI thread.</p>
+</section>
+<section id="public-signals-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
+<section id="signal-displayeddatakeychanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-displayeddatakeychanged">signal displayedDataKeyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> displayedDataKeyChanged<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the displayed data key changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The new displayed data key</li>
+</ul>
+</section>
+<section id="signal-zoomchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-zoomchanged">signal zoomChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> zoomChanged<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> zoom</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when zoom changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>zoom</strong> New zoom factor</li>
+</ul>
+</section>
+<section id="signal-panchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-panchanged">signal panChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> panChanged<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when pan position changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>x</strong> New horizontal pan offset</li>
+<li><strong>y</strong> New vertical pan offset</li>
+</ul>
+</section>
+<section id="signal-canvassizechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-canvassizechanged">signal canvasSizeChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> canvasSizeChanged<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when canvas size changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>width</strong> New canvas width</li>
+<li><strong>height</strong> New canvas height</li>
+</ul>
+</section>
+<section id="signal-viewportchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-viewportchanged">signal viewportChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> viewportChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when any viewport property changes.</p>
+</section>
+<section id="signal-canvascoordinatesystemchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-canvascoordinatesystemchanged">signal canvasCoordinateSystemChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> canvasCoordinateSystemChanged<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    CanvasCoordinateSystem <span class="at">const</span> <span class="op">&amp;</span> coord_system</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the canvas coordinate system changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>coord_system</strong> The new coordinate system</li>
+</ul>
+</section>
+<section id="signal-featureenabledchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-featureenabledchanged">signal featureEnabledChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> featureEnabledChanged<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when a feature’s enabled state changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key</li>
+<li><strong>data_type</strong> The type (“line”, “mask”, etc.)</li>
+<li><strong>enabled</strong> New enabled state</li>
+</ul>
+</section>
+<section id="signal-displayoptionschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-displayoptionschanged">signal displayOptionsChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> displayOptionsChanged<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when display options for a feature change.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key</li>
+<li><strong>data_type</strong> The type (“line”, “mask”, etc.)</li>
+</ul>
+</section>
+<section id="signal-displayoptionsremoved" class="level3">
+<h3 class="anchored" data-anchor-id="signal-displayoptionsremoved">signal displayOptionsRemoved</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> displayOptionsRemoved<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when display options for a feature are removed.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key</li>
+<li><strong>data_type</strong> The type</li>
+</ul>
+</section>
+<section id="signal-interactionprefschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-interactionprefschanged">signal interactionPrefsChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> interactionPrefsChanged<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when any interaction preferences change (consolidated)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>category</strong> “line”, “mask”, or “point”</li>
+</ul>
+</section>
+<section id="signal-textoverlayschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-textoverlayschanged">signal textOverlaysChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> textOverlaysChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when any text overlay operation occurs (consolidated)</p>
+<p>This signal is emitted after any add/remove/update/clear operation.</p>
+</section>
+<section id="signal-toolmodeschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-toolmodeschanged">signal toolModesChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> toolModesChanged<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when any active tool mode changes (consolidated)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>category</strong> “line”, “mask”, or “point”</li>
+</ul>
+</section>
+<section id="signal-canvasimagechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-canvasimagechanged">signal canvasImageChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> canvasImageChanged<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the rendered canvas image changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>image</strong> The new canvas image</li>
+</ul>
+<p>This signal is emitted by <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> after rendering completes. <a href="../../api_generated/Classes/classExport__Video__Widget.html">Export_Video_Widget</a> connects to this to capture frames.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-mediawidgetstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediawidgetstate">function MediaWidgetState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> MediaWidgetState<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a new <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>parent</strong> Parent QObject (typically nullptr, managed by WorkspaceManager)</li>
+</ul>
+</section>
+<section id="function-mediawidgetstate-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediawidgetstate-1">function ~MediaWidgetState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>MediaWidgetState<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gettypename" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettypename">function getTypeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="ex">QString</span> getTypeName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the type name for this state.</p>
+<p><strong>Return</strong>: “MediaWidget”</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-gettypename">EditorState::getTypeName</a></p>
+</section>
+<section id="function-getdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdisplayname">function getDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="ex">QString</span> getDisplayName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the display name for UI.</p>
+<p><strong>Return</strong>: User-visible name (default: “Media Viewer”)</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-getdisplayname">EditorState::getDisplayName</a></p>
+</section>
+<section id="function-setdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdisplayname">function setDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">void</span> setDisplayName<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the display name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> New display name</li>
+</ul>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-setdisplayname">EditorState::setDisplayName</a></p>
+</section>
+<section id="function-tojson" class="level3">
+<h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Serialize state to JSON.</p>
+<p><strong>Return</strong>: JSON string representation</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-tojson">EditorState::toJson</a></p>
+</section>
+<section id="function-fromjson" class="level3">
+<h3 class="anchored" data-anchor-id="function-fromjson">function fromJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> fromJson<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Restore state from JSON.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>json</strong> JSON string to parse</li>
+</ul>
+<p><strong>Return</strong>: true if parsing succeeded</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-fromjson">EditorState::fromJson</a></p>
+</section>
+<section id="function-data" class="level3">
+<h3 class="anchored" data-anchor-id="function-data">function data</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> MediaWidgetStateData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get const reference to underlying data for efficiency.</p>
+<p><strong>Return</strong>: Const reference to <a href="../../api_generated/Classes/structMediaWidgetStateData.html">MediaWidgetStateData</a></p>
+<p>Use this for reading multiple values without individual accessor overhead. For modification, use the typed setters to ensure signals are emitted.</p>
+</section>
+<section id="function-displayoptions" class="level3">
+<h3 class="anchored" data-anchor-id="function-displayoptions">function displayOptions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DisplayOptionsRegistry <span class="op">&amp;</span> displayOptions<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the display options registry for generic access.</p>
+<p><strong>Return</strong>: Reference to <a href="../../api_generated/Classes/classDisplayOptionsRegistry.html">DisplayOptionsRegistry</a></p>
+<p>The registry provides a unified API for all display option types:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Set options (type inferred)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>LineDisplayOptions opts<span class="op">;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>opts<span class="op">.</span>line_thickness <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>state<span class="op">-&gt;</span>displayOptions<span class="op">().</span>set<span class="op">(</span><span class="st">"whisker_1"</span><span class="op">,</span> opts<span class="op">);</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Get options (type explicit)</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span><span class="op">*</span> opts <span class="op">=</span> state<span class="op">-&gt;</span>displayOptions<span class="op">().</span>get<span class="op">&lt;</span>LineDisplayOptions<span class="op">&gt;(</span><span class="st">"whisker_1"</span><span class="op">);</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Get enabled keys</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> enabled <span class="op">=</span> state<span class="op">-&gt;</span>displayOptions<span class="op">().</span>enabledKeys<span class="op">&lt;</span>LineDisplayOptions<span class="op">&gt;();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-displayoptions-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-displayoptions-1">function displayOptions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DisplayOptionsRegistry <span class="at">const</span> <span class="op">&amp;</span> displayOptions<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setdisplayeddatakey" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdisplayeddatakey">function setDisplayedDataKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setDisplayedDataKey<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the displayed data key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> Data key to display (empty string to clear)</li>
+</ul>
+<p>This represents the primary data being displayed in the <a href="../../api_generated/Classes/classMedia__Widget.html">Media_Widget</a>. For image/video data, this is typically the media source.</p>
+</section>
+<section id="function-displayeddatakey" class="level3">
+<h3 class="anchored" data-anchor-id="function-displayeddatakey">function displayedDataKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> displayedDataKey<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the displayed data key.</p>
+<p><strong>Return</strong>: Currently displayed data key, or empty string if none</p>
+</section>
+<section id="function-setzoom" class="level3">
+<h3 class="anchored" data-anchor-id="function-setzoom">function setZoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setZoom<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> zoom</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the zoom level.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>zoom</strong> Zoom factor (1.0 = no zoom)</li>
+</ul>
+</section>
+<section id="function-zoom" class="level3">
+<h3 class="anchored" data-anchor-id="function-zoom">function zoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> zoom<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the zoom level.</p>
+<p><strong>Return</strong>: Current zoom factor</p>
+</section>
+<section id="function-setpan" class="level3">
+<h3 class="anchored" data-anchor-id="function-setpan">function setPan</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPan<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the pan offset.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>x</strong> Horizontal pan offset in pixels</li>
+<li><strong>y</strong> Vertical pan offset in pixels</li>
+</ul>
+</section>
+<section id="function-pan" class="level3">
+<h3 class="anchored" data-anchor-id="function-pan">function pan</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> <span class="dt">double</span> <span class="op">&gt;</span> pan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the pan offset.</p>
+<p><strong>Return</strong>: Pair of (x, y) pan offset in pixels</p>
+</section>
+<section id="function-setcanvassize" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcanvassize">function setCanvasSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCanvasSize<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the canvas size.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>width</strong> Canvas width in pixels</li>
+<li><strong>height</strong> Canvas height in pixels</li>
+</ul>
+</section>
+<section id="function-canvassize" class="level3">
+<h3 class="anchored" data-anchor-id="function-canvassize">function canvasSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> <span class="dt">int</span> <span class="op">&gt;</span> canvasSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the canvas size.</p>
+<p><strong>Return</strong>: Pair of (width, height) in pixels</p>
+</section>
+<section id="function-viewport" class="level3">
+<h3 class="anchored" data-anchor-id="function-viewport">function viewport</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewportState <span class="at">const</span> <span class="op">&amp;</span> viewport<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the complete viewport state.</p>
+<p><strong>Return</strong>: Const reference to <a href="../../api_generated/Classes/structViewportState.html">ViewportState</a></p>
+</section>
+<section id="function-setviewport" class="level3">
+<h3 class="anchored" data-anchor-id="function-setviewport">function setViewport</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setViewport<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    ViewportState <span class="at">const</span> <span class="op">&amp;</span> viewport</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the complete viewport state.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>viewport</strong> New viewport state</li>
+</ul>
+</section>
+<section id="function-canvascoordinatesystem" class="level3">
+<h3 class="anchored" data-anchor-id="function-canvascoordinatesystem">function canvasCoordinateSystem</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CanvasCoordinateSystem <span class="at">const</span> <span class="op">&amp;</span> canvasCoordinateSystem<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the current canvas coordinate system.</p>
+<p><strong>Return</strong>: The current <a href="../../api_generated/Classes/structCanvasCoordinateSystem.html">CanvasCoordinateSystem</a></p>
+<p>This is the resolved coordinate system (after applying the priority chain). Set by <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> during UpdateCanvas via resolveCanvasCoordinateSystem().</p>
+</section>
+<section id="function-setcanvascoordinatesystem" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcanvascoordinatesystem">function setCanvasCoordinateSystem</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCanvasCoordinateSystem<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    CanvasCoordinateSystem <span class="at">const</span> <span class="op">&amp;</span> coord_system</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the resolved canvas coordinate system (called by <a href="">Media_Window</a>)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>coord_system</strong> The resolved coordinate system</li>
+</ul>
+</section>
+<section id="function-iscanvascoordoverrideactive" class="level3">
+<h3 class="anchored" data-anchor-id="function-iscanvascoordoverrideactive">function isCanvasCoordOverrideActive</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isCanvasCoordOverrideActive<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if the user has manually overridden the coordinate system.</p>
+</section>
+<section id="function-setcanvascoordoverride" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcanvascoordoverride">function setCanvasCoordOverride</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCanvasCoordOverride<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set a manual canvas coordinate system override.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>width</strong> Logical width</li>
+<li><strong>height</strong> Logical height</li>
+</ul>
+</section>
+<section id="function-clearcanvascoordoverride" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearcanvascoordoverride">function clearCanvasCoordOverride</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearCanvasCoordOverride<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear the manual canvas coordinate system override.</p>
+<p>The coordinate system will be auto-determined from media/data objects.</p>
+</section>
+<section id="function-setfeatureenabled" class="level3">
+<h3 class="anchored" data-anchor-id="function-setfeatureenabled">function setFeatureEnabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setFeatureEnabled<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable or disable a feature.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key (e.g., “whisker_1”)</li>
+<li><strong>data_type</strong> The type (“line”, “mask”, “point”, “tensor”, “interval”, “media”)</li>
+<li><strong>enabled</strong> Whether the feature should be visible</li>
+</ul>
+<p>This sets the is_visible flag in the corresponding display options. If options don’t exist for this key, they will be created with defaults.</p>
+</section>
+<section id="function-isfeatureenabled" class="level3">
+<h3 class="anchored" data-anchor-id="function-isfeatureenabled">function isFeatureEnabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isFeatureEnabled<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a feature is enabled.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key</li>
+<li><strong>data_type</strong> The type</li>
+</ul>
+<p><strong>Return</strong>: true if the feature exists and is visible</p>
+</section>
+<section id="function-enabledfeatures" class="level3">
+<h3 class="anchored" data-anchor-id="function-enabledfeatures">function enabledFeatures</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QStringList</span> enabledFeatures<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get list of enabled features for a data type.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_type</strong> The type (“line”, “mask”, etc.)</li>
+</ul>
+<p><strong>Return</strong>: List of data keys that are enabled</p>
+</section>
+<section id="function-lineprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-lineprefs">function linePrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> LineInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> linePrefs<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get line interaction preferences.</p>
+<p><strong>Return</strong>: Const reference to <a href="../../api_generated/Classes/structLineInteractionPrefs.html">LineInteractionPrefs</a></p>
+</section>
+<section id="function-setlineprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-setlineprefs">function setLinePrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setLinePrefs<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    LineInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set line interaction preferences.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>prefs</strong> The new preferences</li>
+</ul>
+</section>
+<section id="function-maskprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-maskprefs">function maskPrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> MaskInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> maskPrefs<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get mask interaction preferences.</p>
+<p><strong>Return</strong>: Const reference to <a href="../../api_generated/Classes/structMaskInteractionPrefs.html">MaskInteractionPrefs</a></p>
+</section>
+<section id="function-setmaskprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-setmaskprefs">function setMaskPrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMaskPrefs<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    MaskInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set mask interaction preferences.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>prefs</strong> The new preferences</li>
+</ul>
+</section>
+<section id="function-pointprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-pointprefs">function pointPrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PointInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> pointPrefs<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get point interaction preferences.</p>
+<p><strong>Return</strong>: Const reference to <a href="../../api_generated/Classes/structPointInteractionPrefs.html">PointInteractionPrefs</a></p>
+</section>
+<section id="function-setpointprefs" class="level3">
+<h3 class="anchored" data-anchor-id="function-setpointprefs">function setPointPrefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPointPrefs<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    PointInteractionPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set point interaction preferences.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>prefs</strong> The new preferences</li>
+</ul>
+</section>
+<section id="function-textoverlays" class="level3">
+<h3 class="anchored" data-anchor-id="function-textoverlays">function textOverlays</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TextOverlayData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> textOverlays<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all text overlays.</p>
+<p><strong>Return</strong>: Const reference to text overlay vector</p>
+</section>
+<section id="function-addtextoverlay" class="level3">
+<h3 class="anchored" data-anchor-id="function-addtextoverlay">function addTextOverlay</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> addTextOverlay<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    TextOverlayData overlay</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a text overlay.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>overlay</strong> The overlay data (id field will be overwritten)</li>
+</ul>
+<p><strong>Return</strong>: The assigned overlay ID</p>
+<p>The overlay’s ID will be assigned automatically.</p>
+</section>
+<section id="function-removetextoverlay" class="level3">
+<h3 class="anchored" data-anchor-id="function-removetextoverlay">function removeTextOverlay</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeTextOverlay<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> overlay_id</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove a text overlay by ID.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>overlay_id</strong> The overlay ID to remove</li>
+</ul>
+<p><strong>Return</strong>: true if the overlay was found and removed</p>
+</section>
+<section id="function-updatetextoverlay" class="level3">
+<h3 class="anchored" data-anchor-id="function-updatetextoverlay">function updateTextOverlay</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> updateTextOverlay<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> overlay_id<span class="op">,</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> overlay</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update an existing text overlay.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>overlay_id</strong> The overlay ID to update</li>
+<li><strong>overlay</strong> The new overlay data (id field preserved)</li>
+</ul>
+<p><strong>Return</strong>: true if the overlay was found and updated</p>
+</section>
+<section id="function-cleartextoverlays" class="level3">
+<h3 class="anchored" data-anchor-id="function-cleartextoverlays">function clearTextOverlays</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearTextOverlays<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all text overlays.</p>
+</section>
+<section id="function-gettextoverlay" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettextoverlay">function getTextOverlay</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>TextOverlayData <span class="at">const</span> <span class="op">*</span> getTextOverlay<span class="op">(</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> overlay_id</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a text overlay by ID.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>overlay_id</strong> The overlay ID</li>
+</ul>
+<p><strong>Return</strong>: Pointer to overlay, or nullptr if not found</p>
+</section>
+<section id="function-setactivelinemode" class="level3">
+<h3 class="anchored" data-anchor-id="function-setactivelinemode">function setActiveLineMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setActiveLineMode<span class="op">(</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    LineToolMode mode</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the active line tool mode.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mode</strong> The tool mode</li>
+</ul>
+</section>
+<section id="function-activelinemode" class="level3">
+<h3 class="anchored" data-anchor-id="function-activelinemode">function activeLineMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> LineToolMode activeLineMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the active line tool mode.</p>
+<p><strong>Return</strong>: Current line tool mode</p>
+</section>
+<section id="function-setactivemaskmode" class="level3">
+<h3 class="anchored" data-anchor-id="function-setactivemaskmode">function setActiveMaskMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setActiveMaskMode<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    MaskToolMode mode</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the active mask tool mode.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mode</strong> The tool mode</li>
+</ul>
+</section>
+<section id="function-activemaskmode" class="level3">
+<h3 class="anchored" data-anchor-id="function-activemaskmode">function activeMaskMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> MaskToolMode activeMaskMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the active mask tool mode.</p>
+<p><strong>Return</strong>: Current mask tool mode</p>
+</section>
+<section id="function-setactivepointmode" class="level3">
+<h3 class="anchored" data-anchor-id="function-setactivepointmode">function setActivePointMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setActivePointMode<span class="op">(</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    PointToolMode mode</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the active point tool mode.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mode</strong> The tool mode</li>
+</ul>
+</section>
+<section id="function-activepointmode" class="level3">
+<h3 class="anchored" data-anchor-id="function-activepointmode">function activePointMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PointToolMode activePointMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the active point tool mode.</p>
+<p><strong>Return</strong>: Current point tool mode</p>
+</section>
+<section id="function-setcanvasimage" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcanvasimage">function setCanvasImage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCanvasImage<span class="op">(</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the current canvas image.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>image</strong> The rendered canvas image</li>
+</ul>
+<p>Called by <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> after rendering to update the transient canvas image. This is NOT serialized - it’s only for inter-widget communication.</p>
+</section>
+<section id="function-canvasimage" class="level3">
+<h3 class="anchored" data-anchor-id="function-canvasimage">function canvasImage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> canvasImage<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the current canvas image.</p>
+<p><strong>Return</strong>: The most recently rendered canvas image (may be null)</p>
+</section>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-current_position" class="level3">
+<h3 class="anchored" data-anchor-id="variable-current_position">variable current_position</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>TimePosition current_position<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:22 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

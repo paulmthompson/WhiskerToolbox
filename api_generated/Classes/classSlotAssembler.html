@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>SlotAssembler – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#slotassembler" id="toc-slotassembler" class="nav-link active" data-scroll-target="#slotassembler">SlotAssembler</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-types" id="toc-public-types" class="nav-link" data-scroll-target="#public-types">Public Types</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-types-documentation" id="toc-public-types-documentation" class="nav-link" data-scroll-target="#public-types-documentation">Public Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#using-progresscallback" id="toc-using-progresscallback" class="nav-link" data-scroll-target="#using-progresscallback">using ProgressCallback</a></li>
+  <li><a href="#using-resultcallback" id="toc-using-resultcallback" class="nav-link" data-scroll-target="#using-resultcallback">using ResultCallback</a></li>
+  <li><a href="#using-mediaoverrides" id="toc-using-mediaoverrides" class="nav-link" data-scroll-target="#using-mediaoverrides">using MediaOverrides</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-slotassembler" id="toc-function-slotassembler" class="nav-link" data-scroll-target="#function-slotassembler">function SlotAssembler</a></li>
+  <li><a href="#function-slotassembler-1" id="toc-function-slotassembler-1" class="nav-link" data-scroll-target="#function-slotassembler-1">function ~SlotAssembler</a></li>
+  <li><a href="#function-slotassembler-2" id="toc-function-slotassembler-2" class="nav-link" data-scroll-target="#function-slotassembler-2">function SlotAssembler</a></li>
+  <li><a href="#function-operator" id="toc-function-operator" class="nav-link" data-scroll-target="#function-operator">function operator=</a></li>
+  <li><a href="#function-loadmodel" id="toc-function-loadmodel" class="nav-link" data-scroll-target="#function-loadmodel">function loadModel</a></li>
+  <li><a href="#function-loadweights" id="toc-function-loadweights" class="nav-link" data-scroll-target="#function-loadweights">function loadWeights</a></li>
+  <li><a href="#function-validateweights" id="toc-function-validateweights" class="nav-link" data-scroll-target="#function-validateweights">function validateWeights</a></li>
+  <li><a href="#function-ismodelready" id="toc-function-ismodelready" class="nav-link" data-scroll-target="#function-ismodelready">function isModelReady</a></li>
+  <li><a href="#function-currentmodelid" id="toc-function-currentmodelid" class="nav-link" data-scroll-target="#function-currentmodelid">function currentModelId</a></li>
+  <li><a href="#function-resetmodel" id="toc-function-resetmodel" class="nav-link" data-scroll-target="#function-resetmodel">function resetModel</a></li>
+  <li><a href="#function-runsingleframe" id="toc-function-runsingleframe" class="nav-link" data-scroll-target="#function-runsingleframe">function runSingleFrame</a></li>
+  <li><a href="#function-runbatchrange" id="toc-function-runbatchrange" class="nav-link" data-scroll-target="#function-runbatchrange">function runBatchRange</a></li>
+  <li><a href="#function-runbatchrangeoffline" id="toc-function-runbatchrangeoffline" class="nav-link" data-scroll-target="#function-runbatchrangeoffline">function runBatchRangeOffline</a></li>
+  <li><a href="#function-runrecurrentsequence" id="toc-function-runrecurrentsequence" class="nav-link" data-scroll-target="#function-runrecurrentsequence">function runRecurrentSequence</a></li>
+  <li><a href="#function-capturestaticinput" id="toc-function-capturestaticinput" class="nav-link" data-scroll-target="#function-capturestaticinput">function captureStaticInput</a></li>
+  <li><a href="#function-clearstaticcacheentry" id="toc-function-clearstaticcacheentry" class="nav-link" data-scroll-target="#function-clearstaticcacheentry">function clearStaticCacheEntry</a></li>
+  <li><a href="#function-clearstaticcache" id="toc-function-clearstaticcache" class="nav-link" data-scroll-target="#function-clearstaticcache">function clearStaticCache</a></li>
+  <li><a href="#function-clearrecurrentcache" id="toc-function-clearrecurrentcache" class="nav-link" data-scroll-target="#function-clearrecurrentcache">function clearRecurrentCache</a></li>
+  <li><a href="#function-hasstaticcacheentry" id="toc-function-hasstaticcacheentry" class="nav-link" data-scroll-target="#function-hasstaticcacheentry">function hasStaticCacheEntry</a></li>
+  <li><a href="#function-staticcachekeys" id="toc-function-staticcachekeys" class="nav-link" data-scroll-target="#function-staticcachekeys">function staticCacheKeys</a></li>
+  <li><a href="#function-staticcachetensorshape" id="toc-function-staticcachetensorshape" class="nav-link" data-scroll-target="#function-staticcachetensorshape">function staticCacheTensorShape</a></li>
+  <li><a href="#function-staticcachetensorrange" id="toc-function-staticcachetensorrange" class="nav-link" data-scroll-target="#function-staticcachetensorrange">function staticCacheTensorRange</a></li>
+  <li><a href="#function-currentmodeldisplayinfo" id="toc-function-currentmodeldisplayinfo" class="nav-link" data-scroll-target="#function-currentmodeldisplayinfo">function currentModelDisplayInfo</a></li>
+  <li><a href="#function-configurepostencodermodule" id="toc-function-configurepostencodermodule" class="nav-link" data-scroll-target="#function-configurepostencodermodule">function configurePostEncoderModule</a></li>
+  <li><a href="#function-updatespatialpoint" id="toc-function-updatespatialpoint" class="nav-link" data-scroll-target="#function-updatespatialpoint">function updateSpatialPoint</a></li>
+  <li><a href="#function-configuremodelshape" id="toc-function-configuremodelshape" class="nav-link" data-scroll-target="#function-configuremodelshape">function configureModelShape</a></li>
+  <li><a href="#function-iscudaavailable" id="toc-function-iscudaavailable" class="nav-link" data-scroll-target="#function-iscudaavailable">function isCudaAvailable</a></li>
+  <li><a href="#function-currentdevicename" id="toc-function-currentdevicename" class="nav-link" data-scroll-target="#function-currentdevicename">function currentDeviceName</a></li>
+  <li><a href="#function-setdevicebyname" id="toc-function-setdevicebyname" class="nav-link" data-scroll-target="#function-setdevicebyname">function setDeviceByName</a></li>
+  <li><a href="#function-initdeviceforcurrentthread" id="toc-function-initdeviceforcurrentthread" class="nav-link" data-scroll-target="#function-initdeviceforcurrentthread">function initDeviceForCurrentThread</a></li>
+  <li><a href="#function-availablemodelids" id="toc-function-availablemodelids" class="nav-link" data-scroll-target="#function-availablemodelids">function availableModelIds</a></li>
+  <li><a href="#function-getmodeldisplayinfo" id="toc-function-getmodeldisplayinfo" class="nav-link" data-scroll-target="#function-getmodeldisplayinfo">function getModelDisplayInfo</a></li>
+  <li><a href="#function-availableencoders" id="toc-function-availableencoders" class="nav-link" data-scroll-target="#function-availableencoders">function availableEncoders</a></li>
+  <li><a href="#function-availabledecoders" id="toc-function-availabledecoders" class="nav-link" data-scroll-target="#function-availabledecoders">function availableDecoders</a></li>
+  <li><a href="#function-datatypeforencoder" id="toc-function-datatypeforencoder" class="nav-link" data-scroll-target="#function-datatypeforencoder">function dataTypeForEncoder</a></li>
+  <li><a href="#function-datatypefordecoder" id="toc-function-datatypefordecoder" class="nav-link" data-scroll-target="#function-datatypefordecoder">function dataTypeForDecoder</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">SlotAssembler</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="slotassembler" class="level1">
+<h1>SlotAssembler</h1>
+<p>Bridge between <a href="">DataManager</a> data and model tensor I/O. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;SlotAssembler.hpp&gt;</code></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html">Impl</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-types" class="level2">
+<h2 class="anchored" data-anchor-id="public-types">Public Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; void(int current_frame, int total_frames)&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a></strong> <br>Callback type for progress reporting during recurrent inference.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; void(std::vector&lt; <a href="../../api_generated/Classes/structFrameResult.html">FrameResult</a> &gt;)&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#using-resultcallback">ResultCallback</a></strong> <br>Callback invoked per-frame with decoded results for progressive delivery. When provided to <a href="">runBatchRangeOffline()</a>, results are pushed via this callback instead of accumulating in <a href="../../api_generated/Classes/structBatchInferenceResult.html#variable-results">BatchInferenceResult::results</a>.</td>
+</tr>
+<tr class="odd">
+<td>using std::unordered_map&lt; std::string, std::shared_ptr&lt; <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#using-mediaoverrides">MediaOverrides</a></strong> <br>Map from <a href="">DataManager</a> data_key to a cloned <a href="">MediaData</a> instance.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-slotassembler">SlotAssembler</a></strong>()</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-~slotassembler">~SlotAssembler</a></strong>()</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-slotassembler">SlotAssembler</a></strong>(<a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> &amp;&amp; )</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> &amp;&amp; )</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-loadmodel">loadModel</a></strong>(std::string const &amp; model_id)<br>Load a model by ID from the registry. Resets previous weights.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-loadweights">loadWeights</a></strong>(std::string const &amp; weights_path)<br>Load weights from a file path into the current model.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-validateweights">validateWeights</a></strong>()<br>Run a dummy forward pass to validate weight compatibility.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-ismodelready">isModelReady</a></strong>() const<br>Whether a model is loaded AND its weights are active.</td>
+</tr>
+<tr class="odd">
+<td>std::string const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentmodelid">currentModelId</a></strong>() const<br>Currently loaded model ID, or empty.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-resetmodel">resetModel</a></strong>()<br>Clear the current model and free resources.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runsingleframe">runSingleFrame</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int current_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Run a single-frame inference pipeline: assemble inputs → forward → decode outputs.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrange">runBatchRange</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run independent (non-recurrent) inference over a range of frames.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structBatchInferenceResult.html">BatchInferenceResult</a></td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrangeoffline">runBatchRangeOffline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classSlotAssembler.html#using-mediaoverrides">MediaOverrides</a> const &amp; media_overrides, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, std::atomic&lt; bool &gt; const &amp; cancel_requested, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr, <a href="../../api_generated/Classes/classSlotAssembler.html#using-resultcallback">ResultCallback</a> const &amp; result_callback =nullptr)<br>Run independent inference over a frame range without writing to <a href="">DataManager</a>.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runrecurrentsequence">runRecurrentSequence</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, std::vector&lt; <a href="../../api_generated/Classes/structRecurrentBindingData.html">RecurrentBindingData</a> &gt; const &amp; recurrent_bindings, int start_frame, int frame_count, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run sequential recurrent inference over a range of frames.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-capturestaticinput">captureStaticInput</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> const &amp; entry, int frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Capture a static input at a specific frame and store in the cache.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearstaticcacheentry">clearStaticCacheEntry</a></strong>(std::string const &amp; cache_key)<br>Clear a single entry from the static tensor cache.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearstaticcache">clearStaticCache</a></strong>()<br>Clear the entire static tensor cache.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearrecurrentcache">clearRecurrentCache</a></strong>()<br>Clear the recurrent tensor cache.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-hasstaticcacheentry">hasStaticCacheEntry</a></strong>(std::string const &amp; cache_key) const<br>Whether a cached tensor exists for the given key.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachekeys">staticCacheKeys</a></strong>() const<br>List all keys currently in the static tensor cache.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; int64_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachetensorshape">staticCacheTensorShape</a></strong>(std::string const &amp; cache_key) const<br>Get the dimensions of a cached tensor as a vector of int64_t.</td>
+</tr>
+<tr class="even">
+<td>std::pair&lt; float, float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachetensorrange">staticCacheTensorRange</a></strong>(std::string const &amp; cache_key) const<br>Get min/max values of a cached tensor for preview display.</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structModelDisplayInfo.html">ModelDisplayInfo</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentmodeldisplayinfo">currentModelDisplayInfo</a></strong>() const<br>Get display metadata from the currently loaded model instance.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-configurepostencodermodule">configurePostEncoderModule</a></strong>(std::string const &amp; module_type, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size ={}, std::string const &amp; interpolation =“nearest”)<br>Configure a post-encoder module on the currently loaded model.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-updatespatialpoint">updateSpatialPoint</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; point_key, int frame)<br>Update the spatial-point query for the current frame.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-configuremodelshape">configureModelShape</a></strong>(int input_height, int input_width, std::vector&lt; int64_t &gt; const &amp; output_shape ={})<br>Reconfigure input resolution and output shape on the current model.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-iscudaavailable">isCudaAvailable</a></strong>()<br>Whether CUDA is available on this system (compile-time + runtime).</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentdevicename">currentDeviceName</a></strong>()<br>Human-readable name of the active device (“GPU (CUDA)” or “CPU”).</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-setdevicebyname">setDeviceByName</a></strong>(std::string const &amp; name)<br>Set the active device by name: “cuda” or “cpu”.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-initdeviceforcurrentthread">initDeviceForCurrentThread</a></strong>()<br>Initialize the deep-learning device context on the calling thread.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availablemodelids">availableModelIds</a></strong>()<br>List all registered model IDs.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structModelDisplayInfo.html">ModelDisplayInfo</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-getmodeldisplayinfo">getModelDisplayInfo</a></strong>(std::string const &amp; model_id)<br>Get display metadata for a registered model.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availableencoders">availableEncoders</a></strong>()<br>Available encoder names (e.g.&nbsp;“ImageEncoder”, “Point2DEncoder”, …).</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availabledecoders">availableDecoders</a></strong>()<br>Available decoder names (e.g.&nbsp;“TensorToMask2D”, …).</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypeforencoder">dataTypeForEncoder</a></strong>(std::string const &amp; encoder_id)<br>Map encoder name → <a href="">DataManager</a> data type name for combo filtering.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypefordecoder">dataTypeForDecoder</a></strong>(std::string const &amp; decoder_id)<br>Map decoder name → <a href="">DataManager</a> data type name for combo filtering.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SlotAssembler<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Bridge between <a href="">DataManager</a> data and model tensor I/O.</p>
+<p>Owns a cached ModelBase instance behind a PIMPL to prevent libtorch headers from leaking into Qt translation units.</p>
+</section>
+<section id="public-types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-types-documentation">Public Types Documentation</h2>
+<section id="using-progresscallback" class="level3">
+<h3 class="anchored" data-anchor-id="using-progresscallback">using ProgressCallback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> SlotAssembler<span class="op">::</span>ProgressCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span> current_frame<span class="op">,</span> <span class="dt">int</span> total_frames<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback type for progress reporting during recurrent inference.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>current_frame</strong> 0-based index of the frame being processed</li>
+<li><strong>total_frames</strong> Total number of frames to process</li>
+</ul>
+</section>
+<section id="using-resultcallback" class="level3">
+<h3 class="anchored" data-anchor-id="using-resultcallback">using ResultCallback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> SlotAssembler<span class="op">::</span>ResultCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>FrameResult<span class="op">&gt;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback invoked per-frame with decoded results for progressive delivery. When provided to <a href="">runBatchRangeOffline()</a>, results are pushed via this callback instead of accumulating in <a href="../../api_generated/Classes/structBatchInferenceResult.html#variable-results">BatchInferenceResult::results</a>.</p>
+</section>
+<section id="using-mediaoverrides" class="level3">
+<h3 class="anchored" data-anchor-id="using-mediaoverrides">using MediaOverrides</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> SlotAssembler<span class="op">::</span>MediaOverrides <span class="op">=</span>  <span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MediaData<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map from <a href="">DataManager</a> data_key to a cloned <a href="">MediaData</a> instance.</p>
+<p>Used by <a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrangeoffline">runBatchRangeOffline()</a> so the worker thread has its own independent <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> (e.g.&nbsp;a separate <a href="../../api_generated/Classes/classVideoData.html">VideoData</a> with its own FFmpeg decoder state) while the UI continues using the original.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-slotassembler" class="level3">
+<h3 class="anchored" data-anchor-id="function-slotassembler">function SlotAssembler</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-slotassembler-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-slotassembler-1">function ~SlotAssembler</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-slotassembler-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-slotassembler-2">function SlotAssembler</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-loadmodel" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadmodel">function loadModel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadModel<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a model by ID from the registry. Resets previous weights.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>model_id</strong> Model ID to load.</li>
+</ul>
+<p><strong>Return</strong>: true if the model ID was found and instantiated.</p>
+</section>
+<section id="function-loadweights" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadweights">function loadWeights</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadWeights<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> weights_path</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load weights from a file path into the current model.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>weights_path</strong> Path to the weights file.</li>
+</ul>
+<p><strong>Return</strong>: true on success.</p>
+</section>
+<section id="function-validateweights" class="level3">
+<h3 class="anchored" data-anchor-id="function-validateweights">function validateWeights</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string validateWeights<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run a dummy forward pass to validate weight compatibility.</p>
+<p><strong>Return</strong>: Empty string on success, or a diagnostic message on mismatch.</p>
+<p><strong>Precondition</strong>: <a href="../../api_generated/Classes/classSlotAssembler.html#function-ismodelready">isModelReady()</a> must be true.</p>
+<p>Creates zero-filled input tensors matching each input slot’s shape (batch_size=1), calls forward(), and checks that outputs are produced. Uses torch::NoGradGuard to avoid unnecessary gradient computation.</p>
+</section>
+<section id="function-ismodelready" class="level3">
+<h3 class="anchored" data-anchor-id="function-ismodelready">function isModelReady</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isModelReady<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether a model is loaded AND its weights are active.</p>
+</section>
+<section id="function-currentmodelid" class="level3">
+<h3 class="anchored" data-anchor-id="function-currentmodelid">function currentModelId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> currentModelId<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Currently loaded model ID, or empty.</p>
+</section>
+<section id="function-resetmodel" class="level3">
+<h3 class="anchored" data-anchor-id="function-resetmodel">function resetModel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> resetModel<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear the current model and free resources.</p>
+</section>
+<section id="function-runsingleframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-runsingleframe">function runSingleFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runSingleFrame<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> current_frame<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run a single-frame inference pipeline: assemble inputs → forward → decode outputs.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
+<li><strong>input_bindings</strong> Dynamic input slot bindings</li>
+<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>output_bindings</strong> Output slot bindings</li>
+<li><strong>current_frame</strong> Current frame index</li>
+<li><strong>source_image_size</strong> Original image dimensions</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> on failure.</li>
+</ul>
+</section>
+<section id="function-runbatchrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-runbatchrange">function runBatchRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runBatchRange<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run independent (non-recurrent) inference over a range of frames.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
+<li><strong>input_bindings</strong> Dynamic input slot bindings</li>
+<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>output_bindings</strong> Output slot bindings</li>
+<li><strong>start_frame</strong> First frame to process (inclusive)</li>
+<li><strong>end_frame</strong> Last frame to process (inclusive)</li>
+<li><strong>source_image_size</strong> Original image dimensions</li>
+<li><strong>batch_size</strong> Number of frames to process per forward pass.</li>
+<li><strong>progress</strong> Optional callback for progress reporting</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> on inference failure</li>
+</ul>
+</section>
+<section id="function-runbatchrangeoffline" class="level3">
+<h3 class="anchored" data-anchor-id="function-runbatchrangeoffline">function runBatchRangeOffline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>BatchInferenceResult runBatchRangeOffline<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    MediaOverrides <span class="at">const</span> <span class="op">&amp;</span> media_overrides<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>atomic<span class="op">&lt;</span> <span class="dt">bool</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> cancel_requested<span class="op">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    ResultCallback <span class="at">const</span> <span class="op">&amp;</span> result_callback <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run independent inference over a frame range without writing to <a href="">DataManager</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for non-media input encoding (masks, points, lines)</li>
+<li><strong>media_overrides</strong> Cloned <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> instances keyed by data_key</li>
+<li><strong>input_bindings</strong> Dynamic input slot bindings</li>
+<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>output_bindings</strong> Output slot bindings</li>
+<li><strong>start_frame</strong> First frame to process (inclusive)</li>
+<li><strong>end_frame</strong> Last frame to process (inclusive)</li>
+<li><strong>source_image_size</strong> Original image dimensions</li>
+<li><strong>cancel_requested</strong> Checked before each frame; stops early if true</li>
+<li><strong>batch_size</strong> Number of frames to process per forward pass. Must be &gt;= 1. The last chunk may contain fewer frames.</li>
+<li><strong>progress</strong> Optional callback for progress reporting</li>
+<li><strong>result_callback</strong> Optional per-frame result callback for progressive delivery. When non-null, decoded outputs are pushed via this callback and NOT accumulated in <a href="../../api_generated/Classes/structBatchInferenceResult.html#variable-results">BatchInferenceResult::results</a>.</li>
+</ul>
+<p><strong>Return</strong>: Accumulated decoded results (may be partial on cancellation). If result_callback is set, the results vector will be empty.</p>
+<p>Identical to <a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrange">runBatchRange()</a> except:</p>
+<ul>
+<li>Uses <code>media_overrides</code> for <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> lookups (thread-safe clone).</li>
+<li>Returns decoded results in a <a href="../../api_generated/Classes/structBatchInferenceResult.html">BatchInferenceResult</a> instead of calling addAtTime() on <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</li>
+<li>Checks <code>cancel_requested</code> before each frame for early exit.</li>
+</ul>
+</section>
+<section id="function-runrecurrentsequence" class="level3">
+<h3 class="anchored" data-anchor-id="function-runrecurrentsequence">function runRecurrentSequence</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runRecurrentSequence<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> RecurrentBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> recurrent_bindings<span class="op">,</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_count<span class="op">,</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run sequential recurrent inference over a range of frames.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
+<li><strong>input_bindings</strong> Dynamic input slot bindings</li>
+<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>output_bindings</strong> Output slot bindings</li>
+<li><strong>recurrent_bindings</strong> Recurrent feedback bindings</li>
+<li><strong>start_frame</strong> First frame to process</li>
+<li><strong>frame_count</strong> Number of frames to process</li>
+<li><strong>source_image_size</strong> Original image dimensions</li>
+<li><strong>progress</strong> Optional callback for progress reporting</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> on inference failure</li>
+</ul>
+<p>For each frame in [start_frame, start_frame + frame_count):</p>
+<ol type="1">
+<li>Assemble dynamic + static inputs</li>
+<li>Inject recurrent tensors (output from previous frame) into the corresponding input slots</li>
+<li>Call forward()</li>
+<li>Decode outputs into <a href="../../api_generated/Classes/classDataManager.html">DataManager</a></li>
+<li>Cache output tensors for the next frame’s recurrent inputs</li>
+</ol>
+<p>Batch size is forced to 1 during recurrent inference.</p>
+</section>
+<section id="function-capturestaticinput" class="level3">
+<h3 class="anchored" data-anchor-id="function-capturestaticinput">function captureStaticInput</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> captureStaticInput<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    StaticInputData <span class="at">const</span> <span class="op">&amp;</span> entry<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Capture a static input at a specific frame and store in the cache.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to fetch data from</li>
+<li><strong>entry</strong> Static input entry describing what to capture</li>
+<li><strong>frame</strong> The frame number to encode and cache</li>
+<li><strong>source_image_size</strong> Original image dimensions for coordinate scaling</li>
+</ul>
+<p><strong>Return</strong>: true if the tensor was successfully captured and cached</p>
+<p>Encodes the data from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at the given frame using the model’s recommended encoder for the slot, then stores the resulting tensor. The cached tensor is reused during inference for Absolute-mode entries.</p>
+</section>
+<section id="function-clearstaticcacheentry" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearstaticcacheentry">function clearStaticCacheEntry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearStaticCacheEntry<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear a single entry from the static tensor cache.</p>
+</section>
+<section id="function-clearstaticcache" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearstaticcache">function clearStaticCache</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearStaticCache<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear the entire static tensor cache.</p>
+</section>
+<section id="function-clearrecurrentcache" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearrecurrentcache">function clearRecurrentCache</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearRecurrentCache<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear the recurrent tensor cache.</p>
+<p>Call when changing models, starting a new sequence, or clearing state.</p>
+</section>
+<section id="function-hasstaticcacheentry" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasstaticcacheentry">function hasStaticCacheEntry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasStaticCacheEntry<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether a cached tensor exists for the given key.</p>
+</section>
+<section id="function-staticcachekeys" class="level3">
+<h3 class="anchored" data-anchor-id="function-staticcachekeys">function staticCacheKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> staticCacheKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>List all keys currently in the static tensor cache.</p>
+</section>
+<section id="function-staticcachetensorshape" class="level3">
+<h3 class="anchored" data-anchor-id="function-staticcachetensorshape">function staticCacheTensorShape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> staticCacheTensorShape<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the dimensions of a cached tensor as a vector of int64_t.</p>
+<p><strong>Return</strong>: The dimensions of the cached tensor as a vector of int64_t. Returns empty vector if the key is not in the cache.</p>
+</section>
+<section id="function-staticcachetensorrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-staticcachetensorrange">function staticCacheTensorRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> <span class="dt">float</span> <span class="op">&gt;</span> staticCacheTensorRange<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get min/max values of a cached tensor for preview display.</p>
+<p><strong>Return</strong>: The min and max values of the cached tensor as a pair of float. Returns {0.0f, 0.0f} if the key is not in the cache.</p>
+</section>
+<section id="function-currentmodeldisplayinfo" class="level3">
+<h3 class="anchored" data-anchor-id="function-currentmodeldisplayinfo">function currentModelDisplayInfo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> ModelDisplayInfo <span class="op">&gt;</span> currentModelDisplayInfo<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get display metadata from the currently loaded model instance.</p>
+<p>Unlike the static <code>[getModelDisplayInfo()](/api_generated/Classes/classSlotAssembler.md#function-getmodeldisplayinfo)</code>, this reflects any runtime reconfiguration (e.g.&nbsp;changed input resolution or output shape).</p>
+</section>
+<section id="function-configurepostencodermodule" class="level3">
+<h3 class="anchored" data-anchor-id="function-configurepostencodermodule">function configurePostEncoderModule</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configurePostEncoderModule<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">module_type</span><span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size <span class="op">={},</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> interpolation <span class="op">=</span><span class="st">"nearest"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Configure a post-encoder module on the currently loaded model.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>module_type</strong> Module key: “” / “none”, “global_avg_pool”, or “spatial_point”.</li>
+<li><strong>source_image_size</strong> Source image size used for “spatial_point” coordinate scaling.</li>
+<li><strong>interpolation</strong> “nearest” or “bilinear” (spatial_point only).</li>
+</ul>
+<p>Only applies when the current model is a <code>GeneralEncoderModel</code>. Calling this when the model changes will reset the configuration.</p>
+</section>
+<section id="function-updatespatialpoint" class="level3">
+<h3 class="anchored" data-anchor-id="function-updatespatialpoint">function updateSpatialPoint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateSpatialPoint<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key<span class="op">,</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the spatial-point query for the current frame.</p>
+<p>For the “spatial_point” post-encoder, reads the point at <code>frame</code> from <code>point_key</code> in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and forwards it to the module.</p>
+<p>No-op if the current module is not “spatial_point” or if <code>point_key</code> is empty.</p>
+</section>
+<section id="function-configuremodelshape" class="level3">
+<h3 class="anchored" data-anchor-id="function-configuremodelshape">function configureModelShape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configureModelShape<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> input_height<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> input_width<span class="op">,</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_shape <span class="op">={}</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reconfigure input resolution and output shape on the current model.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input_height</strong> Input image height in pixels (&gt; 0).</li>
+<li><strong>input_width</strong> Input image width in pixels (&gt; 0).</li>
+<li><strong>output_shape</strong> Raw encoder output shape (excluding batch dim). If empty, only input resolution is changed.</li>
+</ul>
+<p>Only applies when the current model is a <code>GeneralEncoderModel</code>. Must be called before <code>[loadWeights()](/api_generated/Classes/classSlotAssembler.md#function-loadweights)</code> or inference.</p>
+</section>
+<section id="function-iscudaavailable" class="level3">
+<h3 class="anchored" data-anchor-id="function-iscudaavailable">function isCudaAvailable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">bool</span> isCudaAvailable<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether CUDA is available on this system (compile-time + runtime).</p>
+</section>
+<section id="function-currentdevicename" class="level3">
+<h3 class="anchored" data-anchor-id="function-currentdevicename">function currentDeviceName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string currentDeviceName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Human-readable name of the active device (“GPU (CUDA)” or “CPU”).</p>
+</section>
+<section id="function-setdevicebyname" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdevicebyname">function setDeviceByName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> setDeviceByName<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the active device by name: “cuda” or “cpu”.</p>
+</section>
+<section id="function-initdeviceforcurrentthread" class="level3">
+<h3 class="anchored" data-anchor-id="function-initdeviceforcurrentthread">function initDeviceForCurrentThread</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> initDeviceForCurrentThread<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Initialize the deep-learning device context on the calling thread.</p>
+<p>On CUDA builds this ensures the CUDA runtime context is set for the current thread — required on Windows where CUDA per-thread state is not inherited from the main thread. Safe to call from any thread; no-op when the active device is CPU.</p>
+<p>Call at the start of worker thread <code>run()</code> methods before any libtorch operations.</p>
+</section>
+<section id="function-availablemodelids" class="level3">
+<h3 class="anchored" data-anchor-id="function-availablemodelids">function availableModelIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableModelIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>List all registered model IDs.</p>
+</section>
+<section id="function-getmodeldisplayinfo" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmodeldisplayinfo">function getModelDisplayInfo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> ModelDisplayInfo <span class="op">&gt;</span> getModelDisplayInfo<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get display metadata for a registered model.</p>
+</section>
+<section id="function-availableencoders" class="level3">
+<h3 class="anchored" data-anchor-id="function-availableencoders">function availableEncoders</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableEncoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Available encoder names (e.g.&nbsp;“ImageEncoder”, “Point2DEncoder”, …).</p>
+</section>
+<section id="function-availabledecoders" class="level3">
+<h3 class="anchored" data-anchor-id="function-availabledecoders">function availableDecoders</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableDecoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Available decoder names (e.g.&nbsp;“TensorToMask2D”, …).</p>
+</section>
+<section id="function-datatypeforencoder" class="level3">
+<h3 class="anchored" data-anchor-id="function-datatypeforencoder">function dataTypeForEncoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForEncoder<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> encoder_id</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map encoder name → <a href="">DataManager</a> data type name for combo filtering.</p>
+<p><strong>Return</strong>: “MediaData”, “PointData”, “MaskData”, “LineData”, or ““.</p>
+</section>
+<section id="function-datatypefordecoder" class="level3">
+<h3 class="anchored" data-anchor-id="function-datatypefordecoder">function dataTypeForDecoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForDecoder<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> decoder_id</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map decoder name → <a href="">DataManager</a> data type name for combo filtering.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:21 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

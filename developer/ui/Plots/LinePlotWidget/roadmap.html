@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Line Plot Widget Roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#lineplotwidget-development-roadmap" id="toc-lineplotwidget-development-roadmap" class="nav-link active" data-scroll-target="#lineplotwidget-development-roadmap">LinePlotWidget Development Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#completed-work-summary" id="toc-completed-work-summary" class="nav-link" data-scroll-target="#completed-work-summary">Completed Work Summary</a></li>
+  <li><a href="#phase-2-mean-summary-overlay-with-confidence-intervals" id="toc-phase-2-mean-summary-overlay-with-confidence-intervals" class="nav-link" data-scroll-target="#phase-2-mean-summary-overlay-with-confidence-intervals">Phase 2: Mean / Summary Overlay with Confidence Intervals</a>
+  <ul class="collapse">
+  <li><a href="#summary-mode-enum" id="toc-summary-mode-enum" class="nav-link" data-scroll-target="#summary-mode-enum">2.1 Summary Mode Enum</a></li>
+  <li><a href="#confidence-interval-options" id="toc-confidence-interval-options" class="nav-link" data-scroll-target="#confidence-interval-options">2.2 Confidence Interval Options</a></li>
+  <li><a href="#state-extension" id="toc-state-extension" class="nav-link" data-scroll-target="#state-extension">2.3 State Extension</a></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">2.4 Implementation</a></li>
+  <li><a href="#shared-confidence-band-rendering" id="toc-shared-confidence-band-rendering" class="nav-link" data-scroll-target="#shared-confidence-band-rendering">2.5 Shared Confidence Band Rendering</a></li>
+  <li><a href="#properties-panel" id="toc-properties-panel" class="nav-link" data-scroll-target="#properties-panel">2.6 Properties Panel</a></li>
+  </ul></li>
+  <li><a href="#phase-3-external-feature-coloring" id="toc-phase-3-external-feature-coloring" class="nav-link" data-scroll-target="#phase-3-external-feature-coloring">Phase 3: External Feature Coloring</a>
+  <ul class="collapse">
+  <li><a href="#concept" id="toc-concept" class="nav-link" data-scroll-target="#concept">Concept</a></li>
+  <li><a href="#color-configuration" id="toc-color-configuration" class="nav-link" data-scroll-target="#color-configuration">3.1 Color Configuration</a></li>
+  <li><a href="#colormap-infrastructure" id="toc-colormap-infrastructure" class="nav-link" data-scroll-target="#colormap-infrastructure">3.2 Colormap Infrastructure</a></li>
+  <li><a href="#per-line-color-in-batchlinerenderer" id="toc-per-line-color-in-batchlinerenderer" class="nav-link" data-scroll-target="#per-line-color-in-batchlinerenderer">3.3 Per-Line Color in BatchLineRenderer</a></li>
+  <li><a href="#properties-panel-1" id="toc-properties-panel-1" class="nav-link" data-scroll-target="#properties-panel-1">3.4 Properties Panel</a></li>
+  </ul></li>
+  <li><a href="#phase-4-distribution-tooltips" id="toc-phase-4-distribution-tooltips" class="nav-link" data-scroll-target="#phase-4-distribution-tooltips">Phase 4: Distribution Tooltips</a>
+  <ul class="collapse">
+  <li><a href="#distribution-computation" id="toc-distribution-computation" class="nav-link" data-scroll-target="#distribution-computation">4.1 Distribution Computation</a></li>
+  <li><a href="#tooltip-image-generation" id="toc-tooltip-image-generation" class="nav-link" data-scroll-target="#tooltip-image-generation">4.2 Tooltip Image Generation</a></li>
+  <li><a href="#integration-with-plottooltipmanager" id="toc-integration-with-plottooltipmanager" class="nav-link" data-scroll-target="#integration-with-plottooltipmanager">4.3 Integration with PlotTooltipManager</a></li>
+  <li><a href="#hover-detection" id="toc-hover-detection" class="nav-link" data-scroll-target="#hover-detection">4.4 Hover Detection</a></li>
+  <li><a href="#configuration" id="toc-configuration" class="nav-link" data-scroll-target="#configuration">4.5 Configuration</a></li>
+  </ul></li>
+  <li><a href="#phase-5-svg-export" id="toc-phase-5-svg-export" class="nav-link" data-scroll-target="#phase-5-svg-export">Phase 5: SVG Export</a>
+  <ul class="collapse">
+  <li><a href="#architecture-assessment" id="toc-architecture-assessment" class="nav-link" data-scroll-target="#architecture-assessment">Architecture Assessment</a></li>
+  <li><a href="#step-5.1-create-linebatchdata-renderablepolylinebatch-converter" id="toc-step-5.1-create-linebatchdata-renderablepolylinebatch-converter" class="nav-link" data-scroll-target="#step-5.1-create-linebatchdata-renderablepolylinebatch-converter">Step 5.1: Create <code>LineBatchData</code> → <code>RenderablePolyLineBatch</code> converter</a></li>
+  <li><a href="#step-5.2-add-background_color-to-lineplotstatedata" id="toc-step-5.2-add-background_color-to-lineplotstatedata" class="nav-link" data-scroll-target="#step-5.2-add-background_color-to-lineplotstatedata">Step 5.2: Add <code>background_color</code> to <code>LinePlotStateData</code></a></li>
+  <li><a href="#step-5.3-add-exporttosvg-to-lineplotopenglwidget" id="toc-step-5.3-add-exporttosvg-to-lineplotopenglwidget" class="nav-link" data-scroll-target="#step-5.3-add-exporttosvg-to-lineplotopenglwidget">Step 5.3: Add <code>exportToSVG()</code> to <code>LinePlotOpenGLWidget</code></a></li>
+  <li><a href="#step-5.4-add-exportsvgrequested-signal-to-lineplotpropertieswidget" id="toc-step-5.4-add-exportsvgrequested-signal-to-lineplotpropertieswidget" class="nav-link" data-scroll-target="#step-5.4-add-exportsvgrequested-signal-to-lineplotpropertieswidget">Step 5.4: Add <code>exportSVGRequested</code> signal to <code>LinePlotPropertiesWidget</code></a></li>
+  <li><a href="#step-5.5-add-handleexportsvg-to-lineplotwidget" id="toc-step-5.5-add-handleexportsvg-to-lineplotwidget" class="nav-link" data-scroll-target="#step-5.5-add-handleexportsvg-to-lineplotwidget">Step 5.5: Add <code>handleExportSVG()</code> to <code>LinePlotWidget</code></a></li>
+  <li><a href="#step-5.6-wire-signals-in-lineplotwidgetregistration" id="toc-step-5.6-wire-signals-in-lineplotwidgetregistration" class="nav-link" data-scroll-target="#step-5.6-wire-signals-in-lineplotwidgetregistration">Step 5.6: Wire signals in <code>LinePlotWidgetRegistration</code></a></li>
+  <li><a href="#step-5.7-manual-validation" id="toc-step-5.7-manual-validation" class="nav-link" data-scroll-target="#step-5.7-manual-validation">Step 5.7: Manual validation</a></li>
+  <li><a href="#design-notes-linebatchdata-conversion" id="toc-design-notes-linebatchdata-conversion" class="nav-link" data-scroll-target="#design-notes-linebatchdata-conversion">Design Notes — LineBatchData Conversion</a></li>
+  </ul></li>
+  <li><a href="#phase-6-cross-widget-linking" id="toc-phase-6-cross-widget-linking" class="nav-link" data-scroll-target="#phase-6-cross-widget-linking">Phase 6: Cross-Widget Linking</a>
+  <ul class="collapse">
+  <li><a href="#selectioncontext-integration" id="toc-selectioncontext-integration" class="nav-link" data-scroll-target="#selectioncontext-integration">6.1 SelectionContext Integration</a></li>
+  <li><a href="#pinning" id="toc-pinning" class="nav-link" data-scroll-target="#pinning">6.2 Pinning</a></li>
+  <li><a href="#companion-widget-workflow" id="toc-companion-widget-workflow" class="nav-link" data-scroll-target="#companion-widget-workflow">6.3 Companion Widget Workflow</a></li>
+  </ul></li>
+  <li><a href="#phase-7-multi-series-rendering" id="toc-phase-7-multi-series-rendering" class="nav-link" data-scroll-target="#phase-7-multi-series-rendering">Phase 7: Multi-Series Rendering</a>
+  <ul class="collapse">
+  <li><a href="#multi-series-data-gathering" id="toc-multi-series-data-gathering" class="nav-link" data-scroll-target="#multi-series-data-gathering">7.1 Multi-Series Data Gathering</a></li>
+  <li><a href="#per-series-color-in-batchlinerenderer" id="toc-per-series-color-in-batchlinerenderer" class="nav-link" data-scroll-target="#per-series-color-in-batchlinerenderer">7.2 Per-Series Color in BatchLineRenderer</a></li>
+  <li><a href="#legend" id="toc-legend" class="nav-link" data-scroll-target="#legend">7.3 Legend</a></li>
+  </ul></li>
+  <li><a href="#dependency-graph" id="toc-dependency-graph" class="nav-link" data-scroll-target="#dependency-graph">Dependency Graph</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Line Plot Widget Roadmap</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="lineplotwidget-development-roadmap" class="level1">
+<h1>LinePlotWidget Development Roadmap</h1>
+<p>This document tracks remaining development tasks for the Line Plot Widget. For documentation of completed features and current architecture, see the <a href="../../../../developer/ui/Plots/LinePlotWidget/index.html">main developer documentation</a>.</p>
+<section id="completed-work-summary" class="level2">
+<h2 class="anchored" data-anchor-id="completed-work-summary">Completed Work Summary</h2>
+<p>The following features are complete and documented in <a href="../../../../developer/ui/Plots/LinePlotWidget/index.html">index.qmd</a>:</p>
+<ul>
+<li><strong>Widget skeleton</strong>: EditorState pattern, registration, state/view/properties factories</li>
+<li><strong>State management</strong>: <code>LinePlotState</code> with <code>PlotAlignmentState</code>, <code>RelativeTimeAxisState</code>, <code>VerticalAxisState</code> composition; separate <code>LinePlotStateData.hpp</code> for fuzz-testable serializable struct</li>
+<li><strong>Rendering pipeline</strong>: <code>GatherResult&lt;AnalogTimeSeries&gt;</code> integration, <code>LineBatchData</code> construction, <code>BatchLineRenderer</code> GPU rendering, auto-fit Y/X bounds</li>
+<li><strong>Per-series options</strong>: Line style (color, thickness, alpha) via <code>LineStyleData</code>/<code>LineStyleState</code>/<code>LineStyleControls</code> — same infrastructure as <a href="../../../../developer/ui/Plots/OnionSkinViewWidget/roadmap.html">OnionSkinViewWidget</a> and <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/roadmap.html">TemporalProjectionViewWidget</a></li>
+<li><strong>Axis system</strong>: <code>RelativeTimeAxisWidget</code> (X) and <code>VerticalAxisWidget</code> (Y) with bidirectional sync</li>
+<li><strong>Interaction</strong>: Separated X/Y zoom, pan, double-click time navigation via shared <code>PlotInteractionHelpers</code></li>
+<li><strong>Line selection</strong>: Ctrl+Click drag intersection stroke (add/remove modes), GPU compute shader and CPU intersector backends, shared <code>LineSelectionHelpers</code> with <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a></li>
+<li><strong>Properties panel</strong>: Alignment controls (<code>PlotAlignmentWidget</code>), series management (add/remove/table), line options (thickness, color), axis range controls in collapsible sections, selection instructions, color-by-group checkbox</li>
+<li><strong>State serialization</strong>: Full round-trip JSON via <code>rfl::json</code></li>
+<li><strong>DataManager observer</strong>: Combo box population and cleanup in destructor</li>
+<li><strong>Group integration</strong>: <code>GroupManager</code> passed at construction, right-click context menu via shared <code>GroupContextMenuHandler</code>, trial→EntityID mapping via cached alignment times, per-line group color overrides in <code>BatchLineRenderer</code> shader, generation-counter-based reactive updates, <code>color_by_group</code> state toggle</li>
+</ul>
+<p><strong>Not yet implemented</strong>: Mean/confidence interval overlay, external feature coloring, distribution tooltips, SVG export, and cross-widget linking described below.</p>
+<hr>
+</section>
+<section id="phase-2-mean-summary-overlay-with-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-mean-summary-overlay-with-confidence-intervals">Phase 2: Mean / Summary Overlay with Confidence Intervals</h2>
+<p><strong>Status</strong>: Not started. Depends on the existing <code>GatherResult</code> and batch rendering pipeline.</p>
+<p><strong>Goal</strong>: Optionally display a summary line (mean, median) of the overlaid trial lines, with optional confidence intervals, similar to the summary statistics shown in a PSTH.</p>
+<section id="summary-mode-enum" class="level3">
+<h3 class="anchored" data-anchor-id="summary-mode-enum">2.1 Summary Mode Enum</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> LinePlotSummaryMode <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    None<span class="op">,</span>       <span class="co">///&lt; No summary overlay (default)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Mean<span class="op">,</span>       <span class="co">///&lt; Arithmetic mean across trials</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Median      <span class="co">///&lt; Median across trials</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="confidence-interval-options" class="level3">
+<h3 class="anchored" data-anchor-id="confidence-interval-options">2.2 Confidence Interval Options</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> ConfidenceIntervalType <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    None<span class="op">,</span>           <span class="co">///&lt; No confidence band</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    SEM<span class="op">,</span>            <span class="co">///&lt; Standard error of the mean</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    StdDev<span class="op">,</span>         <span class="co">///&lt; Standard deviation</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    CI95<span class="op">,</span>           <span class="co">///&lt; 95% confidence interval</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Percentile      <span class="co">///&lt; User-defined percentile band (e.g., 25th–75th)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LinePlotSummaryConfig <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    LinePlotSummaryMode mode <span class="op">=</span> LinePlotSummaryMode<span class="op">::</span>None<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    ConfidenceIntervalType <span class="dt">ci_type</span> <span class="op">=</span> ConfidenceIntervalType<span class="op">::</span>None<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> ci_alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">;</span>                  <span class="co">///&lt; Opacity of confidence band fill</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string summary_color <span class="op">=</span> <span class="st">"#FF0000"</span><span class="op">;</span>  <span class="co">///&lt; Color of the summary line</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> summary_thickness <span class="op">=</span> <span class="fl">2.5</span><span class="op">;</span>         <span class="co">///&lt; Thickness of the summary line</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For Percentile mode</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> lower_percentile <span class="op">=</span> <span class="fl">25.0</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> upper_percentile <span class="op">=</span> <span class="fl">75.0</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="state-extension" class="level3">
+<h3 class="anchored" data-anchor-id="state-extension">2.3 State Extension</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LinePlotStateData <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    LinePlotSummaryConfig summary<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="implementation" class="level3">
+<h3 class="anchored" data-anchor-id="implementation">2.4 Implementation</h3>
+<p>After building <code>LineBatchData</code> from trial data, compute the summary:</p>
+<ol type="1">
+<li><strong>Resample</strong> all trial lines to a common time grid (the <code>GatherResult</code> may have different sample counts per trial due to varying TimeFrame resolutions)</li>
+<li><strong>Pointwise aggregation</strong>: For each time sample, compute the summary statistic (mean or median) across all trials</li>
+<li><strong>Confidence interval</strong>: Compute upper/lower bounds at each sample point</li>
+<li><strong>Render summary line</strong> as a thicker line on top of the trial lines via <code>SceneRenderer</code> or as an additional entry in the <code>LineBatchData</code></li>
+<li><strong>Render confidence band</strong> as a filled semi-transparent polygon (similar to the confidence band rendering proposed in the <a href="../../../../developer/ui/Plots/PSTHWidget/roadmap.html">PSTH Roadmap</a> Phase 3)</li>
+</ol>
+</section>
+<section id="shared-confidence-band-rendering" class="level3">
+<h3 class="anchored" data-anchor-id="shared-confidence-band-rendering">2.5 Shared Confidence Band Rendering</h3>
+<p>The <a href="../../../../developer/ui/Plots/PSTHWidget/roadmap.html">PSTHWidget Roadmap</a> Phase 3 proposes confidence band rendering for histograms. The pointwise confidence band infrastructure (upper/lower bounds per sample → filled polygon) is reusable here. A shared <code>ConfidenceBandMapper</code> in <code>CorePlotting/Mappers/</code> would serve both widgets:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> CorePlotting <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> ConfidenceBandData <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> x_values<span class="op">;</span>    <span class="co">///&lt; Shared X positions</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> upper<span class="op">;</span>       <span class="co">///&lt; Upper bound per sample</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> lower<span class="op">;</span>       <span class="co">///&lt; Lower bound per sample</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build a filled polygon renderable from confidence band data</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    RenderableTriangleStripBatch buildConfidenceBand<span class="op">(</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        ConfidenceBandData <span class="at">const</span> <span class="op">&amp;</span> band<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>vec4 fill_color<span class="op">);</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="properties-panel" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel">2.6 Properties Panel</h3>
+<p>Add to <code>LinePlotPropertiesWidget</code> in a “Summary” collapsible section:</p>
+<ul>
+<li>Summary mode combo (None, Mean, Median)</li>
+<li>Confidence interval type combo (None, SEM, StdDev, CI95, Percentile)</li>
+<li>Summary line color picker</li>
+<li>Summary line thickness spinbox</li>
+<li>CI opacity slider</li>
+<li>Percentile range spinboxes (visible only for Percentile mode)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-3-external-feature-coloring" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-external-feature-coloring">Phase 3: External Feature Coloring</h2>
+<p><strong>Status</strong>: Not started. Design influenced by <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> Phase 5.</p>
+<p><strong>Goal</strong>: Allow trial lines to be colored by an external feature stored in a <code>TensorData</code> column, enabling visual grouping by categorical or continuous features.</p>
+<section id="concept" class="level3">
+<h3 class="anchored" data-anchor-id="concept">Concept</h3>
+<p>The same <code>TensorData</code> infrastructure used for <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget external feature sorting/coloring</a> applies here. A <code>TensorData</code> with interval-based rows can provide per-trial feature values:</p>
+<ul>
+<li><strong>Binary features</strong> (0.0/1.0 from threshold transforms) → two-color categorical coloring</li>
+<li><strong>Continuous features</strong> (e.g., firing rate, latency) → colormap-based gradient coloring</li>
+<li><strong>Alpha scaling</strong> — instead of (or in addition to) color, the feature value scales line opacity</li>
+</ul>
+</section>
+<section id="color-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="color-configuration">3.1 Color Configuration</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineColorConfig <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string color_mode <span class="op">=</span> <span class="st">"fixed"</span><span class="op">;</span>    <span class="co">// "fixed", "by_feature", or "by_group"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For fixed coloring (existing behavior) — uses LinePlotOptions::hex_color</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For feature-based coloring</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    ExternalFeatureConfig feature<span class="op">;</span>       <span class="co">// Which TensorData column</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string colormap <span class="op">=</span> <span class="st">"viridis"</span><span class="op">;</span>    <span class="co">// Colormap name</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> color_min <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> color_max <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> use_auto_range <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Alpha scaling (independent of color mode)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> alpha_by_feature <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    ExternalFeatureConfig alpha_feature<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> alpha_min <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> alpha_max <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>ExternalFeatureConfig</code> struct is shared with <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget</a>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ExternalFeatureConfig <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string tensor_key<span class="op">;</span>       <span class="co">// DataManager key for TensorData</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string column_name<span class="op">;</span>      <span class="co">// Column within the TensorData</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>        <span class="co">// Sort direction (for sorting use)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="colormap-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="colormap-infrastructure">3.2 Colormap Infrastructure</h3>
+<p>This feature depends on the colormap infrastructure proposed in the <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">HeatmapWidget Roadmap</a> Phase 2:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> CorePlotting<span class="op">::</span>Colormaps <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> ColormapFunction <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>glm<span class="op">::</span>vec4<span class="op">(</span><span class="dt">float</span> t<span class="op">)&gt;;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    ColormapFunction getColormap<span class="op">(</span>ColormapPreset preset<span class="op">);</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 mapValue<span class="op">(</span>ColormapFunction <span class="at">const</span> <span class="op">&amp;</span> cmap<span class="op">,</span> <span class="dt">float</span> value<span class="op">,</span> <span class="dt">float</span> vmin<span class="op">,</span> <span class="dt">float</span> vmax<span class="op">);</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The colormap system in <code>CorePlotting/Colormaps/</code> is shared across:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>LinePlotWidget</strong></td>
+<td>Per-trial line color from feature value</td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a></strong></td>
+<td>Per-trial event color (<a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> Phase 5)</td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a></strong></td>
+<td>Heatmap cell color (<a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">Heatmap Roadmap</a> Phase 2)</td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../../../developer/ui/Plots/SpectrogramWidget/index.html">SpectrogramWidget</a></strong></td>
+<td>Spectrogram cell color</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="per-line-color-in-batchlinerenderer" class="level3">
+<h3 class="anchored" data-anchor-id="per-line-color-in-batchlinerenderer">3.3 Per-Line Color in BatchLineRenderer</h3>
+<p>The current <code>BatchLineRenderer</code> uses <strong>global</strong> colors for normal/selected/hover states. To support per-line coloring, the renderer needs to be extended:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Per-line color override (optional — falls back to global if empty)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>glm<span class="op">::</span>vec4<span class="op">&gt;</span> per_line_colors<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When <code>per_line_colors</code> is non-empty, each line uses its own color instead of the global normal color. Selected and hover states could blend with the per-line color.</p>
+<p>This renderer extension also benefits <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a> for entity-based coloring.</p>
+</section>
+<section id="properties-panel-1" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel-1">3.4 Properties Panel</h3>
+<p>Add to <code>LinePlotPropertiesWidget</code> in a “Trial Coloring” collapsible section:</p>
+<ol type="1">
+<li><strong>Color mode combo</strong> — Fixed / By Feature / By Group</li>
+<li><strong>TensorData combo box</strong> — lists <code>TensorData</code> keys from DataManager</li>
+<li><strong>Column combo box</strong> — shows columns of the selected <code>TensorData</code></li>
+<li><strong>Colormap combo</strong> — colormap preset selection</li>
+<li><strong>Range controls</strong> — auto/manual min/max spinboxes</li>
+<li><strong>Alpha scaling checkbox</strong> — enables alpha-by-feature mode</li>
+<li><strong>Alpha feature controls</strong> — separate TensorData/column for alpha (if different from color)</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="phase-4-distribution-tooltips" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-distribution-tooltips">Phase 4: Distribution Tooltips</h2>
+<p><strong>Status</strong>: Not started. New shared infrastructure needed.</p>
+<p><strong>Goal</strong>: When the user hovers over the plot, display a tooltip containing a <strong>vertical histogram</strong> showing the distribution of Y values across trials at that time point. This helps assess the reliability of an “average” (or summary) value by showing trial-to-trial variability.</p>
+<section id="distribution-computation" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-computation">4.1 Distribution Computation</h3>
+<p>At a given relative time <span class="math inline">\(t\)</span>:</p>
+<ol type="1">
+<li>For each trial, interpolate or look up the signal value at time <span class="math inline">\(t\)</span></li>
+<li>Collect the <span class="math inline">\(N\)</span> values (one per trial) into a distribution</li>
+<li>Compute a histogram of these values with configurable bin count</li>
+</ol>
+</section>
+<section id="tooltip-image-generation" class="level3">
+<h3 class="anchored" data-anchor-id="tooltip-image-generation">4.2 Tooltip Image Generation</h3>
+<p>Generate a small image (e.g., 150×200 pixels) showing:</p>
+<ul>
+<li>A vertical histogram (bins on Y-axis matching the plot’s value axis, count/frequency on X-axis)</li>
+<li>Optional summary statistics overlay (mean, median, std dev)</li>
+<li>Current time position label</li>
+</ul>
+<p>The image should be rendered off-screen (using <code>QImage</code> / <code>QPainter</code>) and displayed in a Qt tooltip.</p>
+</section>
+<section id="integration-with-plottooltipmanager" class="level3">
+<h3 class="anchored" data-anchor-id="integration-with-plottooltipmanager">4.3 Integration with PlotTooltipManager</h3>
+<p>The tooltip lifecycle (dwell timer, suppression during pan/zoom, show/hide) is handled by the shared <a href="../../../../developer/ui/Plots/Common/TooltipManager/index.html">PlotTooltipManager</a> (<code>Plots/Common/TooltipManager/</code>). The LinePlotWidget provides two callbacks:</p>
+<ol type="1">
+<li><strong>Hit test provider</strong>: Converts the screen position to a world X coordinate (relative time). Always succeeds when the cursor is within the plot area, since distributions can be computed at any time point.</li>
+<li><strong>Content provider</strong>: Receives the hit, computes the cross-trial distribution at that time, renders a vertical histogram into a <code>QPixmap</code> via <code>QPainter</code>, and returns it as <code>PlotTooltipContent</code>. The <code>PlotTooltipManager</code> displays the pixmap in its built-in <code>PixmapPopup</code> widget.</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>_tooltip_mgr <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>PlotTooltipManager<span class="op">&gt;(</span><span class="kw">this</span><span class="op">,</span> <span class="dv">100</span><span class="op">);</span> <span class="co">// 100ms dwell for responsiveness</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>_tooltip_mgr<span class="op">-&gt;</span>setHitTestProvider<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="ex">QPoint</span> pos<span class="op">)</span> <span class="op">-&gt;</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>PlotTooltipHit<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPointF</span> world <span class="op">=</span> screenToWorld<span class="op">(</span>pos<span class="op">);</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    PlotTooltipHit hit<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    hit<span class="op">.</span>world_x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>world<span class="op">.</span>x<span class="op">());</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    hit<span class="op">.</span>world_y <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>world<span class="op">.</span>y<span class="op">());</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> hit<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>_tooltip_mgr<span class="op">-&gt;</span>setContentProvider<span class="op">([</span><span class="kw">this</span><span class="op">](</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)</span> <span class="op">-&gt;</span> PlotTooltipContent <span class="op">{</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    PlotTooltipContent content<span class="op">;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    content<span class="op">.</span>pixmap <span class="op">=</span> renderDistributionHistogram<span class="op">(</span>hit<span class="op">.</span>world_x<span class="op">);</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> content<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">HeatmapWidget Roadmap</a> Phase 8 uses the same <code>PlotTooltipManager</code> with a pixmap content provider for its miniature PSTH + raster tooltips.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>Tooltip Content</th>
+<th>Content Type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a></strong></td>
+<td>Trial index + time</td>
+<td>Text (implemented)</td>
+</tr>
+<tr class="even">
+<td><strong>LinePlotWidget</strong></td>
+<td>Vertical histogram of Y values at hovered time point</td>
+<td>Pixmap</td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a></strong></td>
+<td>Miniature PSTH + raster for hovered unit</td>
+<td>Pixmap</td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html">ScatterPlotWidget</a></strong></td>
+<td>Point coordinates + TimeFrameIndex</td>
+<td>Text</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="hover-detection" class="level3">
+<h3 class="anchored" data-anchor-id="hover-detection">4.4 Hover Detection</h3>
+<p>Hover detection is handled by <code>PlotTooltipManager::onMouseMove()</code>, called from <code>LinePlotOpenGLWidget::mouseMoveEvent()</code>. The manager’s dwell timer prevents expensive distribution computations during rapid mouse movement. Tooltips are automatically suppressed during panning via the <code>is_interacting</code> parameter.</p>
+</section>
+<section id="configuration" class="level3">
+<h3 class="anchored" data-anchor-id="configuration">4.5 Configuration</h3>
+<p>Add to <code>LinePlotStateData</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TooltipConfig <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> histogram_bins <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_summary_stats <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>   <span class="co">// Mean, median overlay</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="phase-5-svg-export" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-svg-export">Phase 5: SVG Export</h2>
+<p><strong>Status</strong>: Not started. Infrastructure exists in <code>PlottingSVG</code> library (proven with <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> and <a href="../../DataViewer_Widget/index.qmd">DataViewer_Widget</a>).</p>
+<p><strong>Goal</strong>: Allow the user to save the current plot view as an SVG file for publication-quality figures.</p>
+<section id="architecture-assessment" class="level3">
+<h3 class="anchored" data-anchor-id="architecture-assessment">Architecture Assessment</h3>
+<p>The LinePlotWidget rendering pipeline is <strong>not directly compatible</strong> with <code>PlottingSVG</code>. Unlike other plot widgets that build a <code>RenderableScene</code>, LinePlotWidget uses a specialized <code>BatchLineRenderer</code> + <code>BatchLineStore</code> pipeline for GPU performance. The scene is stored as <code>LineBatchData</code> (segments, line IDs, selection/visibility masks) — not as a <code>RenderableScene</code>.</p>
+<p><strong>Key issues to address:</strong></p>
+<ol type="1">
+<li><strong>No <code>RenderableScene</code></strong>: Trial lines are rendered via <code>BatchLineRenderer</code>, bypassing the standard <code>SceneRenderer</code> → <code>RenderableScene</code> path entirely. <code>_scene_renderer</code> is only used for the selection preview overlay and is otherwise cleared/empty.</li>
+<li><strong><code>LineBatchData</code> → <code>RenderablePolyLineBatch</code> conversion needed</strong>: A helper function must reconstruct polylines from the segment-based <code>LineBatchData</code> format. CPU-side data is always available via <code>_line_store.cpuData()</code>.</li>
+<li><strong>Per-line colors stored in GPU VBO</strong>: Group colors and feature colors are applied via the <code>BatchLineRenderer</code>’s color override VBO, not stored in <code>LineBatchData</code>. The conversion helper must also extract per-line colors from the renderer’s color state.</li>
+<li><strong>Background color hardcoded</strong>: Set via <code>glClearColor(0.1f, 0.1f, 0.1f, 1.0f)</code> with no state accessor. A <code>background_color</code> field must be added to <code>LinePlotStateData</code>.</li>
+</ol>
+</section>
+<section id="step-5.1-create-linebatchdata-renderablepolylinebatch-converter" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.1-create-linebatchdata-renderablepolylinebatch-converter">Step 5.1: Create <code>LineBatchData</code> → <code>RenderablePolyLineBatch</code> converter</h3>
+<p>Create a reusable conversion helper in <code>CorePlotting/LineBatch/</code>. This enables any widget using <code>LineBatchData</code> (LinePlotWidget, <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a>, <a href="../../../../developer/ui/Plots/OnionSkinViewWidget/index.html">OnionSkinViewWidget</a>) to produce SVG.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@file</span><span class="co"> </span><span class="cv">LineBatchDataConverter.hpp</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> CorePlotting <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// Convert a LineBatchData to a RenderablePolyLineBatch suitable for SVG export.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// Reconstructs continuous polylines from the segment-based storage format.</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// Applies visibility and selection masks: invisible lines are excluded,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// selected lines use </span><span class="an">@p</span><span class="co"> </span><span class="cv">selected_color</span><span class="co">, unselected use </span><span class="an">@p</span><span class="co"> </span><span class="cv">default_color</span><span class="co">.</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">batch</span><span class="co">         CPU-side line batch data (from BatchLineStore::cpuData())</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">default_color</span><span class="co"> Color for unselected lines</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">selected_color</span><span class="co"> Color for selected lines</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">per_line_colors</span><span class="co"> Optional per-line color overrides (e.g., from group coloring).</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">///                        If non-empty, overrides default_color for each visible line.</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@return</span><span class="co"> PolyLine batch ready for PlottingSVG::SVGPolyLineRenderer</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> RenderablePolyLineBatch convertLineBatchToPolyLines<span class="op">(</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    LineBatchData <span class="at">const</span> <span class="op">&amp;</span> batch<span class="op">,</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 default_color <span class="op">=</span> <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 selected_color <span class="op">=</span> <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.6</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.9</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>glm<span class="op">::</span>vec4<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> per_line_colors <span class="op">=</span> <span class="op">{});</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace CorePlotting</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Algorithm:</strong> 1. Iterate over <code>batch.lines</code> (logical lines) 2. Skip lines where <code>visibility_mask[line_idx] == 0</code> 3. For each visible line, extract segments from <code>batch.segments</code> using <code>LineInfo::first_segment</code> and <code>segment_count</code> 4. Reconstruct polyline vertices: first segment’s start vertex, then each segment’s end vertex (segments share endpoints, so <code>{x1,y1,x2,y2}</code> → vertex chain is <code>{x1,y1, x2,y2}</code> for the first segment, then <code>{x2,y2}</code> for subsequent segments) 5. Populate <code>line_start_indices</code> and <code>line_vertex_counts</code> per polyline 6. Assign color from <code>per_line_colors[line_idx]</code> (if available), <code>selected_color</code> (if selected), or <code>default_color</code></p>
+<p><strong>Files to create:</strong> - <code>src/CorePlotting/LineBatch/LineBatchDataConverter.hpp</code> - <code>src/CorePlotting/LineBatch/LineBatchDataConverter.cpp</code></p>
+<p><strong>Files to modify:</strong> - <code>src/CorePlotting/CMakeLists.txt</code> — add new source files</p>
+<p><strong>Tests to create:</strong> - <code>tests/CorePlotting/LineBatchDataConverter.test.cpp</code> — verify conversion with known segment data, visibility masks, selection masks, and per-line colors</p>
+<p><strong>Verify:</strong> Build compiles. Tests pass.</p>
+</section>
+<section id="step-5.2-add-background_color-to-lineplotstatedata" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.2-add-background_color-to-lineplotstatedata">Step 5.2: Add <code>background_color</code> to <code>LinePlotStateData</code></h3>
+<p>Add a background color field to the state, matching the EventPlot/Heatmap pattern.</p>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/Core/LinePlotStateData.hpp</code> — add <code>std::string background_color = "#1A1A1A";</code> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/Core/LinePlotState.hpp</code> — add getter/setter with <code>backgroundColorChanged()</code> signal - <code>src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp</code> — in <code>initializeGL()</code>, read background color from state instead of hardcoding</p>
+<p><strong>Verify:</strong> Build compiles. Background color driven by state.</p>
+</section>
+<section id="step-5.3-add-exporttosvg-to-lineplotopenglwidget" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.3-add-exporttosvg-to-lineplotopenglwidget">Step 5.3: Add <code>exportToSVG()</code> to <code>LinePlotOpenGLWidget</code></h3>
+<p>Build a temporary <code>RenderableScene</code> from the cached <code>LineBatchData</code> and current matrices.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="ex">QString</span> exportToSVG<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Implementation:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> LinePlotOpenGLWidget<span class="op">::</span>exportToSVG<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu_data <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>cpu_data<span class="op">.</span>numLines<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract per-line colors from BatchLineRenderer's color override state</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> per_line_colors <span class="op">=</span> _line_renderer<span class="op">.</span>getPerLineColors<span class="op">();</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Convert LineBatchData → RenderablePolyLineBatch</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 default_color<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span>  <span class="co">// Or from line style state</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 selected_color<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.6</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.9</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> poly_batch <span class="op">=</span> CorePlotting<span class="op">::</span>convertLineBatchToPolyLines<span class="op">(</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        cpu_data<span class="op">,</span> default_color<span class="op">,</span> selected_color<span class="op">,</span> per_line_colors<span class="op">);</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build temporary RenderableScene</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>RenderableScene scene<span class="op">;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    scene<span class="op">.</span>poly_line_batches<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>poly_batch<span class="op">));</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    scene<span class="op">.</span>view_matrix <span class="op">=</span> _view_matrix<span class="op">;</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    scene<span class="op">.</span>projection_matrix <span class="op">=</span> _projection_matrix<span class="op">;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    PlottingSVG<span class="op">::</span>SVGSceneRenderer renderer<span class="op">;</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setScene<span class="op">(</span>scene<span class="op">);</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setCanvasSize<span class="op">(</span>_widget_width<span class="op">,</span> _widget_height<span class="op">);</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        renderer<span class="op">.</span>setBackgroundColor<span class="op">(</span>_state<span class="op">-&gt;</span>getBackgroundColor<span class="op">().</span>toStdString<span class="op">());</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>renderer<span class="op">.</span>render<span class="op">());</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Note on <code>getPerLineColors()</code></strong>: The <code>BatchLineRenderer</code> applies per-line color overrides via a GPU VBO (e.g., from group coloring). A <code>getPerLineColors()</code> accessor must be added to expose the CPU-side color array. If group coloring is not active, this returns an empty vector and the converter falls back to <code>default_color</code>.</p>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.hpp</code> — add <code>exportToSVG()</code> declaration - <code>src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp</code> — implement - <code>src/PlottingOpenGL/LineBatch/BatchLineRenderer.hpp</code> — add <code>getPerLineColors()</code> accessor (returns the CPU-side <code>std::vector&lt;glm::vec4&gt;</code> used for color overrides) - <code>src/WhiskerToolbox/Plots/LinePlotWidget/CMakeLists.txt</code> — add <code>PlottingSVG</code> to <code>target_link_libraries</code> (PRIVATE)</p>
+<p><strong>Verify:</strong> Build compiles.</p>
+</section>
+<section id="step-5.4-add-exportsvgrequested-signal-to-lineplotpropertieswidget" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.4-add-exportsvgrequested-signal-to-lineplotpropertieswidget">Step 5.4: Add <code>exportSVGRequested</code> signal to <code>LinePlotPropertiesWidget</code></h3>
+<p>Add an “Export SVG” button to the properties panel.</p>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.hpp</code> — add <code>signals: void exportSVGRequested();</code> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.cpp</code> — create a QPushButton in an “Export” collapsible section, connect <code>clicked</code> → <code>exportSVGRequested()</code></p>
+<p><strong>Verify:</strong> Build compiles. Button appears.</p>
+</section>
+<section id="step-5.5-add-handleexportsvg-to-lineplotwidget" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.5-add-handleexportsvg-to-lineplotwidget">Step 5.5: Add <code>handleExportSVG()</code> to <code>LinePlotWidget</code></h3>
+<p>Follow the <a href="../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp">EventPlotWidget::handleExportSVG()</a> pattern:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotWidget<span class="op">::</span>handleExportSVG<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> fileName <span class="op">=</span> AppFileDialog<span class="op">::</span>getSaveFileName<span class="op">(</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"export_line_plot_svg"</span><span class="op">),</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">tr</span><span class="op">(</span><span class="st">"Export Line Plot to SVG"</span><span class="op">),</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">tr</span><span class="op">(</span><span class="st">"SVG Files (*.svg);;All Files (*)"</span><span class="op">));</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>fileName<span class="op">.</span>isEmpty<span class="op">())</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> svg <span class="op">=</span> _opengl_widget<span class="op">-&gt;</span>exportToSVG<span class="op">();</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>svg<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMessageBox::warning</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="fu">tr</span><span class="op">(</span><span class="st">"Export Failed"</span><span class="op">),</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>            <span class="fu">tr</span><span class="op">(</span><span class="st">"No scene to export. Load data and configure the plot first."</span><span class="op">));</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QFile</span> file<span class="op">(</span>fileName<span class="op">);</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>file<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::WriteOnly</span> <span class="op">|</span> <span class="ex">QIODevice::Text</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMessageBox::critical</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="fu">tr</span><span class="op">(</span><span class="st">"Export Failed"</span><span class="op">),</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>            <span class="fu">tr</span><span class="op">(</span><span class="st">"Could not open file for writing:</span><span class="sc">\n</span><span class="st">%1"</span><span class="op">).</span>arg<span class="op">(</span>fileName<span class="op">));</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTextStream</span> out<span class="op">(&amp;</span>file<span class="op">);</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    out <span class="op">&lt;&lt;</span> svg<span class="op">;</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    file<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QMessageBox::information</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="fu">tr</span><span class="op">(</span><span class="st">"Export Successful"</span><span class="op">),</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">tr</span><span class="op">(</span><span class="st">"Line plot exported to:</span><span class="sc">\n</span><span class="st">%1"</span><span class="op">).</span>arg<span class="op">(</span>fileName<span class="op">));</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotWidget.hpp</code> — add <code>void handleExportSVG();</code> public slot - <code>src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotWidget.cpp</code> — implement</p>
+<p><strong>Verify:</strong> Build compiles.</p>
+</section>
+<section id="step-5.6-wire-signals-in-lineplotwidgetregistration" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.6-wire-signals-in-lineplotwidgetregistration">Step 5.6: Wire signals in <code>LinePlotWidgetRegistration</code></h3>
+<p>Connect the properties signal to the view slot in the <code>create_editor_custom</code> lambda:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QObject::connect</span><span class="op">(</span>props<span class="op">,</span> <span class="op">&amp;</span>LinePlotPropertiesWidget<span class="op">::</span>exportSVGRequested<span class="op">,</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                 view<span class="op">,</span> <span class="op">&amp;</span>LinePlotWidget<span class="op">::</span>handleExportSVG<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Files to modify:</strong> - <code>src/WhiskerToolbox/Plots/LinePlotWidget/LinePlotWidgetRegistration.cpp</code></p>
+<p><strong>Verify:</strong> Full build succeeds.</p>
+</section>
+<section id="step-5.7-manual-validation" class="level3">
+<h3 class="anchored" data-anchor-id="step-5.7-manual-validation">Step 5.7: Manual validation</h3>
+<ol type="1">
+<li>Load a dataset with <code>AnalogTimeSeries</code> data</li>
+<li>Open a LinePlotWidget, configure alignment and add a series</li>
+<li>Test with:
+<ul>
+<li>Default uniform coloring</li>
+<li>Group coloring enabled (color-by-group checkbox)</li>
+<li>Trial selection (Ctrl+Click drag to select trials)</li>
+</ul></li>
+<li>Click “Export SVG” in the properties panel</li>
+<li>Open the resulting SVG in a web browser and/or Inkscape</li>
+<li>Verify:
+<ul>
+<li>Trial lines match on-screen positions</li>
+<li>Visible/hidden trial filtering is correct</li>
+<li>Selected trials have the correct highlight color</li>
+<li>Group colors are applied when color-by-group is active</li>
+<li>Background color is correct</li>
+<li>Zoom/pan state is reflected</li>
+</ul></li>
+</ol>
+</section>
+<section id="design-notes-linebatchdata-conversion" class="level3">
+<h3 class="anchored" data-anchor-id="design-notes-linebatchdata-conversion">Design Notes — LineBatchData Conversion</h3>
+<p>The <code>LineBatchData</code> format stores line segments as flat <code>{x1, y1, x2, y2}</code> tuples with per-segment line IDs, while <code>RenderablePolyLineBatch</code> stores polylines as continuous vertex chains. The conversion reconstructs polylines by:</p>
+<ul>
+<li>Iterating over each logical line’s contiguous segment range</li>
+<li>Extracting the first segment’s start point, then each segment’s end point</li>
+<li>Building <code>line_start_indices[]</code> and <code>line_vertex_counts[]</code></li>
+</ul>
+<p>This is a pure CPU operation on already-available data (<code>BatchLineStore::cpuData()</code> always maintains a CPU mirror regardless of GPU state).</p>
+<p><strong>Reuse</strong>: The <code>convertLineBatchToPolyLines()</code> helper benefits <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a> and <a href="../../../../developer/ui/Plots/OnionSkinViewWidget/index.html">OnionSkinViewWidget</a>, which also use <code>BatchLineRenderer</code>.</p>
+<hr>
+</section>
+</section>
+<section id="phase-6-cross-widget-linking" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-cross-widget-linking">Phase 6: Cross-Widget Linking</h2>
+<p><strong>Status</strong>: Design phase. Foundation exists via <code>EditorRegistry::setCurrentTime()</code> for double-click navigation.</p>
+<p><strong>Goal</strong>: Enable LinePlotWidget to participate in the <code>SelectionContext</code> system for inter-widget communication.</p>
+<section id="selectioncontext-integration" class="level3">
+<h3 class="anchored" data-anchor-id="selectioncontext-integration">6.1 SelectionContext Integration</h3>
+<p>Following the pattern described in the <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> Phase 6:</p>
+<ul>
+<li><strong>As receiver</strong>: When a <code>DigitalEventSeries</code> is selected in another widget, the LinePlotWidget could automatically update its alignment event key (unless pinned)</li>
+<li><strong>As source</strong>: When trials are selected, emit the selected alignment event EntityIDs through <code>SelectionContext</code> for other widgets to react</li>
+</ul>
+</section>
+<section id="pinning" class="level3">
+<h3 class="anchored" data-anchor-id="pinning">6.2 Pinning</h3>
+<p>Add a <code>pinned</code> flag to <code>LinePlotStateData</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LinePlotStateData <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pinned <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When pinned, the widget ignores external <code>SelectionContext</code> changes. This enables workflows where one Line Plot is locked to a specific signal while another follows the user’s selection.</p>
+</section>
+<section id="companion-widget-workflow" class="level3">
+<h3 class="anchored" data-anchor-id="companion-widget-workflow">6.3 Companion Widget Workflow</h3>
+<p>The Line Plot Widget is the analog-signal companion to the discrete-event <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> and <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a>. A typical linked workflow:</p>
+<pre><code>User selects alignment event in any trial-aligned widget
+        ↓
+SelectionContext::setSelectedData(alignment_event_key)
+        ↓
+LinePlotWidget (unpinned) updates alignment event
+        ↓
+EventPlotWidget (unpinned) updates alignment event
+        ↓
+PSTHWidget (unpinned) updates alignment event
+        ↓
+All three widgets show data aligned to the same event</code></pre>
+<hr>
+</section>
+</section>
+<section id="phase-7-multi-series-rendering" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-multi-series-rendering">Phase 7: Multi-Series Rendering</h2>
+<p><strong>Status</strong>: Partially implemented. The state supports multiple series (<code>std::map&lt;std::string, LinePlotOptions&gt;</code>) with per-series <code>LineStyleData</code> (color, thickness, alpha) and <code>LineStyleState</code> instances. The properties panel uses the shared <code>LineStyleControls</code> widget to edit the selected series’ style. However, the renderer currently only uses the <strong>first</strong> series key for data gathering.</p>
+<p><strong>Goal</strong>: Render multiple <code>AnalogTimeSeries</code> overlaid in the same plot, each with independent appearance.</p>
+<section id="multi-series-data-gathering" class="level3">
+<h3 class="anchored" data-anchor-id="multi-series-data-gathering">7.1 Multi-Series Data Gathering</h3>
+<p>Extend <code>rebuildScene()</code> to iterate over all series:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>name<span class="op">,</span> options<span class="op">]</span> <span class="op">:</span> _state<span class="op">-&gt;</span>data<span class="op">().</span>plot_series<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> gathered <span class="op">=</span> createAlignedGatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        _data_manager<span class="op">,</span> options<span class="op">.</span>series_key<span class="op">,</span> alignment_data<span class="op">);</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build batch for this series with per-series color</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> batch <span class="op">=</span> buildLineBatchFromGatherResult<span class="op">(</span>gathered<span class="op">,</span> alignment_times<span class="op">);</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Upload and render with series-specific color from options.hex_color</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="per-series-color-in-batchlinerenderer" class="level3">
+<h3 class="anchored" data-anchor-id="per-series-color-in-batchlinerenderer">7.2 Per-Series Color in BatchLineRenderer</h3>
+<p>The <code>BatchLineRenderer</code> now supports per-line color overrides via a <code>vec4</code> vertex attribute (implemented in Phase 1 for group coloring). Multi-series rendering can reuse this infrastructure by assigning each series’ color as the per-line override for its lines.</p>
+</section>
+<section id="legend" class="level3">
+<h3 class="anchored" data-anchor-id="legend">7.3 Legend</h3>
+<p>When multiple series are displayed, a legend should map series names to their colors. This could be rendered as:</p>
+<ul>
+<li>An OpenGL overlay in the top-right corner of the plot</li>
+<li>A separate legend widget in the properties panel</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="dependency-graph" class="level2">
+<h2 class="anchored" data-anchor-id="dependency-graph">Dependency Graph</h2>
+<pre><code>Phase 6: Cross-Widget Linking (uses groups for broadcast)
+
+Phase 2: Mean / CI Overlay
+
+Phase 3: External Feature Coloring
+    ├── depends on: CorePlotting::Colormaps (shared w/ HeatmapWidget, EventPlotWidget)
+    └── Per-line color in BatchLineRenderer (done in Phase 1)
+
+Phase 4: Distribution Tooltips
+    └── depends on: shared PlotTooltipRenderer (also needed by HeatmapWidget)
+
+Phase 5: SVG Export
+    └── depends on: shared Export infrastructure
+
+Phase 7: Multi-Series Rendering
+    └── Per-line color in BatchLineRenderer (done in Phase 1)</code></pre>
+<p>Phase 1 is complete. Phases 2, 3, and 5 are independent and can proceed in parallel. Phase 3 no longer blocked (per-line color infrastructure done in Phase 1). Phase 4 introduces new shared infrastructure.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

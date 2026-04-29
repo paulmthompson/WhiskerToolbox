@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>CODE_REVIEW_ROADMAP.md – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#code_review_roadmap.md" id="toc-code_review_roadmap.md" class="nav-link active" data-scroll-target="#code_review_roadmap.md">CODE_REVIEW_ROADMAP.md</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a>
+  <ul class="collapse">
+  <li><a href="#spatial-index-synchronization-in-scenebuilder" id="toc-spatial-index-synchronization-in-scenebuilder" class="nav-link" data-scroll-target="#spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</a></li>
+  </ul></li>
+  <li><a href="#priority-2-performance-optimizations" id="toc-priority-2-performance-optimizations" class="nav-link" data-scroll-target="#priority-2-performance-optimizations">Priority 2: Performance Optimizations</a>
+  <ul class="collapse">
+  <li><a href="#memory-allocation-in-scenebuilder" id="toc-memory-allocation-in-scenebuilder" class="nav-link" data-scroll-target="#memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</a></li>
+  <li><a href="#allocation-in-gapdetectortransform" id="toc-allocation-in-gapdetectortransform" class="nav-link" data-scroll-target="#allocation-in-gapdetectortransform">2.2 Allocation in GapDetector::transform</a></li>
+  <li><a href="#scenebuilder-vertex-resizing" id="toc-scenebuilder-vertex-resizing" class="nav-link" data-scroll-target="#scenebuilder-vertex-resizing">2.3 SceneBuilder Vertex Resizing</a></li>
+  <li><a href="#rastermappermaptrials-materialization" id="toc-rastermappermaptrials-materialization" class="nav-link" data-scroll-target="#rastermappermaptrials-materialization">2.4 RasterMapper::mapTrials Materialization</a></li>
+  </ul></li>
+  <li><a href="#priority-3-logic-errors-edge-cases" id="toc-priority-3-logic-errors-edge-cases" class="nav-link" data-scroll-target="#priority-3-logic-errors-edge-cases">Priority 3: Logic Errors &amp; Edge Cases</a>
+  <ul class="collapse">
+  <li><a href="#rectangleinteractioncontroller-constraint-logic" id="toc-rectangleinteractioncontroller-constraint-logic" class="nav-link" data-scroll-target="#rectangleinteractioncontroller-constraint-logic">3.1 RectangleInteractionController Constraint Logic</a></li>
+  <li><a href="#hit-testing-interval-logic" id="toc-hit-testing-interval-logic" class="nav-link" data-scroll-target="#hit-testing-interval-logic">3.2 Hit Testing Interval Logic</a></li>
+  <li><a href="#rastermapper-coordinate-mismatch-risk" id="toc-rastermapper-coordinate-mismatch-risk" class="nav-link" data-scroll-target="#rastermapper-coordinate-mismatch-risk">3.3 RasterMapper Coordinate Mismatch Risk</a></li>
+  </ul></li>
+  <li><a href="#priority-4-code-cleanup" id="toc-priority-4-code-cleanup" class="nav-link" data-scroll-target="#priority-4-code-cleanup">Priority 4: Code Cleanup</a>
+  <ul class="collapse">
+  <li><a href="#review-spanlineview-usage" id="toc-review-spanlineview-usage" class="nav-link" data-scroll-target="#review-spanlineview-usage">4.2 Review SpanLineView Usage</a></li>
+  <li><a href="#update-or-remove-interactionroadmap.md" id="toc-update-or-remove-interactionroadmap.md" class="nav-link" data-scroll-target="#update-or-remove-interactionroadmap.md">4.4 Update or Remove Interaction/ROADMAP.md</a></li>
+  </ul></li>
+  <li><a href="#priority-5-architecture-improvements" id="toc-priority-5-architecture-improvements" class="nav-link" data-scroll-target="#priority-5-architecture-improvements">Priority 5: Architecture Improvements</a>
+  <ul class="collapse">
+  <li><a href="#gapdetector-decoupling-from-rendering-layer" id="toc-gapdetector-decoupling-from-rendering-layer" class="nav-link" data-scroll-target="#gapdetector-decoupling-from-rendering-layer">5.1 GapDetector Decoupling from Rendering Layer</a></li>
+  <li><a href="#stronger-coordinate-typing" id="toc-stronger-coordinate-typing" class="nav-link" data-scroll-target="#stronger-coordinate-typing">5.2 Stronger Coordinate Typing</a></li>
+  <li><a href="#clearer-naming-in-layouttransformserieslayout" id="toc-clearer-naming-in-layouttransformserieslayout" class="nav-link" data-scroll-target="#clearer-naming-in-layouttransformserieslayout">5.3 Clearer Naming in LayoutTransform/SeriesLayout</a></li>
+  <li><a href="#add-layouttransform-validation" id="toc-add-layouttransform-validation" class="nav-link" data-scroll-target="#add-layouttransform-validation">5.4 Add LayoutTransform Validation</a></li>
+  </ul></li>
+  <li><a href="#priority-6-modernization-polish" id="toc-priority-6-modernization-polish" class="nav-link" data-scroll-target="#priority-6-modernization-polish">Priority 6: Modernization &amp; Polish</a>
+  <ul class="collapse">
+  <li><a href="#add-constexpr-where-possible" id="toc-add-constexpr-where-possible" class="nav-link" data-scroll-target="#add-constexpr-where-possible">6.1 Add constexpr Where Possible</a></li>
+  <li><a href="#verify-stdabs-include" id="toc-verify-stdabs-include" class="nav-link" data-scroll-target="#verify-stdabs-include">6.2 Verify std::abs Include</a></li>
+  <li><a href="#design.md-vs-code-alignment" id="toc-design.md-vs-code-alignment" class="nav-link" data-scroll-target="#design.md-vs-code-alignment">6.3 DESIGN.md vs Code Alignment</a></li>
+  </ul></li>
+  <li><a href="#implementation-order" id="toc-implementation-order" class="nav-link" data-scroll-target="#implementation-order">Implementation Order</a>
+  <ul class="collapse">
+  <li><a href="#phase-1-critical-fixes-do-first" id="toc-phase-1-critical-fixes-do-first" class="nav-link" data-scroll-target="#phase-1-critical-fixes-do-first">Phase 1: Critical Fixes (Do First)</a></li>
+  <li><a href="#phase-2-performance" id="toc-phase-2-performance" class="nav-link" data-scroll-target="#phase-2-performance">Phase 2: Performance</a></li>
+  <li><a href="#phase-3-cleanup" id="toc-phase-3-cleanup" class="nav-link" data-scroll-target="#phase-3-cleanup">Phase 3: Cleanup</a></li>
+  <li><a href="#phase-4-architecture" id="toc-phase-4-architecture" class="nav-link" data-scroll-target="#phase-4-architecture">Phase 4: Architecture</a></li>
+  <li><a href="#phase-5-polish" id="toc-phase-5-polish" class="nav-link" data-scroll-target="#phase-5-polish">Phase 5: Polish</a></li>
+  </ul></li>
+  <li><a href="#summary-table" id="toc-summary-table" class="nav-link" data-scroll-target="#summary-table">Summary Table</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CODE_REVIEW_ROADMAP.md</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="code_review_roadmap.md" class="level1">
+<h1>CODE_REVIEW_ROADMAP.md</h1>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># CorePlotting Code Review Roadmap</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>This document consolidates findings from two comprehensive code reviews and provides a prioritized action plan for improvements.</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Priority 1: Critical Issues</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### 1.1 Floating Point Precision Risk in TimeSeriesMapper</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>**File**: <span class="co">[</span><span class="ot">Mappers/TimeSeriesMapper.hpp</span><span class="co">](Mappers/TimeSeriesMapper.hpp#L88-L97)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>**Issue**: Absolute time indices are cast directly to <span class="in">`float`</span>:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="in">```cpp</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time_frame<span class="op">.</span>getTimeAtIndex<span class="op">(</span>event_with_id<span class="op">.</span>event_time<span class="op">));</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Problem</strong>: - IEEE 754 32-bit float has only ~7 decimal digits of precision - For microsecond timestamps since epoch or long recordings (&gt;1 hour at 30kHz ≈ 10⁸ samples), this causes: - “Shaking polygon” jitter artifacts - Inability to distinguish adjacent samples when zoomed in</p>
+<p><strong>Fix Options</strong> (choose one): 1. <strong>Double for World Coordinates</strong>: Change <code>RenderableScene</code> matrices and <code>MappedElement</code> to use <code>double</code>/<code>glm::dvec2</code> 2. <strong>Relative Encoding (Recommended)</strong>: Subtract <code>view_state.time_start</code> from absolute time before casting to float. Render everything relative to current view window start.</p>
+<p><strong>Action Items</strong>: - [ ] Update <code>MappedElement</code> to support camera-relative encoding - [ ] Add <code>view_origin</code> parameter to <code>mapEvents</code>, <code>mapEventsInRange</code>, <code>mapIntervals</code>, <code>mapIntervalsInRange</code>, <code>mapAnalogSeries*</code> functions - [ ] Subtract view origin before <code>static_cast&lt;float&gt;</code> in all mappers - [ ] Update <code>SceneBuilder</code> to handle relative coordinates consistently</p>
+<p><strong>Affected Functions</strong>: - <code>TimeSeriesMapper::mapEvents()</code> - <code>TimeSeriesMapper::mapEventsInRange()</code> - <code>TimeSeriesMapper::mapIntervals()</code> - <code>TimeSeriesMapper::mapIntervalsInRange()</code> - <code>TimeSeriesMapper::mapAnalogSeries()</code> - <code>TimeSeriesMapper::mapAnalogSeriesWithIndices()</code> - <code>TimeSeriesMapper::mapAnalogSeriesFull()</code> - <code>RasterMapper::mapEventsRelative()</code> (already uses relative time)</p>
+<hr>
+<section id="spatial-index-synchronization-in-scenebuilder" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</h3>
+<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L333-L347">SceneGraph/SceneBuilder.hpp</a></p>
+<p><strong>Issue</strong>: Range-based methods (<code>addGlyphs</code>, <code>addRectangles</code>) populate <code>_pending_spatial_inserts</code>, but low-level batch methods (<code>addGlyphBatch</code>, <code>addPolyLineBatch</code>, <code>addRectangleBatch</code>) do not.</p>
+<p><strong>Consequence</strong>: Manual batches (e.g., from <code>GapDetector</code>) bypass the pending queue. When <code>build()</code> calls <code>buildSpatialIndexFromPending()</code>, these batches aren’t indexed.</p>
+<p><strong>Action Items</strong>: - [ ] Either: Update <code>addGlyphBatch</code> / <code>addRectangleBatch</code> to also populate <code>_pending_spatial_inserts</code> - [ ] Or: Update <code>build()</code> to call <code>buildSpatialIndex()</code> which iterates all batches, not just pending inserts - [ ] Document clearly which methods auto-populate spatial index</p>
+<hr>
+</section>
+</section>
+<section id="priority-2-performance-optimizations" class="level2">
+<h2 class="anchored" data-anchor-id="priority-2-performance-optimizations">Priority 2: Performance Optimizations</h2>
+<section id="memory-allocation-in-scenebuilder" class="level3">
+<h3 class="anchored" data-anchor-id="memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</h3>
+<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L304-L318">SceneGraph/SceneBuilder.hpp</a></p>
+<p><strong>Issue</strong>: <code>_pending_spatial_inserts</code> allocates heap memory every frame, then immediately drains into QuadTree in <code>build()</code>.</p>
+<p><strong>Optimization</strong>: Since <code>setBounds()</code> must be called before adding glyphs (per comments), insert directly into QuadTree:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>MappedElementRange R<span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SceneBuilder <span class="op">&amp;</span> addGlyphs<span class="op">(...)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_scene<span class="op">.</span>spatial_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"Bounds must be set before adding glyphs"</span><span class="op">);</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> elem <span class="op">:</span> elements<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        batch<span class="op">.</span>positions<span class="op">.</span>emplace_back<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">.</span>spatial_index<span class="op">-&gt;</span>insert<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">,</span> elem<span class="op">.</span>entity_id<span class="op">);</span>  <span class="co">// Direct insertion</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Action Items</strong>: - [ ] Remove <code>_pending_spatial_inserts</code> vector - [ ] Initialize QuadTree in <code>setBounds()</code> - [ ] Insert directly into QuadTree in <code>addGlyphs</code> and <code>addRectangles</code> - [ ] Remove <code>buildSpatialIndexFromPending()</code> helper</p>
+<hr>
+</section>
+<section id="allocation-in-gapdetectortransform" class="level3">
+<h3 class="anchored" data-anchor-id="allocation-in-gapdetectortransform">2.2 Allocation in GapDetector::transform</h3>
+<p><strong>File</strong>: <a href="Transformers/GapDetector.cpp#L52-L65">Transformers/GapDetector.cpp</a></p>
+<p><strong>Issue</strong>: Explicit materialization into vectors negates range-based architecture benefits:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> time_values<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>time_values<span class="op">.</span>reserve<span class="op">(</span>time_indices<span class="op">.</span>size<span class="op">());</span>  <span class="co">// Allocation 1</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">(</span>data_span<span class="op">.</span>begin<span class="op">(),</span> data_span<span class="op">.</span>end<span class="op">());</span>  <span class="co">// Allocation 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Action Items</strong>: - [ ] Rewrite <code>transform()</code> to use <code>segmentByGaps</code> template logic directly on <code>AnalogTimeSeries</code> view - [ ] Remove intermediate <code>std::vector</code> allocations - [ ] Consider keeping vector overload only for unit testing</p>
+<hr>
+</section>
+<section id="scenebuilder-vertex-resizing" class="level3">
+<h3 class="anchored" data-anchor-id="scenebuilder-vertex-resizing">2.3 SceneBuilder Vertex Resizing</h3>
+<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L401-L407">SceneGraph/SceneBuilder.hpp</a></p>
+<p><strong>Issue</strong>: <code>addPolyLine</code> pushes vertices one by one, potentially causing reallocations:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> v <span class="op">:</span> vertices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>x<span class="op">);</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Action Items</strong>: - [ ] Check if range satisfies <code>std::ranges::sized_range</code> - [ ] If so, call <code>batch.vertices.reserve(batch.vertices.size() + std::ranges::size(vertices) * 2)</code> before loop - [ ] Apply same optimization to <code>addPolyLines</code></p>
+<hr>
+</section>
+<section id="rastermappermaptrials-materialization" class="level3">
+<h3 class="anchored" data-anchor-id="rastermappermaptrials-materialization">2.4 RasterMapper::mapTrials Materialization</h3>
+<p><strong>File</strong>: <a href="Mappers/RasterMapper.hpp#L126">Mappers/RasterMapper.hpp</a></p>
+<p><strong>Issue</strong>: <code>mapTrials</code> returns <code>std::vector&lt;MappedElement&gt;</code>, forcing evaluation despite <code>mapEventsRelative</code> already being a view.</p>
+<p><strong>Action Items</strong>: - [ ] Use <code>std::ranges::join</code> or coroutine generator to make this lazy - [ ] Maintain ownership semantics as needed</p>
+<hr>
+</section>
+</section>
+<section id="priority-3-logic-errors-edge-cases" class="level2">
+<h2 class="anchored" data-anchor-id="priority-3-logic-errors-edge-cases">Priority 3: Logic Errors &amp; Edge Cases</h2>
+<section id="rectangleinteractioncontroller-constraint-logic" class="level3">
+<h3 class="anchored" data-anchor-id="rectangleinteractioncontroller-constraint-logic">3.1 RectangleInteractionController Constraint Logic</h3>
+<p><strong>File</strong>: <a href="Interaction/RectangleInteractionController.cpp#L93-L97">Interaction/RectangleInteractionController.cpp</a></p>
+<p><strong>Issue</strong>: <code>constrain_to_x_axis</code> hardcodes <code>y=0.0f</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>_config<span class="op">.</span>constrain_to_x_axis<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    _current_bounds <span class="op">=</span> glm<span class="op">::</span>vec4<span class="op">{</span>x<span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> width<span class="op">,</span> _config<span class="op">.</span>viewport_height<span class="op">};</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Problem</strong>: If layout engine positioned series at <code>y=100.0f</code>, the preview appears at wrong vertical position.</p>
+<p><strong>Action Items</strong>: - [ ] Pass series layout bounds to controller, OR - [ ] Add <code>_config.y_min</code> / <code>_config.y_max</code> fields, OR - [ ] Have PreviewRenderer ignore controller’s Y and draw full-height - [ ] Update <code>start()</code> method to accept series Y position</p>
+<hr>
+</section>
+<section id="hit-testing-interval-logic" class="level3">
+<h3 class="anchored" data-anchor-id="hit-testing-interval-logic">3.2 Hit Testing Interval Logic</h3>
+<p><strong>File</strong>: <a href="Interaction/SceneHitTester.hpp#L140">Interaction/SceneHitTester.hpp</a></p>
+<p><strong>Issue</strong>: In <code>queryIntervals</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> dist <span class="op">=</span> y_dist<span class="op">;</span>  <span class="co">// For intervals, X is always inside</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Problem</strong>: For overlapping intervals on the same row, X distance matters for determining which interval was clicked (especially at edges or with transparency).</p>
+<p><strong>Action Items</strong>: - [ ] If <code>y_dist == 0</code> (inside Y), factor in distance to interval center in X - [ ] Or strictly return 0 for “most centered” prioritization</p>
+<hr>
+</section>
+<section id="rastermapper-coordinate-mismatch-risk" class="level3">
+<h3 class="anchored" data-anchor-id="rastermapper-coordinate-mismatch-risk">3.3 RasterMapper Coordinate Mismatch Risk</h3>
+<p><strong>File</strong>: <a href="Mappers/RasterMapper.hpp#L57-L60">Mappers/RasterMapper.hpp</a></p>
+<p><strong>Issue</strong>: <code>mapEventsRelative</code> outputs X as relative time, but <code>SceneHitTester</code> and <code>InverseTransform::worldXToTimeIndex</code> assume absolute time.</p>
+<p><strong>Action Items</strong>: - [ ] Document that RasterMapper outputs require paired ViewState acknowledging relative X-axis - [ ] Or distinguish “Time Space” from “World Space” in <code>HitTestResult</code> - [ ] Add documentation/comments warning about coordinate system assumptions</p>
+<hr>
+</section>
+</section>
+<section id="priority-4-code-cleanup" class="level2">
+<h2 class="anchored" data-anchor-id="priority-4-code-cleanup">Priority 4: Code Cleanup</h2>
+<hr>
+<section id="review-spanlineview-usage" class="level3">
+<h3 class="anchored" data-anchor-id="review-spanlineview-usage">4.2 Review SpanLineView Usage</h3>
+<p><strong>File</strong>: <a href="Mappers/MappedLineView.hpp#L73-L110">Mappers/MappedLineView.hpp</a></p>
+<p><strong>Issue</strong>: <code>SpanLineView</code>, <code>OwningLineView</code>, and generic <code>MappedLineView</code> all exist. Most mappers return <code>OwningLineView</code> or lazy ranges.</p>
+<p><strong>Action Items</strong>: - [ ] Audit codebase for <code>SpanLineView</code> usage - [ ] If unused by <code>SceneBuilder</code> or any consumer, remove to reduce API surface - [ ] Document remaining line view types and when to use each</p>
+<hr>
+</section>
+<section id="update-or-remove-interactionroadmap.md" class="level3">
+<h3 class="anchored" data-anchor-id="update-or-remove-interactionroadmap.md">4.4 Update or Remove Interaction/ROADMAP.md</h3>
+<p><strong>File</strong>: <a href="Interaction/ROADMAP.md">Interaction/ROADMAP.md</a></p>
+<p><strong>Issue</strong>: References “Phase 5” and “Phase 6” which may be outdated.</p>
+<p><strong>Action Items</strong>: - [ ] Review if roadmap is current - [ ] Update to reflect current state, OR - [ ] Remove if no longer relevant</p>
+<hr>
+</section>
+</section>
+<section id="priority-5-architecture-improvements" class="level2">
+<h2 class="anchored" data-anchor-id="priority-5-architecture-improvements">Priority 5: Architecture Improvements</h2>
+<section id="gapdetector-decoupling-from-rendering-layer" class="level3">
+<h3 class="anchored" data-anchor-id="gapdetector-decoupling-from-rendering-layer">5.1 GapDetector Decoupling from Rendering Layer</h3>
+<p><strong>File</strong>: <a href="Transformers/GapDetector.hpp">Transformers/GapDetector.hpp</a></p>
+<p><strong>Issue</strong>: Mappers use lazy ranges, but <code>GapDetector</code> forces materialization into <code>RenderablePolyLineBatch</code> immediately, breaking the pipeline:</p>
+<ul>
+<li><strong>Current</strong>: Data → Mapper (Range) → GapDetector (Allocates Batch) → SceneBuilder</li>
+<li><strong>Ideal</strong>: Data → Mapper (Range) → GapAdaptor (Range) → SceneBuilder</li>
+</ul>
+<p><strong>Options</strong>: 1. <strong>Range Adaptor</strong>: Rewrite as C++20 range adaptor (<code>gap_view</code>) that yields <code>std::subrange</code>s or modifies <code>line_start</code> signals lazily 2. <strong>Middle Ground</strong>: Return <code>std::vector&lt;std::vector&lt;MappedVertex&gt;&gt;</code> or flat vector with cut indices instead of <code>RenderablePolyLineBatch</code></p>
+<p><strong>Note</strong>: Since OpenGL requires contiguous buffers for <code>glMultiDrawArrays</code>, some materialization is pragmatically necessary. The goal is to decouple from rendering concerns.</p>
+<p><strong>Action Items</strong>: - [ ] Change <code>GapDetector::transform()</code> to return raw geometry (e.g., <code>SegmentedLineData</code> struct with vertices + segment indices) - [ ] Let <code>SceneBuilder</code> convert to <code>RenderablePolyLineBatch</code> - [ ] Or implement <code>gap_view</code> range adaptor for full lazy evaluation</p>
+<hr>
+</section>
+<section id="stronger-coordinate-typing" class="level3">
+<h3 class="anchored" data-anchor-id="stronger-coordinate-typing">5.2 Stronger Coordinate Typing</h3>
+<p><strong>Issue</strong>: <code>float world_x</code> vs <code>float canvas_x</code> is easy to mix up despite <code>InverseTransform.hpp</code> helpers.</p>
+<p><strong>Action Items</strong>: - [ ] Consider strong typedefs or simple structs: <code>cpp   struct WorldCoord { float x, y; };   struct CanvasCoord { float x, y; };   struct NDCCoord { float x, y; };</code> - [ ] Update function signatures to use typed coordinates - [ ] Evaluate compile-time overhead vs.&nbsp;safety benefit</p>
+<hr>
+</section>
+<section id="clearer-naming-in-layouttransformserieslayout" class="level3">
+<h3 class="anchored" data-anchor-id="clearer-naming-in-layouttransformserieslayout">5.3 Clearer Naming in LayoutTransform/SeriesLayout</h3>
+<p><strong>Issue</strong>: <code>SeriesLayout::y_transform</code> naming is ambiguous - is it Data→World or Normalized→World?</p>
+<p><strong>Action Items</strong>: - [ ] Consider renaming helpers in <code>NormalizationHelpers</code>: - <code>createDataToNormalized()</code> - <code>createNormalizedToWorld()</code> - [ ] Add more explicit documentation about transform composition chain</p>
+<hr>
+</section>
+<section id="add-layouttransform-validation" class="level3">
+<h3 class="anchored" data-anchor-id="add-layouttransform-validation">5.4 Add LayoutTransform Validation</h3>
+<p><strong>File</strong>: <a href="Layout/LayoutTransform.hpp">Layout/LayoutTransform.hpp</a></p>
+<p><strong>Issue</strong>: <code>SeriesMatrices.cpp</code> has excellent validation (<code>validateOrthoParams</code>). Similar validation should exist for <code>LayoutTransform</code>.</p>
+<p><strong>Action Items</strong>: - [ ] Add <code>validateLayoutTransform()</code> to ensure gain is never NaN or Infinity - [ ] Call during <code>compose()</code> or <code>apply()</code> in debug builds - [ ] Prevent bad values from propagating through layout engine</p>
+<hr>
+</section>
+</section>
+<section id="priority-6-modernization-polish" class="level2">
+<h2 class="anchored" data-anchor-id="priority-6-modernization-polish">Priority 6: Modernization &amp; Polish</h2>
+<section id="add-constexpr-where-possible" class="level3">
+<h3 class="anchored" data-anchor-id="add-constexpr-where-possible">6.1 Add constexpr Where Possible</h3>
+<p><strong>Files</strong>: - <a href="Layout/NormalizationHelpers.hpp">Layout/NormalizationHelpers.hpp</a> - <a href="Layout/LayoutTransform.hpp">Layout/LayoutTransform.hpp</a></p>
+<p><strong>Action Items</strong>: - [ ] Mark <code>NormalizationHelpers</code> functions as <code>constexpr</code> where applicable - [ ] Mark <code>LayoutTransform</code> methods as <code>constexpr</code> where applicable - [ ] Verify no runtime-only operations prevent constexpr</p>
+<hr>
+</section>
+<section id="verify-stdabs-include" class="level3">
+<h3 class="anchored" data-anchor-id="verify-stdabs-include">6.2 Verify std::abs Include</h3>
+<p><strong>File</strong>: <a href="CoordinateTransform/InverseTransform.cpp">CoordinateTransform/InverseTransform.cpp</a></p>
+<p><strong>Action Items</strong>: - [ ] Verify <code>&lt;cmath&gt;</code> is included for <code>std::abs</code> on floats - [ ] Ensure correct overload resolution (float vs int)</p>
+<hr>
+</section>
+<section id="design.md-vs-code-alignment" class="level3">
+<h3 class="anchored" data-anchor-id="design.md-vs-code-alignment">6.3 DESIGN.md vs Code Alignment</h3>
+<p><strong>File</strong>: <a href="DESIGN.md">DESIGN.md</a></p>
+<p><strong>Issue</strong>: Design doc mentions “Compute shader for dense line data” but <code>RenderablePolyLineBatch</code> uses <code>std::vector</code>.</p>
+<p><strong>Action Items</strong>: - [ ] If compute shaders are planned, ensure alignment (std430 layout, <code>glm::vec4</code> padding) - [ ] Update DESIGN.md to reflect current implementation state - [ ] Or add tracking issue for compute shader implementation</p>
+<hr>
+</section>
+</section>
+<section id="implementation-order" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-order">Implementation Order</h2>
+<section id="phase-1-critical-fixes-do-first" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-critical-fixes-do-first">Phase 1: Critical Fixes (Do First)</h3>
+<ol type="1">
+<li>Floating point precision fix (1.1)</li>
+<li>Spatial index synchronization (1.2)</li>
+<li>RectangleInteractionController constraint logic (3.1)</li>
+</ol>
+</section>
+<section id="phase-2-performance" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-performance">Phase 2: Performance</h3>
+<ol start="4" type="1">
+<li>SceneBuilder memory allocation (2.1)</li>
+<li>GapDetector allocation (2.2)</li>
+<li>Vertex resizing optimization (2.3)</li>
+</ol>
+</section>
+<section id="phase-3-cleanup" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-cleanup">Phase 3: Cleanup</h3>
+<ol start="7" type="1">
+<li>Delete deprecated findIntervalEdge (4.1)</li>
+<li>Audit and remove unused code (4.2, 4.3, 4.4)</li>
+</ol>
+</section>
+<section id="phase-4-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4-architecture">Phase 4: Architecture</h3>
+<ol start="9" type="1">
+<li>GapDetector decoupling (5.1)</li>
+<li>Stronger coordinate typing (5.2)</li>
+<li>LayoutTransform validation (5.4)</li>
+</ol>
+</section>
+<section id="phase-5-polish" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5-polish">Phase 5: Polish</h3>
+<ol start="12" type="1">
+<li>constexpr additions (6.1)</li>
+<li>Documentation updates (6.2, 6.3)</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="summary-table" class="level2">
+<h2 class="anchored" data-anchor-id="summary-table">Summary Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 29%">
+<col style="width: 17%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Priority</th>
+<th>Severity</th>
+<th>File</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.1</td>
+<td><strong>High</strong></td>
+<td>TimeSeriesMapper.hpp</td>
+<td>Fix precision: subtract view origin before float cast</td>
+</tr>
+<tr class="even">
+<td>1.2</td>
+<td><strong>High</strong></td>
+<td>SceneBuilder.hpp</td>
+<td>Sync spatial index for manual batch additions</td>
+</tr>
+<tr class="odd">
+<td>2.1</td>
+<td>Medium</td>
+<td>SceneBuilder.hpp</td>
+<td>Remove <code>_pending_spatial_inserts</code>, direct QuadTree insert</td>
+</tr>
+<tr class="even">
+<td>2.2</td>
+<td>Medium</td>
+<td>GapDetector.cpp</td>
+<td>Remove intermediate vector allocations</td>
+</tr>
+<tr class="odd">
+<td>2.3</td>
+<td>Low</td>
+<td>SceneBuilder.hpp</td>
+<td>Reserve vertex buffer capacity</td>
+</tr>
+<tr class="even">
+<td>3.1</td>
+<td>Medium</td>
+<td>RectangleInteractionController.cpp</td>
+<td>Fix <code>constrain_to_x_axis</code> Y position</td>
+</tr>
+<tr class="odd">
+<td>3.2</td>
+<td>Low</td>
+<td>SceneHitTester.hpp</td>
+<td>Improve interval hit X-distance handling</td>
+</tr>
+<tr class="even">
+<td>4.1</td>
+<td>Low</td>
+<td>SceneHitTester.hpp</td>
+<td>Delete deprecated <code>findIntervalEdge</code></td>
+</tr>
+<tr class="odd">
+<td>4.2</td>
+<td>Low</td>
+<td>MappedLineView.hpp</td>
+<td>Audit/remove unused <code>SpanLineView</code></td>
+</tr>
+<tr class="even">
+<td>4.3</td>
+<td>Low</td>
+<td>Matrices.cpp</td>
+<td>Audit/remove unused <code>createModelMatrix</code> overload</td>
+</tr>
+<tr class="odd">
+<td>5.1</td>
+<td>Medium</td>
+<td>GapDetector.hpp</td>
+<td>Decouple from <code>RenderablePolyLineBatch</code></td>
+</tr>
+</tbody>
+</table>
+<p>```</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Migration Roadmap: AutoParamWidget for IO Widgets – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#migration-roadmap-replacing-boilerplate-io-widgets-with-autoparamwidget" id="toc-migration-roadmap-replacing-boilerplate-io-widgets-with-autoparamwidget" class="nav-link active" data-scroll-target="#migration-roadmap-replacing-boilerplate-io-widgets-with-autoparamwidget">Migration Roadmap: Replacing Boilerplate IO Widgets with AutoParamWidget</a>
+  <ul class="collapse">
+  <li><a href="#problem-statement" id="toc-problem-statement" class="nav-link" data-scroll-target="#problem-statement">Problem Statement</a></li>
+  <li><a href="#current-architecture" id="toc-current-architecture" class="nav-link" data-scroll-target="#current-architecture">Current Architecture</a></li>
+  <li><a href="#target-architecture" id="toc-target-architecture" class="nav-link" data-scroll-target="#target-architecture">Target Architecture</a></li>
+  <li><a href="#migration-phases" id="toc-migration-phases" class="nav-link" data-scroll-target="#migration-phases">Migration Phases</a>
+  <ul class="collapse">
+  <li><a href="#phase-0-infrastructure-add-loaderinfo-to-io-layer" id="toc-phase-0-infrastructure-add-loaderinfo-to-io-layer" class="nav-link" data-scroll-target="#phase-0-infrastructure-add-loaderinfo-to-io-layer">Phase 0: Infrastructure — Add <code>LoaderInfo</code> to IO Layer</a></li>
+  <li><a href="#phase-1-export-widget-migration-easier-saverinfo-already-exists" id="toc-phase-1-export-widget-migration-easier-saverinfo-already-exists" class="nav-link" data-scroll-target="#phase-1-export-widget-migration-easier-saverinfo-already-exists">Phase 1: Export Widget Migration (Easier — SaverInfo Already Exists)</a></li>
+  <li><a href="#phase-2-import-widget-migration-requires-phase-0" id="toc-phase-2-import-widget-migration-requires-phase-0" class="nav-link" data-scroll-target="#phase-2-import-widget-migration-requires-phase-0">Phase 2: Import Widget Migration (Requires Phase 0)</a></li>
+  <li><a href="#phase-3-datainspector-integration" id="toc-phase-3-datainspector-integration" class="nav-link" data-scroll-target="#phase-3-datainspector-integration">Phase 3: DataInspector Integration</a></li>
+  <li><a href="#phase-4-cleanup-and-documentation" id="toc-phase-4-cleanup-and-documentation" class="nav-link" data-scroll-target="#phase-4-cleanup-and-documentation">Phase 4: Cleanup and Documentation</a></li>
+  </ul></li>
+  <li><a href="#summary-of-file-impact" id="toc-summary-of-file-impact" class="nav-link" data-scroll-target="#summary-of-file-impact">Summary of File Impact</a></li>
+  <li><a href="#key-design-decisions" id="toc-key-design-decisions" class="nav-link" data-scroll-target="#key-design-decisions">Key Design Decisions</a></li>
+  <li><a href="#risk-assessment" id="toc-risk-assessment" class="nav-link" data-scroll-target="#risk-assessment">Risk Assessment</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Migration Roadmap: AutoParamWidget for IO Widgets</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="migration-roadmap-replacing-boilerplate-io-widgets-with-autoparamwidget" class="level1">
+<h1>Migration Roadmap: Replacing Boilerplate IO Widgets with AutoParamWidget</h1>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
+<p>The <code>DataImport_Widget</code> (68 files, ~25 format-specific sub-widgets) and <code>DataExport_Widget</code> (28 files, ~9 format-specific sub-widgets) contain extensive boilerplate UI code. Each format/data-type combination has:</p>
+<ul>
+<li>A hand-written <code>.ui</code> XML file defining QSpinBoxes, QComboBoxes, QCheckBoxes, etc.</li>
+<li>A hand-written <code>.hpp</code>/<code>.cpp</code> class that manually reads widget values and constructs either an Options struct or a <code>nlohmann::json</code> config object.</li>
+<li>Manual signal wiring between parent container widgets and child format widgets.</li>
+</ul>
+<p>Meanwhile, the project already has:</p>
+<ul>
+<li><strong>ParameterSchema</strong> (<code>src/ParameterSchema/</code>): Compile-time schema extraction from reflect-cpp structs.</li>
+<li><strong>AutoParamWidget</strong> (<code>src/WhiskerToolbox/AutoParamWidget/</code>): Generates a complete Qt form from a <code>ParameterSchema</code>, with JSON serialization/deserialization.</li>
+<li><strong>Existing IO Options structs</strong> that already use reflect-cpp (e.g., <code>CSVPointLoaderOptions</code>, <code>BinaryAnalogLoaderOptions</code>).</li>
+<li><strong>SaverInfo</strong> with a <code>ParameterSchema schema</code> field that is already populated at registration time but <strong>never consumed by the export UI</strong>.</li>
+</ul>
+<p>This roadmap describes how to systematically replace hand-written format widgets with <code>AutoParamWidget</code>, making the UI self-updating when new formats or options are added.</p>
+</section>
+<section id="current-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="current-architecture">Current Architecture</h2>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│ DataImport_Widget (top-level)                            │
+│  ├── DataImportTypeRegistry (factory map)                │
+│  ├── PointImport_Widget (container)                      │
+│  │    └── CSVPointImport_Widget (hand-written .ui)       │
+│  ├── AnalogImport_Widget (container)                     │
+│  │    ├── CSVAnalogImport_Widget (hand-written .ui)      │
+│  │    └── BinaryAnalogImport_Widget (hand-written .ui)   │
+│  ├── LineImport_Widget (container)                       │
+│  │    ├── CSVLineImport_Widget (hand-written .ui)        │
+│  │    ├── BinaryLineImport_Widget (hand-written .ui)     │
+│  │    ├── HDF5LineImport_Widget (hand-written .ui)       │
+│  │    └── LMDBLineImport_Widget (hand-written .ui)       │
+│  ├── MaskImport_Widget (container)                       │
+│  │    ├── HDF5MaskImport_Widget (hand-written .ui)       │
+│  │    └── ImageMaskImport_Widget (hand-written .ui)      │
+│  ├── DigitalEventImport_Widget (container)               │
+│  │    └── CSVDigitalEventImport_Widget (hand-written .ui)│
+│  ├── DigitalIntervalImport_Widget (container)            │
+│  │    ├── CSVDigitalIntervalImport_Widget                │
+│  │    └── BinaryDigitalIntervalImport_Widget             │
+│  └── TensorImport_Widget (container)                     │
+│       └── (Numpy sub-widget)                             │
+└──────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Key asymmetry</strong>: Savers already have <code>SaverInfo</code> with <code>ParameterSchema</code> populated via <code>extractParameterSchema&lt;T&gt;()</code>. Loaders have <strong>no equivalent</strong> <code>LoaderInfo</code> struct.</p>
+</section>
+<section id="target-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="target-architecture">Target Architecture</h2>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│ DataImport_Widget (top-level)                            │
+│  ├── Queries LoaderRegistry for LoaderInfo               │
+│  ├── Data type combo → filters LoaderInfos by type       │
+│  ├── Format combo → populated from LoaderInfos           │
+│  └── AutoParamWidget → setSchema(selected_loader.schema) │
+│       ├── File path field (from Options struct)           │
+│       ├── Format-specific fields (auto-generated)        │
+│       └── [Load] button → toJson() → registry.tryLoad()  │
+│                                                          │
+│ DataExport_Widget (top-level)                            │
+│  ├── Queries LoaderRegistry.getSupportedSaveFormats()    │
+│  ├── Data type combo → filters SaverInfos                │
+│  ├── Format combo → populated from SaverInfos            │
+│  └── AutoParamWidget → setSchema(selected_saver.schema)  │
+│       ├── Filename/directory fields (auto-generated)     │
+│       ├── Format-specific fields (auto-generated)        │
+│       └── [Save] button → toJson() → registry.trySave()  │
+└──────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="migration-phases" class="level2">
+<h2 class="anchored" data-anchor-id="migration-phases">Migration Phases</h2>
+<section id="phase-0-infrastructure-add-loaderinfo-to-io-layer" class="level3">
+<h3 class="anchored" data-anchor-id="phase-0-infrastructure-add-loaderinfo-to-io-layer">Phase 0: Infrastructure — Add <code>LoaderInfo</code> to IO Layer</h3>
+<p><strong>Goal</strong>: Create parity between loaders and savers so both can be discovered and auto-generate UI.</p>
+<section id="step-0.1-create-loaderinfo-struct-done" class="level4">
+<h4 class="anchored" data-anchor-id="step-0.1-create-loaderinfo-struct-done">Step 0.1: Create <code>LoaderInfo</code> struct ✅ DONE</h4>
+<p>Created <code>src/IO/core/LoaderInfo.hpp</code> with <code>format</code>, <code>data_type</code>, <code>description</code>, <code>supports_batch</code>, and <code>ParameterSchema schema</code> fields. Added to <code>src/IO/CMakeLists.txt</code>.</p>
+</section>
+<section id="step-0.2-add-getloaderinfo-to-iformatloader-done" class="level4">
+<h4 class="anchored" data-anchor-id="step-0.2-add-getloaderinfo-to-iformatloader-done">Step 0.2: Add <code>getLoaderInfo()</code> to <code>IFormatLoader</code> ✅ DONE</h4>
+<p>Added <code>virtual std::vector&lt;LoaderInfo&gt; getLoaderInfo() const { return {}; }</code> to <code>IFormatLoader</code> in <code>src/IO/core/IFormatLoader.hpp</code>, mirroring <code>getSaverInfo()</code>.</p>
+</section>
+<section id="step-0.3-add-loaderinfo-query-methods-to-loaderregistry-done" class="level4">
+<h4 class="anchored" data-anchor-id="step-0.3-add-loaderinfo-query-methods-to-loaderregistry-done">Step 0.3: Add <code>LoaderInfo</code> query methods to <code>LoaderRegistry</code> ✅ DONE</h4>
+<p>Added <code>getSupportedLoadFormats()</code> and <code>getSupportedLoadFormats(DM_DataType)</code> to <code>LoaderRegistry</code> in <code>src/IO/core/LoaderRegistry.hpp</code> and <code>src/IO/core/LoaderRegistry.cpp</code>. Added 8 test cases (59 assertions) in <code>tests/DataManager/IO/loader_registry.test.cpp</code> covering empty registry, stub loaders, data-type filtering, multi-loader aggregation, and batch flag preservation.</p>
+</section>
+<section id="step-0.4-add-parameteruihints-specializations-for-loader-options-done" class="level4">
+<h4 class="anchored" data-anchor-id="step-0.4-add-parameteruihints-specializations-for-loader-options-done">Step 0.4: Add <code>ParameterUIHints</code> specializations for loader options ✅ DONE</h4>
+<p>For each loader Options struct that uses <code>rfl::Validator</code>, add tooltips and display hints. These are optional but improve the auto-generated UI quality significantly.</p>
+<p>Priority order (by complexity of the Options struct):</p>
+<ol type="1">
+<li><code>BinaryAnalogLoaderOptions</code> — 10+ fields, prime candidate</li>
+<li><code>CSVAnalogLoaderOptions</code> — 6 fields</li>
+<li><code>CSVPointLoaderOptions</code> — 5 fields</li>
+<li><code>CSVEventLoaderOptions</code> — 7 fields</li>
+<li><code>CSVIntervalLoaderOptions</code> — 5 fields</li>
+<li><code>CSVLineLoaderOptions</code> — (if exists)</li>
+<li>Others (HDF5, Image, etc.)</li>
+</ol>
+<p>Example for <code>BinaryAnalogLoaderOptions</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints<span class="op">&lt;</span>BinaryAnalogLoaderOptions<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="dt">void</span> annotate<span class="op">(</span>ParameterSchema <span class="op">&amp;</span> schema<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"header_size"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Number of bytes to skip at the start of the file"</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"num_channels"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Number of interleaved channels in the binary file"</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"binary_data_type"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Binary encoding of each sample"</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>allowed_values <span class="op">=</span> <span class="op">{</span><span class="st">"int8"</span><span class="op">,</span> <span class="st">"int16"</span><span class="op">,</span> <span class="st">"uint16"</span><span class="op">,</span> <span class="st">"float32"</span><span class="op">,</span> <span class="st">"float64"</span><span class="op">};</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"use_memory_mapped"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Use memory-mapped I/O for large files"</span><span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"scale_factor"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Multiply each sample by this value after loading"</span><span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"offset_value"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Add this value to each sample after scaling"</span><span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>Files to modify</strong>: Each <code>*Options</code> header in <code>src/IO/formats/*/</code> (add <code>ParameterUIHints</code> specialization).</li>
+<li><strong>Depends on</strong>: These headers already include <code>ParameterSchema/ParameterSchema.hpp</code> for the saver side; reuse for loaders.</li>
+</ul>
+</section>
+<section id="step-0.5-implement-getloaderinfo-in-each-format-loader" class="level4">
+<h4 class="anchored" data-anchor-id="step-0.5-implement-getloaderinfo-in-each-format-loader">Step 0.5: Implement <code>getLoaderInfo()</code> in each format loader</h4>
+<p>For each <code>IFormatLoader</code> subclass, add <code>getLoaderInfo()</code> returning one <code>LoaderInfo</code> per supported data-type/format combination with <code>extractParameterSchema&lt;OptionsType&gt;()</code>.</p>
+<p><strong>CSVLoader</strong> example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>LoaderInfo<span class="op">&gt;</span> CSVLoader<span class="op">::</span>getLoaderInfo<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>extractParameterSchema<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"csv"</span><span class="op">,</span> DM_DataType<span class="op">::</span>Points<span class="op">,</span> <span class="st">"CSV point data (frame, x, y)"</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>         extractParameterSchema<span class="op">&lt;</span>CSVPointLoaderOptions<span class="op">&gt;()},</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"csv"</span><span class="op">,</span> DM_DataType<span class="op">::</span>Analog<span class="op">,</span> <span class="st">"CSV analog time series"</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>         extractParameterSchema<span class="op">&lt;</span>CSVAnalogLoaderOptions<span class="op">&gt;()},</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"csv"</span><span class="op">,</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">,</span> <span class="st">"CSV digital events"</span><span class="op">,</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>         extractParameterSchema<span class="op">&lt;</span>CSVEventLoaderOptions<span class="op">&gt;()},</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"csv"</span><span class="op">,</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">,</span> <span class="st">"CSV digital intervals"</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>         extractParameterSchema<span class="op">&lt;</span>CSVIntervalLoaderOptions<span class="op">&gt;()},</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ... etc</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Do this for all format loaders:</p>
+<ol type="1">
+<li><code>CSVLoader</code> — largest, ~6 loader infos</li>
+<li><code>BinaryFormatLoader</code> — ~3 loader infos</li>
+<li><code>CapnProtoFormatLoader</code> — 1 loader info</li>
+<li><code>HDF5FormatLoader</code> — ~2 loader infos</li>
+<li><code>OpenCVFormatLoader</code> — 1 loader info</li>
+<li><code>NumpyFormatLoader</code> — 1 loader info</li>
+</ol>
+<ul>
+<li><strong>Files to modify</strong>: Each format loader <code>.hpp</code>/<code>.cpp</code> in <code>src/IO/formats/</code></li>
+<li><strong>Tests</strong>: Extend the Step 0.3 test to verify schema field counts match expected values for key loaders (e.g., <code>BinaryAnalogLoaderOptions</code> should have 10+ fields).</li>
+</ul>
+</section>
+</section>
+<section id="phase-1-export-widget-migration-easier-saverinfo-already-exists" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-export-widget-migration-easier-saverinfo-already-exists">Phase 1: Export Widget Migration (Easier — SaverInfo Already Exists)</h3>
+<p><strong>Goal</strong>: Replace all 9 hand-written export sub-widgets with a single <code>AutoParamWidget</code>-based export panel.</p>
+<section id="step-1.1-create-genericsaverpanel-widget" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.1-create-genericsaverpanel-widget">Step 1.1: Create <code>GenericSaverPanel</code> widget</h4>
+<p>Create a new widget <code>src/WhiskerToolbox/DataExport_Widget/GenericSaverPanel.hpp/cpp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GenericSaverPanel <span class="op">:</span> <span class="kw">public</span> <span class="ex">QWidget</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> GenericSaverPanel<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set the saver info and rebuild the form</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setSaverInfo<span class="op">(</span>SaverInfo <span class="at">const</span> <span class="op">&amp;</span> info<span class="op">);</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Get the current options as JSON</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> saveRequested<span class="op">(</span><span class="ex">QString</span> format<span class="op">,</span> nlohmann<span class="op">::</span>json config<span class="op">);</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    AutoParamWidget <span class="op">*</span> _param_widget <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPushButton</span> <span class="op">*</span> _save_button <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _description_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    SaverInfo _current_info<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The implementation:</p>
+<ol type="1">
+<li>When <code>setSaverInfo()</code> is called, call <code>_param_widget-&gt;setSchema(info.schema)</code>.</li>
+<li>When the Save button is clicked, call <code>_param_widget-&gt;toJson()</code>, parse to <code>nlohmann::json</code>, and emit <code>saveRequested(format, config)</code>.</li>
+<li>Add a “Browse” button that opens a <code>QFileDialog</code> for filename/directory fields.</li>
+</ol>
+<ul>
+<li><strong>Files to create</strong>: <code>GenericSaverPanel.hpp</code>, <code>GenericSaverPanel.cpp</code></li>
+<li><strong>Files to modify</strong>: <code>DataExport_Widget/CMakeLists.txt</code></li>
+<li><strong>Tests</strong>: Layout constraint test via <code>LayoutTesting</code> — verify no zero-dimension widgets.</li>
+</ul>
+</section>
+<section id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-or-genericsaverpanel" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-or-genericsaverpanel">Step 1.2: Add file/directory browsing support to <code>AutoParamWidget</code> or <code>GenericSaverPanel</code></h4>
+<p>The loader/saver Options structs have fields like <code>filepath</code>, <code>filename</code>, <code>parent_dir</code>, <code>directory_path</code>. These should get a browse button rather than a plain <code>QLineEdit</code>.</p>
+<p><strong>Option A</strong>: Add a <code>ParameterFieldDescriptor</code> flag (<code>bool is_file_path = false; bool is_directory_path = false;</code>) and teach <code>AutoParamWidget</code> to create a <code>QLineEdit + QPushButton("Browse...")</code> combo for these fields.</p>
+<p><strong>Option B</strong>: Handle this in <code>GenericSaverPanel</code> / <code>GenericLoaderPanel</code> by detecting field names containing “filepath”, “filename”, “directory”, “parent_dir” and overlaying browse buttons.</p>
+<p><strong>Recommendation</strong>: Option A is cleaner and reusable. Add the flags to <code>ParameterFieldDescriptor</code> and handle them in <code>AutoParamWidget</code>. Use <code>ParameterUIHints</code> specializations to mark which fields are file/directory paths:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints<span class="op">&lt;</span>CSVPointSaverOptions<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="dt">void</span> annotate<span class="op">(</span>ParameterSchema <span class="op">&amp;</span> schema<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"filename"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>is_file_path <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output filename"</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"parent_dir"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>is_directory_path <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output directory"</span><span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>Files to modify</strong>: <code>ParameterSchema.hpp</code> (add <code>is_file_path</code>, <code>is_directory_path</code> to <code>ParameterFieldDescriptor</code>), <code>AutoParamWidget.cpp</code> (create browse button layout for these fields).</li>
+<li><strong>Tests</strong>: Unit test that <code>extractParameterSchema</code> preserves the flags after annotation.</li>
+</ul>
+</section>
+<section id="step-1.3-refactor-dataexport_widget-to-use-registry-driven-discovery" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.3-refactor-dataexport_widget-to-use-registry-driven-discovery">Step 1.3: Refactor <code>DataExport_Widget</code> to use registry-driven discovery</h4>
+<p>Replace the current stacked-widget approach with:</p>
+<ol type="1">
+<li>Query <code>LoaderRegistry::getInstance().getSupportedSaveFormats()</code> to get all <code>SaverInfo</code> entries.</li>
+<li>Populate a data-type combo from the unique <code>data_type</code> values.</li>
+<li>When data type is selected, populate a format combo from matching <code>SaverInfo</code> entries.</li>
+<li>When format is selected, call <code>GenericSaverPanel::setSaverInfo(selectedInfo)</code>.</li>
+</ol>
+<pre><code>DataExport_Widget
+├── QComboBox (data key selector — pick which data object to export)
+├── QComboBox (format selector — populated from SaverInfos matching data type)
+├── GenericSaverPanel (AutoParamWidget + Save button)
+└── QLabel (status/error messages)</code></pre>
+<ul>
+<li><strong>Files to modify</strong>: <code>DataExport_Widget.hpp</code>, <code>DataExport_Widget.cpp</code>, <code>DataExport_Widget.ui</code></li>
+<li><strong>Files to delete</strong> (after migration is complete and tested): All 9 format-specific saver sub-widgets and their <code>.ui</code> files.</li>
+<li><strong>Tests</strong>: Integration test — verify that saving a PointData to CSV with the new widget produces the same output as the old widget.</li>
+</ul>
+</section>
+<section id="step-1.4-migrate-datainspector-export-sections" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.4-migrate-datainspector-export-sections">Step 1.4: Migrate DataInspector export sections</h4>
+<p>DataInspectors (e.g., <code>LineInspector</code>) currently embed hand-written saver widgets. Replace these with <code>GenericSaverPanel</code> instances populated from <code>SaverInfo</code>.</p>
+<p>For each Inspector that has export functionality:</p>
+<ol type="1">
+<li>Remove the <code>#include</code> of the old saver widget.</li>
+<li>Create a <code>GenericSaverPanel</code>, query <code>getSupportedSaveFormats(data_type)</code>, and let the user pick format + configure options.</li>
+<li>Wire the <code>saveRequested</code> signal to the existing save logic.</li>
+</ol>
+<ul>
+<li><strong>Files to modify</strong>: Each DataInspector that includes saver widgets (search for <code>Saver_Widget</code> includes).</li>
+<li><strong>Tests</strong>: Manual smoke test — export from inspector, verify file correctness.</li>
+</ul>
+</section>
+<section id="step-1.5-add-parameteruihints-for-all-saver-options-structs" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.5-add-parameteruihints-for-all-saver-options-structs">Step 1.5: Add <code>ParameterUIHints</code> for all saver Options structs</h4>
+<p>Many saver Options structs are plain structs without hints. Add <code>ParameterUIHints</code> specializations for each to improve the generated UI:</p>
+<ol type="1">
+<li><code>CSVPointSaverOptions</code></li>
+<li><code>CSVAnalogSaverOptions</code></li>
+<li><code>CSVEventSaverOptions</code></li>
+<li><code>CSVIntervalSaverOptions</code></li>
+<li><code>CSVMaskRLESaverOptions</code></li>
+<li><code>CSVSingleFileLineSaverOptions</code></li>
+<li><code>BinaryLineSaverOptions</code></li>
+<li><code>ImageMaskSaverOptions</code></li>
+</ol>
+<p>For each, add tooltips, mark file/directory fields, set reasonable min/max for numeric fields (e.g., <code>precision</code> 0–15).</p>
+<ul>
+<li><strong>Files to modify</strong>: Each Options header in <code>src/IO/formats/</code>.</li>
+<li><strong>Tests</strong>: None required (cosmetic).</li>
+</ul>
+</section>
+</section>
+<section id="phase-2-import-widget-migration-requires-phase-0" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-import-widget-migration-requires-phase-0">Phase 2: Import Widget Migration (Requires Phase 0)</h3>
+<p><strong>Goal</strong>: Replace all 12+ hand-written import sub-widgets with a single <code>AutoParamWidget</code>-based import panel.</p>
+<section id="step-2.1-create-genericloaderpanel-widget" class="level4">
+<h4 class="anchored" data-anchor-id="step-2.1-create-genericloaderpanel-widget">Step 2.1: Create <code>GenericLoaderPanel</code> widget</h4>
+<p>Create <code>src/WhiskerToolbox/DataImport_Widget/GenericLoaderPanel.hpp/cpp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GenericLoaderPanel <span class="op">:</span> <span class="kw">public</span> <span class="ex">QWidget</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> GenericLoaderPanel<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set the loader info and rebuild the form</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setLoaderInfo<span class="op">(</span>LoaderInfo <span class="at">const</span> <span class="op">&amp;</span> info<span class="op">);</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Get the current options as JSON</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> loadRequested<span class="op">(</span><span class="ex">QString</span> format<span class="op">,</span> DM_DataType <span class="dt">data_type</span><span class="op">,</span> nlohmann<span class="op">::</span>json config<span class="op">);</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    AutoParamWidget <span class="op">*</span> _param_widget <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPushButton</span> <span class="op">*</span> _load_button <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _description_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    LoaderInfo _current_info<span class="op">;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>Files to create</strong>: <code>GenericLoaderPanel.hpp</code>, <code>GenericLoaderPanel.cpp</code></li>
+<li><strong>Files to modify</strong>: <code>DataImport_Widget/CMakeLists.txt</code></li>
+</ul>
+</section>
+<section id="step-2.2-refactor-dataimport_widget-to-use-registry-driven-discovery" class="level4">
+<h4 class="anchored" data-anchor-id="step-2.2-refactor-dataimport_widget-to-use-registry-driven-discovery">Step 2.2: Refactor <code>DataImport_Widget</code> to use registry-driven discovery</h4>
+<p>Replace <code>DataImportTypeRegistry</code> + per-type container widgets with:</p>
+<ol type="1">
+<li>Query <code>LoaderRegistry::getInstance().getSupportedLoadFormats()</code> to get all <code>LoaderInfo</code> entries.</li>
+<li>Data type combo populated from unique <code>data_type</code> values in the LoaderInfos.</li>
+<li>Format combo populated from <code>LoaderInfo</code> entries matching selected data type.</li>
+<li><code>GenericLoaderPanel</code> rendered for the selected format.</li>
+</ol>
+<pre><code>DataImport_Widget
+├── QLineEdit + Browse (data name for DataManager)
+├── QComboBox (data type — from LoaderInfos)
+├── QComboBox (format — from LoaderInfos matching type)
+├── GenericLoaderPanel (AutoParamWidget + Load button)
+└── QLabel (status/error messages)</code></pre>
+<ul>
+<li><strong>Files to modify</strong>: <code>DataImport_Widget.hpp</code>, <code>DataImport_Widget.cpp</code>, <code>DataImport_Widget.ui</code></li>
+</ul>
+</section>
+<section id="step-2.3-handle-special-cases" class="level4">
+<h4 class="anchored" data-anchor-id="step-2.3-handle-special-cases">Step 2.3: Handle special cases</h4>
+<p>Some import widgets have behavior that plain AutoParamWidget cannot handle:</p>
+<ol type="1">
+<li><p><strong>Batch loading</strong> (DLC points, multi-file CSVs): The <code>LoaderInfo.supports_batch</code> flag indicates this. When true, add a “Load All” button that calls <code>loadBatch()</code> instead of <code>load()</code>. The JSON config is still generated the same way.</p></li>
+<li><p><strong>Scaling widget</strong> (MaskImport, used for coordinate rescaling): This is orthogonal to format-specific options. Add a collapsible “Post-Import Options” section below the <code>GenericLoaderPanel</code> with a <code>Scaling_Widget</code>. This section is shown when the data type supports scaling (Mask, Line, Point).</p></li>
+<li><p><strong>Preview</strong> (some widgets show a data preview after file selection): This can be deferred — the old behavior was inconsistent anyway.</p></li>
+<li><p><strong>Multi-file vs single-file modes</strong> (CSVLineImport has radio buttons for this): Model this as a variant or an enum field in the loader Options struct (e.g., <code>std::optional&lt;std::string&gt; load_mode</code> with <code>allowed_values = {"single_file", "multi_file"}</code>). The <code>ParameterUIHints</code> annotation can set this up.</p></li>
+</ol>
+<p>For each special case, document it as a <code>ParameterUIHints</code> annotation or a small wrapper around <code>GenericLoaderPanel</code>, rather than creating a custom widget.</p>
+<ul>
+<li><strong>Files to modify</strong>: Various loader Options structs may need new fields. <code>GenericLoaderPanel</code> may need optional slots for auxiliary widgets (scaling, preview).</li>
+</ul>
+</section>
+<section id="step-2.4-migrate-one-data-type-at-a-time" class="level4">
+<h4 class="anchored" data-anchor-id="step-2.4-migrate-one-data-type-at-a-time">Step 2.4: Migrate one data type at a time</h4>
+<p>Migrate import widgets in order from simplest to most complex. For each:</p>
+<ol type="1">
+<li>Verify the <code>LoaderInfo</code> is returned by the registry with correct schema.</li>
+<li>Verify <code>AutoParamWidget</code> renders the schema correctly.</li>
+<li>Verify <code>toJson()</code> output matches what the loader expects.</li>
+<li>Verify loading works end-to-end.</li>
+<li>Mark the old widget as deprecated (comment only — do not delete yet).</li>
+</ol>
+<p><strong>Migration order</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 22%">
+<col style="width: 16%">
+<col style="width: 24%">
+<col style="width: 24%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Order</th>
+<th>Data Type</th>
+<th>Format</th>
+<th>Old Widget</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Points</td>
+<td>CSV</td>
+<td><code>CSVPointImport_Widget</code></td>
+<td>Low (4 fields)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>DigitalInterval</td>
+<td>CSV</td>
+<td><code>CSVDigitalIntervalImport_Widget</code></td>
+<td>Low (5 fields)</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>DigitalEvent</td>
+<td>CSV</td>
+<td><code>CSVDigitalEventImport_Widget</code></td>
+<td>Low (7 fields)</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Analog</td>
+<td>CSV</td>
+<td><code>CSVAnalogImport_Widget</code></td>
+<td>Medium (6 fields)</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Analog</td>
+<td>Binary</td>
+<td><code>BinaryAnalogImport_Widget</code></td>
+<td>High (10+ fields)</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Lines</td>
+<td>CSV</td>
+<td><code>CSVLineImport_Widget</code></td>
+<td>Medium (has single/multi mode)</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Lines</td>
+<td>Binary</td>
+<td><code>BinaryLineImport_Widget</code></td>
+<td>Low (1 field)</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Lines</td>
+<td>HDF5</td>
+<td><code>HDF5LineImport_Widget</code></td>
+<td>Low (few fields)</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>Masks</td>
+<td>HDF5</td>
+<td><code>HDF5MaskImport_Widget</code></td>
+<td>Low-Medium</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>Masks</td>
+<td>Image</td>
+<td><code>ImageMaskImport_Widget</code></td>
+<td>Medium (6 fields)</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td>Tensors</td>
+<td>Numpy</td>
+<td><code>TensorImport_Widget</code></td>
+<td>Low</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>DigitalInterval</td>
+<td>Binary</td>
+<td><code>BinaryDigitalIntervalImport_Widget</code></td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<p>For each migration step, the concrete actions are:</p>
+<ol type="1">
+<li>Open the old widget’s <code>.cpp</code> file and the corresponding <code>*LoaderOptions</code> struct.</li>
+<li>Verify the Options struct has all fields the old widget exposes. If not, add missing fields.</li>
+<li>Add <code>ParameterUIHints</code> specialization if not present.</li>
+<li>Implement <code>getLoaderInfo()</code> entry in the format loader (if not done in Phase 0).</li>
+<li>Test: <code>auto schema = extractParameterSchema&lt;OptionsType&gt;(); auto w = AutoParamWidget(); w.setSchema(schema);</code> — visually verify the form matches the old widget.</li>
+<li>Test: Fill the form, call <code>toJson()</code>, pass to <code>registry.tryLoad()</code> — verify data loads correctly.</li>
+<li>If the old widget had custom behavior (e.g., file preview, batch discovery), implement it in <code>GenericLoaderPanel</code> or as a <code>ParameterUIHints</code> annotation.</li>
+</ol>
+</section>
+<section id="step-2.5-delete-old-widgets-and-dataimporttyperegistry" class="level4">
+<h4 class="anchored" data-anchor-id="step-2.5-delete-old-widgets-and-dataimporttyperegistry">Step 2.5: Delete old widgets and <code>DataImportTypeRegistry</code></h4>
+<p>After all data types are migrated and tested:</p>
+<ol type="1">
+<li>Remove all format-specific import sub-widgets (<code>.hpp</code>, <code>.cpp</code>, <code>.ui</code> files).</li>
+<li>Remove all container widgets (e.g., <code>PointImport_Widget</code>, <code>AnalogImport_Widget</code>, etc.).</li>
+<li>Remove <code>DataImportTypeRegistry</code> and <code>DataImportWidgetRegistration</code>.</li>
+<li>Update <code>DataImport_Widget/CMakeLists.txt</code> to remove old sources.</li>
+<li>Update <code>DataExport_Widget/CMakeLists.txt</code> similarly.</li>
+</ol>
+<ul>
+<li><strong>Files to delete</strong>: ~60 files in <code>DataImport_Widget/</code>, ~25 files in <code>DataExport_Widget/</code>.</li>
+<li><strong>Tests</strong>: Full regression test — load and save each data type/format combination.</li>
+</ul>
+</section>
+</section>
+<section id="phase-3-datainspector-integration" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-datainspector-integration">Phase 3: DataInspector Integration</h3>
+<p><strong>Goal</strong>: DataInspectors that embed import/export functionality should use the new generic panels.</p>
+<section id="step-3.1-replace-embedded-saver-widgets-in-inspectors" class="level4">
+<h4 class="anchored" data-anchor-id="step-3.1-replace-embedded-saver-widgets-in-inspectors">Step 3.1: Replace embedded saver widgets in Inspectors</h4>
+<p>Search for all Inspector files that include <code>DataExport_Widget/</code> headers. Replace the embedded format-specific saver widget with a <code>GenericSaverPanel</code> configured from <code>SaverInfo</code>.</p>
+</section>
+<section id="step-3.2-add-import-capability-to-inspectors-optional" class="level4">
+<h4 class="anchored" data-anchor-id="step-3.2-add-import-capability-to-inspectors-optional">Step 3.2: Add import capability to Inspectors (optional)</h4>
+<p>If desired, Inspectors could also embed a <code>GenericLoaderPanel</code> for quick re-loading or format conversion. This follows the same pattern.</p>
+</section>
+</section>
+<section id="phase-4-cleanup-and-documentation" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4-cleanup-and-documentation">Phase 4: Cleanup and Documentation</h3>
+<section id="step-4.1-remove-dataimporttyperegistry-if-no-longer-needed" class="level4">
+<h4 class="anchored" data-anchor-id="step-4.1-remove-dataimporttyperegistry-if-no-longer-needed">Step 4.1: Remove <code>DataImportTypeRegistry</code> if no longer needed</h4>
+<p>If <code>DataImport_Widget</code> now discovers loaders entirely from <code>LoaderRegistry</code>, the <code>DataImportTypeRegistry</code> factory map is redundant.</p>
+</section>
+<section id="step-4.2-update-developer-documentation" class="level4">
+<h4 class="anchored" data-anchor-id="step-4.2-update-developer-documentation">Step 4.2: Update developer documentation</h4>
+<ul>
+<li>Update <code>docs/developer/IO/</code> docs to describe the new <code>LoaderInfo</code> and registry discovery flow.</li>
+<li>Update widget documentation to describe the <code>GenericLoaderPanel</code> / <code>GenericSaverPanel</code> pattern.</li>
+<li>Update <code>copilot-instructions.md</code> to add the new libraries/widgets to the architecture section.</li>
+</ul>
+</section>
+<section id="step-4.3-update-user-documentation" class="level4">
+<h4 class="anchored" data-anchor-id="step-4.3-update-user-documentation">Step 4.3: Update user documentation</h4>
+<ul>
+<li>Update <code>docs/user_guide/</code> import/export articles to reflect the simplified UI.</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="summary-of-file-impact" class="level2">
+<h2 class="anchored" data-anchor-id="summary-of-file-impact">Summary of File Impact</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 22%">
+<col style="width: 25%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Files Created</th>
+<th>Files Modified</th>
+<th>Files Deleted (eventual)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>1 (LoaderInfo.hpp)</td>
+<td>~15 (IFormatLoader, Registry, all format loaders)</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>2 (GenericSaverPanel)</td>
+<td>~5 (DataExport_Widget, ParameterSchema, AutoParamWidget)</td>
+<td>~25 (old saver widgets)</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>2 (GenericLoaderPanel)</td>
+<td>~3 (DataImport_Widget)</td>
+<td>~60 (old import widgets)</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>0</td>
+<td>~5 (Inspectors)</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>0</td>
+<td>~5 (docs)</td>
+<td>~3 (TypeRegistry)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-design-decisions" class="level2">
+<h2 class="anchored" data-anchor-id="key-design-decisions">Key Design Decisions</h2>
+<ol type="1">
+<li><p><strong><code>filepath</code> handling</strong>: Loader Options structs have a <code>filepath</code> field. In the auto-generated UI, this needs a browse button. Add <code>is_file_path</code> / <code>is_directory_path</code> flags to <code>ParameterFieldDescriptor</code> and teach <code>AutoParamWidget</code> to create browse buttons for these.</p></li>
+<li><p><strong>Saver <code>parent_dir</code> + <code>filename</code> pattern</strong>: Many savers split the output path into <code>parent_dir</code> and <code>filename</code>. The auto-generated UI will show both as browseable fields. This is actually cleaner than the current approach where some widgets combine them.</p></li>
+<li><p><strong>Batch loading</strong>: Handled by a flag on <code>LoaderInfo</code>, with a secondary “Load All” button when supported. The JSON config is identical for single and batch loading.</p></li>
+<li><p><strong>Post-import transforms</strong> (scaling, coordinate maps): These are orthogonal to format-specific options. Model them as an optional auxiliary section below the <code>GenericLoaderPanel</code>, not as part of the <code>AutoParamWidget</code> form.</p></li>
+<li><p><strong>Backward compatibility</strong>: The <code>LoaderRegistry.tryLoad()</code> and <code>trySave()</code> methods already accept <code>nlohmann::json</code> config. The <code>AutoParamWidget.toJson()</code> output is compatible. No changes needed to the IO dispatch layer.</p></li>
+<li><p><strong>Incremental migration</strong>: Each data type can be migrated independently. The old Type Registry and new Registry-driven discovery can coexist during migration. Old widgets can remain alongside new ones until fully tested.</p></li>
+</ol>
+</section>
+<section id="risk-assessment" class="level2">
+<h2 class="anchored" data-anchor-id="risk-assessment">Risk Assessment</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 64%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AutoParamWidget doesn’t support a field type used in an Options struct</td>
+<td>The <code>rfl::Validator</code> types are already proven. Only risk is custom validators like <code>ValidBinaryDataType</code> — add <code>ParameterUIHints</code> to map these to combo boxes.</td>
+</tr>
+<tr class="even">
+<td>File browse UX is worse than hand-written</td>
+<td>Add <code>is_file_path</code> / <code>is_directory_path</code> to <code>ParameterFieldDescriptor</code> (Step 1.2) to get proper browse dialogs.</td>
+</tr>
+<tr class="odd">
+<td>Batch loading UI needs custom logic</td>
+<td>Keep batch handling in <code>GenericLoaderPanel</code> as a flag, not in <code>AutoParamWidget</code>. The param widget only handles the schema.</td>
+</tr>
+<tr class="even">
+<td>Some import widgets have validation logic (e.g., “column X must be different from column Y”)</td>
+<td>Use <code>PostEditHook</code> on the <code>AutoParamWidget</code> for cross-field validation.</td>
+</tr>
+<tr class="odd">
+<td>Performance of extractParameterSchema at startup</td>
+<td>Negligible — these are small structs. Schema extraction is already used for all savers.</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

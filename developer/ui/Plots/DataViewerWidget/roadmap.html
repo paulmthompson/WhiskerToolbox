@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Data Viewer Widget Roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#dataviewer-widget-development-roadmap" id="toc-dataviewer-widget-development-roadmap" class="nav-link active" data-scroll-target="#dataviewer-widget-development-roadmap">DataViewer Widget Development Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#completed-work-summary" id="toc-completed-work-summary" class="nav-link" data-scroll-target="#completed-work-summary">Completed Work Summary</a></li>
+  <li><a href="#phase-1-layout-foundation" id="toc-phase-1-layout-foundation" class="nav-link" data-scroll-target="#phase-1-layout-foundation">Phase 1: Layout Foundation</a>
+  <ul class="collapse">
+  <li><a href="#y-scale-state-audit" id="toc-y-scale-state-audit" class="nav-link" data-scroll-target="#y-scale-state-audit">1.1 Y-Scale State Audit</a></li>
+  <li><a href="#configurable-lane-sizing" id="toc-configurable-lane-sizing" class="nav-link" data-scroll-target="#configurable-lane-sizing">1.2 Configurable Lane Sizing</a></li>
+  <li><a href="#lane-sizing-ui-controls" id="toc-lane-sizing-ui-controls" class="nav-link" data-scroll-target="#lane-sizing-ui-controls">1.3 Lane Sizing UI Controls</a></li>
+  <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">1.4 Verification</a></li>
+  </ul></li>
+  <li><a href="#phase-1b-rendering-pipeline" id="toc-phase-1b-rendering-pipeline" class="nav-link" data-scroll-target="#phase-1b-rendering-pipeline">Phase 1B: Rendering Pipeline Modernization</a>
+  <ul class="collapse">
+  <li><a href="#summary-of-changes" id="toc-summary-of-changes" class="nav-link" data-scroll-target="#summary-of-changes">Summary of Changes</a></li>
+  </ul></li>
+  <li><a href="#phase-2-y-axis-navigation" id="toc-phase-2-y-axis-navigation" class="nav-link" data-scroll-target="#phase-2-y-axis-navigation">Phase 2: Y-Axis Navigation</a>
+  <ul class="collapse">
+  <li><a href="#multilaneverticalaxiswidget-minimal-version" id="toc-multilaneverticalaxiswidget-minimal-version" class="nav-link" data-scroll-target="#multilaneverticalaxiswidget-minimal-version">2.1 MultiLaneVerticalAxisWidget (Minimal Version)</a></li>
+  <li><a href="#viewport-visibility-culling" id="toc-viewport-visibility-culling" class="nav-link" data-scroll-target="#viewport-visibility-culling">2.3 Viewport Visibility Culling</a></li>
+  <li><a href="#wheel-modifier-chords-for-y-interaction" id="toc-wheel-modifier-chords-for-y-interaction" class="nav-link" data-scroll-target="#wheel-modifier-chords-for-y-interaction">2.4 Wheel Modifier Chords for Y Interaction</a></li>
+  <li><a href="#visible-lane-indicator-in-properties-panel" id="toc-visible-lane-indicator-in-properties-panel" class="nav-link" data-scroll-target="#visible-lane-indicator-in-properties-panel">2.5 Visible Lane Indicator in Properties Panel</a></li>
+  <li><a href="#verification-1" id="toc-verification-1" class="nav-link" data-scroll-target="#verification-1">2.6 Verification</a></li>
+  <li><a href="#phase-2-7-y-viewport-zoom" id="toc-phase-2-7-y-viewport-zoom" class="nav-link" data-scroll-target="#phase-2-7-y-viewport-zoom">2.7 Y Viewport Zoom Rendering Support</a></li>
+  </ul></li>
+  <li><a href="#phase-3-scalebars-labels" id="toc-phase-3-scalebars-labels" class="nav-link" data-scroll-target="#phase-3-scalebars-labels">Phase 3: Y-Axis Scalebars and Enhanced Lane Annotations</a>
+  <ul class="collapse">
+  <li><a href="#extend-laneaxisdescriptor-with-amplitude-information" id="toc-extend-laneaxisdescriptor-with-amplitude-information" class="nav-link" data-scroll-target="#extend-laneaxisdescriptor-with-amplitude-information">3.1 Extend LaneAxisDescriptor with Amplitude Information</a></li>
+  <li><a href="#per-lane-y-axis-scalebars" id="toc-per-lane-y-axis-scalebars" class="nav-link" data-scroll-target="#per-lane-y-axis-scalebars">3.2 Per-Lane Y-Axis Scalebars</a></li>
+  <li><a href="#visibility-toggles" id="toc-visibility-toggles" class="nav-link" data-scroll-target="#visibility-toggles">3.3 Visibility Toggles</a></li>
+  <li><a href="#group-scaling-verification" id="toc-group-scaling-verification" class="nav-link" data-scroll-target="#group-scaling-verification">3.4 Group Scaling Verification</a></li>
+  <li><a href="#smart-label-positioning" id="toc-smart-label-positioning" class="nav-link" data-scroll-target="#smart-label-positioning">3.5 Smart Label Positioning</a></li>
+  <li><a href="#verification-2" id="toc-verification-2" class="nav-link" data-scroll-target="#verification-2">3.6 Verification</a></li>
+  </ul></li>
+  <li><a href="#phase-4-centered-time-axis" id="toc-phase-4-centered-time-axis" class="nav-link" data-scroll-target="#phase-4-centered-time-axis">Phase 4: CenteredTimeAxis Widget</a>
+  <ul class="collapse">
+  <li><a href="#centeredtimeaxis-new-horizontal-axis-variant" id="toc-centeredtimeaxis-new-horizontal-axis-variant" class="nav-link" data-scroll-target="#centeredtimeaxis-new-horizontal-axis-variant">4.1 CenteredTimeAxis — New Horizontal Axis Variant</a></li>
+  <li><a href="#zoom-math-extraction" id="toc-zoom-math-extraction" class="nav-link" data-scroll-target="#zoom-math-extraction">4.2 Zoom Math Extraction</a></li>
+  <li><a href="#dataviewer-migration" id="toc-dataviewer-migration" class="nav-link" data-scroll-target="#dataviewer-migration">4.3 DataViewer Migration</a></li>
+  <li><a href="#spectrogramwidget-adoption" id="toc-spectrogramwidget-adoption" class="nav-link" data-scroll-target="#spectrogramwidget-adoption">4.4 SpectrogramWidget Adoption</a></li>
+  <li><a href="#tests-and-documentation" id="toc-tests-and-documentation" class="nav-link" data-scroll-target="#tests-and-documentation">4.5 Tests and Documentation</a></li>
+  <li><a href="#verification-3" id="toc-verification-3" class="nav-link" data-scroll-target="#verification-3">4.6 Verification</a></li>
+  </ul></li>
+  <li><a href="#phase-5-enhanced-event-glyph-options" id="toc-phase-5-enhanced-event-glyph-options" class="nav-link" data-scroll-target="#phase-5-enhanced-event-glyph-options">Phase 5: Enhanced Event Glyph Options</a>
+  <ul class="collapse">
+  <li><a href="#shared-glyphstyledata-complete" id="toc-shared-glyphstyledata-complete" class="nav-link" data-scroll-target="#shared-glyphstyledata-complete">5.1 Shared GlyphStyleData (Complete)</a></li>
+  <li><a href="#state-and-options-update" id="toc-state-and-options-update" class="nav-link" data-scroll-target="#state-and-options-update">5.2 State and Options Update</a></li>
+  <li><a href="#properties-panel-controls" id="toc-properties-panel-controls" class="nav-link" data-scroll-target="#properties-panel-controls">5.3 Properties Panel Controls</a></li>
+  <li><a href="#scene-building-update" id="toc-scene-building-update" class="nav-link" data-scroll-target="#scene-building-update">5.4 Scene Building Update</a></li>
+  </ul></li>
+  <li><a href="#phase-6-enhanced-interval-rendering" id="toc-phase-6-enhanced-interval-rendering" class="nav-link" data-scroll-target="#phase-6-enhanced-interval-rendering">Phase 6: Enhanced Interval Rendering</a>
+  <ul class="collapse">
+  <li><a href="#intervalrenderingoptions" id="toc-intervalrenderingoptions" class="nav-link" data-scroll-target="#intervalrenderingoptions">6.1 IntervalRenderingOptions</a></li>
+  <li><a href="#hatching-patterns" id="toc-hatching-patterns" class="nav-link" data-scroll-target="#hatching-patterns">6.2 Hatching Patterns</a></li>
+  <li><a href="#svg-export-update" id="toc-svg-export-update" class="nav-link" data-scroll-target="#svg-export-update">6.3 SVG Export Update</a></li>
+  <li><a href="#properties-panel-controls-1" id="toc-properties-panel-controls-1" class="nav-link" data-scroll-target="#properties-panel-controls-1">6.4 Properties Panel Controls</a></li>
+  </ul></li>
+  <li><a href="#phase-7-analog-line-style" id="toc-phase-7-analog-line-style" class="nav-link" data-scroll-target="#phase-7-analog-line-style">Phase 7: Analog Line Style Enhancements</a>
+  <ul class="collapse">
+  <li><a href="#planned-options" id="toc-planned-options" class="nav-link" data-scroll-target="#planned-options">7.1 Planned Options</a></li>
+  <li><a href="#rendering" id="toc-rendering" class="nav-link" data-scroll-target="#rendering">7.2 Rendering</a></li>
+  </ul></li>
+  <li><a href="#phase-8-shared-components" id="toc-phase-8-shared-components" class="nav-link" data-scroll-target="#phase-8-shared-components">Phase 8: Shared Component Extraction</a>
+  <ul class="collapse">
+  <li><a href="#components-to-extract-from-dataviewer" id="toc-components-to-extract-from-dataviewer" class="nav-link" data-scroll-target="#components-to-extract-from-dataviewer">8.1 Components to Extract from DataViewer</a></li>
+  <li><a href="#components-to-adopt-from-plotscommon" id="toc-components-to-adopt-from-plotscommon" class="nav-link" data-scroll-target="#components-to-adopt-from-plotscommon">8.2 Components to Adopt from Plots/Common/</a></li>
+  <li><a href="#shared-visual-options-infrastructure" id="toc-shared-visual-options-infrastructure" class="nav-link" data-scroll-target="#shared-visual-options-infrastructure">8.3 Shared Visual Options Infrastructure</a></li>
+  </ul></li>
+  <li><a href="#phase-9-directory-relocation" id="toc-phase-9-directory-relocation" class="nav-link" data-scroll-target="#phase-9-directory-relocation">Phase 9: Directory Relocation</a>
+  <ul class="collapse">
+  <li><a href="#steps" id="toc-steps" class="nav-link" data-scroll-target="#steps">9.1 Steps</a></li>
+  </ul></li>
+  <li><a href="#implementation-priority" id="toc-implementation-priority" class="nav-link" data-scroll-target="#implementation-priority">Implementation Priority</a>
+  <ul class="collapse">
+  <li><a href="#completed-prerequisites" id="toc-completed-prerequisites" class="nav-link" data-scroll-target="#completed-prerequisites">Completed Prerequisites</a></li>
+  <li><a href="#completed-y-axis-track" id="toc-completed-y-axis-track" class="nav-link" data-scroll-target="#completed-y-axis-track">Completed (Y-Axis Track)</a></li>
+  <li><a href="#next-up" id="toc-next-up" class="nav-link" data-scroll-target="#next-up">Next Up</a></li>
+  <li><a href="#parallel-track-x-axis-extraction" id="toc-parallel-track-x-axis-extraction" class="nav-link" data-scroll-target="#parallel-track-x-axis-extraction">Parallel Track (X-Axis Extraction)</a></li>
+  <li><a href="#following-visual-enhancements" id="toc-following-visual-enhancements" class="nav-link" data-scroll-target="#following-visual-enhancements">Following (Visual Enhancements)</a></li>
+  <li><a href="#deferred" id="toc-deferred" class="nav-link" data-scroll-target="#deferred">Deferred</a></li>
+  </ul></li>
+  <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">Open Questions</a>
+  <ul class="collapse">
+  <li><a href="#resolved-questions" id="toc-resolved-questions" class="nav-link" data-scroll-target="#resolved-questions">Resolved Questions</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data Viewer Widget Roadmap</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="dataviewer-widget-development-roadmap" class="level1">
+<h1>DataViewer Widget Development Roadmap</h1>
+<p>This document tracks remaining development tasks for the Data Viewer Widget. For documentation of completed features and current architecture, see the <a href="../../../../developer/ui/Plots/DataViewerWidget/index.html">main developer documentation</a>.</p>
+<p>For the mixed-lane ordering refactor that precedes interactive lane drag-and-drop, see <a href="../../../../developer/ui/Plots/DataViewerWidget/ordering_abstractions_implementation_roadmap.html">ordering abstractions implementation roadmap</a>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Pre-Architecture Widget
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The Data Viewer Widget was the first plot widget developed, before the unified <code>Plots/</code> directory structure and common axis/interaction infrastructure. Several refactoring items below extract DataViewer-specific code into shared components or adopt existing shared components from <code>Plots/Common/</code>. These refactoring tasks are ordered by priority and can be interleaved with feature work.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Related GitHub Issues
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Open issues tracking remaining feature work:</p>
+<ul>
+<li><a href="https://github.com/paulmthompson/WhiskerToolbox/issues/223">#223</a> — Extract reusable temporal X-axis (CenteredTimeAxis widget)</li>
+<li><a href="https://github.com/paulmthompson/WhiskerToolbox/issues/227">#227</a> — Mouse-wheel modifiers for Y scaling (global, per-lane, viewport zoom)</li>
+<li><a href="https://github.com/paulmthompson/WhiskerToolbox/issues/247">#247</a> — Y-axis scalebars and lane labels</li>
+</ul>
+<p>Closed issues:</p>
+<ul>
+<li><a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a> — Viewport culling and configurable lane sizing (completed in Phases 1 + 2)</li>
+</ul>
+</div>
+</div>
+<section id="completed-work-summary" class="level2">
+<h2 class="anchored" data-anchor-id="completed-work-summary">Completed Work Summary</h2>
+<p>The following features are complete and documented in <a href="../../../../developer/ui/Plots/DataViewerWidget/index.html">index.qmd</a>:</p>
+<ul>
+<li><strong>EditorState pattern</strong>: <code>DataViewerState</code> with <code>DataViewerStateData</code> serialization via reflect-cpp</li>
+<li><strong>SeriesOptionsRegistry</strong>: Generic type-safe per-series options for analog, event, and interval types</li>
+<li><strong>Rendering pipeline</strong>: <code>SceneBuildingHelpers</code> → <code>RenderableBatch</code> → <code>PlottingOpenGL::SceneRenderer</code></li>
+<li><strong>Layout system</strong>: <code>CorePlotting::LayoutEngine</code> with <code>StackedLayoutStrategy</code>; spike sorter configuration for custom channel ordering; FitToViewport lane sizing with configurable <code>margin_factor</code></li>
+<li><strong>Y-axis transform pipeline</strong>: <code>TransformComposers</code> composing data normalization, user adjustments, layout positioning, global scaling</li>
+<li><strong>Interaction system</strong>: <code>DataViewerInteractionManager</code> state machine (Normal, CreateInterval, ModifyInterval, CreateLine modes)</li>
+<li><strong>Interval editing</strong>: Click-to-select, edge dragging, collision prevention, multi-timeframe support</li>
+<li><strong>Entity selection</strong>: Multi-select via Ctrl+click in <code>DataViewerSelectionManager</code></li>
+<li><strong>Coordinate transforms</strong>: Unified <code>DataViewerCoordinates</code> class for canvas ↔︎ world ↔︎ time ↔︎ data conversions</li>
+<li><strong>Analog vertex cache</strong>: Ring buffer for 26–130x faster scrolling rendering</li>
+<li><strong>SVG export</strong>: Publication-quality export using the same scene building as OpenGL rendering</li>
+<li><strong>Time frame synchronization</strong>: Cross-sampling-rate display (e.g., 30 kHz electrophysiology + 500 Hz video)</li>
+<li><strong>Grouped data</strong>: Group loading with auto-calculated scaling and event spacing</li>
+<li><strong>Theme and grid</strong>: Dark/Light themes, configurable grid overlay</li>
+<li><strong>DataManager observer</strong>: Combo box population, stale key cleanup</li>
+<li><strong>Developer Debug Panel</strong>: Real-time diagnostics for lane layout, scales, coordinate transforms, and viewport state</li>
+</ul>
+<p><strong>Not yet implemented</strong>: Common axis integration, Y pan/zoom for channel navigation, enhanced per-type visual options, viewport culling, and shared component extraction described below.</p>
+<hr>
+</section>
+<section id="phase-1-layout-foundation" class="level2 completed">
+<h2 class="completed anchored" data-anchor-id="phase-1-layout-foundation">Phase 1: Layout Foundation</h2>
+<p><strong>Status</strong>: Complete. <strong>Issues</strong>: <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a>, <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/227">#227</a></p>
+<p><strong>Goal</strong>: Establish the lane sizing model that all subsequent Y-axis features depend on.</p>
+<section id="y-scale-state-audit" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="y-scale-state-audit">1.1 Y-Scale State Audit</h3>
+<p>Merged <code>global_zoom</code> and <code>global_vertical_scale</code> into a single <code>global_y_scale</code> field. Exposed as “Global Y Scale” in the UI and used consistently in all <code>TransformComposers</code> functions.</p>
+</section>
+<section id="configurable-lane-sizing" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="configurable-lane-sizing">1.2 Configurable Lane Sizing</h3>
+<p><code>StackedLayoutStrategy</code> uses FitToViewport (equal division of viewport among stackable lanes). Layout config persisted in <code>DataViewerLayoutConfig</code> via reflect-cpp with a user-configurable <code>margin_factor</code> (fraction of allocated lane height used for data rendering, default 0.8). State API: <code>setMarginFactor()</code>, <code>marginFactor()</code>, <code>layoutConfigChanged()</code> signal.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The former <code>FixedHeight</code> lane sizing policy (with <code>lane_height</code> and <code>lane_gap</code> parameters) was removed because Y viewport zoom (<code>y_zoom</code> + <code>y_pan</code> in <code>ViewStateData</code>) provides the same functionality — users zoom into the viewport to see a subset of channels at larger resolution, rather than setting a fixed pixel height per lane.</p>
+</div>
+</div>
+<p><strong>Key files</strong>: <code>StackedLayoutStrategy.hpp/.cpp</code>, <code>DataViewerStateData.hpp</code>, <code>DataViewerState.hpp/.cpp</code></p>
+</section>
+<section id="lane-sizing-ui-controls" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="lane-sizing-ui-controls">1.3 Lane Sizing UI Controls</h3>
+<p>“Layout Settings” group in <code>DataViewerPropertiesWidget</code>: margin factor spinbox (0.1–1.0). Bidirectional sync via <code>layoutConfigChanged()</code>.</p>
+</section>
+<section id="verification" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="verification">1.4 Verification</h3>
+<p>32+ channels in <code>FitToViewport</code> all visible. Y viewport zoom shows subset with panning. Workspace save/restore roundtrips layout config.</p>
+<hr>
+</section>
+</section>
+<section id="phase-1b-rendering-pipeline" class="level2 completed">
+<h2 class="completed anchored" data-anchor-id="phase-1b-rendering-pipeline">Phase 1B: Rendering Pipeline Modernization</h2>
+<p><strong>Status</strong>: Complete. <strong>Depends on</strong>: <a href="#phase-1-layout-foundation">Phase 1</a>.</p>
+<p><strong>Goal</strong>: Migrate from <code>TimeSeriesViewState</code> to shared <code>ViewStateData</code> zoom/pan model. Eliminate the performance bottleneck where Y-axis panning triggered full scene rebuild + GPU re-upload every frame.</p>
+<section id="summary-of-changes" class="level3">
+<h3 class="anchored" data-anchor-id="summary-of-changes">Summary of Changes</h3>
+<p><strong>ViewStateData adoption</strong> (1B.1): <code>DataViewerStateData::view</code> is now <code>CorePlotting::ViewStateData</code> (<code>x_min</code>/<code>x_max</code> as <code>double</code>, <code>y_min</code>/<code>y_max</code>, <code>y_pan</code>, <code>y_zoom</code>). <code>global_y_scale</code> remains a separate field in <code>DataViewerStateData</code> (data amplitude gain, not a view transform). DataViewer defaults: <code>x_min=0, x_max=1000, y_min=-1, y_max=1</code>. Convenience methods on <code>DataViewerState</code>: <code>timeStart()</code>, <code>timeEnd()</code>, <code>timeWidth()</code>, <code>timeCenter()</code>.</p>
+<p><strong>Scene dirty guard</strong> (1B.3, 1B.6): <code>OpenGLWidget</code> uses separate signal handlers:</p>
+<ul>
+<li><code>timeWindowChanged</code> → <code>scene_dirty = true</code> (scene rebuild needed)</li>
+<li><code>viewStateChanged</code> → matrix update only (Y pan/zoom is instant)</li>
+<li><code>layoutConfigChanged</code> → <code>scene_dirty = true</code> (layout transforms baked into vertices)</li>
+<li><code>global_y_scale</code> changes detected via cached comparison → <code>scene_dirty = true</code></li>
+</ul>
+<p>Scene rebuilds (<code>rebuildScene()</code>) only occur when <code>_cache_state.scene_dirty</code> is set. Y-axis panning updates only the projection/view matrices.</p>
+<p><strong>Caller migration</strong> (1B.7): All files across <code>DataViewer_Widget/</code> updated to use <code>ViewStateData</code> field names (<code>x_min</code>/<code>x_max</code>/<code>y_pan</code> with appropriate casts). <code>DataViewerCoordinates</code>, <code>DataViewerInputHandler</code>, <code>DataViewerInteractionManager</code>, <code>DataViewerDebugPanel</code>, <code>DataViewerPropertiesWidget</code>, <code>SVGExporter</code>, and all test files migrated.</p>
+<p><strong>Key architectural decisions</strong>:</p>
+<ul>
+<li><code>x_zoom</code> fixed at 1.0, <code>x_pan</code> at 0.0 (DataViewer X-axis controlled externally via time bar)</li>
+<li>Lane sizing policy changes reset <code>y_pan</code> to 0 to prevent stranded viewport on mode switch</li>
+<li><code>double</code> precision for time bounds sufficient for indices up to ~9×10¹⁵</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-2-y-axis-navigation" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-y-axis-navigation">Phase 2: Y-Axis Navigation</h2>
+<p><strong>Status</strong>: In progress (Phase 2.1 completed). <strong>Issues</strong>: <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/227">#227</a> (wheel modifiers, per-lane scaling), <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a> (viewport culling), <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/247">#247</a> (axis synchronization) <strong>Depends on</strong>: <a href="#phase-1-layout-foundation">Phase 1</a> (layout foundation must exist), <a href="#phase-1b-rendering-pipeline">Phase 1B</a> (pan/zoom must be performant before adding more interaction modes).</p>
+<p><strong>Goal</strong>: Allow users to pan and zoom the Y-axis so they can view a subset of channels at readable resolution, inspired by <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>’s trial Y navigation.</p>
+<section id="multilaneverticalaxiswidget-minimal-version" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="multilaneverticalaxiswidget-minimal-version">2.1 MultiLaneVerticalAxisWidget (Minimal Version)</h3>
+<p>Create a new <code>MultiLaneVerticalAxisWidget</code> in <code>Plots/Common/</code> and integrate it into DataViewer. This is a <strong>standalone widget</strong> — not a subclass of the existing single-range <code>VerticalAxisWidget</code>, which continues to serve ScatterPlotWidget and EventPlotWidget unchanged.</p>
+<p>The existing <code>VerticalAxisWidget</code> manages a single <code>y_min</code>/<code>y_max</code> range with uniform tick marks. DataViewer lanes have <strong>independent amplitude scales</strong> (each series has its own <code>user_scale_factor</code>, data range, and normalization), so a single-range axis cannot meaningfully represent per-lane amplitudes. Building the multi-lane widget from the start avoids a throwaway integration cycle.</p>
+<p><strong>New files</strong>:</p>
+<pre><code>Plots/Common/MultiLaneVerticalAxisWidget/
+├── Core/
+│   ├── MultiLaneVerticalAxisStateData.hpp   # LaneAxisDescriptor + vector, serializable
+│   └── MultiLaneVerticalAxisState.hpp       # QObject with lane update signals
+├── MultiLaneVerticalAxisWidget.hpp/.cpp     # QPainter rendering: labels + separators
+└── CMakeLists.txt</code></pre>
+<p>The widget follows the standard four-layer pattern (<code>StateData → State → Widget → optional WithControls</code>) and is driven by a <code>std::vector&lt;LaneAxisDescriptor&gt;</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LaneAxisDescriptor <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string lane_id<span class="op">;</span>        <span class="co">///&lt; Series key in DataManager</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string label<span class="op">;</span>          <span class="co">///&lt; Display name (channel name or series key)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center<span class="op">;</span>             <span class="co">///&lt; Center Y position in world coordinates</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_half_height<span class="op">;</span>        <span class="co">///&lt; Half-height of the lane in world coordinates</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Minimal rendering scope</strong> (Phase 2 only):</p>
+<ul>
+<li>Channel name labels painted at each lane’s center Y position</li>
+<li>Lane boundary separators (horizontal lines between lanes)</li>
+<li>Viewport-aware: only renders labels for lanes visible in the current Y viewport</li>
+<li>Fixed 50px width (matching existing <code>VerticalAxisWidget</code> <code>sizeHint</code>)</li>
+</ul>
+<p>Scalebars, visibility toggles, and per-lane range annotations are deferred to <a href="#phase-3-scalebars-labels">Phase 3</a>, which adds them incrementally to this same widget.</p>
+<p><strong>Layout</strong>: Place <code>MultiLaneVerticalAxisWidget</code> in a <code>QHBoxLayout</code> to the left of <code>OpenGLWidget</code>:</p>
+<pre><code>DataViewer_Widget (QWidget)
+├── QVBoxLayout
+│   ├── QHBoxLayout [stretch 1]
+│   │   ├── MultiLaneVerticalAxisWidget (50px fixed width)
+│   │   └── OpenGLWidget [stretch 1]
+│   └── (future: CenteredTimeAxisWidget — Phase 4)</code></pre>
+<p><strong>State integration</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In DataViewerState</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>_multi_lane_axis_state <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>MultiLaneVerticalAxisState<span class="op">&gt;(</span><span class="kw">this</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Data flow</strong> (one-directional — labels are read-only display):</p>
+<ul>
+<li>After each layout computation, DataViewer extracts <code>LaneAxisDescriptor</code> entries from <code>LayoutResponse</code> and pushes them to <code>MultiLaneVerticalAxisState</code></li>
+<li><code>DataViewerState::viewStateChanged</code> → widget repaint (for Y pan/zoom tracking)</li>
+<li>No bidirectional range sync is needed (Y pan/zoom originates from wheel events on <code>OpenGLWidget</code>, not from the axis widget)</li>
+</ul>
+<p><strong>Files</strong>: <code>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/</code> (new), <code>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</code></p>
+</section>
+<section id="viewport-visibility-culling" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="viewport-visibility-culling">2.3 Viewport Visibility Culling</h3>
+<p>When many channels are loaded but only a few are visible (e.g., viewing 4 of 32 channels), non-visible series are culled from the rendering pipeline using <strong>additive culling</strong>:</p>
+<ol type="1">
+<li><strong>Layout query</strong>: <code>LayoutResponse::isSeriesVisible()</code> and <code>visibleSeriesIds()</code> determine which lanes overlap the effective Y viewport (accounting for <code>y_pan</code>).</li>
+<li><strong>Additive tracking</strong>: <code>SceneCacheState::series_in_scene</code> tracks which series have been built into the current scene. The set accumulates across pan-triggered rebuilds and is only cleared on full data changes (time window, layout config, global Y scale).</li>
+<li><strong>Pan-triggered rebuild</strong>: <code>hasNewVisibleSeries()</code> checks if any enabled, viewport-visible series is not yet in <code>series_in_scene</code>. If so, an additive rebuild is triggered that builds the new series plus all previously-built series.</li>
+<li><strong>Additive batch building</strong>: <code>add*BatchesToBuilder</code> methods skip a series only if it is both off-screen AND not in <code>series_in_scene</code>. This ensures panning never removes already-rendered series from the scene.</li>
+</ol>
+<p>Non-stackable series (full-canvas intervals, full-canvas events) always pass the visibility check because their layout spans the entire viewport.</p>
+<p><strong>Key files</strong>: <code>src/CorePlotting/Layout/LayoutEngine.hpp</code> (<code>isSeriesVisible</code>, <code>visibleSeriesIds</code>), <code>src/CorePlotting/Layout/LayoutEngine.cpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp</code> (<code>SceneCacheState::series_in_scene</code>, <code>hasNewVisibleSeries</code>), <code>src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp</code></p>
+</section>
+<section id="wheel-modifier-chords-for-y-interaction" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="wheel-modifier-chords-for-y-interaction">2.4 Wheel Modifier Chords for Y Interaction</h3>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Preserving Existing Behavior
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The current default mouse wheel behavior (time-axis zoom) must be preserved. Users who do not use modifiers should see no change. Y-axis panning is already handled by left-click drag (via <code>DataViewerInputHandler</code>) and does not need a wheel chord.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Known Limitation — Y Viewport Zoom Not Yet Rendered
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <code>Alt+Ctrl+Scroll</code> chord correctly updates <code>y_zoom</code> and <code>y_pan</code> in <code>ViewStateData</code>, but the DataViewer rendering pipeline does not yet incorporate <code>y_zoom</code> into the projection or view matrices. As a result, the gesture currently appears as a pan rather than a zoom. See <a href="#phase-2-7-y-viewport-zoom">Phase 2.7</a> for the rendering refactoring plan.</p>
+</div>
+</div>
+<p><strong>Current behavior</strong> (unchanged):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Modifier</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>None</td>
+<td>Time-axis zoom (normal sensitivity)</td>
+</tr>
+<tr class="even">
+<td>Shift</td>
+<td>Time-axis zoom (fine sensitivity)</td>
+</tr>
+<tr class="odd">
+<td>Ctrl</td>
+<td>Time-axis zoom (coarse sensitivity)</td>
+</tr>
+<tr class="even">
+<td>Left-drag</td>
+<td>Y-axis pan</td>
+</tr>
+</tbody>
+</table>
+<p><strong>New chords</strong> — all Y-axis wheel actions share <code>Alt</code> as the common prefix, distinguishing them from X-axis zoom (no <code>Alt</code>):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 21%">
+<col style="width: 18%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Modifier</th>
+<th>Action</th>
+<th>Scope</th>
+<th>State Field</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alt+Scroll</td>
+<td>Global Y scale</td>
+<td>All lanes</td>
+<td><code>global_y_scale</code></td>
+</tr>
+<tr class="even">
+<td>Alt+Shift+Scroll</td>
+<td>Per-lane Y scale</td>
+<td>Hovered lane</td>
+<td><code>user_scale_factor</code> in <code>AnalogSeriesOptionsData</code></td>
+</tr>
+<tr class="odd">
+<td>Alt+Ctrl+Scroll</td>
+<td>Y viewport zoom (cursor-anchored)</td>
+<td>View matrix</td>
+<td><code>y_zoom</code> in <code>ViewStateData</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Global Y scale</strong> (<code>Alt+Scroll</code>): Adjusts <code>global_y_scale</code>, which amplifies all series uniformly within their lanes. This is a data gain factor baked into vertices, so it triggers a scene rebuild.</p>
+<p><strong>Per-lane Y scale</strong> (<code>Alt+Shift+Scroll</code>): Adjusts the <code>user_scale_factor</code> for the analog series under the cursor. Uses <code>OpenGLWidget::findSeriesAtPosition()</code> for hit testing. No-op if the cursor is not over an analog lane. The per-series scale is already serialized and shown in the properties panel, so this provides a mouse-driven shortcut for an existing feature. <code>Shift</code> narrows the scope from global to local.</p>
+<p><strong>Y viewport zoom</strong> (<code>Alt+Ctrl+Scroll</code>): Adjusts <code>y_zoom</code> in <code>ViewStateData</code>, which scales the view matrix — making lane heights appear larger or smaller without changing the data gain. This is a cheap matrix-only update (no scene rebuild). Cursor-anchored: the focal point under the mouse remains stable during zoom. Define min/max span clamps so projection and hit testing never degenerate.</p>
+<p><strong>Implementation notes</strong>:</p>
+<ul>
+<li><code>Alt+click</code> is window-move on some Linux WMs, but <code>Alt+Scroll</code> is generally safe</li>
+<li>Respect <code>OpenGLWidget::isInteractionActive()</code> (no zoom while creating/editing intervals)</li>
+<li>When multiple modifiers match (e.g., <code>Alt+Ctrl+Shift</code>), the most specific chord wins: per-lane (<code>Alt+Shift</code>) &gt; viewport zoom (<code>Alt+Ctrl</code>) &gt; global scale (<code>Alt</code>)</li>
+<li>Document chords in a user-facing summary (tooltip, status bar, or User Guide stub)</li>
+</ul>
+<p><strong>Spinbox synchronization</strong>: The properties panel already has spinboxes for <code>global_y_scale</code> and per-series <code>user_scale_factor</code>. Wheel-driven changes update these spinboxes without triggering feedback loops by leveraging the existing <code>_updating_from_state</code> guard in <code>DataViewerPropertiesWidget::_connectStateSignals()</code>:</p>
+<ul>
+<li><strong>Global Y scale</strong>: <code>_handleGlobalYScaleWheel()</code> calls <code>setGlobalYScale()</code> on the state, which emits <code>viewStateChanged</code>. The properties widget’s <code>viewStateChanged</code> handler sets <code>_updating_from_state = true</code>, updates the spinbox value, then clears the guard — preventing the spinbox’s <code>valueChanged</code> signal from re-entering the state setter.</li>
+<li><strong>Per-lane Y scale</strong>: <code>_handlePerLaneYScaleWheel()</code> uses the same <code>getMutable()</code> + <code>update()</code> pattern as <code>AnalogViewer_Widget::_setAnalogScaleFactor()</code>. No spinbox sync is needed because the AnalogViewer_Widget sub-panel only shows when the user explicitly selects a series in the feature tree, and the spinbox value is set when <code>setActiveKey()</code> is called.</li>
+</ul>
+<p><strong>Key implementation details</strong>:</p>
+<ul>
+<li>Three new private helper methods in <code>DataViewer_Widget</code>: <code>_handleGlobalYScaleWheel()</code>, <code>_handlePerLaneYScaleWheel()</code>, <code>_handleYViewportZoomWheel()</code></li>
+<li><code>OpenGLWidget::findSeriesAtPosition()</code> moved from private to public for hit testing</li>
+<li>All wheel handlers use multiplicative 5% steps with <code>std::clamp</code> for bounds</li>
+<li>Y viewport zoom is cursor-anchored: computes world-Y under cursor before zoom, then adjusts <code>y_pan</code> so the same world-Y maps back to the same screen position after zoom</li>
+</ul>
+<p><strong>Files</strong>: <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</code> (<code>wheelEvent</code>), <code>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code></p>
+</section>
+<section id="visible-lane-indicator-in-properties-panel" class="level3 completed">
+<h3 class="completed anchored" data-anchor-id="visible-lane-indicator-in-properties-panel">2.5 Visible Lane Indicator in Properties Panel</h3>
+<p>A read-only “Visible lanes: N of M” label in <code>DataViewerPropertiesWidget</code> updates whenever the viewport or lane count changes. Added to the Layout Settings group in the properties panel UI. The update is driven by two signal connections wired in <code>DataViewerWidgetRegistration::create_editor_custom</code>:</p>
+<ul>
+<li><code>OpenGLWidget::sceneRebuilt</code> → recomputes visible/total from layout response</li>
+<li><code>DataViewerState::viewStateChanged</code> → recomputes when Y pan/zoom changes</li>
+</ul>
+<p>The effective viewport is computed as <code>[y_min + y_pan, y_max + y_pan]</code> and passed to <code>LayoutResponse::visibleSeriesIds()</code> to count visible lanes.</p>
+<p><strong>Files</strong>: <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp</code>, <code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui</code>, <code>src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp</code></p>
+</section>
+<section id="verification-1" class="level3">
+<h3 class="anchored" data-anchor-id="verification-1">2.6 Verification</h3>
+<ul>
+<li>Load 32+ channels.</li>
+<li>Y pan scrolls through lanes; Y zoom narrows the visible range.</li>
+<li>Viewport culling skips off-screen series (verify via Developer Debug Panel rendering stats).</li>
+<li>Per-lane hover scaling adjusts the hovered series only.</li>
+<li>Channel name labels appear on the <code>MultiLaneVerticalAxisWidget</code> at correct Y positions.</li>
+<li>Labels scroll correctly during Y pan and recompute when series are added/removed.</li>
+<li>“Visible lanes: N of M” indicator updates correctly.</li>
+<li>Workspace save/restore roundtrips all new state.</li>
+<li>Existing <code>DataViewer_Widget</code> tests that assert time window changes after wheel remain green.</li>
+<li>Existing <code>VerticalAxisWidget</code> consumers (ScatterPlot, EventPlot) are unaffected.</li>
+</ul>
+</section>
+<section id="phase-2-7-y-viewport-zoom" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-7-y-viewport-zoom">2.7 Y Viewport Zoom Rendering Support</h3>
+<p><strong>Status</strong>: Complete.</p>
+<section id="summary" class="level4">
+<h4 class="anchored" data-anchor-id="summary">Summary</h4>
+<p><code>y_zoom</code> in <code>ViewStateData</code> now affects rendered output in DataViewer so that <code>Alt+Ctrl+Scroll</code> produces true cursor-anchored Y viewport zoom.</p>
+<p>The implementation folds both <code>y_zoom</code> and <code>y_pan</code> into the projection matrix via a new <code>computeEffectiveYViewport()</code> helper in <code>ViewStateData.hpp</code>. The view matrix is now identity — all vertical camera state lives in the projection. Every location that previously computed <code>effective_y_min = y_min + y_pan</code> now calls the helper instead.</p>
+</section>
+<section id="changes-made" class="level4">
+<h4 class="anchored" data-anchor-id="changes-made">Changes Made</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ViewStateData.hpp</code> (CorePlotting)</td>
+<td>Added <code>EffectiveYViewport</code> struct and <code>computeEffectiveYViewport()</code> inline helper</td>
+</tr>
+<tr class="even">
+<td><code>OpenGLWidget.cpp</code></td>
+<td><code>updateMatrices()</code>, <code>rebuildScene()</code>, <code>hasNewVisibleSeries()</code>, all <code>add*BatchesToBuilder()</code>, <code>getDiagnostics()</code>, <code>drawLaneBoundaries()</code>, <code>drawOriginMarkers()</code>, <code>findSeriesAtPosition()</code> — all use effective viewport, view matrix is identity</td>
+</tr>
+<tr class="odd">
+<td><code>SVGExporter.cpp</code></td>
+<td><code>buildScene()</code> uses effective viewport, view matrix is identity</td>
+</tr>
+<tr class="even">
+<td><code>DataViewerCoordinates.cpp</code></td>
+<td>Constructor uses effective viewport for <code>YAxisParams</code></td>
+</tr>
+<tr class="odd">
+<td><code>DataViewerInputHandler.cpp</code></td>
+<td>Pan delta scales inversely with <code>y_zoom</code></td>
+</tr>
+<tr class="even">
+<td><code>DataViewerDebugPanel.cpp</code></td>
+<td>Coordinate inspector and Y bounds display use effective viewport</td>
+</tr>
+<tr class="odd">
+<td><code>DataViewerWidgetRegistration.cpp</code></td>
+<td>Visible lane indicator uses effective viewport</td>
+</tr>
+<tr class="even">
+<td><code>DataViewer_Widget.cpp</code></td>
+<td><code>_handleYViewportZoomWheel()</code> rewritten with correct cursor-anchoring math; <code>MultiLaneVerticalAxisWidget</code> uses <code>setViewportGetter()</code></td>
+</tr>
+<tr class="odd">
+<td><code>MultiLaneVerticalAxisWidget.hpp/.cpp</code></td>
+<td>New <code>ViewportGetter</code> type returning <code>{y_min, y_max}</code> effective bounds; deprecated <code>setPanGetter()</code>; <code>ndcToPixelY()</code> and <code>isLaneVisible()</code> use viewport getter</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="phase-3-scalebars-labels" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-scalebars-labels">Phase 3: Y-Axis Scalebars and Enhanced Lane Annotations</h2>
+<p><strong>Status</strong>: Not started. <strong>Issues</strong>: <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/247">#247</a> <strong>Depends on</strong>: <a href="#phase-2-y-axis-navigation">Phase 2</a> (<code>MultiLaneVerticalAxisWidget</code> exists with minimal label + separator rendering)</p>
+<p><strong>Goal</strong>: Extend the <code>MultiLaneVerticalAxisWidget</code> created in Phase 2.1 with per-lane scalebars, visibility toggles, and smart label positioning so users can interpret amplitudes and identify individual traces at a glance.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Incremental Enhancement — No Widget Replacement
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Phase 2.1 creates the <code>MultiLaneVerticalAxisWidget</code> with channel name labels and lane separators. All Phase 3 work is <strong>additive</strong> to that same widget — extending <code>LaneAxisDescriptor</code> with amplitude range fields, adding scalebar rendering to <code>paintEvent()</code>, and wiring new toggle controls. No widget is replaced or discarded.</p>
+</div>
+</div>
+<section id="extend-laneaxisdescriptor-with-amplitude-information" class="level3">
+<h3 class="anchored" data-anchor-id="extend-laneaxisdescriptor-with-amplitude-information">3.1 Extend LaneAxisDescriptor with Amplitude Information</h3>
+<p>Add per-lane amplitude fields to <code>LaneAxisDescriptor</code> so the widget can render scalebars:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LaneAxisDescriptor <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string lane_id<span class="op">;</span>        <span class="co">///&lt; Series key in DataManager</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string label<span class="op">;</span>          <span class="co">///&lt; Display name (channel name or series key)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center<span class="op">;</span>             <span class="co">///&lt; Center Y position in world coordinates</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_half_height<span class="op">;</span>        <span class="co">///&lt; Half-height of the lane in world coordinates</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> amplitude_min<span class="op">;</span>       <span class="co">///&lt; Data-space minimum (after user_scale_factor)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> amplitude_max<span class="op">;</span>       <span class="co">///&lt; Data-space maximum (after user_scale_factor)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string unit<span class="op">;</span>           <span class="co">///&lt; Amplitude unit label (e.g., "µV", "mV")</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_scalebar <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>  <span class="co">///&lt; Per-lane scalebar visibility</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>DataViewer populates the new fields from per-series statistics, <code>user_scale_factor</code>, and group scaling normalization during layout computation.</p>
+<p><strong>Files</strong>: <code>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp</code></p>
+</section>
+<section id="per-lane-y-axis-scalebars" class="level3">
+<h3 class="anchored" data-anchor-id="per-lane-y-axis-scalebars">3.2 Per-Lane Y-Axis Scalebars</h3>
+<p>Within each lane’s Y band in the axis widget, draw a small scalebar indicating the amplitude range:</p>
+<ul>
+<li>A vertical bar with two endpoints and a magnitude label (e.g., “100 µV”)</li>
+<li>The scale is computed from the lane’s amplitude range: <code>user_scale_factor</code>, data statistics, and any group scaling normalization</li>
+<li>Scalebars provide absolute scale context that uniform tick marks cannot (since each lane has its own amplitude mapping)</li>
+</ul>
+</section>
+<section id="visibility-toggles" class="level3">
+<h3 class="anchored" data-anchor-id="visibility-toggles">3.3 Visibility Toggles</h3>
+<p>Add options to <code>DataViewerStateData</code> and the properties UI:</p>
+<ul>
+<li>Toggle lane labels on/off</li>
+<li>Toggle scalebars on/off</li>
+<li>These should be serialized for workspace restore</li>
+</ul>
+</section>
+<section id="group-scaling-verification" class="level3">
+<h3 class="anchored" data-anchor-id="group-scaling-verification">3.4 Group Scaling Verification</h3>
+<p>Verify that scalebars update correctly when switching between individual and unified group scaling modes (<code>GroupScalingState</code>), and that labels remain aligned during Y pan/zoom.</p>
+</section>
+<section id="smart-label-positioning" class="level3">
+<h3 class="anchored" data-anchor-id="smart-label-positioning">3.5 Smart Label Positioning</h3>
+<p>Labels and scalebars must be viewport-aware (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a>):</p>
+<ul>
+<li>When panning in Y, labels for visible lanes must adjust accordingly</li>
+<li>Labels for off-screen lanes should not be rendered</li>
+<li>Labels should not overlap when lanes are very short (many channels or high Y zoom)</li>
+</ul>
+</section>
+<section id="verification-2" class="level3">
+<h3 class="anchored" data-anchor-id="verification-2">3.6 Verification</h3>
+<ul>
+<li>Each data lane can render an optional Y-axis scalebar indicating its magnitude/units.</li>
+<li>Each data lane displays its assigned name/identifier (e.g., channel name or series key).</li>
+<li>Scalebars and labels toggle on/off via properties UI.</li>
+<li>Correct behavior when switching between individual and unified group scaling modes.</li>
+<li>Labels remain aligned and visible during vertical panning.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4-centered-time-axis" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-centered-time-axis">Phase 4: CenteredTimeAxis Widget</h2>
+<p><strong>Status</strong>: Not started. <strong>Issues</strong>: <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/223">#223</a> <strong>Parallel with</strong>: <a href="#phase-3-scalebars-labels">Phase 3</a> (no dependency between X and Y axis work)</p>
+<p><strong>Goal</strong>: Extract the DataViewer’s temporal X-axis behavior into a reusable <code>CenteredTimeAxisWidget</code> in <code>Plots/Common/</code>, following the established four-layer axis widget pattern (<code>StateData → State → Widget → WithRangeControls</code>). The <code>SpectrogramWidget</code> (currently a stub with time-axis state defined but no axis widget) is the primary second consumer.</p>
+<section id="centeredtimeaxis-new-horizontal-axis-variant" class="level3">
+<h3 class="anchored" data-anchor-id="centeredtimeaxis-new-horizontal-axis-variant">4.1 CenteredTimeAxis — New Horizontal Axis Variant</h3>
+<p>The DataViewer’s X-axis behavior is unique among the plot widgets: it is <strong>always centered on the global time position</strong> with zoom but <strong>no independent X panning</strong>. Neither the existing <code>RelativeTimeAxis</code> (event-relative, symmetric window) nor <code>HorizontalAxis</code> (arbitrary range with pan) match this pattern exactly.</p>
+<p>A new <code>CenteredTimeAxis</code> variant should be added to <code>Plots/Common/</code>:</p>
+<pre><code>Plots/Common/CenteredTimeAxisWidget/
+├── Core/
+│   ├── CenteredTimeAxisStateData.hpp   # half_window (zoom level), serializable
+│   └── CenteredTimeAxisState.hpp       # QObject with zoom math + signals
+├── CenteredTimeAxisWidget.hpp          # Axis display (tick marks, labels) via QPainter
+└── CenteredTimeAxisWithRangeControls.hpp  # Factory with zoom spinbox</code></pre>
+<p><strong>State fields:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CenteredTimeAxisStateData <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_start <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span>   <span class="co">///&lt; Visible window start in time units</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_end <span class="op">=</span> <span class="fl">10000.0</span><span class="op">;</span> <span class="co">///&lt; Visible window end in time units</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The state uses <code>time_start</code>/<code>time_end</code> rather than <code>half_window</code> for consistency with the existing <code>TimeSeriesViewState</code> representation. The State class provides convenience accessors for <code>halfWindow()</code> and <code>center()</code> computed from these fields.</p>
+<p><strong>Key behavior differences from existing axes:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 28%">
+<col style="width: 30%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>CenteredTimeAxis</th>
+<th>RelativeTimeAxis</th>
+<th>HorizontalAxis</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Center</td>
+<td>Global time position (external)</td>
+<td>0 (alignment event)</td>
+<td>User-adjustable</td>
+</tr>
+<tr class="even">
+<td>Pan</td>
+<td>None — follows time bar</td>
+<td>User-adjustable</td>
+<td>User-adjustable</td>
+</tr>
+<tr class="odd">
+<td>Zoom</td>
+<td>Adjusts window width symmetrically around center</td>
+<td>Adjusts min/max symmetrically</td>
+<td>Adjusts x_min/x_max</td>
+</tr>
+<tr class="even">
+<td>Labels</td>
+<td>Absolute time values</td>
+<td>Relative offsets (±N)</td>
+<td>Arbitrary values</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Signals:</strong> <code>rangeChanged</code> (user action), <code>rangeUpdated</code> (silent sync — matches bidirectional sync pattern used by all axis widgets)</p>
+<p>The axis widget receives the current time position from an external source (the application’s global time bar emits <code>timeChanged</code>). On each time change, the parent widget recenters the window: <code>time_start = current_time - half_window; time_end = current_time + half_window</code>.</p>
+<p><strong>Sharing potential:</strong> This axis variant could also be useful for any future widget that needs a time-following view (e.g., a real-time signal monitor).</p>
+</section>
+<section id="zoom-math-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="zoom-math-extraction">4.2 Zoom Math Extraction</h3>
+<p>The wheel-zoom math currently lives in <code>DataViewer_Widget::wheelEvent</code> and <code>DataViewerState::adjustTimeWidth</code>. This logic should be extracted into <code>CenteredTimeAxisState</code> as reusable methods:</p>
+<ul>
+<li><code>applyWheelZoom(int angle_delta, ZoomScalingMode mode, Qt::KeyboardModifiers mods, int64_t total_frames)</code></li>
+<li>Supports both <code>Adaptive</code> and <code>Fixed</code> scaling modes with <code>Shift</code> (fine) / <code>Ctrl</code> (coarse) modifiers</li>
+<li>Optional clamp policy hooks</li>
+<li>Pure logic that can be unit-tested without QWidget</li>
+</ul>
+<p>This addresses the core goal of <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/223">#223</a>: making the zoom behavior reusable without duplicating the logic in each consumer widget.</p>
+</section>
+<section id="dataviewer-migration" class="level3">
+<h3 class="anchored" data-anchor-id="dataviewer-migration">4.3 DataViewer Migration</h3>
+<p>Migrate <code>DataViewer_Widget</code> to use <code>CenteredTimeAxisWidget</code>:</p>
+<ol type="1">
+<li>Add <code>CenteredTimeAxisState</code> member to <code>DataViewerState</code></li>
+<li>Place <code>CenteredTimeAxisWidget</code> below the OpenGL canvas in the <code>QVBoxLayout</code></li>
+<li>Replace <code>DataViewerState::setTimeWindow()</code> / <code>adjustTimeWindowWidth()</code> with <code>CenteredTimeAxisState</code> methods</li>
+<li>Wire state sync: <code>CenteredTimeAxisState</code> → <code>DataViewerState</code> time window updates</li>
+<li>Update <code>DataViewerStateData</code> serialization to include <code>CenteredTimeAxisStateData</code></li>
+</ol>
+<p>Existing tests that assert time window changes after wheel events must remain green.</p>
+</section>
+<section id="spectrogramwidget-adoption" class="level3">
+<h3 class="anchored" data-anchor-id="spectrogramwidget-adoption">4.4 SpectrogramWidget Adoption</h3>
+<p>Adopt the same <code>CenteredTimeAxisWidget</code> for <code>SpectrogramWidget</code>’s time axis. The SpectrogramWidget currently defines <code>SpectrogramViewState</code> with <code>x_min</code>/<code>x_max</code>/<code>x_zoom</code>/<code>x_pan</code> but has no axis widget — it is essentially a stub GUI. This provides:</p>
+<ul>
+<li>Tick marks and time labels via QPainter (matching other plot widgets)</li>
+<li>Zoom controls via <code>CenteredTimeAxisWithRangeControls</code></li>
+<li>Consistent wheel-zoom behavior shared with DataViewer</li>
+</ul>
+</section>
+<section id="tests-and-documentation" class="level3">
+<h3 class="anchored" data-anchor-id="tests-and-documentation">4.5 Tests and Documentation</h3>
+<ul>
+<li>Port/add unit tests for zoom math (adaptive vs fixed scaling, modifiers) independent of QWidget</li>
+<li>Update <code>TimeRange.hpp</code> / <code>TimeSeriesViewState</code> comments to point to the new module</li>
+<li>Developer documentation entry for the shared temporal axis</li>
+<li>Link from DataViewer and Spectrogram developer docs</li>
+</ul>
+</section>
+<section id="verification-3" class="level3">
+<h3 class="anchored" data-anchor-id="verification-3">4.6 Verification</h3>
+<ul>
+<li>DataViewer time-axis behavior unchanged (behavioral parity with pre-migration)</li>
+<li><code>CenteredTimeAxisWidget</code> renders absolute time tick marks and labels below the OpenGL canvas</li>
+<li>SpectrogramWidget can use the same axis widget for its time dimension</li>
+<li>Wheel zoom tests pass for both consumers</li>
+<li>Workspace save/restore roundtrips <code>CenteredTimeAxisStateData</code></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-5-enhanced-event-glyph-options" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-enhanced-event-glyph-options">Phase 5: Enhanced Event Glyph Options</h2>
+<p><strong>Status</strong>: Not started. Events are currently rendered as simple ticks with configurable color and spacing but no glyph type selection.</p>
+<p><strong>Goal</strong>: Full control over event glyph appearance, using the shared <code>CorePlotting::GlyphStyleData</code> infrastructure that is now implemented and integrated into TemporalProjectionViewWidget, OnionSkinViewWidget, and EventPlotWidget.</p>
+<section id="shared-glyphstyledata-complete" class="level3">
+<h3 class="anchored" data-anchor-id="shared-glyphstyledata-complete">5.1 Shared GlyphStyleData (Complete)</h3>
+<p>The shared glyph infrastructure is now available:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 34%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Location</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CorePlotting::GlyphType</code> enum</td>
+<td><code>CorePlotting/DataTypes/GlyphStyleData.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+<tr class="even">
+<td><code>CorePlotting::GlyphStyleData</code> struct</td>
+<td><code>CorePlotting/DataTypes/GlyphStyleData.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+<tr class="odd">
+<td><code>CorePlotting::toRenderableGlyphType()</code></td>
+<td><code>CorePlotting/DataTypes/GlyphStyleConversion.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+<tr class="even">
+<td><code>CorePlotting::hexColorToVec4()</code></td>
+<td><code>CorePlotting/DataTypes/GlyphStyleConversion.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+<tr class="odd">
+<td><code>GlyphStyleState</code></td>
+<td><code>Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+<tr class="even">
+<td><code>GlyphStyleControls</code></td>
+<td><code>Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp</code></td>
+<td><strong>Complete</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.</p>
+</section>
+<section id="state-and-options-update" class="level3">
+<h3 class="anchored" data-anchor-id="state-and-options-update">5.2 State and Options Update</h3>
+<p>Extend <code>DigitalEventSeriesOptionsData</code> to include glyph options using the shared struct:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/DataTypes/GlyphStyleData.hpp"</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DigitalEventSeriesOptionsData <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CorePlotting<span class="op">::</span>SeriesStyle<span class="op">&gt;</span> style<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Event-specific settings (existing)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    EventPlottingModeData plotting_mode<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> vertical_spacing<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> event_height<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Glyph options (using shared infrastructure)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>GlyphStyleData glyph_style<span class="op">{</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        CorePlotting<span class="op">::</span>GlyphType<span class="op">::</span>Tick<span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">,</span> <span class="st">"#FFFFFF"</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="properties-panel-controls" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel-controls">5.3 Properties Panel Controls</h3>
+<p>Embed <code>GlyphStyleControls</code> from <code>Plots/Common/GlyphStyleWidget/</code> for per-event-key glyph customization, following the same pattern used by TemporalProjectionViewWidget and OnionSkinViewWidget:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="op">*</span> controls <span class="op">=</span> <span class="kw">new</span> GlyphStyleControls<span class="op">(</span>glyph_style_state<span class="op">,</span> parent<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="scene-building-update" class="level3">
+<h3 class="anchored" data-anchor-id="scene-building-update">5.4 Scene Building Update</h3>
+<p>Update <code>SceneBuildingHelpers::buildEventSeriesBatch()</code> to use <code>CorePlotting::toRenderableGlyphType()</code> and <code>CorePlotting::hexColorToVec4()</code> from <code>GlyphStyleConversion.hpp</code>, replacing the hardcoded tick rendering.</p>
+<hr>
+</section>
+</section>
+<section id="phase-6-enhanced-interval-rendering" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-enhanced-interval-rendering">Phase 6: Enhanced Interval Rendering</h2>
+<p><strong>Status</strong>: Not started. Intervals are currently rendered as filled rectangles with configurable color and alpha but no border or pattern options.</p>
+<p><strong>Goal</strong>: Rich interval visualization with adjustable border, alpha, and hatching patterns.</p>
+<section id="intervalrenderingoptions" class="level3">
+<h3 class="anchored" data-anchor-id="intervalrenderingoptions">6.1 IntervalRenderingOptions</h3>
+<p>Extend <code>DigitalIntervalSeriesOptionsData</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DigitalIntervalSeriesOptionsData <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CorePlotting<span class="op">::</span>SeriesStyle<span class="op">&gt;</span> style<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Existing</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> extend_full_canvas <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor <span class="op">=</span> <span class="fl">0.95</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> interval_height <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New border options</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> border_thickness <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span>        <span class="co">///&lt; Border line width in pixels (0 = no border)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string border_color <span class="op">=</span> <span class="st">"#FFFFFF"</span><span class="op">;</span> <span class="co">///&lt; Border color in hex</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> border_alpha <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span>            <span class="co">///&lt; Border alpha (separate from fill alpha)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New fill options</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> fill_alpha <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span>             <span class="co">///&lt; Fill alpha (replaces general alpha for fill)</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New hatching options</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    IntervalHatchPattern hatch_pattern <span class="op">=</span> IntervalHatchPattern<span class="op">::</span>None<span class="op">;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> hatch_spacing <span class="op">=</span> <span class="fl">8.0</span><span class="bu">f</span><span class="op">;</span>          <span class="co">///&lt; Spacing between hatch lines in pixels</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> hatch_angle <span class="op">=</span> <span class="fl">45.0</span><span class="bu">f</span><span class="op">;</span>           <span class="co">///&lt; Angle of hatch lines in degrees</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string hatch_color <span class="op">=</span> <span class="st">"#FFFFFF"</span><span class="op">;</span> <span class="co">///&lt; Hatch line color</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="hatching-patterns" class="level3">
+<h3 class="anchored" data-anchor-id="hatching-patterns">6.2 Hatching Patterns</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> IntervalHatchPattern <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    None<span class="op">,</span>              <span class="co">///&lt; Solid fill only (default)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    ForwardDiagonal<span class="op">,</span>   <span class="co">///&lt; Lines from bottom-left to top-right</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    BackwardDiagonal<span class="op">,</span>  <span class="co">///&lt; Lines from top-left to bottom-right</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    CrossHatch<span class="op">,</span>        <span class="co">///&lt; Both diagonal directions</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Horizontal<span class="op">,</span>        <span class="co">///&lt; Horizontal lines</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    Vertical           <span class="co">///&lt; Vertical lines</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Hatching can be implemented via:</p>
+<ol type="1">
+<li><strong>Fragment shader approach</strong>: A shader that discards fragments based on position modulo hatch spacing and angle. This is efficient but requires a new shader variant.</li>
+<li><strong>Additional geometry approach</strong>: Generate hatch lines as <code>RenderablePolyLineBatch</code> clipped to the interval rectangle. Simpler but generates more geometry.</li>
+</ol>
+<p>The fragment shader approach is preferred for performance with many intervals.</p>
+</section>
+<section id="svg-export-update" class="level3">
+<h3 class="anchored" data-anchor-id="svg-export-update">6.3 SVG Export Update</h3>
+<p>Update <code>SVGExporter</code> to support border and hatching in SVG output. SVG natively supports <code>stroke</code>, <code>stroke-width</code>, and <code>&lt;pattern&gt;</code> elements for hatching, making this straightforward.</p>
+</section>
+<section id="properties-panel-controls-1" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel-controls-1">6.4 Properties Panel Controls</h3>
+<p>Add to the interval section of <code>DataViewerPropertiesWidget</code>:</p>
+<ul>
+<li><strong>Fill alpha</strong> slider (0.0–1.0)</li>
+<li><strong>Border thickness</strong> spinbox</li>
+<li><strong>Border color</strong> button</li>
+<li><strong>Hatch pattern</strong> combo box</li>
+<li><strong>Hatch spacing</strong> spinbox (enabled when pattern ≠ None)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-7-analog-line-style" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-analog-line-style">Phase 7: Analog Line Style Enhancements</h2>
+<p><strong>Status</strong>: Partially implemented. Color, alpha, and line thickness exist in <code>AnalogSeriesOptionsData</code> via <code>CorePlotting::SeriesStyle</code>. Gap handling modes exist but are basic.</p>
+<p><strong>Goal</strong>: Additional line rendering options for publication-quality analog traces.</p>
+<section id="planned-options" class="level3">
+<h3 class="anchored" data-anchor-id="planned-options">7.1 Planned Options</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AnalogSeriesOptionsData <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Existing via SeriesStyle</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// hex_color, alpha, line_thickness, is_visible</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Existing analog-specific</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// user_scale_factor, y_offset, gap_handling, enable_gap_detection, gap_threshold</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New options</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    LineStyle line_style <span class="op">=</span> LineStyle<span class="op">::</span>Solid<span class="op">;</span>  <span class="co">///&lt; Solid, Dashed, Dotted</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_data_points <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>            <span class="co">///&lt; Overlay point markers on the line</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    PointGlyphType data_point_glyph <span class="op">=</span> PointGlyphType<span class="op">::</span>Circle<span class="op">;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> data_point_size <span class="op">=</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> LineStyle <span class="op">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    Solid<span class="op">,</span>    <span class="co">///&lt; Continuous line (default)</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    Dashed<span class="op">,</span>   <span class="co">///&lt; Dashed segments</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    Dotted    <span class="co">///&lt; Dotted segments</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="rendering" class="level3">
+<h3 class="anchored" data-anchor-id="rendering">7.2 Rendering</h3>
+<p>Dashed/dotted styles can be implemented via fragment shader stipple patterns or by breaking the polyline into segments during scene building. The shader approach is preferred for consistency with interval hatching (Phase 6).</p>
+<hr>
+</section>
+</section>
+<section id="phase-8-shared-components" class="level2">
+<h2 class="anchored" data-anchor-id="phase-8-shared-components">Phase 8: Shared Component Extraction</h2>
+<p><strong>Status</strong>: Not started. Design exploration — depends on Phases 1–6 establishing which patterns are truly shared.</p>
+<p><strong>Goal</strong>: Extract DataViewer-specific implementations that have general utility into shared locations, and adopt shared components that are currently duplicated.</p>
+<section id="components-to-extract-from-dataviewer" class="level3">
+<h3 class="anchored" data-anchor-id="components-to-extract-from-dataviewer">8.1 Components to Extract from DataViewer</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Current Location</th>
+<th>Target Location</th>
+<th>Also Used By</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SeriesOptionsRegistry</code></td>
+<td><code>DataViewer_Widget/Core/</code></td>
+<td><code>Plots/Common/</code> or <code>CorePlotting/</code></td>
+<td>Any multi-series plot widget</td>
+</tr>
+<tr class="even">
+<td><code>TransformComposers</code></td>
+<td><code>DataViewer_Widget/Rendering/</code></td>
+<td><code>CorePlotting/Layout/</code></td>
+<td>Any widget with stacked lane layout</td>
+</tr>
+<tr class="odd">
+<td><code>AnalogVertexCache</code></td>
+<td><code>DataViewer_Widget/Rendering/</code></td>
+<td><code>CorePlotting/</code> or <code>PlottingOpenGL/</code></td>
+<td><a href="../../../../developer/ui/Plots/LinePlotWidget/index.html">LinePlotWidget</a> (dense time series)</td>
+</tr>
+<tr class="even">
+<td><code>DataViewerCoordinates</code></td>
+<td><code>DataViewer_Widget/Interaction/</code></td>
+<td>Pattern generalizable via <code>Plots/Common/</code></td>
+<td>Layout+coordinate queries shared</td>
+</tr>
+<tr class="odd">
+<td><code>SpikeSorterConfigLoader</code></td>
+<td><code>DataViewer_Widget/Core/</code></td>
+<td><code>DataManager/</code> or <code>CorePlotting/</code></td>
+<td>Any widget displaying multi-channel data</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="components-to-adopt-from-plotscommon" class="level3">
+<h3 class="anchored" data-anchor-id="components-to-adopt-from-plotscommon">8.2 Components to Adopt from Plots/Common/</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 47%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Shared Component</th>
+<th>Current DataViewer Equivalent</th>
+<th>Adoption Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>VerticalAxisState</code> + <code>VerticalAxisWidget</code></td>
+<td>Direct <code>y_min</code>/<code>y_max</code> in state</td>
+<td>Phase 2.1</td>
+</tr>
+<tr class="even">
+<td><code>CenteredTimeAxis</code> (new)</td>
+<td>Direct time window in state</td>
+<td>Phase 4.1</td>
+</tr>
+<tr class="odd">
+<td><code>PlotInteractionHelpers</code></td>
+<td>Custom zoom/pan in <code>DataViewerInputHandler</code></td>
+<td>Adopt shared zoom/pan concepts</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="shared-visual-options-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="shared-visual-options-infrastructure">8.3 Shared Visual Options Infrastructure</h3>
+<p>The point glyph options infrastructure is now implemented and centralized:</p>
+<pre><code>CorePlotting/DataTypes/
+├── GlyphStyleData.hpp         # COMPLETE: GlyphType enum + GlyphStyleData struct
+├── GlyphStyleConversion.hpp   # COMPLETE: toRenderableGlyphType(), hexColorToVec4()
+├── SeriesStyle.hpp            # Already exists: hex_color, alpha, line_thickness, is_visible
+├── LineRenderingOptions.hpp   # Planned: line_style (solid/dashed/dotted), data_point overlay
+├── IntervalRenderingOptions.hpp # Planned: border, fill_alpha, hatch pattern
+
+Plots/Common/GlyphStyleWidget/
+├── Core/GlyphStyleState.hpp   # COMPLETE: QObject wrapper with styleChanged/styleUpdated signals
+├── GlyphStyleControls.hpp     # COMPLETE: Widget with shape combo, size spinbox, color button, alpha
+├── CMakeLists.txt             # COMPLETE: Static library linking Qt6::Widgets + CorePlotting</code></pre>
+<p>Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.</p>
+<p>Remaining shared visual option structs to implement:</p>
+<ul>
+<li><strong>DataViewer Widget</strong>: Events (Phase 5), Intervals (Phase 6), Analog lines (Phase 7)</li>
+<li><strong><a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget</a></strong>: Phase 3 glyph options</li>
+<li><strong><a href="../../../../developer/ui/Plots/OnionSkinViewWidget/roadmap.html">OnionSkinViewWidget</a></strong>: Phase 1 point options, Phase 2 line options</li>
+<li><strong><a href="../../../../developer/ui/Plots/ScatterPlotWidget/roadmap.html">ScatterPlotWidget</a></strong>: Phase 4 point options</li>
+<li><strong><a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/roadmap.html">TemporalProjectionViewWidget</a></strong>: Phase 1 point options</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-9-directory-relocation" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9-directory-relocation">Phase 9: Directory Relocation</h2>
+<p><strong>Status</strong>: Not started. Low priority — functional correctness is unaffected.</p>
+<p><strong>Goal</strong>: Move <code>src/WhiskerToolbox/DataViewer_Widget/</code> to <code>src/WhiskerToolbox/Plots/DataViewerWidget/</code> for consistency with other plot widgets.</p>
+<section id="steps" class="level3">
+<h3 class="anchored" data-anchor-id="steps">9.1 Steps</h3>
+<ol type="1">
+<li>Move directory <code>DataViewer_Widget/</code> → <code>Plots/DataViewerWidget/</code></li>
+<li>Update <code>CMakeLists.txt</code> references in <code>src/WhiskerToolbox/</code> and the widget’s own <code>CMakeLists.txt</code></li>
+<li>Update <code>#include</code> paths across the codebase</li>
+<li>Update registration module type ID if it references the path</li>
+<li>Update test directory structure in <code>tests/</code> if mirrored</li>
+</ol>
+<p>This is a purely mechanical refactor with no behavioral change. It should be done after the major feature phases to avoid merge conflicts.</p>
+<hr>
+</section>
+</section>
+<section id="implementation-priority" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-priority">Implementation Priority</h2>
+<section id="completed-prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="completed-prerequisites">Completed Prerequisites</h3>
+<ul>
+<li><strong><a href="../../../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html">Developer Debug Panel</a></strong> — Diagnostic infrastructure providing real-time visibility into lane layout, scales, coordinate transforms, and viewport state. <strong>Complete</strong> — accelerates development of Phases 1–3.</li>
+</ul>
+</section>
+<section id="completed-y-axis-track" class="level3">
+<h3 class="anchored" data-anchor-id="completed-y-axis-track">Completed (Y-Axis Track)</h3>
+<ol type="1">
+<li><strong>Phase 1</strong>: Layout foundation — lane sizing model with configurable margin_factor (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a> ✓, <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/227">#227</a>)</li>
+<li><strong>Phase 1B</strong>: Rendering pipeline modernization — <code>ViewStateData</code>, scene dirty guard, shared interaction helpers for fast pan/zoom</li>
+<li><strong>Phase 2</strong>: Y-axis navigation — pan/zoom, viewport culling, wheel modifiers (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/227">#227</a>, <a href="https://github.com/paulmthompson/WhiskerToolbox/issues/248">#248</a> ✓)</li>
+</ol>
+</section>
+<section id="next-up" class="level3">
+<h3 class="anchored" data-anchor-id="next-up">Next Up</h3>
+<ol start="4" type="1">
+<li><strong>Phase 3</strong>: Y-axis scalebars and lane labels (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/247">#247</a>)</li>
+</ol>
+</section>
+<section id="parallel-track-x-axis-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="parallel-track-x-axis-extraction">Parallel Track (X-Axis Extraction)</h3>
+<ol start="4" type="1">
+<li><strong>Phase 4</strong>: CenteredTimeAxis widget — can proceed in parallel with Phase 3 (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/223">#223</a>)</li>
+</ol>
+</section>
+<section id="following-visual-enhancements" class="level3">
+<h3 class="anchored" data-anchor-id="following-visual-enhancements">Following (Visual Enhancements)</h3>
+<ol start="5" type="1">
+<li><strong>Phase 5</strong>: Enhanced event glyph options — shared infrastructure milestone</li>
+<li><strong>Phase 6</strong>: Enhanced interval rendering — border, alpha, hatching</li>
+<li><strong>Phase 7</strong>: Analog line style enhancements</li>
+</ol>
+</section>
+<section id="deferred" class="level3">
+<h3 class="anchored" data-anchor-id="deferred">Deferred</h3>
+<ol start="8" type="1">
+<li><strong>Phase 8</strong>: Shared component extraction — house-cleaning across widgets</li>
+<li><strong>Phase 9</strong>: Directory relocation — mechanical cleanup</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="open-questions" class="level2">
+<h2 class="anchored" data-anchor-id="open-questions">Open Questions</h2>
+<ol type="1">
+<li><p><strong>CenteredTimeAxis scope</strong>: Should the new axis variant handle the time-following logic itself (receiving <code>timeChanged</code> signals), or should it remain a pure zoom widget with the center set externally? The external approach is more flexible but requires the parent widget to manually update the center on every time change.</p></li>
+<li><p><strong>Lane height policy</strong>: Should lane height be fixed across all series types, or should analog channels get taller lanes than event/interval channels by default? A configurable policy (uniform vs.&nbsp;type-weighted) could address both preferences.</p></li>
+<li><p><strong>Viewport culling granularity</strong>: Should culling operate at the series level (skip entire series) or could it operate at the sample level (skip analog samples outside the viewport)? Sample-level culling is already partially handled by the <code>AnalogVertexCache</code> time range queries.</p></li>
+<li><p><strong>Hatching renderer</strong>: Fragment shader stipple vs.&nbsp;additional geometry — the shader approach is more performant but adds shader complexity. Is the interval count high enough to warrant shader-based hatching, or would geometry-based hatching suffice?</p></li>
+<li><p><strong>SeriesOptionsRegistry scope</strong>: If extracted to <code>Plots/Common/</code>, should it remain specific to the three DataViewer series types (analog, event, interval), or should it be generalized to support arbitrary option types via a compile-time type list?</p></li>
+<li><p><strong>Y-axis wheel modifier chords</strong>: Which modifier combinations should be used for Y-axis operations? <code>Alt+Scroll</code> is a natural candidate but may conflict with Linux window manager defaults (Alt+click is often window move). Alternatives include right-click+scroll or other combinations.</p></li>
+</ol>
+<section id="resolved-questions" class="level3">
+<h3 class="anchored" data-anchor-id="resolved-questions">Resolved Questions</h3>
+<ul>
+<li><p><strong>Multi-lane VerticalAxisWidget design</strong> (was Q6): <strong>Decision — new separate widget.</strong> <code>MultiLaneVerticalAxisWidget</code> will be a standalone widget in <code>Plots/Common/</code>, not a subclass or extension of the existing <code>VerticalAxisWidget</code>. The single-range widget remains unchanged for consumers that need a uniform Y range.</p></li>
+<li><p><strong>CenteredTimeAxis state representation</strong> (was Q8): <strong>Decision — <code>time_start</code>/<code>time_end</code>.</strong> Consistent with <code>TimeSeriesViewState</code>. The State class provides <code>halfWindow()</code> and <code>center()</code> convenience accessors computed from <code>time_start</code>/<code>time_end</code>.</p></li>
+</ul>
+<hr>
+</section>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../../../../developer/ui/Plots/DataViewerWidget/index.html">Data Viewer Widget Documentation</a> — Full architecture and feature documentation</li>
+<li><a href="../../../../developer/ui/Plots/DataViewerWidget/mixed_lanes_and_scaling_implementation_roadmap.html">Mixed Lanes + Scaling Implementation Roadmap</a> — Detailed developer execution plan for Y-scaling bug fix and mixed-lane layout support</li>
+<li><a href="../../../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html">Developer Debug Panel Plan</a> — Diagnostic panel and on-canvas overlays for development</li>
+<li><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> — Shared axis architecture, DataManager integration, testing patterns</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget Roadmap</a> — Shared glyph infrastructure (Phase 5), cross-widget linking</li>
+<li><a href="../../../../developer/ui/Plots/OnionSkinViewWidget/roadmap.html">OnionSkinViewWidget Roadmap</a> — Shared visual options</li>
+<li><a href="../../../../developer/ui/Plots/LinePlotWidget/roadmap.html">LinePlotWidget Roadmap</a> — Group integration and per-series options patterns</li>
+<li><a href="../../../../developer/ui/Plots/ScatterPlotWidget/roadmap.html">ScatterPlotWidget Roadmap</a> — Shared point glyph infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/roadmap.html">TemporalProjectionViewWidget Roadmap</a> — Shared point/line visual options</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

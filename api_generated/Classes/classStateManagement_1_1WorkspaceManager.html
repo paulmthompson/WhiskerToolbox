@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>StateManagement::WorkspaceManager – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#statemanagementworkspacemanager" id="toc-statemanagementworkspacemanager" class="nav-link active" data-scroll-target="#statemanagementworkspacemanager">StateManagement::WorkspaceManager</a>
+  <ul class="collapse">
+  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
+  <ul class="collapse">
+  <li><a href="#signal-workspacesaved" id="toc-signal-workspacesaved" class="nav-link" data-scroll-target="#signal-workspacesaved">signal workspaceSaved</a></li>
+  <li><a href="#signal-workspacepathchanged" id="toc-signal-workspacepathchanged" class="nav-link" data-scroll-target="#signal-workspacepathchanged">signal workspacePathChanged</a></li>
+  <li><a href="#signal-dirtychanged" id="toc-signal-dirtychanged" class="nav-link" data-scroll-target="#signal-dirtychanged">signal dirtyChanged</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-workspacemanager" id="toc-function-workspacemanager" class="nav-link" data-scroll-target="#function-workspacemanager">function WorkspaceManager</a></li>
+  <li><a href="#function-workspacemanager-1" id="toc-function-workspacemanager-1" class="nav-link" data-scroll-target="#function-workspacemanager-1">function ~WorkspaceManager</a></li>
+  <li><a href="#function-seteditorregistry" id="toc-function-seteditorregistry" class="nav-link" data-scroll-target="#function-seteditorregistry">function setEditorRegistry</a></li>
+  <li><a href="#function-setzonemanager" id="toc-function-setzonemanager" class="nav-link" data-scroll-target="#function-setzonemanager">function setZoneManager</a></li>
+  <li><a href="#function-setdockstatecapturecallback" id="toc-function-setdockstatecapturecallback" class="nav-link" data-scroll-target="#function-setdockstatecapturecallback">function setDockStateCaptureCallback</a></li>
+  <li><a href="#function-saveworkspace" id="toc-function-saveworkspace" class="nav-link" data-scroll-target="#function-saveworkspace">function saveWorkspace</a></li>
+  <li><a href="#function-readworkspace" id="toc-function-readworkspace" class="nav-link" data-scroll-target="#function-readworkspace">function readWorkspace</a></li>
+  <li><a href="#function-markrestored" id="toc-function-markrestored" class="nav-link" data-scroll-target="#function-markrestored">function markRestored</a></li>
+  <li><a href="#function-recorddataload" id="toc-function-recorddataload" class="nav-link" data-scroll-target="#function-recorddataload">function recordDataLoad</a></li>
+  <li><a href="#function-recordjsonconfigload" id="toc-function-recordjsonconfigload" class="nav-link" data-scroll-target="#function-recordjsonconfigload">function recordJsonConfigLoad</a></li>
+  <li><a href="#function-recordvideoload" id="toc-function-recordvideoload" class="nav-link" data-scroll-target="#function-recordvideoload">function recordVideoLoad</a></li>
+  <li><a href="#function-recordimagesload" id="toc-function-recordimagesload" class="nav-link" data-scroll-target="#function-recordimagesload">function recordImagesLoad</a></li>
+  <li><a href="#function-cleardataloads" id="toc-function-cleardataloads" class="nav-link" data-scroll-target="#function-cleardataloads">function clearDataLoads</a></li>
+  <li><a href="#function-dataloads" id="toc-function-dataloads" class="nav-link" data-scroll-target="#function-dataloads">function dataLoads</a></li>
+  <li><a href="#function-recordappliedpipeline" id="toc-function-recordappliedpipeline" class="nav-link" data-scroll-target="#function-recordappliedpipeline">function recordAppliedPipeline</a></li>
+  <li><a href="#function-clearappliedpipelines" id="toc-function-clearappliedpipelines" class="nav-link" data-scroll-target="#function-clearappliedpipelines">function clearAppliedPipelines</a></li>
+  <li><a href="#function-appliedpipelines" id="toc-function-appliedpipelines" class="nav-link" data-scroll-target="#function-appliedpipelines">function appliedPipelines</a></li>
+  <li><a href="#function-recordtabledefinition" id="toc-function-recordtabledefinition" class="nav-link" data-scroll-target="#function-recordtabledefinition">function recordTableDefinition</a></li>
+  <li><a href="#function-cleartabledefinitions" id="toc-function-cleartabledefinitions" class="nav-link" data-scroll-target="#function-cleartabledefinitions">function clearTableDefinitions</a></li>
+  <li><a href="#function-tabledefinitions" id="toc-function-tabledefinitions" class="nav-link" data-scroll-target="#function-tabledefinitions">function tableDefinitions</a></li>
+  <li><a href="#function-enableautosave" id="toc-function-enableautosave" class="nav-link" data-scroll-target="#function-enableautosave">function enableAutoSave</a></li>
+  <li><a href="#function-disableautosave" id="toc-function-disableautosave" class="nav-link" data-scroll-target="#function-disableautosave">function disableAutoSave</a></li>
+  <li><a href="#function-isautosaveenabled" id="toc-function-isautosaveenabled" class="nav-link" data-scroll-target="#function-isautosaveenabled">function isAutoSaveEnabled</a></li>
+  <li><a href="#function-hasrecoveryfile" id="toc-function-hasrecoveryfile" class="nav-link" data-scroll-target="#function-hasrecoveryfile">function hasRecoveryFile</a></li>
+  <li><a href="#function-readrecoveryfile" id="toc-function-readrecoveryfile" class="nav-link" data-scroll-target="#function-readrecoveryfile">function readRecoveryFile</a></li>
+  <li><a href="#function-deleterecoveryfile" id="toc-function-deleterecoveryfile" class="nav-link" data-scroll-target="#function-deleterecoveryfile">function deleteRecoveryFile</a></li>
+  <li><a href="#function-currentworkspacepath" id="toc-function-currentworkspacepath" class="nav-link" data-scroll-target="#function-currentworkspacepath">function currentWorkspacePath</a></li>
+  <li><a href="#function-hasunsavedchanges" id="toc-function-hasunsavedchanges" class="nav-link" data-scroll-target="#function-hasunsavedchanges">function hasUnsavedChanges</a></li>
+  <li><a href="#function-markdirty" id="toc-function-markdirty" class="nav-link" data-scroll-target="#function-markdirty">function markDirty</a></li>
+  <li><a href="#function-markclean" id="toc-function-markclean" class="nav-link" data-scroll-target="#function-markclean">function markClean</a></li>
+  <li><a href="#function-recoveryfilepath" id="toc-function-recoveryfilepath" class="nav-link" data-scroll-target="#function-recoveryfilepath">function recoveryFilePath</a></li>
+  </ul></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-kworkspaceextension" id="toc-variable-kworkspaceextension" class="nav-link" data-scroll-target="#variable-kworkspaceextension">variable kWorkspaceExtension</a></li>
+  <li><a href="#variable-kdefaultautosaveintervalms" id="toc-variable-kdefaultautosaveintervalms" class="nav-link" data-scroll-target="#variable-kdefaultautosaveintervalms">variable kDefaultAutoSaveIntervalMs</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">StateManagement::WorkspaceManager</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="statemanagementworkspacemanager" class="level1">
+<h1>StateManagement::WorkspaceManager</h1>
+<p><code>#include &lt;WorkspaceManager.hpp&gt;</code></p>
+<p>Inherits from QObject</p>
+<section id="public-signals" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#signal-workspacesaved">workspaceSaved</a></strong>(QString path)<br>Emitted after a successful save.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#signal-workspacepathchanged">workspacePathChanged</a></strong>(QString path)<br>Emitted when the current workspace path changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#signal-dirtychanged">dirtyChanged</a></strong>(bool has_unsaved)<br>Emitted when the dirty flag changes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-workspacemanager">WorkspaceManager</a></strong>(QString const &amp; config_dir, QObject * parent =nullptr)<br>Construct <a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html">WorkspaceManager</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-~workspacemanager">~WorkspaceManager</a></strong>() override</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-seteditorregistry">setEditorRegistry</a></strong>(<a href="../../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a> * registry)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-setzonemanager">setZoneManager</a></strong>(<a href="../../api_generated/Classes/classZoneManager.html">ZoneManager</a> * zone_manager)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-setdockstatecapturecallback">setDockStateCaptureCallback</a></strong>(std::function&lt; std::string()&gt; callback)<br>Set a callback to capture ADS dock state for layout persistence.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-saveworkspace">saveWorkspace</a></strong>(QString const &amp; file_path)<br>Save the current session to a workspace file.</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structStateManagement_1_1WorkspaceData.html">WorkspaceData</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-readworkspace">readWorkspace</a></strong>(QString const &amp; file_path) const<br>Load a workspace file and return its data.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-markrestored">markRestored</a></strong>(QString const &amp; file_path)<br>Mark the workspace as successfully restored.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recorddataload">recordDataLoad</a></strong>(<a href="../../api_generated/Classes/structStateManagement_1_1DataLoadEntry.html">DataLoadEntry</a> entry)<br>Record a data-loading operation for workspace provenance.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recordjsonconfigload">recordJsonConfigLoad</a></strong>(QString const &amp; config_file_path)<br>Record that a JSON config file was loaded.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recordvideoload">recordVideoLoad</a></strong>(QString const &amp; video_path)<br>Record that a video was loaded.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recordimagesload">recordImagesLoad</a></strong>(QString const &amp; images_dir)<br>Record that an image directory was loaded.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-cleardataloads">clearDataLoads</a></strong>()<br>Clear all data load entries (e.g., before restoring a workspace).</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structStateManagement_1_1DataLoadEntry.html">DataLoadEntry</a> &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-dataloads">dataLoads</a></strong>() const<br>Get the current list of data load entries.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recordappliedpipeline">recordAppliedPipeline</a></strong>(std::string const &amp; pipeline_json)<br>Record that a transform pipeline was applied (JSON string).</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-clearappliedpipelines">clearAppliedPipelines</a></strong>()<br>Clear all recorded pipelines.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-appliedpipelines">appliedPipelines</a></strong>() const<br>Get the list of applied pipeline JSON strings.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recordtabledefinition">recordTableDefinition</a></strong>(std::string const &amp; table_json)<br>Record that a table definition was created (JSON string).</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-cleartabledefinitions">clearTableDefinitions</a></strong>()<br>Clear all recorded table definitions.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-tabledefinitions">tableDefinitions</a></strong>() const<br>Get the list of table definition JSON strings.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-enableautosave">enableAutoSave</a></strong>(int interval_ms =<a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#variable-kdefaultautosaveintervalms">kDefaultAutoSaveIntervalMs</a>)<br>Enable periodic auto-save to the recovery file.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-disableautosave">disableAutoSave</a></strong>()<br>Disable auto-save.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-isautosaveenabled">isAutoSaveEnabled</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-hasrecoveryfile">hasRecoveryFile</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structStateManagement_1_1WorkspaceData.html">WorkspaceData</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-readrecoveryfile">readRecoveryFile</a></strong>() const<br>Read the recovery file and return its data.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-deleterecoveryfile">deleteRecoveryFile</a></strong>()<br>Delete the recovery file (after successful restore or user decline).</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-currentworkspacepath">currentWorkspacePath</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-hasunsavedchanges">hasUnsavedChanges</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-markdirty">markDirty</a></strong>()<br>Mark the workspace as having unsaved changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-markclean">markClean</a></strong>()<br>Mark the workspace as clean (matches the last save).</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#function-recoveryfilepath">recoveryFilePath</a></strong>() const</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>constexpr char const *</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#variable-kworkspaceextension">kWorkspaceExtension</a></strong> <br>File extension for workspace files (including dot).</td>
+</tr>
+<tr class="even">
+<td>constexpr int</td>
+<td><strong><a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html#variable-kdefaultautosaveintervalms">kDefaultAutoSaveIntervalMs</a></strong> <br>Default auto-save interval in milliseconds (30 seconds).</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-signals-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
+<section id="signal-workspacesaved" class="level3">
+<h3 class="anchored" data-anchor-id="signal-workspacesaved">signal workspaceSaved</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> workspaceSaved<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> path</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted after a successful save.</p>
+</section>
+<section id="signal-workspacepathchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-workspacepathchanged">signal workspacePathChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> workspacePathChanged<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> path</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the current workspace path changes.</p>
+</section>
+<section id="signal-dirtychanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-dirtychanged">signal dirtyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dirtyChanged<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> has_unsaved</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the dirty flag changes.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-workspacemanager" class="level3">
+<h3 class="anchored" data-anchor-id="function-workspacemanager">function WorkspaceManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> WorkspaceManager<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> config_dir<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct <a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html">WorkspaceManager</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>config_dir</strong> Application config directory (recovery file lives here)</li>
+<li><strong>parent</strong> Parent QObject</li>
+</ul>
+</section>
+<section id="function-workspacemanager-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-workspacemanager-1">function ~WorkspaceManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>WorkspaceManager<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-seteditorregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-seteditorregistry">function setEditorRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setEditorRegistry<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    EditorRegistry <span class="op">*</span> registry</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setzonemanager" class="level3">
+<h3 class="anchored" data-anchor-id="function-setzonemanager">function setZoneManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setZoneManager<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    ZoneManager <span class="op">*</span> zone_manager</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setdockstatecapturecallback" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdockstatecapturecallback">function setDockStateCaptureCallback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setDockStateCaptureCallback<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">()&gt;</span> callback</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set a callback to capture ADS dock state for layout persistence.</p>
+<p>The callback should return a base64-encoded string of the ADS CDockManager::saveState() QByteArray. This avoids coupling <a href="../../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html">WorkspaceManager</a> to the ADS library.</p>
+</section>
+<section id="function-saveworkspace" class="level3">
+<h3 class="anchored" data-anchor-id="function-saveworkspace">function saveWorkspace</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> saveWorkspace<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save the current session to a workspace file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>file_path</strong> Absolute path to the workspace file</li>
+</ul>
+<p><strong>Return</strong>: true on success</p>
+<p>Captures editor states, zone layout, and data load entries. Updates the current workspace path and clears the dirty flag.</p>
+</section>
+<section id="function-readworkspace" class="level3">
+<h3 class="anchored" data-anchor-id="function-readworkspace">function readWorkspace</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> WorkspaceData <span class="op">&gt;</span> readWorkspace<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a workspace file and return its data.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>file_path</strong> Path to the workspace file</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structStateManagement_1_1WorkspaceData.html">WorkspaceData</a> on success, std::nullopt on failure</p>
+<p>Parses the workspace file and returns the data. The caller (<a href="../../api_generated/Classes/classMainWindow.html">MainWindow</a>) is responsible for orchestrating the actual restore (data reload, state restore, widget recreation, layout application).</p>
+</section>
+<section id="function-markrestored" class="level3">
+<h3 class="anchored" data-anchor-id="function-markrestored">function markRestored</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> markRestored<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mark the workspace as successfully restored.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>file_path</strong> The path of the workspace that was restored</li>
+</ul>
+<p>Sets the current path and clears dirty state after a successful restore orchestrated by the caller.</p>
+</section>
+<section id="function-recorddataload" class="level3">
+<h3 class="anchored" data-anchor-id="function-recorddataload">function recordDataLoad</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordDataLoad<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DataLoadEntry entry</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record a data-loading operation for workspace provenance.</p>
+</section>
+<section id="function-recordjsonconfigload" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordjsonconfigload">function recordJsonConfigLoad</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordJsonConfigLoad<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> config_file_path</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record that a JSON config file was loaded.</p>
+</section>
+<section id="function-recordvideoload" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordvideoload">function recordVideoLoad</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordVideoLoad<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> video_path</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record that a video was loaded.</p>
+</section>
+<section id="function-recordimagesload" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordimagesload">function recordImagesLoad</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordImagesLoad<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> images_dir</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record that an image directory was loaded.</p>
+</section>
+<section id="function-cleardataloads" class="level3">
+<h3 class="anchored" data-anchor-id="function-cleardataloads">function clearDataLoads</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearDataLoads<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all data load entries (e.g., before restoring a workspace).</p>
+</section>
+<section id="function-dataloads" class="level3">
+<h3 class="anchored" data-anchor-id="function-dataloads">function dataLoads</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> DataLoadEntry <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> dataLoads<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the current list of data load entries.</p>
+</section>
+<section id="function-recordappliedpipeline" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordappliedpipeline">function recordAppliedPipeline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordAppliedPipeline<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> pipeline_json</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record that a transform pipeline was applied (JSON string).</p>
+</section>
+<section id="function-clearappliedpipelines" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearappliedpipelines">function clearAppliedPipelines</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearAppliedPipelines<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all recorded pipelines.</p>
+</section>
+<section id="function-appliedpipelines" class="level3">
+<h3 class="anchored" data-anchor-id="function-appliedpipelines">function appliedPipelines</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> appliedPipelines<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the list of applied pipeline JSON strings.</p>
+</section>
+<section id="function-recordtabledefinition" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordtabledefinition">function recordTableDefinition</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> recordTableDefinition<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> table_json</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record that a table definition was created (JSON string).</p>
+</section>
+<section id="function-cleartabledefinitions" class="level3">
+<h3 class="anchored" data-anchor-id="function-cleartabledefinitions">function clearTableDefinitions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearTableDefinitions<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all recorded table definitions.</p>
+</section>
+<section id="function-tabledefinitions" class="level3">
+<h3 class="anchored" data-anchor-id="function-tabledefinitions">function tableDefinitions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> tableDefinitions<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the list of table definition JSON strings.</p>
+</section>
+<section id="function-enableautosave" class="level3">
+<h3 class="anchored" data-anchor-id="function-enableautosave">function enableAutoSave</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> enableAutoSave<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> interval_ms <span class="op">=</span>kDefaultAutoSaveIntervalMs</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable periodic auto-save to the recovery file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>interval_ms</strong> Interval in milliseconds (default 30 s)</li>
+</ul>
+</section>
+<section id="function-disableautosave" class="level3">
+<h3 class="anchored" data-anchor-id="function-disableautosave">function disableAutoSave</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> disableAutoSave<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Disable auto-save.</p>
+</section>
+<section id="function-isautosaveenabled" class="level3">
+<h3 class="anchored" data-anchor-id="function-isautosaveenabled">function isAutoSaveEnabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isAutoSaveEnabled<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Return</strong>: true if auto-save is currently enabled</p>
+</section>
+<section id="function-hasrecoveryfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasrecoveryfile">function hasRecoveryFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasRecoveryFile<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Return</strong>: true if a recovery file exists from a previous crash</p>
+</section>
+<section id="function-readrecoveryfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-readrecoveryfile">function readRecoveryFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> WorkspaceData <span class="op">&gt;</span> readRecoveryFile<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Read the recovery file and return its data.</p>
+</section>
+<section id="function-deleterecoveryfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-deleterecoveryfile">function deleteRecoveryFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> deleteRecoveryFile<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Delete the recovery file (after successful restore or user decline).</p>
+</section>
+<section id="function-currentworkspacepath" class="level3">
+<h3 class="anchored" data-anchor-id="function-currentworkspacepath">function currentWorkspacePath</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> currentWorkspacePath<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Return</strong>: Path of the currently open workspace (empty if none)</p>
+</section>
+<section id="function-hasunsavedchanges" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasunsavedchanges">function hasUnsavedChanges</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasUnsavedChanges<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Return</strong>: true if the session has unsaved changes</p>
+</section>
+<section id="function-markdirty" class="level3">
+<h3 class="anchored" data-anchor-id="function-markdirty">function markDirty</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> markDirty<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mark the workspace as having unsaved changes.</p>
+</section>
+<section id="function-markclean" class="level3">
+<h3 class="anchored" data-anchor-id="function-markclean">function markClean</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> markClean<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mark the workspace as clean (matches the last save).</p>
+</section>
+<section id="function-recoveryfilepath" class="level3">
+<h3 class="anchored" data-anchor-id="function-recoveryfilepath">function recoveryFilePath</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> recoveryFilePath<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Return</strong>: Absolute path to the recovery file</p>
+</section>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-kworkspaceextension" class="level3">
+<h3 class="anchored" data-anchor-id="variable-kworkspaceextension">variable kWorkspaceExtension</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span>  <span class="op">*</span> kWorkspaceExtension <span class="op">=</span> <span class="st">".wtb"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>File extension for workspace files (including dot).</p>
+</section>
+<section id="variable-kdefaultautosaveintervalms" class="level3">
+<h3 class="anchored" data-anchor-id="variable-kdefaultautosaveintervalms">variable kDefaultAutoSaveIntervalMs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kDefaultAutoSaveIntervalMs <span class="op">=</span> <span class="dv">30000</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Default auto-save interval in milliseconds (30 seconds).</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

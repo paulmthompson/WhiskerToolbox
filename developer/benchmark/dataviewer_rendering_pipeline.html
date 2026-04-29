@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>DataViewer Rendering Pipeline Benchmarks – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/benchmark/dataviewer_rendering_pipeline.html">DataViewer Rendering Pipeline Benchmarks</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/python_bindings/python_integration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Python Integration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/benchmark/tensor_car_gpu_cpu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCAR: GPU vs CPU Benchmark Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+ <span class="menu-text">developer/benchmark/tensor_whitening_memory_profile.qmd</span>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/benchmark/dataviewer_rendering_pipeline.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">DataViewer Rendering Pipeline Benchmarks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/analysis/precondition_protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Precondition Documentation Protocol</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/testing/layout_sanity_checker_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Layout Sanity Checker — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../api_generated/index_classes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/coreplotting/feature_color.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">FeatureColor Module</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">PlottingOpenGL</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlottingOpenGL/wide_line_rendering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Wide Line Rendering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/PlottingSVG/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlottingSVG/SVGExport.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — SVGExport (legacy flat document)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlottingSVG/SVGUtils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — SVGUtils</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlottingSVG/decorations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — Decorations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/PlotDataExport/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlotDataExport</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/DeepLearning/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/model_wrapper_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Creating a C++ Model Wrapper</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/aot_inductor_tutorial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AOT Inductor Export Tutorial</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/recurrent_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recurrent (Feedback) Inputs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/batch_mode_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Mode &amp; Multi-Variant Model Loading</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Range Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">General Encoder Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Device Selector (GPU/CPU)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/transforms_v2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transforms V2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/adding_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Adding New Transforms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/sinc_interpolation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sinc Interpolation Transform</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/tensor_central_difference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCentralDifference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/tensor_temporal_neighbors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorTemporalNeighbors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/analog_to_tensor.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AnalogToTensor &amp; TensorToAnalog</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/tensor_car.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCAR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/tensor_whitening.qmd</span>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ParameterSchema/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ParameterSchema</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Data Synthesizer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/GeneratorRegistry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generator Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataSynthesizer Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/MLCore/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLCore</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model Interface &amp; Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/softmax_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Softmax Regression Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/logit_projection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Logit Projection Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/lars_projection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LARS Projection Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/supervised_pca.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Supervised PCA Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/supervised_robust_pca.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Supervised Robust PCA Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/dim_reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dimensionality Reduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/hmm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hidden Markov Model (Gaussian / GMM)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Feature Processing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/label_assembly.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Label Assembly</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/pipelines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipelines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/validation_cross_validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation &amp; Cross-Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/prediction_regions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Prediction Regions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/sequence_assembler.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sequence Assembler</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Output &amp; Entity Utils</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/MLCore/widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLCore Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text">Generators</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Generators/Analog.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analog Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Generators/DigitalEvent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Event Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Generators/DigitalInterval.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Interval Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Generators/Spatial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataSynthesizer/Generators/MotionModels.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Motion Models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true">
+ <span class="menu-text">TimeFrame</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/TimeFrame/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeFrame Resampling &amp; Upsampling Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/TimeController/TimeController.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeController</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <span class="sidebar-item-text sidebar-link text-start">
+ <span class="menu-text">Media Processing Pipeline</span></span>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Inspectors</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_inspectors/tensor_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tensor Inspector (Dev)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_inspectors/digital_event_series_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DigitalEventSeries Inspector</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_inspectors/inspector_deletion_lifecycle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspector Lifecycle vs DataManager Deletion</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-17" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-17" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-17" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/IO/mask_csv_rle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Data CSV (RLE) Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/IO/csv_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CSV Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/IO/capnproto_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CapnProto Binary Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/IO/opencv_mask_image.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">OpenCV Binary Image Mask I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/IO/saver_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaverInfo &amp; AtomicWrite</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/generic_time_series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generic Time Series Programming</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/storage_testing_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Testing Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/storage_benchmarking_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Benchmarking Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/concurrency_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concurrency Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Threaded Loading Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-18" role="navigation" aria-expanded="false">
+ <span class="menu-text">TensorData</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-18" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-18" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataObjects/Tensors/row_mutation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorData Row Mutation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataObjects/multi_channel_storage_and_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Channel Storage &amp; Cross-Channel Transforms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataObjects/multi_channel_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Channel Storage Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataObjects/AnalogTimeSeries/tensor_column_analog_storage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorColumnAnalogStorage</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Core Types &amp; Factory</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">getEntityIdsInRange Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concrete Commands</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LoadData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SynthesizeData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Introspection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataManagerSnapshot</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Log Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-20" role="navigation" aria-expanded="true">
+ <span class="menu-text">Triage Session</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-20" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-20" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/TriageSession/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-21" role="navigation" aria-expanded="true">
+ <span class="menu-text">Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-21" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-21" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/WidgetDevelopment/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Widget Development Guide</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/inter_widget_communication_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inter-Widget Communication — Architecture Analysis &amp; Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/KeymapSystem/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keymap System</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-22" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-22" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/KeymapSystem/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keymap System — Implementation Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/KeymapSystem/library_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">KeymapSystem Library Reference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/KeybindingEditor/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keybinding Editor</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-23" role="navigation" aria-expanded="false">
+ <span class="menu-text">Editor State</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-23" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-23" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/EditorState/time_controller_extraction_roadmap.md</span>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-24" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-24" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-24" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/TimeScrollBar/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeScrollBar</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_point_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MediaPoint Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_line_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MediaLine Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/TriageSession_Widget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-25" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-25" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/autoparam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AutoParam System</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-26" role="navigation" aria-expanded="false">
+ <span class="menu-text">Deep Learning Widget</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-26" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DeepLearning Widget Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">InferenceController</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ui/Plots/plot_widget_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plot Widgets</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-27" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-27" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-28" role="navigation" aria-expanded="false">
+ <span class="menu-text">Common</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-28" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-28" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/Common/ColormapControls/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ColormapControls</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/Common/MultiLaneVerticalAxisWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MultiLaneVerticalAxisWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/Common/TooltipManager/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TooltipManager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/3DPlot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/ACFWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ACF Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/DataViewerWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/DataViewerWidget/ordering_policy_resolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Ordering Policy Resolver</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/DataViewerWidget/phase4e_spike_to_analog_loader.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Phase 4E: CSV Spike-to-Analog Pairing Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/EventPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Event Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/HeatmapWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Heatmap Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/LinePlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Line Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/OnionSkinViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Onion Skin View Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/PSTHWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PSTH Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/ScatterPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Scatter Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/SpectrogramWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spectrogram Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/TemporalProjectionViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temporal Projection View Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#sec-storage-read" id="toc-sec-storage-read" class="nav-link" data-scroll-target="#sec-storage-read">1. Storage Backend Read Throughput</a>
+  <ul class="collapse">
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#key-findings" id="toc-key-findings" class="nav-link" data-scroll-target="#key-findings">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-vertex-generation" id="toc-sec-vertex-generation" class="nav-link" data-scroll-target="#sec-vertex-generation">2. Vertex Generation Pipeline</a>
+  <ul class="collapse">
+  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a></li>
+  <li><a href="#key-findings-1" id="toc-key-findings-1" class="nav-link" data-scroll-target="#key-findings-1">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-cache-extraction" id="toc-sec-cache-extraction" class="nav-link" data-scroll-target="#sec-cache-extraction">3. Cache Extraction</a>
+  <ul class="collapse">
+  <li><a href="#results-2" id="toc-results-2" class="nav-link" data-scroll-target="#results-2">Results</a></li>
+  <li><a href="#key-findings-2" id="toc-key-findings-2" class="nav-link" data-scroll-target="#key-findings-2">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-decimation" id="toc-sec-decimation" class="nav-link" data-scroll-target="#sec-decimation">4. Min/Max Decimation</a>
+  <ul class="collapse">
+  <li><a href="#results-1m-input-samples" id="toc-results-1m-input-samples" class="nav-link" data-scroll-target="#results-1m-input-samples">Results (1M input samples)</a></li>
+  <li><a href="#key-findings-3" id="toc-key-findings-3" class="nav-link" data-scroll-target="#key-findings-3">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-perpixel" id="toc-sec-perpixel" class="nav-link" data-scroll-target="#sec-perpixel">5. Per-Pixel Buffer Strategy</a>
+  <ul class="collapse">
+  <li><a href="#single-channel-results-1m-samples" id="toc-single-channel-results-1m-samples" class="nav-link" data-scroll-target="#single-channel-results-1m-samples">Single-Channel Results (1M samples)</a></li>
+  <li><a href="#multi-channel-results-100k-samplesch" id="toc-multi-channel-results-100k-samplesch" class="nav-link" data-scroll-target="#multi-channel-results-100k-samplesch">Multi-Channel Results (100K samples/ch)</a></li>
+  <li><a href="#canvas-resize-cost" id="toc-canvas-resize-cost" class="nav-link" data-scroll-target="#canvas-resize-cost">Canvas Resize Cost</a></li>
+  <li><a href="#key-findings-4" id="toc-key-findings-4" class="nav-link" data-scroll-target="#key-findings-4">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-multichannel" id="toc-sec-multichannel" class="nav-link" data-scroll-target="#sec-multichannel">6. Multi-Channel Scaling</a>
+  <ul class="collapse">
+  <li><a href="#tensorcolumn-raw-vs.-decimated-1920-px-canvas" id="toc-tensorcolumn-raw-vs.-decimated-1920-px-canvas" class="nav-link" data-scroll-target="#tensorcolumn-raw-vs.-decimated-1920-px-canvas">TensorColumn: Raw vs.&nbsp;Decimated (1920 px canvas)</a></li>
+  <li><a href="#blockcached-raw-vs.-decimated" id="toc-blockcached-raw-vs.-decimated" class="nav-link" data-scroll-target="#blockcached-raw-vs.-decimated">BlockCached: Raw vs.&nbsp;Decimated</a></li>
+  <li><a href="#channel-scaling-decimated-tensorcolumn-100k-samplesch-1920-px-canvas" id="toc-channel-scaling-decimated-tensorcolumn-100k-samplesch-1920-px-canvas" class="nav-link" data-scroll-target="#channel-scaling-decimated-tensorcolumn-100k-samplesch-1920-px-canvas">Channel Scaling (Decimated TensorColumn, 100K samples/ch, 1920 px canvas)</a></li>
+  <li><a href="#key-findings-5" id="toc-key-findings-5" class="nav-link" data-scroll-target="#key-findings-5">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-memory" id="toc-sec-memory" class="nav-link" data-scroll-target="#sec-memory">7. Memory Profile (Heaptrack)</a>
+  <ul class="collapse">
+  <li><a href="#allocation-summary" id="toc-allocation-summary" class="nav-link" data-scroll-target="#allocation-summary">Allocation Summary</a></li>
+  <li><a href="#per-scenario-vertex-counts" id="toc-per-scenario-vertex-counts" class="nav-link" data-scroll-target="#per-scenario-vertex-counts">Per-Scenario Vertex Counts</a></li>
+  <li><a href="#peak-memory-consumers" id="toc-peak-memory-consumers" class="nav-link" data-scroll-target="#peak-memory-consumers">Peak Memory Consumers</a></li>
+  <li><a href="#key-findings-6" id="toc-key-findings-6" class="nav-link" data-scroll-target="#key-findings-6">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#sec-conclusions" id="toc-sec-conclusions" class="nav-link" data-scroll-target="#sec-conclusions">Conclusions and Recommendations</a>
+  <ul class="collapse">
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">What We Learned</a></li>
+  <li><a href="#recommended-optimizations-priority-order" id="toc-recommended-optimizations-priority-order" class="nav-link" data-scroll-target="#recommended-optimizations-priority-order">Recommended Optimizations (Priority Order)</a></li>
+  <li><a href="#performance-budget-384ch-100k-samples-1920-px-canvas" id="toc-performance-budget-384ch-100k-samples-1920-px-canvas" class="nav-link" data-scroll-target="#performance-budget-384ch-100k-samples-1920-px-canvas">Performance Budget (384ch × 100K samples, 1920 px canvas)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">DataViewer Rendering Pipeline Benchmarks</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This document presents the results of ad-hoc benchmarks measuring the DataViewer_Widget rendering pipeline performance. The benchmarks quantify read throughput across storage backends, vertex generation costs, cache extraction overhead, min/max decimation strategies, per-pixel buffer approaches, and multi-channel scaling behavior.</p>
+<p><strong>Hardware:</strong> 12-core CPU @ 2.9 GHz, 32 KiB L1d (x6), 256 KiB L2 (x6), 12 MiB L3<br>
+<strong>Compiler:</strong> Clang Release (C++23), <code>-O2</code>/<code>-O3</code> via CMake preset <code>linux-clang-release</code><br>
+<strong>Date:</strong> April 2026<br>
+<strong>Source:</strong> <code>benchmark/adhoc/rendering/</code></p>
+</section>
+<section id="sec-storage-read" class="level2">
+<h2 class="anchored" data-anchor-id="sec-storage-read">1. Storage Backend Read Throughput</h2>
+<p>This benchmark measures raw read throughput for each <code>AnalogTimeSeries</code> storage backend, isolating how fast we can extract sample values from each implementation.</p>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 22%">
+<col style="width: 20%">
+<col style="width: 22%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Backend</th>
+<th>Access Method</th>
+<th>10K samples</th>
+<th>100K samples</th>
+<th>1M samples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Vector</strong></td>
+<td><code>viewValues()</code></td>
+<td>939 M/s</td>
+<td>968 M/s</td>
+<td>911 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>Vector</strong></td>
+<td>Span range</td>
+<td>971 M/s</td>
+<td>978 M/s</td>
+<td>940 M/s</td>
+</tr>
+<tr class="odd">
+<td><strong>Vector</strong></td>
+<td>Raw pointer</td>
+<td>983 M/s</td>
+<td>978 M/s</td>
+<td>937 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>Vector</strong></td>
+<td><code>viewTimeValueRange()</code></td>
+<td>414 M/s</td>
+<td>429 M/s</td>
+<td>416 M/s</td>
+</tr>
+<tr class="odd">
+<td><strong>TensorColumn</strong> (32ch)</td>
+<td><code>viewValues()</code></td>
+<td>—</td>
+<td>970 M/s</td>
+<td>932 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>TensorColumn</strong> (384ch)</td>
+<td><code>viewValues()</code></td>
+<td>—</td>
+<td>975 M/s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>TensorColumn</strong> (32ch)</td>
+<td>Span range</td>
+<td>—</td>
+<td>972 M/s</td>
+<td>935 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>TensorColumn</strong> (384ch)</td>
+<td>Span range</td>
+<td>—</td>
+<td>974 M/s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>BlockCachedMmap</strong> (32ch)</td>
+<td><code>viewValues()</code></td>
+<td>99 M/s</td>
+<td>8.7 M/s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>BlockCachedMmap</strong> (384ch)</td>
+<td><code>viewValues()</code></td>
+<td>100 M/s</td>
+<td>0.73 M/s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>BlockCachedMmap</strong> (32ch)</td>
+<td>Cold start</td>
+<td>9.1 M/s</td>
+<td>7.9 M/s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>MemoryMapped</strong> (32ch)</td>
+<td>Per-element</td>
+<td>211 M/s</td>
+<td>132 M/s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>MemoryMapped</strong> (384ch)</td>
+<td>Per-element</td>
+<td>96 M/s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings">Key Findings</h3>
+<ul>
+<li><strong><code>viewTimeValueRange()</code> is 2.3x slower</strong> than direct span or <code>viewValues()</code> access on Vector storage ($$416 M/s vs $$940 M/s). This is the path currently used by the rendering pipeline. The overhead comes from constructing <code>TimeValuePoint</code> structs with virtual dispatch per element.</li>
+<li><strong>Vector, TensorColumn, and raw pointer</strong> all achieve $$940–980 M/s at 1M samples — effectively memory-bandwidth limited. There is no penalty for using Armadillo column storage vs.&nbsp;<code>std::vector</code>.</li>
+<li><strong>BlockCachedMmap degrades catastrophically</strong> at scale. At 100K samples with 384 channels, throughput drops to 0.73 M/s — over <strong>1000x slower</strong> than contiguous storage. This is caused by per-element mutex acquisition and block-lookup overhead in the access path.</li>
+<li><strong>Raw MemoryMapped</strong> is 5–7x slower than contiguous storage due to byte offset calculation, <code>memcpy</code>, type switch, and scaling per element.</li>
+</ul>
+</section>
+</section>
+<section id="sec-vertex-generation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-vertex-generation">2. Vertex Generation Pipeline</h2>
+<p>This benchmark measures the full vertex generation pipeline: read → transform → materialize to vertex array. It compares the current <code>TimeSeriesMapper::mapAnalogSeriesWithIndices()</code> pipeline against fast-path alternatives.</p>
+<section id="results-1" class="level3">
+<h3 class="anchored" data-anchor-id="results-1">Results</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 16%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>10K</th>
+<th>100K</th>
+<th>500K</th>
+<th>1M</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Current pipeline</strong> (Vector)</td>
+<td>223 M/s</td>
+<td>221 M/s</td>
+<td>213 M/s</td>
+<td>209 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>Span fast-path</strong> (Vector)</td>
+<td>1025 M/s</td>
+<td>1019 M/s</td>
+<td>898 M/s</td>
+<td>865 M/s</td>
+</tr>
+<tr class="odd">
+<td><strong>Span-pair path</strong> (Vector)</td>
+<td>1104 M/s</td>
+<td>1104 M/s</td>
+<td>973 M/s</td>
+<td>864 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>Current pipeline</strong> (TensorCol, 32ch)</td>
+<td>—</td>
+<td>225 M/s</td>
+<td>—</td>
+<td>210 M/s</td>
+</tr>
+<tr class="odd">
+<td><strong>Current pipeline</strong> (TensorCol, 384ch)</td>
+<td>—</td>
+<td>224 M/s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>Current pipeline</strong> (BlockCached, 32ch)</td>
+<td>70 M/s</td>
+<td>9.0 M/s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>Current pipeline</strong> (BlockCached, 384ch)</td>
+<td>70 M/s</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-1" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-1">Key Findings</h3>
+<ul>
+<li>The <strong>current pipeline</strong> is $$4.1x slower than a span-based fast-path at 1M samples (209 M/s vs 865 M/s). This overhead is the combined cost of <code>viewTimeValueRange()</code>, lazy <code>views::transform</code>, and per-element <code>MappedAnalogVertex</code> construction.</li>
+<li>The span fast-path and span-pair path converge at 1M samples ($$865 M/s), suggesting they become memory-bandwidth limited at that scale.</li>
+<li>At small sizes (10K), the span-pair path is slightly faster (1104 M/s vs 1025 M/s), likely due to better branch prediction with paired x/y writes.</li>
+<li><strong>BlockCached pipeline</strong> is dominated by storage read cost — vertex generation adds negligible overhead on top of the already-slow per-element access.</li>
+</ul>
+</section>
+</section>
+<section id="sec-cache-extraction" class="level2">
+<h2 class="anchored" data-anchor-id="sec-cache-extraction">3. Cache Extraction</h2>
+<p>This benchmark measures the cost of extracting vertex data from the <code>AnalogVertexCache</code> ring buffer into GPU-uploadable <code>float</code> arrays.</p>
+<section id="results-2" class="level3">
+<h3 class="anchored" data-anchor-id="results-2">Results</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 34%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>10K vertices</th>
+<th>100K</th>
+<th>500K</th>
+<th>1M</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Current</strong> (alloc + copy)</td>
+<td>21.5 µs (3.5 GiB/s)</td>
+<td>225 µs (3.3 GiB/s)</td>
+<td>1344 µs (2.8 GiB/s)</td>
+<td>2828 µs (2.6 GiB/s)</td>
+</tr>
+<tr class="even">
+<td><strong>Pre-allocated</strong></td>
+<td>23.7 µs</td>
+<td>260 µs</td>
+<td>1949 µs</td>
+<td>3443 µs</td>
+</tr>
+<tr class="odd">
+<td><strong>Zero-copy baseline</strong></td>
+<td>1.75 µs (42.6 GiB/s)</td>
+<td>26.4 µs (28.3 GiB/s)</td>
+<td>299 µs (12.5 GiB/s)</td>
+<td>673 µs (11.1 GiB/s)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Incremental scroll cost</strong> (window=100K, varying scroll step):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Scroll Step</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10 samples</td>
+<td>230 µs</td>
+</tr>
+<tr class="even">
+<td>100 samples</td>
+<td>227 µs</td>
+</tr>
+<tr class="odd">
+<td>1000 samples</td>
+<td>240 µs</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-2" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-2">Key Findings</h3>
+<ul>
+<li><strong>Pre-allocation does not help</strong> — it is actually slightly slower than the current alloc+copy path. The allocator is efficient for sequential same-size allocations, and the pre-allocated path has extra bookkeeping overhead.</li>
+<li>The <strong>zero-copy baseline</strong> (direct pointer access) is 4.2x faster at 1M vertices (673 µs vs 2828 µs). This is the theoretical speedup available if the cache stored data in GPU-upload-ready format.</li>
+<li><strong>Scroll step size has minimal impact</strong> on extraction cost — the cache always re-extracts the full window. This indicates the current cache is not truly incremental; it rebuilds the extraction buffer every frame regardless of how much actually changed.</li>
+</ul>
+</section>
+</section>
+<section id="sec-decimation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-decimation">4. Min/Max Decimation</h2>
+<p>This benchmark measures the throughput of min/max decimation algorithms, which reduce <span class="math inline">\(N\)</span> samples to <span class="math inline">\(2 \times \text{canvas\_width}\)</span> vertices (one min and one max per pixel column).</p>
+<section id="results-1m-input-samples" class="level3">
+<h3 class="anchored" data-anchor-id="results-1m-input-samples">Results (1M input samples)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>1K bins</th>
+<th>2K bins</th>
+<th>4K bins</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Span, allocating</strong></td>
+<td>880 M/s</td>
+<td>884 M/s</td>
+<td>874 M/s</td>
+</tr>
+<tr class="even">
+<td><strong>Span, in-place</strong></td>
+<td>869 M/s</td>
+<td>888 M/s</td>
+<td>819 M/s</td>
+</tr>
+<tr class="odd">
+<td><strong>Generic (Vector)</strong></td>
+<td>896 M/s</td>
+<td>878 M/s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>Generic (BlockCached, 32ch)</strong></td>
+<td>10.0 M/s</td>
+<td>10.0 M/s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>Generic (BlockCached, 384ch)</strong></td>
+<td>0.71 M/s</td>
+<td>0.75 M/s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>Raw vertices (no decimation)</strong></td>
+<td>823 M/s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-3" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-3">Key Findings</h3>
+<ul>
+<li><strong>Decimation is essentially free</strong> for contiguous storage — the throughput ($$880 M/s) is close to the raw vertex copy rate (823 M/s). The min/max comparison adds negligible overhead over a simple data scan.</li>
+<li><strong>Output bin count does not matter.</strong> Whether we decimate to 1K or 4K bins, the bottleneck is the input scan, not the output write. This makes the algorithm well-suited for variable canvas widths.</li>
+<li><strong>In-place and allocating variants perform identically</strong> for contiguous data — there is no allocation overhead to save.</li>
+<li><strong>BlockCached decimation is catastrophically slow</strong> (0.71 M/s for 384ch) due to per-element storage access. Decimation cannot fix a fundamentally slow storage backend — the data must first be loaded into contiguous memory.</li>
+</ul>
+</section>
+</section>
+<section id="sec-perpixel" class="level2">
+<h2 class="anchored" data-anchor-id="sec-perpixel">5. Per-Pixel Buffer Strategy</h2>
+<p>This benchmark compares a pre-allocated per-pixel output buffer (allocated once, reused across frames) against allocating a new output buffer every frame.</p>
+<section id="single-channel-results-1m-samples" class="level3">
+<h3 class="anchored" data-anchor-id="single-channel-results-1m-samples">Single-Channel Results (1M samples)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Canvas Width</th>
+<th>Per-pixel (pre-alloc)</th>
+<th>Alloc every frame</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1000 px</td>
+<td>902 M/s</td>
+<td>907 M/s</td>
+</tr>
+<tr class="even">
+<td>2000 px</td>
+<td>888 M/s</td>
+<td>894 M/s</td>
+</tr>
+<tr class="odd">
+<td>4000 px</td>
+<td>864 M/s</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="multi-channel-results-100k-samplesch" class="level3">
+<h3 class="anchored" data-anchor-id="multi-channel-results-100k-samplesch">Multi-Channel Results (100K samples/ch)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Channels</th>
+<th>Canvas</th>
+<th>Throughput</th>
+<th>Output Vertices</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>32</td>
+<td>1K</td>
+<td>739 M/s</td>
+<td>64K</td>
+</tr>
+<tr class="even">
+<td>32</td>
+<td>2K</td>
+<td>765 M/s</td>
+<td>128K</td>
+</tr>
+<tr class="odd">
+<td>384</td>
+<td>1K</td>
+<td>760 M/s</td>
+<td>768K</td>
+</tr>
+<tr class="even">
+<td>384</td>
+<td>2K</td>
+<td>754 M/s</td>
+<td>1.54M</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="canvas-resize-cost" class="level3">
+<h3 class="anchored" data-anchor-id="canvas-resize-cost">Canvas Resize Cost</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Samples</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100K</td>
+<td>116 µs</td>
+</tr>
+<tr class="even">
+<td>500K</td>
+<td>556 µs</td>
+</tr>
+<tr class="odd">
+<td>1M</td>
+<td>1152 µs</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-4" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-4">Key Findings</h3>
+<ul>
+<li><strong>Pre-allocation provides no measurable throughput benefit</strong> for single-channel rendering. Modern allocators (glibc malloc) are highly optimized for repeated same-size allocations.</li>
+<li><strong>Multi-channel per-pixel rendering scales linearly</strong> with channel count: 32ch at 739 M/s, 384ch at 760 M/s — throughput per channel is constant.</li>
+<li><strong>Canvas resize cost is negligible</strong> ($$1.15 ms for 1M samples) — the output buffer reallocation on resize is not a concern.</li>
+</ul>
+</section>
+</section>
+<section id="sec-multichannel" class="level2">
+<h2 class="anchored" data-anchor-id="sec-multichannel">6. Multi-Channel Scaling</h2>
+<p>This is the most realistic benchmark, simulating the full pipeline for multi-channel neural recordings. It tests how performance scales from 1 to 384 channels.</p>
+<section id="tensorcolumn-raw-vs.-decimated-1920-px-canvas" class="level3">
+<h3 class="anchored" data-anchor-id="tensorcolumn-raw-vs.-decimated-1920-px-canvas">TensorColumn: Raw vs.&nbsp;Decimated (1920 px canvas)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 15%">
+<col style="width: 12%">
+<col style="width: 17%">
+<col style="width: 9%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Channels</th>
+<th>Samples/ch</th>
+<th>Raw (M/s)</th>
+<th>Decimated (M/s)</th>
+<th>Raw Vertices</th>
+<th>Decimated Vertices</th>
+<th>Raw Time</th>
+<th>Decimated Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>32</td>
+<td>30K</td>
+<td>582</td>
+<td>632</td>
+<td>960K</td>
+<td>123K</td>
+<td>1.65 ms</td>
+<td>1.53 ms</td>
+</tr>
+<tr class="even">
+<td>128</td>
+<td>30K</td>
+<td>633</td>
+<td>615</td>
+<td>3.84M</td>
+<td>492K</td>
+<td>6.07 ms</td>
+<td>6.24 ms</td>
+</tr>
+<tr class="odd">
+<td>384</td>
+<td>30K</td>
+<td>541</td>
+<td>618</td>
+<td>11.5M</td>
+<td>1.47M</td>
+<td>21.3 ms</td>
+<td>18.6 ms</td>
+</tr>
+<tr class="even">
+<td>32</td>
+<td>100K</td>
+<td>648</td>
+<td>764</td>
+<td>3.2M</td>
+<td>123K</td>
+<td>4.94 ms</td>
+<td>4.19 ms</td>
+</tr>
+<tr class="odd">
+<td>128</td>
+<td>100K</td>
+<td>536</td>
+<td>775</td>
+<td>12.8M</td>
+<td>492K</td>
+<td>23.9 ms</td>
+<td>16.5 ms</td>
+</tr>
+<tr class="even">
+<td>384</td>
+<td>100K</td>
+<td>544</td>
+<td>766</td>
+<td>38.4M</td>
+<td>1.47M</td>
+<td>71.2 ms</td>
+<td>50.1 ms</td>
+</tr>
+<tr class="odd">
+<td>32</td>
+<td>300K</td>
+<td>530</td>
+<td>817</td>
+<td>9.6M</td>
+<td>123K</td>
+<td>18.3 ms</td>
+<td>11.8 ms</td>
+</tr>
+<tr class="even">
+<td>128</td>
+<td>300K</td>
+<td>543</td>
+<td>791</td>
+<td>38.4M</td>
+<td>492K</td>
+<td>70.7 ms</td>
+<td>48.5 ms</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="blockcached-raw-vs.-decimated" class="level3">
+<h3 class="anchored" data-anchor-id="blockcached-raw-vs.-decimated">BlockCached: Raw vs.&nbsp;Decimated</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 22%">
+<col style="width: 13%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Channels</th>
+<th>Samples/ch</th>
+<th>Raw (M/s)</th>
+<th>Decimated (M/s)</th>
+<th>Raw Time</th>
+<th>Decimated Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>32</td>
+<td>30K</td>
+<td>78.5</td>
+<td>76.4</td>
+<td>12.2 ms</td>
+<td>12.6 ms</td>
+</tr>
+<tr class="even">
+<td>128</td>
+<td>30K</td>
+<td>75.9</td>
+<td>75.4</td>
+<td>50.6 ms</td>
+<td>50.9 ms</td>
+</tr>
+<tr class="odd">
+<td>32</td>
+<td>100K</td>
+<td>8.6</td>
+<td>8.8</td>
+<td>372 ms</td>
+<td>365 ms</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="channel-scaling-decimated-tensorcolumn-100k-samplesch-1920-px-canvas" class="level3">
+<h3 class="anchored" data-anchor-id="channel-scaling-decimated-tensorcolumn-100k-samplesch-1920-px-canvas">Channel Scaling (Decimated TensorColumn, 100K samples/ch, 1920 px canvas)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Channels</th>
+<th>Time</th>
+<th>Throughput</th>
+<th>Output Vertices</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>0.12 ms</td>
+<td>833 M/s</td>
+<td>3.8K</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>0.49 ms</td>
+<td>824 M/s</td>
+<td>15.4K</td>
+</tr>
+<tr class="odd">
+<td>16</td>
+<td>2.09 ms</td>
+<td>767 M/s</td>
+<td>61.4K</td>
+</tr>
+<tr class="even">
+<td>32</td>
+<td>4.24 ms</td>
+<td>754 M/s</td>
+<td>123K</td>
+</tr>
+<tr class="odd">
+<td>64</td>
+<td>8.50 ms</td>
+<td>753 M/s</td>
+<td>246K</td>
+</tr>
+<tr class="even">
+<td>128</td>
+<td>16.5 ms</td>
+<td>774 M/s</td>
+<td>492K</td>
+</tr>
+<tr class="odd">
+<td>256</td>
+<td>33.2 ms</td>
+<td>772 M/s</td>
+<td>983K</td>
+</tr>
+<tr class="even">
+<td>384</td>
+<td>49.6 ms</td>
+<td>775 M/s</td>
+<td>1.47M</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-5" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-5">Key Findings</h3>
+<ul>
+<li><strong>Decimation advantage grows with data size.</strong> At 384ch × 300K samples (not tested, but extrapolated from 128ch × 300K), the raw pipeline would produce $$115M vertices while decimated produces $$1.5M — a <strong>78x vertex reduction</strong>.</li>
+<li>At 384ch × 100K samples, decimation reduces wall-clock time from <strong>71.2 ms → 50.1 ms</strong> (30% improvement). The improvement is modest because the decimation scan still touches every input sample; the savings come from reduced vertex materialization and output.</li>
+<li><strong>Channel scaling is perfectly linear</strong> for decimated TensorColumn: doubling channels doubles time, while per-channel throughput stays constant at $$775 M/s.</li>
+<li><strong>BlockCached is 70–85x slower</strong> than TensorColumn regardless of whether decimation is applied. Decimation cannot compensate for a slow storage backend.</li>
+</ul>
+</section>
+</section>
+<section id="sec-memory" class="level2">
+<h2 class="anchored" data-anchor-id="sec-memory">7. Memory Profile (Heaptrack)</h2>
+<p>The <code>bm_rendering_memory_profile</code> target was run under heaptrack to measure allocation patterns. All scenarios use TensorColumn storage.</p>
+<section id="allocation-summary" class="level3">
+<h3 class="anchored" data-anchor-id="allocation-summary">Allocation Summary</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Total allocations</td>
+<td>777,228</td>
+</tr>
+<tr class="even">
+<td>Temporary allocations</td>
+<td>60,630 (7.8%)</td>
+</tr>
+<tr class="odd">
+<td>Peak heap consumption</td>
+<td>538.85 MB</td>
+</tr>
+<tr class="even">
+<td>Allocation rate</td>
+<td>65,922 allocs/s</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="per-scenario-vertex-counts" class="level3">
+<h3 class="anchored" data-anchor-id="per-scenario-vertex-counts">Per-Scenario Vertex Counts</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 14%">
+<col style="width: 25%">
+<col style="width: 29%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Method</th>
+<th>Scroll Frames</th>
+<th>Total Vertices</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>A: 32ch Interactive</strong> (100K window)</td>
+<td>Current (alloc/frame)</td>
+<td>100</td>
+<td>320M</td>
+<td>438 ms</td>
+</tr>
+<tr class="even">
+<td><strong>A: 32ch Interactive</strong> (100K window)</td>
+<td>Decimated (alloc once)</td>
+<td>100</td>
+<td>12.3M</td>
+<td>436 ms</td>
+</tr>
+<tr class="odd">
+<td><strong>B: 384ch Stress</strong> (100K window)</td>
+<td>Current (alloc/frame)</td>
+<td>10</td>
+<td>384M</td>
+<td>497 ms</td>
+</tr>
+<tr class="even">
+<td><strong>B: 384ch Stress</strong> (100K window)</td>
+<td>Decimated (alloc once)</td>
+<td>10</td>
+<td>14.7M</td>
+<td>549 ms</td>
+</tr>
+<tr class="odd">
+<td><strong>C: 384ch Zoomed</strong> (10K window)</td>
+<td>Current (alloc/frame)</td>
+<td>50</td>
+<td>192M</td>
+<td>268 ms</td>
+</tr>
+<tr class="even">
+<td><strong>C: 384ch Zoomed</strong> (10K window)</td>
+<td>Decimated (alloc once)</td>
+<td>50</td>
+<td>73.7M</td>
+<td>491 ms</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="peak-memory-consumers" class="level3">
+<h3 class="anchored" data-anchor-id="peak-memory-consumers">Peak Memory Consumers</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Peak Consumption</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Armadillo <code>Mat</code> (TensorColumn data)</td>
+<td>460.80 MB</td>
+</tr>
+<tr class="even">
+<td>libtorch static initialization</td>
+<td>21.58 MB</td>
+</tr>
+<tr class="odd">
+<td><code>std::vector</code> allocations (rendering)</td>
+<td>11.83 MB</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings-6" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings-6">Key Findings</h3>
+<ul>
+<li><strong>460 MB</strong> is consumed by the Armadillo matrix backing TensorColumn storage. This is the data itself, not the rendering pipeline.</li>
+<li>The rendering pipeline’s <code>std::vector</code> allocations peak at <strong>11.83 MB</strong> — modest compared to the underlying data.</li>
+<li>The “current pipeline” generates 100K vectors per frame (32ch × 100K samples = 3.2M × 8 bytes = 25.6 MB per frame, freed immediately). Over 100 frames, this is <strong>2.56 GB of churn</strong> — all temporary allocations that stress the allocator and fragment the heap.</li>
+<li>The “decimated” method allocates 384 output buffers once ($$12 MB total) and reuses them. The allocation count drops to effectively zero per frame.</li>
+<li><strong>Scenario C (zoomed)</strong> shows the decimated path is actually <em>slower</em> than current (491 ms vs 268 ms). This is because at 10K samples/ch with 1920 px canvas, the decimation ratio is only $$2.6x (10K / 3840), so the overhead of the decimation loop exceeds the savings from reduced output.</li>
+</ul>
+</section>
+</section>
+<section id="sec-conclusions" class="level2">
+<h2 class="anchored" data-anchor-id="sec-conclusions">Conclusions and Recommendations</h2>
+<section id="what-we-learned" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-learned">What We Learned</h3>
+<ol type="1">
+<li><p><strong>The biggest bottleneck is <code>viewTimeValueRange()</code>.</strong> The current rendering pipeline pays a 2.3x penalty using the time+value accessor path instead of direct span access. Switching to a span-based data read would immediately improve vertex generation throughput from $$209 M/s to $$865 M/s — a <strong>4.1x speedup</strong> at the data-read stage.</p></li>
+<li><p><strong>Decimation helps, but mostly for vertex count reduction.</strong> The decimation scan itself runs at near-memory-bandwidth speeds ($$880 M/s). The real savings come downstream: fewer vertices to materialize, cache, and upload to GPU. At 384ch × 100K, decimation reduces output from 38.4M to 1.47M vertices — a <strong>26x reduction</strong> in GPU upload data.</p></li>
+<li><p><strong>Pre-allocation and in-place buffers provide no measurable benefit</strong> for the compute-side pipeline. Modern allocators handle repeated same-size allocations efficiently. The benefit of pre-allocation would only appear in reducing allocation <em>count</em> (reducing heap fragmentation and GC pressure over long sessions), not in per-frame throughput.</p></li>
+<li><p><strong>BlockCachedMmap is fundamentally incompatible with real-time rendering.</strong> At 70–85x slower than TensorColumn, no amount of algorithmic optimization at the rendering layer can compensate. If mmap data needs real-time visualization, it must be pre-loaded into contiguous memory (either full copy or block-level pre-fetch).</p></li>
+<li><p><strong>Channel scaling is perfectly linear</strong> for contiguous storage. There are no super-linear effects from cache pressure or memory bandwidth saturation up to 384 channels. This means the rendering pipeline can be straightforwardly parallelized if needed.</p></li>
+<li><p><strong>The cache extraction layer is not truly incremental.</strong> Scrolling by 10 samples costs the same as scrolling by 1000 samples — the entire window is re-extracted every frame. A true incremental approach (ring buffer with only-new-data extraction) would reduce scroll costs proportionally to scroll step.</p></li>
+</ol>
+</section>
+<section id="recommended-optimizations-priority-order" class="level3">
+<h3 class="anchored" data-anchor-id="recommended-optimizations-priority-order">Recommended Optimizations (Priority Order)</h3>
+<ol type="1">
+<li><p><strong>Add a span-based fast-path for contiguous storage</strong> in the vertex generation pipeline. When the storage backend supports <code>getDataInTimeFrameIndexRange()</code> returning a contiguous <code>std::span</code>, bypass <code>viewTimeValueRange()</code> entirely. Expected improvement: <strong>4x</strong> at the data-read stage.</p></li>
+<li><p><strong>Implement min/max decimation</strong> when <code>samples_per_pixel &gt; threshold</code> (e.g., &gt; 4). Output 2 vertices per pixel column (min, max). This reduces vertex count by up to 100x for zoomed-out views and costs essentially nothing beyond the data scan.</p></li>
+<li><p><strong>Use direct-to-GPU vertex format in the cache.</strong> Instead of caching <code>CachedAnalogVertex{x, y, TimeFrameIndex}</code> (24 bytes) and then copying to <code>float[2]</code> (8 bytes), store the GPU-ready format directly. This eliminates the extraction copy entirely — a 4.2x speedup for the cache extraction stage.</p></li>
+<li><p><strong>Make cache extraction truly incremental.</strong> Track the last-extracted range and only extract newly-visible samples on scroll. For small scroll steps, this would reduce extraction cost from <span class="math inline">\(O(W)\)</span> to <span class="math inline">\(O(\Delta)\)</span>.</p></li>
+<li><p><strong>Pre-load mmap data into contiguous buffers</strong> before rendering. For BlockCachedMmap, perform a bulk read of the visible window into a temporary <code>std::vector&lt;float&gt;</code> and render from that. This converts a 70x-slower per-element path into a single bulk I/O + contiguous render.</p></li>
+</ol>
+</section>
+<section id="performance-budget-384ch-100k-samples-1920-px-canvas" class="level3">
+<h3 class="anchored" data-anchor-id="performance-budget-384ch-100k-samples-1920-px-canvas">Performance Budget (384ch × 100K samples, 1920 px canvas)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>Current</th>
+<th>With Recommendations</th>
+<th>Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data read</td>
+<td>71.2 ms</td>
+<td>~17.8 ms (span path)</td>
+<td>4x</td>
+</tr>
+<tr class="even">
+<td>Vertex generation</td>
+<td>(included above)</td>
+<td>~17.8 ms</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Decimation</td>
+<td>—</td>
+<td>~0 ms (folded into read)</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Cache extraction</td>
+<td>~4 ms</td>
+<td>~0 ms (zero-copy)</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>GPU upload</td>
+<td>~5 ms (38.4M verts)</td>
+<td>~0.2 ms (1.47M verts)</td>
+<td>25x</td>
+</tr>
+<tr class="even">
+<td><strong>Total CPU</strong></td>
+<td><strong>~80 ms</strong></td>
+<td><strong>~18 ms</strong></td>
+<td><strong>~4.4x</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>Frame rate</strong></td>
+<td><strong>~12 FPS</strong></td>
+<td><strong>~55 FPS</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>These numbers exclude Qt overhead, OpenGL state changes, and actual fragment shading. The CPU-side rendering budget of $$18 ms would comfortably support 60 FPS interactive browsing even at 384-channel scale.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

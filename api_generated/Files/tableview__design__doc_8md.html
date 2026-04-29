@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>tableview_design_doc.md – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tableview_design_doc.md" id="toc-tableview_design_doc.md" class="nav-link active" data-scroll-target="#tableview_design_doc.md">tableview_design_doc.md</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">tableview_design_doc.md</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="tableview_design_doc.md" class="level1">
+<h1>tableview_design_doc.md</h1>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="an">Design Document:</span><span class="co"> The TableView System</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">Version:</span><span class="co"> 1.0</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">Date:</span><span class="co"> July 9, 2025</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">Author:</span><span class="co"> Gemini</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Introduction &amp; Goals</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>This document outlines the design for a flexible and high-performance TableView system for data analysis in C++. The primary goal is to provide a unified, expressive interface for creating tabular views of heterogeneous, time-series data (e.g., AnalogData, PointData, Intervals) for tasks such as serialization (CSV), plotting, and input to machine learning libraries.</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>The design prioritizes the following key principles:</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Efficiency: Avoids unnecessary computation and memory allocation through lazy, batch-oriented evaluation. Expensive operations like time-to-index conversion are performed once and cached.</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Flexibility: Allows columns to be defined from raw data, lagged/leaded data, complex reductions (e.g., mean over an interval), or transformations of other columns.</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>Extensibility: New data types and computations can be integrated without modifying the core TableView logic by adding new adapters and computer strategies.</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>Decoupling: The definition of a table is separate from its computation. The underlying raw data storage is not duplicated.</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>Usability: A fluent Builder pattern provides a clean and readable API for constructing complex table definitions.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Core Architectural Concepts</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>The system is built on a combination of established design patterns to achieve its goals.</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>Adapter Pattern: Complex or non-contiguous data structures (like PointData) are wrapped in adapters that expose them through a unified IAnalogSource interface, presenting them as simple, contiguous series of values.</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>Strategy Pattern: The logic for how a column is computed is encapsulated in IColumnComputer objects. This allows us to have different strategies for direct access, interval reductions, or functional transformations.</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>Builder Pattern: A TableViewBuilder provides a step-by-step, fluent API for constructing a TableView object, simplifying the setup of complex configurations.</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>Lazy Evaluation &amp; Caching: A Column's data is not computed until it is first requested. Once computed, the result is cached (materialized) as a contiguous vector for all subsequent accesses. Intermediate computational steps, like converting row timestamps to data indices (ExecutionPlan), are also cached and shared between columns.</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Key Components &amp; Class Definitions</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>This section details the primary classes that form the TableView ecosystem.</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>3.1. IAnalogSource (The Unified Data Interface)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>This abstract base class is the cornerstone of the system's flexibility. It provides a common interface for any data that can be treated as a simple array of doubles.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>// Interface for any data source that can be viewed as an analog signal.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>class IAnalogSource {</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    virtual ~IAnalogSource() = default;</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="in">    // Gets the ID of the TimeFrame the data belongs to.</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual int getTimeFrameId() const = 0;</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="in">    </span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="in">    // Gets the total number of samples in the source.</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual size_t size() const = 0;</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="in">    // Provides a view over the data.</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="in">    // This may trigger a one-time lazy materialization for non-contiguous sources.</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual std::span&lt;const double&gt; getDataSpan() = 0;</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>Implementations: AnalogData (physical), PointComponentAdapter (virtual), TensorSliceAdapter (virtual), etc.</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>3.2. DataManager (The Source Factory)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>The DataManager acts as a facade and a factory. It manages the lifecycle of raw data objects and is responsible for creating and caching IAnalogSource adapters.</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>class DataManager {</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    // Unified access point for all data sources.</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    // Name can be "LFP" for physical data or "Spikes.x" for a virtual source.</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    std::shared_ptr<span class="dt">&lt;</span><span class="kw">IAnalogSource</span><span class="dt">&gt;</span> getAnalogSource(const std::string&amp; name);</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="in">    // ... methods to load/manage raw AnalogData, PointData, etc. ...</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>    // Caches for raw data</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    std::map&lt;std::string, std::shared_ptr<span class="dt">&lt;</span><span class="kw">AnalogData</span><span class="dt">&gt;</span>&gt; m_analogData;</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    std::map&lt;std::string, std::shared_ptr<span class="dt">&lt;</span><span class="kw">PointData</span><span class="dt">&gt;</span>&gt; m_pointData;</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="in">    // Cache for adapter objects to ensure reuse and correct lifetime.</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="in">    mutable std::map&lt;std::string, std::shared_ptr&lt;IAnalogSource&gt;&gt; m_dataSourceCache;</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>3.3. IRowSelector (Row Definition)</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>This interface defines what constitutes a "row" in the table.</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>// Defines the source and number of rows for the table.</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>class IRowSelector {</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    virtual ~IRowSelector() = default;</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    virtual size_t getRowCount() const = 0;</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>    // ... other methods to access row-defining data (e.g., getTimestamps())</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>// Example Implementations:</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>class IndexSelector : public IRowSelector { /* uses std::vector<span class="dt">&lt;</span><span class="kw">size_t</span><span class="dt">&gt;</span> */ };</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>class TimestampSelector : public IRowSelector { /* uses std::vector<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span> */ };</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>class IntervalSelector : public IRowSelector { /* uses std::vector<span class="dt">&lt;</span><span class="kw">Interval</span><span class="dt">&gt;</span> */ };</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>3.4. ExecutionPlan (Shared Intermediate Computation)</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>A simple data object that holds the result of an expensive intermediate calculation, typically the mapping of row definitions to specific data array indices.</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>// Holds a cached, reusable access pattern for a specific data source.</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>class ExecutionPlan {</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    // Example: For interval reductions, this would hold start/end index pairs.</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    const std::vector&lt;std::pair&lt;size_t, size_t&gt;&gt;&amp; getIndexPairs() const;</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a><span class="in">    // Example: For direct access, this would hold single indices.</span></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a><span class="in">    const std::vector&lt;size_t&gt;&amp; getIndices() const;</span></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>3.5. IColumnComputer (Column Computation Strategy)</span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>This interface defines the strategy for computing all values in a column in a single batch operation.</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>class IColumnComputer {</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>    virtual ~IColumnComputer() = default;</span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a><span class="in">    // The core batch computation method.</span></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual std::vector&lt;double&gt; compute(const ExecutionPlan&amp; plan) const = 0;</span></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a><span class="in">    // Declares dependencies on other columns (for transformed columns).</span></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual std::vector&lt;std::string&gt; getDependencies() const { return {}; }</span></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a><span class="in">    </span></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a><span class="in">    // Declares the required data source.</span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a><span class="in">    virtual std::string getSourceDependency() const = 0;</span></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>Implementations: DirectAccessComputer, IntervalReductionComputer, TransformComputer.</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>3.6. Column &amp; TableView (The Core Objects)</span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>The TableView orchestrates the process, while the Column holds the state for a single column.</span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>class TableView; // Forward declaration</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>class Column {</span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>    // Gets a span over the column's data. Triggers computation if not materialized.</span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>    std::span<span class="dt">&lt;</span><span class="kw">const</span><span class="ot"> double</span><span class="dt">&gt;</span> getSpan(TableView* table);</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>    friend class TableViewBuilder;</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>    std::string m_name;</span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>    std::unique_ptr<span class="dt">&lt;</span><span class="kw">IColumnComputer</span><span class="dt">&gt;</span> m_computer;</span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>    std::variant&lt;std::monostate, std::vector<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span>&gt; m_cache;</span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>class TableView {</span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>    size_t getRowCount() const;</span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>    size_t getColumnCount() const;</span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>    std::span<span class="dt">&lt;</span><span class="kw">const</span><span class="ot"> double</span><span class="dt">&gt;</span> getColumnSpan(const std::string&amp; name);</span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>    friend class TableViewBuilder;</span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>    friend class Column; // Allows Column to access the plan cache</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a><span class="in">    // Gets or creates the ExecutionPlan for a given data source requirement.</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a><span class="in">    const ExecutionPlan&amp; getExecutionPlanFor(const std::string&amp; sourceName);</span></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a><span class="in">    std::unique_ptr&lt;IRowSelector&gt; m_rowSelector;</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="in">    std::vector&lt;std::shared_ptr&lt;Column&gt;&gt; m_columns;</span></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="in">    std::map&lt;std::string, size_t&gt; m_colNameToIndex;</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="in">    </span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a><span class="in">    // Caches ExecutionPlans, keyed by a unique source identifier.</span></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a><span class="in">    std::map&lt;std::string, ExecutionPlan&gt; m_planCache;</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Workflow &amp; Usage Example</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>4.1. Workflow: Lazy Computation</span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>A user requests data from a column for the first time via tableView.getColumnSpan("MyColumn").</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>The TableView finds the corresponding Column object and sees its cache is empty.</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>The TableView inspects the column's IColumnComputer to determine its dependencies (e.g., "I need AnalogData source 'LFP'").</span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>It checks its m_planCache for a pre-computed ExecutionPlan for the 'LFP' source based on the table's RowSelector.</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>If the plan is not found: The TableView generates it by converting the row definitions (e.g., timestamps) to indices in the 'LFP' array. The new plan is stored in m_planCache.</span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>The cached (or newly created) ExecutionPlan is passed to the column's IColumnComputer::compute() method.</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>The computer performs its batch operation (e.g., calculating the mean for every interval) and returns a std::vector<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span>.</span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>This vector is moved into the Column's internal cache, materializing it.</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>A std::span over the newly materialized data is returned to the user.</span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>All subsequent calls to getColumnSpan("MyColumn") will find the cached data and immediately return a span.</span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>4.2. Usage Example (Client Code)</span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>This demonstrates how a user would construct and use a TableView.</span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>void example_usage(DataManager&amp; dataManager, const std::vector<span class="dt">&lt;</span><span class="kw">Interval</span><span class="dt">&gt;</span>&amp; spikeBursts) {</span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>    // 1. Create a builder and define the rows.</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>    TableViewBuilder builder;</span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>    builder.setRowSource(std::make_unique<span class="dt">&lt;</span><span class="kw">IntervalSelector</span><span class="dt">&gt;</span>(spikeBursts));</span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a><span class="in">    // 2. Get unified source handles from the DataManager.</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a><span class="in">    auto source_lfp = dataManager.getAnalogSource("LFP");          // Physical source</span></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a><span class="in">    auto source_spikes_x = dataManager.getAnalogSource("Spikes.x"); // Virtual source</span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a><span class="in">    // 3. Define columns with different computation strategies.</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn("LFP_Mean", </span></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;IntervalReductionComputer&gt;(source_lfp, Reduction::Mean));</span></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn("SpikeX_StdDev", </span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;IntervalReductionComputer&gt;(source_spikes_x, Reduction::StdDev));</span></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a><span class="in">    // Example of a transformed column.</span></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a><span class="in">    // This computer would take "LFP_Mean" as a dependency.</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn("LFP_Mean_Sq", </span></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;TransformComputer&gt;([](double v) { return v * v; }, "LFP_Mean"));</span></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a><span class="in">    // 4. Build the final, lazy table object.</span></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a><span class="in">    TableView table = builder.build();</span></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a><span class="in">    // 5. Use the table. Computation is triggered here.</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a><span class="in">    std::cout &lt;&lt; "Table has " &lt;&lt; table.getRowCount() &lt;&lt; " rows." &lt;&lt; std::endl;</span></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a><span class="in">    </span></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a><span class="in">    // Get the LFP_Mean column (this triggers its computation).</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a><span class="in">    std::span&lt;const double&gt; lfp_means = table.getColumnSpan("LFP_Mean");</span></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a><span class="in">    // Get the SpikeX_StdDev column (this triggers its computation, but reuses the ExecutionPlan).</span></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a><span class="in">    std::span&lt;const double&gt; spike_x_stds = table.getColumnSpan("SpikeX_StdDev");</span></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a><span class="in">    // Pass to a machine learning library (e.g., Armadillo)</span></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="in">    // arma::vec arma_lfp_means(lfp_means.data(), lfp_means.size());</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>Future Considerations</span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>Error Handling: Implement robust error handling for cases like missing data sources, failed transformations, or mismatched TimeFrames.</span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>Multi-threading: The computation of independent columns is highly parallelizable. The TableView could be extended with a materializeAll() method that computes multiple columns in parallel.</span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>Heterogeneous Column Types: While this design focuses on double, the Column's cache (std::variant) and IColumnComputer could be templated to support other types like int, std::string, etc.</span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>Write-back: The current design is read-only. A mechanism for writing data from a TableView back to a DataManager source could be considered.</span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>A2. Proposed Design Changes</span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>A2.1. Heterogeneous Columns via Type Erasure</span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>To support multiple data types, we will introduce templates and a non-templated base class to erase the type information at the TableView level.</span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>IColumn (New Base Interface):</span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>A non-templated base interface that TableView will use to manage all columns polymorphically.</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>class IColumn {</span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>    virtual ~IColumn() = default;</span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>    virtual const std::string&amp; getName() const = 0;</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>    virtual const std::type_info&amp; getType() const = 0;</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>    // A method to trigger computation without exposing the type.</span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>    virtual void materialize(TableView* table) = 0;</span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Column<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span> (Templated Class):</span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>The original Column class will be converted to a template and will inherit from IColumn.</span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>class Column : public IColumn {</span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>    // Returns a span for contiguous types, or a direct reference for complex types.</span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>    const std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&amp; getValues(TableView* table);</span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a><span class="in">    // IColumn overrides</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a><span class="in">    const std::string&amp; getName() const override { return m_name; }</span></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a><span class="in">    const std::type_info&amp; getType() const override { return typeid(T); }</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a><span class="in">    void materialize(TableView* table) override;</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>    std::string m_name;</span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>    std::unique_ptr&lt;IColumnComputer<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&gt; m_computer;</span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>    std::variant&lt;std::monostate, std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&gt; m_cache;</span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>IColumnComputer<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span> (Templated Interface):</span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>The computer interface must also be templated to return vectors of the correct type.</span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>class IColumnComputer {</span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>    virtual ~IColumnComputer() = default;</span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>    virtual std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span> compute(const ExecutionPlan&amp; plan) const = 0;</span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>    // ... other methods remain the same</span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>TableView Modifications:</span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>The TableView will now hold std::vector&lt;std::shared_ptr<span class="dt">&lt;</span><span class="kw">IColumn</span><span class="dt">&gt;</span>&gt;. The getColumnSpan method will be replaced with a templated getColumnValues method that performs a dynamic_cast to retrieve the correctly typed column.</span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>class TableView {</span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>    template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    const std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&amp; getColumnValues(const std::string&amp; name);</span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    std::vector&lt;std::shared_ptr<span class="dt">&lt;</span><span class="kw">IColumn</span><span class="dt">&gt;</span>&gt; m_columns;</span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>    // ... rest of TableView</span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>const std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&amp; TableView::getColumnValues(const std::string&amp; name) {</span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>    // 1. Find the IColumn pointer by name.</span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>    // 2. dynamic_cast the IColumn* to a Column<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>*.</span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    // 3. If cast succeeds, call getValues() on the typed column.</span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>    // 4. If cast fails, throw an exception for type mismatch.</span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>A2.2. Event-Based Data Source and Computer</span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>To handle DigitalEventSeries, we introduce a new data source interface and a corresponding computer.</span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>IEventSource (New Data Source Interface):</span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>An interface for data that consists of a sorted list of timestamps or indices.</span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>class IEventSource {</span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    virtual ~IEventSource() = default;</span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    virtual int getTimeFrameId() const = 0;</span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    // Returns a span over the sorted event indices/timestamps.</span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>    virtual std::span<span class="dt">&lt;</span><span class="kw">const</span><span class="ot"> TimeFrameIndex</span><span class="dt">&gt;</span> getEvents() const = 0;</span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>DigitalEventSeries (New Data Type):</span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>A concrete class holding event data and implementing the IEventSource interface.</span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>DataManager Extension:</span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>The DataManager will be extended with a getEventSource(const std::string&amp; name) method.</span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>EventInIntervalComputer<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span> (New Column Computer):</span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>A new, versatile computer that works with an IEventSource. It can be configured to perform different operations.</span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>enum class EventOperation { Presence, Count, Gather };</span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>class EventInIntervalComputer : public IColumnComputer<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span> {</span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>    EventInIntervalComputer(std::shared_ptr<span class="dt">&lt;</span><span class="kw">IEventSource</span><span class="dt">&gt;</span> source, EventOperation op);</span>
+<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a><span class="in">    std::vector&lt;T&gt; compute(const ExecutionPlan&amp; plan) const override {</span></span>
+<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a><span class="in">        // Get event list from the IEventSource</span></span>
+<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a><span class="in">        auto all_events = m_source-&gt;getEvents();</span></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a><span class="in">        // Get interval index pairs from the ExecutionPlan</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a><span class="in">        auto intervals = plan.getIndexPairs();</span></span>
+<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a><span class="in">        std::vector&lt;T&gt; results;</span></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a><span class="in">        // For each interval, perform an efficient search (e.g., binary search)</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a><span class="in">        // on the event list to find events within the interval's bounds.</span></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a><span class="in">        // Based on m_operation, push back a bool, int, or vector&lt;TimeFrameIndex&gt;</span></span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a><span class="in">        // into the results vector. This requires template specialization for the logic.</span></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a><span class="in">        return results;</span></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>    std::shared_ptr<span class="dt">&lt;</span><span class="kw">IEventSource</span><span class="dt">&gt;</span> m_source;</span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>    EventOperation m_operation;</span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>The implementation of compute will use if constexpr or template specialization to handle the different return types (bool, int, std::vector<span class="dt">&lt;</span><span class="kw">TimeFrameIndex</span><span class="dt">&gt;</span>) required by the EventOperation.</span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>A3. Updated Usage Example</span>
+<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a>void new_usage_example(DataManager&amp; dataManager, const std::vector<span class="dt">&lt;</span><span class="kw">Interval</span><span class="dt">&gt;</span>&amp; intervals) {</span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>    TableViewBuilder builder;</span>
+<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>    builder.setRowSource(std::make_unique<span class="dt">&lt;</span><span class="kw">IntervalSelector</span><span class="dt">&gt;</span>(intervals));</span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a><span class="in">    auto event_source = dataManager.getEventSource("MyEvents");</span></span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a><span class="in">    // Add columns with different types and computers.</span></span>
+<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;bool&gt;("EventPresence", </span></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;EventInIntervalComputer&lt;bool&gt;&gt;(event_source, EventOperation::Presence));</span></span>
+<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;int&gt;("EventCount", </span></span>
+<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;EventInIntervalComputer&lt;int&gt;&gt;(event_source, EventOperation::Count));</span></span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;std::vector&lt;TimeFrameIndex&gt;&gt;("GatheredEvents",</span></span>
+<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;EventInIntervalComputer&lt;std::vector&lt;TimeFrameIndex&gt;&gt;&gt;(event_source, EventOperation::Gather));</span></span>
+<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a><span class="in">    TableView table = builder.build();</span></span>
+<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a><span class="in">    // Retrieve data with type-safe accessors.</span></span>
+<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a><span class="in">    const auto&amp; counts = table.getColumnValues&lt;int&gt;("EventCount");</span></span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a><span class="in">    const auto&amp; gathered = table.getColumnValues&lt;std::vector&lt;TimeFrameIndex&gt;&gt;("GatheredEvents");</span></span>
+<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a><span class="in">    std::cout &lt;&lt; "Count for first interval: " &lt;&lt; counts[0] &lt;&lt; std::endl;</span></span>
+<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a>This addendum makes the TableView system significantly more powerful, allowing it to truly manage heterogeneous data while maintaining its core principles of lazy evaluation and efficiency.</span>
+<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a>Addendum 2: Support for Gathering Analog Data Slices</span>
+<span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a>Date: July 15, 2025</span>
+<span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>This addendum addresses the requirement to create columns where each cell contains a window of an analog time series, corresponding to a row's interval.</span>
+<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a>A4. Problem Statement</span>
+<span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a>A common analysis task is to collect snippets of a continuous signal (e.g., LFP or EEG) around specific events or within defined intervals. The desired output is a column where each cell is a std::vector<span class="dt">&lt;</span><span class="kw">float</span><span class="dt">&gt;</span> or std::vector<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span>. The existing architecture, as modified by Addendum 1, supports the storage of such a column (Column&lt;std::vector<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span>&gt;). What is missing is the specific "computer" strategy to perform this gathering operation.</span>
+<span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a>A5. Proposed Design Changes</span>
+<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>No changes are needed for the core architecture (IColumn, TableView, etc.). We only need to define a new, specialized IColumnComputer.</span>
+<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>AnalogSliceGathererComputer (New Column Computer):</span>
+<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>This new computer strategy is responsible for iterating through an ExecutionPlan of interval index pairs and, for each pair, copying the corresponding slice of data from an IAnalogSource into a new vector.</span>
+<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a>// This computer's output type is a vector of vectors.</span>
+<span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a>// The inner vector can be float or double.</span>
+<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T </span><span class="op">=</span> <span class="st">double</span><span class="dt">&gt;</span></span>
+<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a>class AnalogSliceGathererComputer : public IColumnComputer&lt;std::vector<span class="dt">&lt;</span><span class="kw">T</span><span class="dt">&gt;</span>&gt; {</span>
+<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a>    AnalogSliceGathererComputer(std::shared_ptr<span class="dt">&lt;</span><span class="kw">IAnalogSource</span><span class="dt">&gt;</span> source) </span>
+<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>        : m_source(std::move(source)) {}</span>
+<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a><span class="in">    // The core computation method.</span></span>
+<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a><span class="in">    std::vector&lt;std::vector&lt;T&gt;&gt; compute(const ComputeContext&amp; context) const override {</span></span>
+<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a><span class="in">        // Get a view over the entire raw data source once.</span></span>
+<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a><span class="in">        std::span&lt;const double&gt; raw_data = m_source-&gt;getDataSpan();</span></span>
+<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a><span class="in">        // Get the list of [start, end] index pairs from the shared plan.</span></span>
+<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a><span class="in">        const auto&amp; index_pairs = context.getPlan().getIndexPairs();</span></span>
+<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a><span class="in">        // This is our final result: a vector of vectors.</span></span>
+<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a><span class="in">        std::vector&lt;std::vector&lt;T&gt;&gt; results;</span></span>
+<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a><span class="in">        results.reserve(index_pairs.size());</span></span>
+<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a><span class="in">        for (const auto&amp; pair : index_pairs) {</span></span>
+<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a><span class="in">            size_t start_index = pair.first;</span></span>
+<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a><span class="in">            size_t count = pair.second - pair.first;</span></span>
+<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a><span class="in">            // Create a view of the slice from the raw data.</span></span>
+<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a><span class="in">            auto slice_view = raw_data.subspan(start_index, count);</span></span>
+<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a><span class="in">            // Copy the data from the slice view into a new vector of type T.</span></span>
+<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a><span class="in">            // This constructs the vector for the cell.</span></span>
+<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a><span class="in">            results.emplace_back(slice_view.begin(), slice_view.end());</span></span>
+<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a><span class="in">        }</span></span>
+<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a><span class="in">        return results;</span></span>
+<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a>    std::shared_ptr<span class="dt">&lt;</span><span class="kw">IAnalogSource</span><span class="dt">&gt;</span> m_source;</span>
+<span id="cb1-428"><a href="#cb1-428" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-429"><a href="#cb1-429" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a>A6. Updated Usage Example</span>
+<span id="cb1-431"><a href="#cb1-431" aria-hidden="true" tabindex="-1"></a>This example shows how to create a column of LFP snippets.</span>
+<span id="cb1-432"><a href="#cb1-432" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-433"><a href="#cb1-433" aria-hidden="true" tabindex="-1"></a>void waveform_gathering_example(DataManager&amp; dataManager, const std::vector<span class="dt">&lt;</span><span class="kw">Interval</span><span class="dt">&gt;</span>&amp; intervals) {</span>
+<span id="cb1-434"><a href="#cb1-434" aria-hidden="true" tabindex="-1"></a>    TableViewBuilder builder;</span>
+<span id="cb1-435"><a href="#cb1-435" aria-hidden="true" tabindex="-1"></a>    builder.setRowSource(std::make_unique<span class="dt">&lt;</span><span class="kw">IntervalSelector</span><span class="dt">&gt;</span>(intervals));</span>
+<span id="cb1-436"><a href="#cb1-436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-437"><a href="#cb1-437" aria-hidden="true" tabindex="-1"></a><span class="in">    // Get the source for the LFP data.</span></span>
+<span id="cb1-438"><a href="#cb1-438" aria-hidden="true" tabindex="-1"></a><span class="in">    auto lfp_source = dataManager.getAnalogSource("LFP");</span></span>
+<span id="cb1-439"><a href="#cb1-439" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-440"><a href="#cb1-440" aria-hidden="true" tabindex="-1"></a><span class="in">    // Add a column to gather the LFP data within each interval.</span></span>
+<span id="cb1-441"><a href="#cb1-441" aria-hidden="true" tabindex="-1"></a><span class="in">    // The column's type will be std::vector&lt;double&gt;.</span></span>
+<span id="cb1-442"><a href="#cb1-442" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;std::vector&lt;double&gt;&gt;("LFP_Snippets",</span></span>
+<span id="cb1-443"><a href="#cb1-443" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;AnalogSliceGathererComputer&lt;double&gt;&gt;(lfp_source));</span></span>
+<span id="cb1-444"><a href="#cb1-444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-445"><a href="#cb1-445" aria-hidden="true" tabindex="-1"></a><span class="in">    TableView table = builder.build();</span></span>
+<span id="cb1-446"><a href="#cb1-446" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-447"><a href="#cb1-447" aria-hidden="true" tabindex="-1"></a><span class="in">    // Retrieve the materialized column data.</span></span>
+<span id="cb1-448"><a href="#cb1-448" aria-hidden="true" tabindex="-1"></a><span class="in">    // `lfp_waveforms` is a const reference to a std::vector&lt;std::vector&lt;double&gt;&gt;.</span></span>
+<span id="cb1-449"><a href="#cb1-449" aria-hidden="true" tabindex="-1"></a><span class="in">    const auto&amp; lfp_waveforms = table.getColumnValues&lt;std::vector&lt;double&gt;&gt;("LFP_Snippets");</span></span>
+<span id="cb1-450"><a href="#cb1-450" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-451"><a href="#cb1-451" aria-hidden="true" tabindex="-1"></a><span class="in">    // We can now work with the gathered data.</span></span>
+<span id="cb1-452"><a href="#cb1-452" aria-hidden="true" tabindex="-1"></a><span class="in">    if (!lfp_waveforms.empty()) {</span></span>
+<span id="cb1-453"><a href="#cb1-453" aria-hidden="true" tabindex="-1"></a><span class="in">        std::cout &lt;&lt; "First LFP snippet has " &lt;&lt; lfp_waveforms[0].size() &lt;&lt; " samples." &lt;&lt; std::endl;</span></span>
+<span id="cb1-454"><a href="#cb1-454" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-455"><a href="#cb1-455" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-456"><a href="#cb1-456" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-457"><a href="#cb1-457" aria-hidden="true" tabindex="-1"></a>Addendum 3: Support for Statistical Standardization</span>
+<span id="cb1-458"><a href="#cb1-458" aria-hidden="true" tabindex="-1"></a>Date: July 15, 2025</span>
+<span id="cb1-459"><a href="#cb1-459" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-460"><a href="#cb1-460" aria-hidden="true" tabindex="-1"></a>This addendum addresses the requirement to create a column by standardizing another numerical column (Z-scoring).</span>
+<span id="cb1-461"><a href="#cb1-461" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-462"><a href="#cb1-462" aria-hidden="true" tabindex="-1"></a>A7. Problem Statement</span>
+<span id="cb1-463"><a href="#cb1-463" aria-hidden="true" tabindex="-1"></a>A frequent need in statistical analysis is to normalize data by centering it on its mean and scaling it by its standard deviation. This operation requires a full-column transformation: the statistics (mean, stddev) must be computed for the entire source column before the element-wise transformation can be applied.</span>
+<span id="cb1-464"><a href="#cb1-464" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-465"><a href="#cb1-465" aria-hidden="true" tabindex="-1"></a>A8. Proposed Design Changes</span>
+<span id="cb1-466"><a href="#cb1-466" aria-hidden="true" tabindex="-1"></a>The revised IColumnComputer interface using ComputeContext is perfectly suited for this task. We only need to add a new "computer" strategy.</span>
+<span id="cb1-467"><a href="#cb1-467" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-468"><a href="#cb1-468" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>StandardizeComputer (New Column Computer):</span>
+<span id="cb1-469"><a href="#cb1-469" aria-hidden="true" tabindex="-1"></a>This computer takes a single column name as a dependency. Its compute method uses the ComputeContext to fetch the materialized data of its dependency, calculates the necessary statistics, and then performs the transformation.</span>
+<span id="cb1-470"><a href="#cb1-470" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-471"><a href="#cb1-471" aria-hidden="true" tabindex="-1"></a>// This computer takes a numerical column and produces a double column.</span>
+<span id="cb1-472"><a href="#cb1-472" aria-hidden="true" tabindex="-1"></a>template<span class="dt">&lt;</span><span class="kw">typename</span><span class="ot"> T</span><span class="dt">&gt;</span></span>
+<span id="cb1-473"><a href="#cb1-473" aria-hidden="true" tabindex="-1"></a>class StandardizeComputer : public IColumnComputer<span class="dt">&lt;</span><span class="kw">double</span><span class="dt">&gt;</span> {</span>
+<span id="cb1-474"><a href="#cb1-474" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-475"><a href="#cb1-475" aria-hidden="true" tabindex="-1"></a>    StandardizeComputer(std::string dependency_col_name) </span>
+<span id="cb1-476"><a href="#cb1-476" aria-hidden="true" tabindex="-1"></a>        : m_dependency(std::move(dependency_col_name)) {}</span>
+<span id="cb1-477"><a href="#cb1-477" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-478"><a href="#cb1-478" aria-hidden="true" tabindex="-1"></a><span class="in">    std::vector&lt;std::string&gt; getDependencies() const override {</span></span>
+<span id="cb1-479"><a href="#cb1-479" aria-hidden="true" tabindex="-1"></a><span class="in">        return {m_dependency};</span></span>
+<span id="cb1-480"><a href="#cb1-480" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-481"><a href="#cb1-481" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-482"><a href="#cb1-482" aria-hidden="true" tabindex="-1"></a><span class="in">    std::vector&lt;double&gt; compute(const ComputeContext&amp; context) const override {</span></span>
+<span id="cb1-483"><a href="#cb1-483" aria-hidden="true" tabindex="-1"></a><span class="in">        // 1. Get the materialized data of the dependency column.</span></span>
+<span id="cb1-484"><a href="#cb1-484" aria-hidden="true" tabindex="-1"></a><span class="in">        const auto&amp; source_values = context.getDependencyValues&lt;T&gt;(m_dependency);</span></span>
+<span id="cb1-485"><a href="#cb1-485" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-486"><a href="#cb1-486" aria-hidden="true" tabindex="-1"></a><span class="in">        if (source_values.empty()) {</span></span>
+<span id="cb1-487"><a href="#cb1-487" aria-hidden="true" tabindex="-1"></a><span class="in">            return {};</span></span>
+<span id="cb1-488"><a href="#cb1-488" aria-hidden="true" tabindex="-1"></a><span class="in">        }</span></span>
+<span id="cb1-489"><a href="#cb1-489" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-490"><a href="#cb1-490" aria-hidden="true" tabindex="-1"></a><span class="in">        // 2. Calculate mean and standard deviation.</span></span>
+<span id="cb1-491"><a href="#cb1-491" aria-hidden="true" tabindex="-1"></a><span class="in">        double sum = std::accumulate(source_values.begin(), source_values.end(), 0.0);</span></span>
+<span id="cb1-492"><a href="#cb1-492" aria-hidden="true" tabindex="-1"></a><span class="in">        double mean = sum / source_values.size();</span></span>
+<span id="cb1-493"><a href="#cb1-493" aria-hidden="true" tabindex="-1"></a><span class="in">        </span></span>
+<span id="cb1-494"><a href="#cb1-494" aria-hidden="true" tabindex="-1"></a><span class="in">        double sq_sum = std::inner_product(source_values.begin(), source_values.end(), source_values.begin(), 0.0);</span></span>
+<span id="cb1-495"><a href="#cb1-495" aria-hidden="true" tabindex="-1"></a><span class="in">        double stddev = std::sqrt(sq_sum / source_values.size() - mean * mean);</span></span>
+<span id="cb1-496"><a href="#cb1-496" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-497"><a href="#cb1-497" aria-hidden="true" tabindex="-1"></a><span class="in">        // Handle case of zero standard deviation to avoid division by zero.</span></span>
+<span id="cb1-498"><a href="#cb1-498" aria-hidden="true" tabindex="-1"></a><span class="in">        if (stddev &lt; 1e-9) {</span></span>
+<span id="cb1-499"><a href="#cb1-499" aria-hidden="true" tabindex="-1"></a><span class="in">            return std::vector&lt;double&gt;(source_values.size(), 0.0);</span></span>
+<span id="cb1-500"><a href="#cb1-500" aria-hidden="true" tabindex="-1"></a><span class="in">        }</span></span>
+<span id="cb1-501"><a href="#cb1-501" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-502"><a href="#cb1-502" aria-hidden="true" tabindex="-1"></a><span class="in">        // 3. Apply the standardization formula to each element.</span></span>
+<span id="cb1-503"><a href="#cb1-503" aria-hidden="true" tabindex="-1"></a><span class="in">        std::vector&lt;double&gt; results;</span></span>
+<span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a><span class="in">        results.reserve(source_values.size());</span></span>
+<span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a><span class="in">        for (const auto&amp; val : source_values) {</span></span>
+<span id="cb1-506"><a href="#cb1-506" aria-hidden="true" tabindex="-1"></a><span class="in">            results.push_back((val - mean) / stddev);</span></span>
+<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a><span class="in">        }</span></span>
+<span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a><span class="in">        return results;</span></span>
+<span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>private:</span>
+<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>    std::string m_dependency;</span>
+<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>A9. Updated Usage Example</span>
+<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>This example shows how to create a standardized version of the "LFP_Mean" column.</span>
+<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a>void standardize_example(DataManager&amp; dataManager, const std::vector<span class="dt">&lt;</span><span class="kw">Interval</span><span class="dt">&gt;</span>&amp; intervals) {</span>
+<span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a>    TableViewBuilder builder;</span>
+<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>    builder.setRowSource(std::make_unique<span class="dt">&lt;</span><span class="kw">IntervalSelector</span><span class="dt">&gt;</span>(intervals));</span>
+<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a><span class="in">    auto lfp_source = dataManager.getAnalogSource("LFP");</span></span>
+<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a><span class="in">    // 1. Add the base column we want to standardize.</span></span>
+<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;double&gt;("LFP_Mean", </span></span>
+<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;IntervalReductionComputer&lt;double&gt;&gt;(lfp_source, Reduction::Mean));</span></span>
+<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a><span class="in">    // 2. Add the transformed column that depends on "LFP_Mean".</span></span>
+<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a><span class="in">    builder.addColumn&lt;double&gt;("LFP_Mean_ZScore",</span></span>
+<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a><span class="in">        std::make_unique&lt;StandardizeComputer&lt;double&gt;&gt;("LFP_Mean"));</span></span>
+<span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a><span class="in">    TableView table = builder.build();</span></span>
+<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a><span class="in">    // Retrieve the standardized data.</span></span>
+<span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a><span class="in">    // This will first trigger the computation of "LFP_Mean", then use those</span></span>
+<span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a><span class="in">    // results to compute "LFP_Mean_ZScore".</span></span>
+<span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a><span class="in">    const auto&amp; z_scores = table.getColumnValues&lt;double&gt;("LFP_Mean_ZScore");</span></span>
+<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a><span class="in">    if (!z_scores.empty()) {</span></span>
+<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a><span class="in">        std::cout &lt;&lt; "First Z-scored value: " &lt;&lt; z_scores[0] &lt;&lt; std::endl;</span></span>
+<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a><span class="in">    }</span></span>
+<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>Addendum 4: Support for Reverse Lookup (Trace-back to Source)</span>
+<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>Date: July 15, 2025</span>
+<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>This addendum addresses the critical requirement for interactive plotting: tracing a data point in a TableView row back to its original source definition (e.g., the specific timestamp or interval).</span>
+<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>A10. Problem Statement</span>
+<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>The TableView contains all the information necessary for a reverse lookup, but it is not exposed through a clean, type-safe public API. Client code, such as a plotting library, should not need to know the internal details of the IRowSelector or perform dynamic_cast operations to get the source of a given row.</span>
+<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a>A11. Proposed Design Changes</span>
+<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>We will introduce a RowDescriptor variant type and a new public method on TableView to provide this functionality in a clean, encapsulated way.</span>
+<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>RowDescriptor (New Type Definition):</span>
+<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>A std::variant that can hold any of the possible source types that can define a row. This makes it easily extensible.</span>
+<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>// Assuming Interval and TimeFrameIndex are defined elsewhere</span>
+<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>using RowDescriptor = std::variant&lt;</span>
+<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>    std::monostate,         // For cases where there's no descriptor</span>
+<span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>    size_t,                 // For IndexSelector</span>
+<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    double,                 // For TimestampSelector</span>
+<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    Interval                // For IntervalSelector</span>
+<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a><span class="at">&gt;;</span></span>
+<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>IRowSelector Extension:</span>
+<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>The IRowSelector interface will be extended with a virtual method to retrieve a descriptor for a specific row.</span>
+<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a>class IRowSelector {</span>
+<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    // ... existing methods ...</span>
+<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a>    virtual RowDescriptor getDescriptor(size_t row_index) const = 0;</span>
+<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>// Example implementation in IntervalSelector:</span>
+<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>RowDescriptor IntervalSelector::getDescriptor(size_t row_index) const {</span>
+<span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a>    if (row_index &lt; m_intervals.size()) {</span>
+<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>        return m_intervals<span class="co">[</span><span class="ot">row_index</span><span class="co">]</span>;</span>
+<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    return std::monostate{};</span>
+<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>TableView API Extension:</span>
+<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>A new public method is added to TableView to provide the main access point for this feature.</span>
+<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>class TableView {</span>
+<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>public:</span>
+<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>    // ... existing methods ...</span>
+<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a><span class="in">    // Gets a descriptor containing the source information for a given row index.</span></span>
+<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a><span class="in">    RowDescriptor getRowDescriptor(size_t row_index) const;</span></span>
+<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>};</span>
+<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a>// Implementation:</span>
+<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>RowDescriptor TableView::getRowDescriptor(size_t row_index) const {</span>
+<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>    if (m_rowSelector) {</span>
+<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a>        return m_rowSelector-&gt;getDescriptor(row_index);</span>
+<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a>    return std::monostate{};</span>
+<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>A12. Updated Usage Example (Tooltip Scenario)</span>
+<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a>This example shows how a plotting library would use the new API to create a tooltip.</span>
+<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a>// This function would be called by the plotting library on mouse hover.</span>
+<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>void on_plot_hover(const TableView&amp; table, size_t hovered_row_index) {</span>
+<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a>    // 1. Get the generic descriptor for the hovered row.</span>
+<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a>    RowDescriptor desc = table.getRowDescriptor(hovered_row_index);</span>
+<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a><span class="in">    // 2. Use std::visit with a lambda to process the descriptor type-safely.</span></span>
+<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a><span class="in">    std::string tooltip_text = std::visit([](auto&amp;&amp; arg) -&gt; std::string {</span></span>
+<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a><span class="in">        using T = std::decay_t&lt;decltype(arg)&gt;;</span></span>
+<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a><span class="in">        if constexpr (std::is_same_v&lt;T, size_t&gt;) {</span></span>
+<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a><span class="in">            return "Source Index: " + std::to_string(arg);</span></span>
+<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a><span class="in">        } else if constexpr (std::is_same_v&lt;T, double&gt;) {</span></span>
+<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a><span class="in">            return "Source Timestamp: " + std::to_string(arg);</span></span>
+<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a><span class="in">        } else if constexpr (std::is_same_v&lt;T, Interval&gt;) {</span></span>
+<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a><span class="in">            return "Source Interval: [" + std::to_string(arg.start) + ", " + std::to_string(arg.end) + "]";</span></span>
+<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a><span class="in">        } else {</span></span>
+<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a><span class="in">            return "Source: N/A";</span></span>
+<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a><span class="in">        }</span></span>
+<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a><span class="in">    }, desc);</span></span>
+<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a><span class="in">    // 3. Display the generated tooltip text to the user.</span></span>
+<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a><span class="in">    show_tooltip(tooltip_text);</span></span>
+<span id="cb1-627"><a href="#cb1-627" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

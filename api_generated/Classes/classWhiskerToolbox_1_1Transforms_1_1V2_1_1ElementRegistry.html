@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>WhiskerToolbox::Transforms::V2::ElementRegistry – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#whiskertoolboxtransformsv2elementregistry" id="toc-whiskertoolboxtransformsv2elementregistry" class="nav-link active" data-scroll-target="#whiskertoolboxtransformsv2elementregistry">WhiskerToolbox::Transforms::V2::ElementRegistry</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-elementregistry" id="toc-function-elementregistry" class="nav-link" data-scroll-target="#function-elementregistry">function ElementRegistry</a></li>
+  <li><a href="#function-elementregistry-1" id="toc-function-elementregistry-1" class="nav-link" data-scroll-target="#function-elementregistry-1">function ElementRegistry</a></li>
+  <li><a href="#function-operator" id="toc-function-operator" class="nav-link" data-scroll-target="#function-operator">function operator=</a></li>
+  <li><a href="#function-elementregistry-2" id="toc-function-elementregistry-2" class="nav-link" data-scroll-target="#function-elementregistry-2">function ElementRegistry</a></li>
+  <li><a href="#function-operator-1" id="toc-function-operator-1" class="nav-link" data-scroll-target="#function-operator-1">function operator=</a></li>
+  <li><a href="#function-registertransform" id="toc-function-registertransform" class="nav-link" data-scroll-target="#function-registertransform">function registerTransform</a></li>
+  <li><a href="#function-registertransform-1" id="toc-function-registertransform-1" class="nav-link" data-scroll-target="#function-registertransform-1">function registerTransform</a></li>
+  <li><a href="#function-registertimegroupedtransform" id="toc-function-registertimegroupedtransform" class="nav-link" data-scroll-target="#function-registertimegroupedtransform">function registerTimeGroupedTransform</a></li>
+  <li><a href="#function-registertimegroupedtransform-1" id="toc-function-registertimegroupedtransform-1" class="nav-link" data-scroll-target="#function-registertimegroupedtransform-1">function registerTimeGroupedTransform</a></li>
+  <li><a href="#function-registerbinarytransform" id="toc-function-registerbinarytransform" class="nav-link" data-scroll-target="#function-registerbinarytransform">function registerBinaryTransform</a></li>
+  <li><a href="#function-execute" id="toc-function-execute" class="nav-link" data-scroll-target="#function-execute">function execute</a></li>
+  <li><a href="#function-executebinary" id="toc-function-executebinary" class="nav-link" data-scroll-target="#function-executebinary">function executeBinary</a></li>
+  <li><a href="#function-executetimegrouped" id="toc-function-executetimegrouped" class="nav-link" data-scroll-target="#function-executetimegrouped">function executeTimeGrouped</a></li>
+  <li><a href="#function-registercontainertransform" id="toc-function-registercontainertransform" class="nav-link" data-scroll-target="#function-registercontainertransform">function registerContainerTransform</a></li>
+  <li><a href="#function-executecontainertransform" id="toc-function-executecontainertransform" class="nav-link" data-scroll-target="#function-executecontainertransform">function executeContainerTransform</a></li>
+  <li><a href="#function-iscontainertransform" id="toc-function-iscontainertransform" class="nav-link" data-scroll-target="#function-iscontainertransform">function isContainerTransform</a></li>
+  <li><a href="#function-getcontainermetadata" id="toc-function-getcontainermetadata" class="nav-link" data-scroll-target="#function-getcontainermetadata">function getContainerMetadata</a></li>
+  <li><a href="#function-getcontainertransformsforinputtype" id="toc-function-getcontainertransformsforinputtype" class="nav-link" data-scroll-target="#function-getcontainertransformsforinputtype">function getContainerTransformsForInputType</a></li>
+  <li><a href="#function-createcontainerexecutor" id="toc-function-createcontainerexecutor" class="nav-link" data-scroll-target="#function-createcontainerexecutor">function createContainerExecutor</a></li>
+  <li><a href="#function-executecontainertransformdynamic" id="toc-function-executecontainertransformdynamic" class="nav-link" data-scroll-target="#function-executecontainertransformdynamic">function executeContainerTransformDynamic</a></li>
+  <li><a href="#function-registerbinarycontainertransform" id="toc-function-registerbinarycontainertransform" class="nav-link" data-scroll-target="#function-registerbinarycontainertransform">function registerBinaryContainerTransform</a></li>
+  <li><a href="#function-executebinarycontainertransform" id="toc-function-executebinarycontainertransform" class="nav-link" data-scroll-target="#function-executebinarycontainertransform">function executeBinaryContainerTransform</a></li>
+  <li><a href="#function-gettransformfunction" id="toc-function-gettransformfunction" class="nav-link" data-scroll-target="#function-gettransformfunction">function getTransformFunction</a></li>
+  <li><a href="#function-gettransformsforinputtype" id="toc-function-gettransformsforinputtype" class="nav-link" data-scroll-target="#function-gettransformsforinputtype">function getTransformsForInputType</a></li>
+  <li><a href="#function-gettransformsforoutputtype" id="toc-function-gettransformsforoutputtype" class="nav-link" data-scroll-target="#function-gettransformsforoutputtype">function getTransformsForOutputType</a></li>
+  <li><a href="#function-getcompatibletransforms" id="toc-function-getcompatibletransforms" class="nav-link" data-scroll-target="#function-getcompatibletransforms">function getCompatibleTransforms</a></li>
+  <li><a href="#function-getmetadata" id="toc-function-getmetadata" class="nav-link" data-scroll-target="#function-getmetadata">function getMetadata</a></li>
+  <li><a href="#function-getparameterschema" id="toc-function-getparameterschema" class="nav-link" data-scroll-target="#function-getparameterschema">function getParameterSchema</a></li>
+  <li><a href="#function-getparameterschemabytype" id="toc-function-getparameterschemabytype" class="nav-link" data-scroll-target="#function-getparameterschemabytype">function getParameterSchemaByType</a></li>
+  <li><a href="#function-hastransform" id="toc-function-hastransform" class="nav-link" data-scroll-target="#function-hastransform">function hasTransform</a></li>
+  <li><a href="#function-haselementtransform" id="toc-function-haselementtransform" class="nav-link" data-scroll-target="#function-haselementtransform">function hasElementTransform</a></li>
+  <li><a href="#function-getalltransformnames" id="toc-function-getalltransformnames" class="nav-link" data-scroll-target="#function-getalltransformnames">function getAllTransformNames</a></li>
+  <li><a href="#function-registerparamdeserializer" id="toc-function-registerparamdeserializer" class="nav-link" data-scroll-target="#function-registerparamdeserializer">function registerParamDeserializer</a></li>
+  <li><a href="#function-deserializeparameters" id="toc-function-deserializeparameters" class="nav-link" data-scroll-target="#function-deserializeparameters">function deserializeParameters</a></li>
+  <li><a href="#function-validateparameters" id="toc-function-validateparameters" class="nav-link" data-scroll-target="#function-validateparameters">function validateParameters</a></li>
+  <li><a href="#function-registertypedexecutorfactory" id="toc-function-registertypedexecutorfactory" class="nav-link" data-scroll-target="#function-registertypedexecutorfactory">function registerTypedExecutorFactory</a></li>
+  <li><a href="#function-registertimegroupedexecutorfactory" id="toc-function-registertimegroupedexecutorfactory" class="nav-link" data-scroll-target="#function-registertimegroupedexecutorfactory">function registerTimeGroupedExecutorFactory</a></li>
+  <li><a href="#function-createtypedexecutor" id="toc-function-createtypedexecutor" class="nav-link" data-scroll-target="#function-createtypedexecutor">function createTypedExecutor</a></li>
+  <li><a href="#function-createtimegroupedexecutor" id="toc-function-createtimegroupedexecutor" class="nav-link" data-scroll-target="#function-createtimegroupedexecutor">function createTimeGroupedExecutor</a></li>
+  <li><a href="#function-executewithdynamicparams" id="toc-function-executewithdynamicparams" class="nav-link" data-scroll-target="#function-executewithdynamicparams">function executeWithDynamicParams</a></li>
+  <li><a href="#function-executewithdynamicparamsany" id="toc-function-executewithdynamicparamsany" class="nav-link" data-scroll-target="#function-executewithdynamicparamsany">function executeWithDynamicParamsAny</a></li>
+  <li><a href="#function-executetimegroupedwithdynamicparams" id="toc-function-executetimegroupedwithdynamicparams" class="nav-link" data-scroll-target="#function-executetimegroupedwithdynamicparams">function executeTimeGroupedWithDynamicParams</a></li>
+  <li><a href="#function-registercontainerops" id="toc-function-registercontainerops" class="nav-link" data-scroll-target="#function-registercontainerops">function registerContainerOps</a></li>
+  <li><a href="#function-getcontainerops" id="toc-function-getcontainerops" class="nav-link" data-scroll-target="#function-getcontainerops">function getContainerOps</a></li>
+  <li><a href="#function-registertimeseriesops" id="toc-function-registertimeseriesops" class="nav-link" data-scroll-target="#function-registertimeseriesops">function registerTimeSeriesOps</a></li>
+  <li><a href="#function-gettimeseriesops" id="toc-function-gettimeseriesops" class="nav-link" data-scroll-target="#function-gettimeseriesops">function getTimeSeriesOps</a></li>
+  <li><a href="#function-instance" id="toc-function-instance" class="nav-link" data-scroll-target="#function-instance">function instance</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">WhiskerToolbox::Transforms::V2::ElementRegistry</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="whiskertoolboxtransformsv2elementregistry" class="level1">
+<h1>WhiskerToolbox::Transforms::V2::ElementRegistry</h1>
+<p>Registry for element-level transforms. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;ElementRegistry.hpp&gt;</code></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry_1_1ContainerOps.html">ContainerOps</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry_1_1TimeSeriesOps.html">TimeSeriesOps</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-elementregistry">ElementRegistry</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-elementregistry">ElementRegistry</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> const &amp; ) =delete</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> const &amp; ) =delete</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-elementregistry">ElementRegistry</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> &amp;&amp; ) =default</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> &amp;&amp; ) =default</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertransform">registerTransform</a></strong>(std::string const &amp; name, std::function&lt; Out(In const &amp;, Params const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> metadata ={})<br>Register single-input element transform with parameters.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertransform">registerTransform</a></strong>(std::string const &amp; name, std::function&lt; Out(In const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> metadata ={})<br>Register stateless transform (no parameters)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertimegroupedtransform">registerTimeGroupedTransform</a></strong>(std::string const &amp; name, std::function&lt; std::vector&lt; Out &gt;(std::span&lt; In const &gt;, Params const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> metadata ={})<br>Register time-grouped transform.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertimegroupedtransform">registerTimeGroupedTransform</a></strong>(std::string const &amp; name, std::function&lt; std::vector&lt; Out &gt;(std::span&lt; In const &gt;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> metadata ={})<br>Register stateless time-grouped transform (no parameters)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In1 ,typename In2 ,typename Out ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registerbinarytransform">registerBinaryTransform</a></strong>(std::string const &amp; name, std::function&lt; Out(In1 const &amp;, In2 const &amp;, Params const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> metadata ={})<br>Register binary element transform.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>Out</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-execute">execute</a></strong>(std::string const &amp; name, In const &amp; input, Params const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx ={}) const<br>Execute single-input transform.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In1 ,typename In2 ,typename Out ,typename Params &gt; <br>Out</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executebinary">executeBinary</a></strong>(std::string const &amp; name, In1 const &amp; input1, In2 const &amp; input2, Params const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx ={}) const<br>Execute binary transform.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>std::vector&lt; Out &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executetimegrouped">executeTimeGrouped</a></strong>(std::string const &amp; name, std::span&lt; In const &gt; inputs, Params const &amp; params) const<br>Execute time-grouped transform.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename InContainer ,typename OutContainer ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registercontainertransform">registerContainerTransform</a></strong>(std::string const &amp; name, std::function&lt; std::shared_ptr&lt; OutContainer &gt;(InContainer const &amp;, Params const &amp;, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ContainerTransformMetadata.html">ContainerTransformMetadata</a> metadata ={})<br>Register a container-level transform.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InContainer ,typename OutContainer ,typename Params &gt; <br>std::shared_ptr&lt; OutContainer &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executecontainertransform">executeContainerTransform</a></strong>(std::string const &amp; name, InContainer const &amp; input, Params const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx ={}) const<br>Execute a container transform.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-iscontainertransform">isContainerTransform</a></strong>(std::string const &amp; name) const<br>Check if a transform is a container transform.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ContainerTransformMetadata.html">ContainerTransformMetadata</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getcontainermetadata">getContainerMetadata</a></strong>(std::string const &amp; name) const<br>Get container transform metadata.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getcontainertransformsforinputtype">getContainerTransformsForInputType</a></strong>(std::type_index input_type) const<br>Get all container transforms for an input type.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IContainerExecutor.html">IContainerExecutor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-createcontainerexecutor">createContainerExecutor</a></strong>(std::string const &amp; name, std::any const &amp; params_any) const<br>Create a container executor from parameters.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executecontainertransformdynamic">executeContainerTransformDynamic</a></strong>(std::string const &amp; name, <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; input_variant, std::any const &amp; params_any, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx ={}) const<br>Execute container transform with dynamic parameter dispatch.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InContainer1 ,typename InContainer2 ,typename OutContainer ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registerbinarycontainertransform">registerBinaryContainerTransform</a></strong>(std::string const &amp; name, std::function&lt; std::shared_ptr&lt; OutContainer &gt;(InContainer1 const &amp;, InContainer2 const &amp;, Params const &amp;, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp;)&gt; func, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ContainerTransformMetadata.html">ContainerTransformMetadata</a> metadata ={})<br>Register binary container transform.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename InContainer1 ,typename InContainer2 ,typename OutContainer ,typename Params &gt; <br>std::shared_ptr&lt; OutContainer &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executebinarycontainertransform">executeBinaryContainerTransform</a></strong>(std::string const &amp; name, InContainer1 &amp; input1, InContainer2 &amp; input2, Params const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx ={}) const<br>Execute binary container transform.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>auto</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-gettransformfunction">getTransformFunction</a></strong>(std::string const &amp; name, Params const &amp; params) const<br>Get a callable transform function from the registry.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-gettransformsforinputtype">getTransformsForInputType</a></strong>(std::type_index input_type) const<br>Get all transform names applicable to an input type.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-gettransformsforoutputtype">getTransformsForOutputType</a></strong>(std::type_index output_type) const<br>Get all transform names that produce an output type.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In ,typename Out &gt; <br>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getcompatibletransforms">getCompatibleTransforms</a></strong>() const<br>Get all transform names that take In and produce Out.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">TransformMetadata</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getmetadata">getMetadata</a></strong>(std::string const &amp; name) const<br>Get metadata for a transform.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getparameterschema">getParameterSchema</a></strong>(std::string const &amp; transform_name) const<br>Get the parameter schema for a transform by name.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getparameterschemabytype">getParameterSchemaByType</a></strong>(std::type_index params_type) const<br>Get the parameter schema for a params type_index directly.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-hastransform">hasTransform</a></strong>(std::string const &amp; name) const<br>Check if transform exists (element or container)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-haselementtransform">hasElementTransform</a></strong>(std::string const &amp; name) const<br>Check if an element-level transform exists (not container)</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getalltransformnames">getAllTransformNames</a></strong>() const<br>Get all registered transform names.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registerparamdeserializer">registerParamDeserializer</a></strong>(std::function&lt; std::any(std::string const &amp;)&gt; deserializer)<br>Register JSON parameter deserializer for a parameter type.</td>
+</tr>
+<tr class="even">
+<td>std::any</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-deserializeparameters">deserializeParameters</a></strong>(std::string const &amp; transform_name, std::string const &amp; json_str) const<br>Deserialize JSON parameters for a transform by name.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-validateparameters">validateParameters</a></strong>(std::string const &amp; transform_name, std::any const &amp; params_any) const<br>Validate that parameters match the expected type for a transform.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertypedexecutorfactory">registerTypedExecutorFactory</a></strong>(std::function&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IParamExecutor.html">IParamExecutor</a> &gt;(std::any const &amp;)&gt; factory)<br>Register a typed executor factory for a specific type signature.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename In ,typename Out ,typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertimegroupedexecutorfactory">registerTimeGroupedExecutorFactory</a></strong>(std::function&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ITimeGroupedParamExecutor.html">ITimeGroupedParamExecutor</a> &gt;(std::any const &amp;)&gt; factory)<br>Register a typed time-grouped executor factory.</td>
+</tr>
+<tr class="even">
+<td>std::unique_ptr&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IParamExecutor.html">IParamExecutor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-createtypedexecutor">createTypedExecutor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeTriple.html">TypeTriple</a> const &amp; key, std::any const &amp; params) const<br>Create a typed executor for given parameters.</td>
+</tr>
+<tr class="odd">
+<td>std::unique_ptr&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ITimeGroupedParamExecutor.html">ITimeGroupedParamExecutor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-createtimegroupedexecutor">createTimeGroupedExecutor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeTriple.html">TypeTriple</a> const &amp; key, std::any const &amp; params) const<br>Create a typed time-grouped executor for given parameters.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#using-elementvariant">ElementVariant</a></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executewithdynamicparams">executeWithDynamicParams</a></strong>(std::string const &amp; transform_name, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#using-elementvariant">ElementVariant</a> const &amp; input_element, std::any const &amp; params, std::type_index in_type, std::type_index out_type, std::type_index param_type) const<br>Execute transform with typed executor (zero per-element dispatch)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#using-elementvariant">ElementVariant</a></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executewithdynamicparamsany">executeWithDynamicParamsAny</a></strong>(std::string const &amp; transform_name, std::any const &amp; input_element, std::any const &amp; params, std::type_index in_type, std::type_index out_type, std::type_index param_type) const<br>Execute transform with dynamic parameters and arbitrary input type.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#using-batchvariant">BatchVariant</a></td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-executetimegroupedwithdynamicparams">executeTimeGroupedWithDynamicParams</a></strong>(std::string const &amp; transform_name, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#using-batchvariant">BatchVariant</a> const &amp; input_span, std::any const &amp; params, std::type_index in_type, std::type_index out_type, std::type_index param_type) const<br>Execute time-grouped transform with typed executor.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registercontainerops">registerContainerOps</a></strong>()<br>Register container operations for a type T.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry_1_1ContainerOps.html">ContainerOps</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-getcontainerops">getContainerOps</a></strong>(std::type_index type_idx) const<br>Get container operations for a type.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename Container &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-registertimeseriesops">registerTimeSeriesOps</a></strong>()<br>Register time series operations for a container type.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry_1_1TimeSeriesOps.html">TimeSeriesOps</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-gettimeseriesops">getTimeSeriesOps</a></strong>(std::type_index type_idx) const<br>Get time series operations for a type.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html#function-instance">instance</a></strong>()<br>Get global singleton instance.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ElementRegistry<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry for element-level transforms.</p>
+<p>Maintains a compile-time typed registry of transforms that operate on individual elements (<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, float, etc.).</p>
+<p>Features:</p>
+<ul>
+<li>Type-safe registration and lookup</li>
+<li>Query by input/output types</li>
+<li>Automatic container lifting</li>
+<li>Metadata for UI generation</li>
+</ul>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-elementregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-elementregistry">function ElementRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ElementRegistry<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-elementregistry-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-elementregistry-1">function ElementRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ElementRegistry<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ElementRegistry <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-elementregistry-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-elementregistry-2">function ElementRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ElementRegistry<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="op">&amp;&amp;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator-1">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ElementRegistry <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="op">&amp;&amp;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-registertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertransform">function registerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTransform<span class="op">(</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> Out<span class="op">(</span>In <span class="at">const</span> <span class="op">&amp;,</span> Params <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    TransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register single-input element transform with parameters.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Unique transform name</li>
+<li><strong>func</strong> Transform function</li>
+<li><strong>metadata</strong> Optional metadata for UI</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>In</strong> Input element type (e.g., <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>)</li>
+<li><strong>Out</strong> Output element type (e.g., float)</li>
+<li><strong>Params</strong> Parameter type (must be default constructible)</li>
+</ul>
+</section>
+<section id="function-registertransform-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertransform-1">function registerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTransform<span class="op">(</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> Out<span class="op">(</span>In <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    TransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register stateless transform (no parameters)</p>
+</section>
+<section id="function-registertimegroupedtransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertimegroupedtransform">function registerTimeGroupedTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTimeGroupedTransform<span class="op">(</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Out <span class="op">&gt;(</span><span class="bu">std::</span>span<span class="op">&lt;</span> In <span class="at">const</span> <span class="op">&gt;,</span> Params <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    TransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register time-grouped transform.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>In</strong> Input element type (e.g., float)</li>
+<li><strong>Out</strong> Output element type (e.g., float)</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p>For transforms that operate on all elements at a single time point. Signature: (span<in>, Params) → vector<out></out></in></p>
+<p>Example: Sum reduction (span<float> → vector<float> with one element)</float></float></p>
+</section>
+<section id="function-registertimegroupedtransform-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertimegroupedtransform-1">function registerTimeGroupedTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTimeGroupedTransform<span class="op">(</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Out <span class="op">&gt;(</span><span class="bu">std::</span>span<span class="op">&lt;</span> In <span class="at">const</span> <span class="op">&gt;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    TransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register stateless time-grouped transform (no parameters)</p>
+</section>
+<section id="function-registerbinarytransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-registerbinarytransform">function registerBinaryTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In1 <span class="op">,</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> In2 <span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerBinaryTransform<span class="op">(</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> Out<span class="op">(</span>In1 <span class="at">const</span> <span class="op">&amp;,</span> In2 <span class="at">const</span> <span class="op">&amp;,</span> Params <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    TransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register binary element transform.</p>
+<p>Wraps binary function as tuple-input function for consistency.</p>
+</section>
+<section id="function-execute" class="level3">
+<h3 class="anchored" data-anchor-id="function-execute">function execute</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Out execute<span class="op">(</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    In <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx <span class="op">={}</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute single-input transform.</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if transform not found or type mismatch</li>
+</ul>
+</section>
+<section id="function-executebinary" class="level3">
+<h3 class="anchored" data-anchor-id="function-executebinary">function executeBinary</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In1 <span class="op">,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> In2 <span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Out executeBinary<span class="op">(</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    In1 <span class="at">const</span> <span class="op">&amp;</span> input1<span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    In2 <span class="at">const</span> <span class="op">&amp;</span> input2<span class="op">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx <span class="op">={}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute binary transform.</p>
+</section>
+<section id="function-executetimegrouped" class="level3">
+<h3 class="anchored" data-anchor-id="function-executetimegrouped">function executeTimeGrouped</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Out <span class="op">&gt;</span> executeTimeGrouped<span class="op">(</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> In <span class="at">const</span> <span class="op">&gt;</span> inputs<span class="op">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute time-grouped transform.</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if transform not found or type mismatch</li>
+</ul>
+</section>
+<section id="function-registercontainertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-registercontainertransform">function registerContainerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerContainerTransform<span class="op">(</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;(</span>InContainer <span class="at">const</span> <span class="op">&amp;,</span> Params <span class="at">const</span> <span class="op">&amp;,</span> ComputeContext <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    ContainerTransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a container-level transform.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Unique transform name</li>
+<li><strong>func</strong> Transform function: (Container const&amp;, Params const&amp;, Context const&amp;) -&gt; shared_ptr<container></container></li>
+<li><strong>metadata</strong> Optional metadata</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>InContainer</strong> Input container type (e.g., <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>)</li>
+<li><strong>OutContainer</strong> Output container type (e.g., <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>)</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p>These are transforms that need full container access (temporal dependencies, etc.) Transform function should be pure: take concrete types, return concrete types. No virtual inheritance, no variants - pipeline handles type erasure.</p>
+</section>
+<section id="function-executecontainertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-executecontainertransform">function executeContainerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> executeContainerTransform<span class="op">(</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx <span class="op">={}</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute a container transform.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Transform name</li>
+<li><strong>input</strong> Input container (concrete type, not variant)</li>
+<li><strong>params</strong> Parameters (concrete type, not type-erased)</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if transform not found</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>InContainer</strong> Input container type</li>
+<li><strong>OutContainer</strong> Output container type</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to output container</p>
+</section>
+<section id="function-iscontainertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-iscontainertransform">function isContainerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isContainerTransform<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a transform is a container transform.</p>
+</section>
+<section id="function-getcontainermetadata" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcontainermetadata">function getContainerMetadata</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ContainerTransformMetadata <span class="at">const</span> <span class="op">*</span> getContainerMetadata<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get container transform metadata.</p>
+</section>
+<section id="function-getcontainertransformsforinputtype" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcontainertransformsforinputtype">function getContainerTransformsForInputType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getContainerTransformsForInputType<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all container transforms for an input type.</p>
+</section>
+<section id="function-createcontainerexecutor" class="level3">
+<h3 class="anchored" data-anchor-id="function-createcontainerexecutor">function createContainerExecutor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> IContainerExecutor <span class="op">&gt;</span> createContainerExecutor<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a container executor from parameters.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Transform name</li>
+<li><strong>params_any</strong> Type-erased parameters (must match registered type)</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IContainerExecutor.html">IContainerExecutor</a>, or nullptr if not found</p>
+<p>Uses the registered factory to create a typed executor with captured parameters. Returns the <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IContainerExecutor.html">IContainerExecutor</a> interface for type-erased execution.</p>
+</section>
+<section id="function-executecontainertransformdynamic" class="level3">
+<h3 class="anchored" data-anchor-id="function-executecontainertransformdynamic">function executeContainerTransformDynamic</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>DataTypeVariant executeContainerTransformDynamic<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> input_variant<span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any<span class="op">,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx <span class="op">={}</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute container transform with dynamic parameter dispatch.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Transform name</li>
+<li><strong>input_variant</strong> Input data as DataTypeVariant</li>
+<li><strong>params_any</strong> Type-erased parameters</li>
+<li><strong>ctx</strong> Compute context</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if transform not found or execution fails</li>
+</ul>
+<p><strong>Return</strong>: Output data as DataTypeVariant</p>
+<p>Creates an executor from the parameters and executes the transform. This is the primary entry point for dynamic container transform execution.</p>
+</section>
+<section id="function-registerbinarycontainertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-registerbinarycontainertransform">function registerBinaryContainerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer1 <span class="op">,</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InContainer2 <span class="op">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerBinaryContainerTransform<span class="op">(</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;(</span>InContainer1 <span class="at">const</span> <span class="op">&amp;,</span> InContainer2 <span class="at">const</span> <span class="op">&amp;,</span> Params <span class="at">const</span> <span class="op">&amp;,</span> ComputeContext <span class="at">const</span> <span class="op">&amp;)&gt;</span> func<span class="op">,</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    ContainerTransformMetadata metadata <span class="op">={}</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register binary container transform.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>InContainer1</strong> First input container type</li>
+<li><strong>InContainer2</strong> Second input container type</li>
+<li><strong>OutContainer</strong> Output container type</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p>For container-level transforms that need two full containers as input and handle their own time alignment and ragged structure.</p>
+<p>Example: AnalogIntervalPeak(DigitalIntervalSeries, AnalogTimeSeries) → <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a></p>
+</section>
+<section id="function-executebinarycontainertransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-executebinarycontainertransform">function executeBinaryContainerTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer1 <span class="op">,</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InContainer2 <span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> executeBinaryContainerTransform<span class="op">(</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    InContainer1 <span class="op">&amp;</span> input1<span class="op">,</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    InContainer2 <span class="op">&amp;</span> input2<span class="op">,</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx <span class="op">={}</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute binary container transform.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Transform name</li>
+<li><strong>input1</strong> First input container</li>
+<li><strong>input2</strong> Second input container</li>
+<li><strong>params</strong> Parameters</li>
+<li><strong>ctx</strong> Compute context</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to output container</p>
+</section>
+<section id="function-gettransformfunction" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettransformfunction">function getTransformFunction</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getTransformFunction<span class="op">(</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a callable transform function from the registry.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Transform name</li>
+<li><strong>params</strong> Parameters to bind to the transform</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if transform not found</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>In</strong> Input element type</li>
+<li><strong>Out</strong> Output element type</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: Callable that applies the transform</p>
+<p>Returns a lambda that captures the transform and parameters, allowing it to be used with standard algorithms or materializers.</p>
+</section>
+<section id="function-gettransformsforinputtype" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettransformsforinputtype">function getTransformsForInputType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getTransformsForInputType<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all transform names applicable to an input type.</p>
+</section>
+<section id="function-gettransformsforoutputtype" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettransformsforoutputtype">function getTransformsForOutputType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getTransformsForOutputType<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all transform names that produce an output type.</p>
+</section>
+<section id="function-getcompatibletransforms" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcompatibletransforms">function getCompatibleTransforms</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getCompatibleTransforms<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all transform names that take In and produce Out.</p>
+</section>
+<section id="function-getmetadata" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmetadata">function getMetadata</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>TransformMetadata <span class="at">const</span> <span class="op">*</span> getMetadata<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get metadata for a transform.</p>
+</section>
+<section id="function-getparameterschema" class="level3">
+<h3 class="anchored" data-anchor-id="function-getparameterschema">function getParameterSchema</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ParameterSchema <span class="at">const</span> <span class="op">*</span> getParameterSchema<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the parameter schema for a transform by name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>transform_name</strong> Name of the transform</li>
+</ul>
+<p><strong>Return</strong>: Pointer to <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a>, or nullptr if not found</p>
+<p>Returns the <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> describing all fields and their types, constraints, and UI hints for the transform’s parameter struct.</p>
+</section>
+<section id="function-getparameterschemabytype" class="level3">
+<h3 class="anchored" data-anchor-id="function-getparameterschemabytype">function getParameterSchemaByType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ParameterSchema <span class="at">const</span> <span class="op">*</span> getParameterSchemaByType<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the parameter schema for a params type_index directly.</p>
+</section>
+<section id="function-hastransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-hastransform">function hasTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasTransform<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if transform exists (element or container)</p>
+</section>
+<section id="function-haselementtransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-haselementtransform">function hasElementTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasElementTransform<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if an element-level transform exists (not container)</p>
+</section>
+<section id="function-getalltransformnames" class="level3">
+<h3 class="anchored" data-anchor-id="function-getalltransformnames">function getAllTransformNames</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getAllTransformNames<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all registered transform names.</p>
+</section>
+<section id="function-registerparamdeserializer" class="level3">
+<h3 class="anchored" data-anchor-id="function-registerparamdeserializer">function registerParamDeserializer</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerParamDeserializer<span class="op">(</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;</span> deserializer</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register JSON parameter deserializer for a parameter type.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>deserializer</strong> Function that converts JSON string to std::any containing Params</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p>This allows the registry to deserialize JSON strings into typed parameters without needing a variant or manual dispatch.</p>
+</section>
+<section id="function-deserializeparameters" class="level3">
+<h3 class="anchored" data-anchor-id="function-deserializeparameters">function deserializeParameters</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any deserializeParameters<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Deserialize JSON parameters for a transform by name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>transform_name</strong> Name of the transform</li>
+<li><strong>json_str</strong> JSON string containing parameters</li>
+</ul>
+<p><strong>Return</strong>: std::any containing typed parameters, or empty std::any on failure</p>
+<p>Looks up the transform’s parameter type and uses the registered deserializer.</p>
+</section>
+<section id="function-validateparameters" class="level3">
+<h3 class="anchored" data-anchor-id="function-validateparameters">function validateParameters</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> validateParameters<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Validate that parameters match the expected type for a transform.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>transform_name</strong> Name of the transform</li>
+<li><strong>params_any</strong> Type-erased parameters to validate</li>
+</ul>
+<p><strong>Return</strong>: true if parameters are valid for this transform</p>
+<p>This checks that the std::any contains parameters of the correct type for the given transform, based on registered metadata.</p>
+</section>
+<section id="function-registertypedexecutorfactory" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertypedexecutorfactory">function registerTypedExecutorFactory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTypedExecutorFactory<span class="op">(</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> IParamExecutor <span class="op">&gt;(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;</span> factory</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a typed executor factory for a specific type signature.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>factory</strong> Function that creates executor from type-erased params</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>In</strong> Input element type</li>
+<li><strong>Out</strong> Output element type</li>
+<li><strong>Params</strong> Parameter type</li>
+</ul>
+<p>The factory creates executors with parameters already captured, eliminating per-element parameter casts and type dispatch.</p>
+</section>
+<section id="function-registertimegroupedexecutorfactory" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertimegroupedexecutorfactory">function registerTimeGroupedExecutorFactory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTimeGroupedExecutorFactory<span class="op">(</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> ITimeGroupedParamExecutor <span class="op">&gt;(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;</span> factory</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a typed time-grouped executor factory.</p>
+</section>
+<section id="function-createtypedexecutor" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtypedexecutor">function createTypedExecutor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> IParamExecutor <span class="op">&gt;</span> createTypedExecutor<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    TypeTriple <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a typed executor for given parameters.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> Type triple identifying the transform signature</li>
+<li><strong>params</strong> Type-erased parameters</li>
+</ul>
+<p><strong>Return</strong>: Unique pointer to executor with captured state</p>
+<p>Creates a fresh executor with parameters captured. No caching to avoid stale data issues with preprocessing.</p>
+</section>
+<section id="function-createtimegroupedexecutor" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtimegroupedexecutor">function createTimeGroupedExecutor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> ITimeGroupedParamExecutor <span class="op">&gt;</span> createTimeGroupedExecutor<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    TypeTriple <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a typed time-grouped executor for given parameters.</p>
+<p>Creates a fresh executor with parameters captured. No caching to avoid stale data issues with preprocessing.</p>
+</section>
+<section id="function-executewithdynamicparams" class="level3">
+<h3 class="anchored" data-anchor-id="function-executewithdynamicparams">function executeWithDynamicParams</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ElementVariant executeWithDynamicParams<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    ElementVariant <span class="at">const</span> <span class="op">&amp;</span> input_element<span class="op">,</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">in_type</span><span class="op">,</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">out_type</span><span class="op">,</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">param_type</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute transform with typed executor (zero per-element dispatch)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>transform_name</strong> Name of the transform</li>
+<li><strong>input_element</strong> Input element (variant)</li>
+<li><strong>params</strong> Parameters (type-erased)</li>
+<li><strong>in_type</strong> Input element type</li>
+<li><strong>out_type</strong> Output element type</li>
+<li><strong>param_type</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: Output element (variant)</p>
+<p>Creates fresh executor with captured parameters and types, eliminating all per-element casts and dispatch overhead.</p>
+</section>
+<section id="function-executewithdynamicparamsany" class="level3">
+<h3 class="anchored" data-anchor-id="function-executewithdynamicparamsany">function executeWithDynamicParamsAny</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ElementVariant executeWithDynamicParamsAny<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> input_element<span class="op">,</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">in_type</span><span class="op">,</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">out_type</span><span class="op">,</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">param_type</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute transform with dynamic parameters and arbitrary input type.</p>
+<p>Used for the “Head” of the pipeline where input might be a tuple or other type not supported by ElementVariant.</p>
+</section>
+<section id="function-executetimegroupedwithdynamicparams" class="level3">
+<h3 class="anchored" data-anchor-id="function-executetimegroupedwithdynamicparams">function executeTimeGroupedWithDynamicParams</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> BatchVariant executeTimeGroupedWithDynamicParams<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="at">const</span> <span class="op">&amp;</span> input_span<span class="op">,</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">in_type</span><span class="op">,</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">out_type</span><span class="op">,</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">param_type</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute time-grouped transform with typed executor.</p>
+</section>
+<section id="function-registercontainerops" class="level3">
+<h3 class="anchored" data-anchor-id="function-registercontainerops">function registerContainerOps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerContainerOps<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register container operations for a type T.</p>
+<p>Enables generic pipeline execution by providing type-erased access to vector<t> and span<t>.</t></t></p>
+</section>
+<section id="function-getcontainerops" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcontainerops">function getContainerOps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ContainerOps <span class="at">const</span> <span class="op">&amp;</span> getContainerOps<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index type_idx</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get container operations for a type.</p>
+</section>
+<section id="function-registertimeseriesops" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertimeseriesops">function registerTimeSeriesOps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Container <span class="op">&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerTimeSeriesOps<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register time series operations for a container type.</p>
+</section>
+<section id="function-gettimeseriesops" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeseriesops">function getTimeSeriesOps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeSeriesOps <span class="at">const</span> <span class="op">&amp;</span> getTimeSeriesOps<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index type_idx</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time series operations for a type.</p>
+</section>
+<section id="function-instance" class="level3">
+<h3 class="anchored" data-anchor-id="function-instance">function instance</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> ElementRegistry <span class="op">&amp;</span> instance<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get global singleton instance.</p>
+<p><strong>Return</strong>: Reference to the global registry</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>WhiskerToolbox::Plots – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#whiskertoolboxplots" id="toc-whiskertoolboxplots" class="nav-link active" data-scroll-target="#whiskertoolboxplots">WhiskerToolbox::Plots</a>
+  <ul class="collapse">
+  <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#enum-scalingmode" id="toc-enum-scalingmode" class="nav-link" data-scroll-target="#enum-scalingmode">enum ScalingMode</a></li>
+  <li><a href="#using-estimationparams" id="toc-using-estimationparams" class="nav-link" data-scroll-target="#using-estimationparams">using EstimationParams</a></li>
+  <li><a href="#using-heatmapscaling" id="toc-using-heatmapscaling" class="nav-link" data-scroll-target="#using-heatmapscaling">using HeatmapScaling</a></li>
+  <li><a href="#using-tooltiphittestfn" id="toc-using-tooltiphittestfn" class="nav-link" data-scroll-target="#using-tooltiphittestfn">using TooltipHitTestFn</a></li>
+  <li><a href="#using-tooltiptextfn" id="toc-using-tooltiptextfn" class="nav-link" data-scroll-target="#using-tooltiptextfn">using TooltipTextFn</a></li>
+  <li><a href="#using-tooltipcontentfn" id="toc-using-tooltipcontentfn" class="nav-link" data-scroll-target="#using-tooltipcontentfn">using TooltipContentFn</a></li>
+  </ul></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-createunitgathercontext" id="toc-function-createunitgathercontext" class="nav-link" data-scroll-target="#function-createunitgathercontext">function createUnitGatherContext</a></li>
+  <li><a href="#function-createunitgathercontexts" id="toc-function-createunitgathercontexts" class="nav-link" data-scroll-target="#function-createunitgathercontexts">function createUnitGatherContexts</a></li>
+  <li><a href="#function-estimaterate" id="toc-function-estimaterate" class="nav-link" data-scroll-target="#function-estimaterate">function estimateRate</a></li>
+  <li><a href="#function-estimateratewithtrials" id="toc-function-estimateratewithtrials" class="nav-link" data-scroll-target="#function-estimateratewithtrials">function estimateRateWithTrials</a></li>
+  <li><a href="#function-estimaterates" id="toc-function-estimaterates" class="nav-link" data-scroll-target="#function-estimaterates">function estimateRates</a></li>
+  <li><a href="#function-scalinglabel" id="toc-function-scalinglabel" class="nav-link" data-scroll-target="#function-scalinglabel">function scalingLabel</a></li>
+  <li><a href="#function-scalingaxislabel" id="toc-function-scalingaxislabel" class="nav-link" data-scroll-target="#function-scalingaxislabel">function scalingAxisLabel</a></li>
+  <li><a href="#function-allscalingmodes" id="toc-function-allscalingmodes" class="nav-link" data-scroll-target="#function-allscalingmodes">function allScalingModes</a></li>
+  <li><a href="#function-tofiringratehz" id="toc-function-tofiringratehz" class="nav-link" data-scroll-target="#function-tofiringratehz">function toFiringRateHz</a></li>
+  <li><a href="#function-tocountpertrial" id="toc-function-tocountpertrial" class="nav-link" data-scroll-target="#function-tocountpertrial">function toCountPerTrial</a></li>
+  <li><a href="#function-zscorenormalize" id="toc-function-zscorenormalize" class="nav-link" data-scroll-target="#function-zscorenormalize">function zScoreNormalize</a></li>
+  <li><a href="#function-minmaxnormalize" id="toc-function-minmaxnormalize" class="nav-link" data-scroll-target="#function-minmaxnormalize">function minMaxNormalize</a></li>
+  <li><a href="#function-applyscaling" id="toc-function-applyscaling" class="nav-link" data-scroll-target="#function-applyscaling">function applyScaling</a></li>
+  <li><a href="#function-applyscaling-1" id="toc-function-applyscaling-1" class="nav-link" data-scroll-target="#function-applyscaling-1">function applyScaling</a></li>
+  <li><a href="#function-computesem" id="toc-function-computesem" class="nav-link" data-scroll-target="#function-computesem">function computeSEM</a></li>
+  <li><a href="#function-computepercentileci" id="toc-function-computepercentileci" class="nav-link" data-scroll-target="#function-computepercentileci">function computePercentileCI</a></li>
+  <li><a href="#function-bootstrapci" id="toc-function-bootstrapci" class="nav-link" data-scroll-target="#function-bootstrapci">function bootstrapCI</a></li>
+  <li><a href="#function-buildlineselectionpreview" id="toc-function-buildlineselectionpreview" class="nav-link" data-scroll-target="#function-buildlineselectionpreview">function buildLineSelectionPreview</a></li>
+  <li><a href="#function-runlineselectionintersection" id="toc-function-runlineselectionintersection" class="nav-link" data-scroll-target="#function-runlineselectionintersection">function runLineSelectionIntersection</a></li>
+  <li><a href="#function-toalignmentpoint" id="toc-function-toalignmentpoint" class="nav-link" data-scroll-target="#function-toalignmentpoint">function toAlignmentPoint</a></li>
+  <li><a href="#function-gatherwitheventalignment" id="toc-function-gatherwitheventalignment" class="nav-link" data-scroll-target="#function-gatherwitheventalignment">function gatherWithEventAlignment</a></li>
+  <li><a href="#function-gatherwithintervalalignment" id="toc-function-gatherwithintervalalignment" class="nav-link" data-scroll-target="#function-gatherwithintervalalignment">function gatherWithIntervalAlignment</a></li>
+  <li><a href="#function-gatherwithintervalalignment-1" id="toc-function-gatherwithintervalalignment-1" class="nav-link" data-scroll-target="#function-gatherwithintervalalignment-1">function gatherWithIntervalAlignment</a></li>
+  <li><a href="#function-pruneoverlappingalignmenttimes" id="toc-function-pruneoverlappingalignmenttimes" class="nav-link" data-scroll-target="#function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</a></li>
+  <li><a href="#function-extractalignmenttimes" id="toc-function-extractalignmenttimes" class="nav-link" data-scroll-target="#function-extractalignmenttimes">function extractAlignmentTimes</a></li>
+  <li><a href="#function-extractalignmenttimes-1" id="toc-function-extractalignmenttimes-1" class="nav-link" data-scroll-target="#function-extractalignmenttimes-1">function extractAlignmentTimes</a></li>
+  <li><a href="#function-createfilteredeventseries" id="toc-function-createfilteredeventseries" class="nav-link" data-scroll-target="#function-createfilteredeventseries">function createFilteredEventSeries</a></li>
+  <li><a href="#function-createfilteredintervalseries" id="toc-function-createfilteredintervalseries" class="nav-link" data-scroll-target="#function-createfilteredintervalseries">function createFilteredIntervalSeries</a></li>
+  <li><a href="#function-countnonoverlappingalignmentevents" id="toc-function-countnonoverlappingalignmentevents" class="nav-link" data-scroll-target="#function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</a></li>
+  <li><a href="#function-getalignmentsource" id="toc-function-getalignmentsource" class="nav-link" data-scroll-target="#function-getalignmentsource">function getAlignmentSource</a></li>
+  <li><a href="#function-getfilteredalignmentsource" id="toc-function-getfilteredalignmentsource" class="nav-link" data-scroll-target="#function-getfilteredalignmentsource">function getFilteredAlignmentSource</a></li>
+  <li><a href="#function-createalignedgatherresult" id="toc-function-createalignedgatherresult" class="nav-link" data-scroll-target="#function-createalignedgatherresult">function createAlignedGatherResult</a></li>
+  <li><a href="#function-createalignedgatherresult-1" id="toc-function-createalignedgatherresult-1" class="nav-link" data-scroll-target="#function-createalignedgatherresult-1">function createAlignedGatherResult</a></li>
+  <li><a href="#function-screentondc" id="toc-function-screentondc" class="nav-link" data-scroll-target="#function-screentondc">function screenToNDC</a></li>
+  <li><a href="#function-screentoworld" id="toc-function-screentoworld" class="nav-link" data-scroll-target="#function-screentoworld">function screenToWorld</a></li>
+  <li><a href="#function-worldtoscreen" id="toc-function-worldtoscreen" class="nav-link" data-scroll-target="#function-worldtoscreen">function worldToScreen</a></li>
+  <li><a href="#function-computeorthoprojection" id="toc-function-computeorthoprojection" class="nav-link" data-scroll-target="#function-computeorthoprojection">function computeOrthoProjection</a></li>
+  <li><a href="#function-computeorthoprojection-1" id="toc-function-computeorthoprojection-1" class="nav-link" data-scroll-target="#function-computeorthoprojection-1">function computeOrthoProjection</a></li>
+  <li><a href="#function-handlepanning" id="toc-function-handlepanning" class="nav-link" data-scroll-target="#function-handlepanning">function handlePanning</a></li>
+  <li><a href="#function-handlepanning-1" id="toc-function-handlepanning-1" class="nav-link" data-scroll-target="#function-handlepanning-1">function handlePanning</a></li>
+  <li><a href="#function-handlezoom" id="toc-function-handlezoom" class="nav-link" data-scroll-target="#function-handlezoom">function handleZoom</a></li>
+  <li><a href="#function-extractedgeevents" id="toc-function-extractedgeevents" class="nav-link" data-scroll-target="#function-extractedgeevents">function extractEdgeEvents</a></li>
+  <li><a href="#function-runheatmappipeline" id="toc-function-runheatmappipeline" class="nav-link" data-scroll-target="#function-runheatmappipeline">function runHeatmapPipeline</a></li>
+  <li><a href="#function-computesortorder" id="toc-function-computesortorder" class="nav-link" data-scroll-target="#function-computesortorder">function computeSortOrder</a></li>
+  <li><a href="#function-applysortorder" id="toc-function-applysortorder" class="nav-link" data-scroll-target="#function-applysortorder">function applySortOrder</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">WhiskerToolbox::Plots</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="whiskertoolboxplots" class="level1">
+<h1>WhiskerToolbox::Plots</h1>
+<section id="namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1SelectionInstructions.html">WhiskerToolbox::Plots::SelectionInstructions</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1AlignmentSourceResult.html">WhiskerToolbox::Plots::AlignmentSourceResult</a></strong> <br>Result of alignment source lookup.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.html">WhiskerToolbox::Plots::BinningParams</a></strong> <br>Parameters for simple histogram binning.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1CausalExponentialParams.html">WhiskerToolbox::Plots::CausalExponentialParams</a></strong> <br>Parameters for causal exponential filter (stub — not yet implemented)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">WhiskerToolbox::Plots::ConfidenceBand</a></strong> <br>Lower and upper bounds at each time point.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1GaussianKernelParams.html">WhiskerToolbox::Plots::GaussianKernelParams</a></strong> <br>Parameters for Gaussian kernel smoothing (stub — not yet implemented)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineConfig.html">WhiskerToolbox::Plots::HeatmapPipelineConfig</a></strong> <br>Configuration for the heatmap data pipeline.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineResult.html">WhiskerToolbox::Plots::HeatmapPipelineResult</a></strong> <br>Result of the heatmap data pipeline.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1NormalizedRow.html">WhiskerToolbox::Plots::NormalizedRow</a></strong> <br>One row of normalized values (deprecated — use <a href="">RateEstimate</a> + applyScaling instead)</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PerTrialData.html">WhiskerToolbox::Plots::PerTrialData</a></strong> <br>Optional per-trial breakdown, for uncertainty and variability analysis.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipContent.html">WhiskerToolbox::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">WhiskerToolbox::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Plots_1_1PlotTooltipManager.html">WhiskerToolbox::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">WhiskerToolbox::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">WhiskerToolbox::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.html">WhiskerToolbox::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types" class="level2">
+<h2 class="anchored" data-anchor-id="types">Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a></strong> { FiringRateHz, ZScore, Normalized01, RawCount, CountPerTrial}<br>Scaling mode for rate estimate values.</td>
+</tr>
+<tr class="even">
+<td>using std::variant&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.html">BinningParams</a>, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1GaussianKernelParams.html">GaussianKernelParams</a>, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1CausalExponentialParams.html">CausalExponentialParams</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-estimationparams">EstimationParams</a></strong> <br>Tagged union of all supported rate estimation method parameter structs.</td>
+</tr>
+<tr class="odd">
+<td>using <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-heatmapscaling">HeatmapScaling</a></strong></td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; std::optional&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> &gt;(QPoint screen_pos)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-tooltiphittestfn">TooltipHitTestFn</a></strong> <br>Callback that performs a hit test at a screen position.</td>
+</tr>
+<tr class="odd">
+<td>using std::function&lt; QString(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-tooltiptextfn">TooltipTextFn</a></strong> <br>Callback that generates tooltip text from a hit result.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipContent.html">PlotTooltipContent</a>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-tooltipcontentfn">TooltipContentFn</a></strong> <br>Callback that generates rich tooltip content from a hit result.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.html">UnitGatherContext</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createunitgathercontext">createUnitGatherContext</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; event_key, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Create a <a href="">UnitGatherContext</a> for a single <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> key.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.html">UnitGatherContext</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createunitgathercontexts">createUnitGatherContexts</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; event_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Create UnitGatherContexts for a batch of <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keys.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-estimaterate">estimateRate</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; gathered, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * time_frame, double window_size, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate the rate for a single unit (aggregate across trials)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-estimateratewithtrials">estimateRateWithTrials</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; gathered, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * time_frame, double window_size, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate rate with per-trial breakdown for a single unit.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-estimaterates">estimateRates</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.html">UnitGatherContext</a> &gt; const &amp; units, double window_size, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate rates for multiple units.</td>
+</tr>
+<tr class="even">
+<td>constexpr char const *</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-scalinglabel">scalingLabel</a></strong>(<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode)<br>Return a human-readable label for a ScalingMode value.</td>
+</tr>
+<tr class="odd">
+<td>constexpr char const *</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-scalingaxislabel">scalingAxisLabel</a></strong>(<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode)<br>Return the axis label appropriate for a scaling mode.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-allscalingmodes">allScalingModes</a></strong>()<br>All available scaling modes (for populating combo boxes)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-tofiringratehz">toFiringRateHz</a></strong>(std::span&lt; double &gt; values, size_t num_trials, double sample_spacing, double time_units_per_second)<br>Convert raw counts to firing rate (Hz)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-tocountpertrial">toCountPerTrial</a></strong>(std::span&lt; double &gt; values, size_t num_trials)<br>Convert raw counts to count-per-trial.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-zscorenormalize">zScoreNormalize</a></strong>(std::span&lt; double &gt; values)<br>Apply per-unit z-score normalization.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-minmaxnormalize">minMaxNormalize</a></strong>(std::span&lt; double &gt; values)<br>Apply per-unit min-max normalization to [0, 1].</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-applyscaling">applyScaling</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a> &amp; estimate, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode, double time_units_per_second)<br>Apply a named scaling to a <a href="">RateEstimate</a> in-place.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-applyscaling">applyScaling</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> &amp; data, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode, double time_units_per_second)<br>Apply scaling consistently to aggregate + all per-trial curves.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computesem">computeSEM</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> const &amp; data, double k =1.0)<br>Compute SEM-based confidence band as mean ± k × SEM.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computepercentileci">computePercentileCI</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> const &amp; data, double lower_pct =2.5, double upper_pct =97.5)<br>Compute percentile-based confidence band.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-bootstrapci">bootstrapCI</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> const &amp; data, size_t n_resamples =1000, double ci_level =0.95)<br>Bootstrap confidence band (resamples trials)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structCorePlotting_1_1Interaction_1_1GlyphPreview.html">CorePlotting::Interaction::GlyphPreview</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-buildlineselectionpreview">buildLineSelectionPreview</a></strong>(QPoint const &amp; start_screen, QPoint const &amp; end_screen, bool remove_mode)<br>Build a line-selection GlyphPreview for the selection rubber-band.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#using-linebatchindex">CorePlotting::LineBatchIndex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-runlineselectionintersection">runLineSelectionIntersection</a></strong>(<a href="../../api_generated/Classes/classCorePlotting_1_1ILineBatchIntersector.html">CorePlotting::ILineBatchIntersector</a> &amp; intersector, <a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">CorePlotting::LineBatchData</a> const &amp; cpu_data, glm::vec2 start_ndc, glm::vec2 end_ndc, glm::mat4 const &amp; projection_matrix, glm::mat4 const &amp; view_matrix)<br>Run line-vs-batch intersection and return hit line indices.</td>
+</tr>
+<tr class="even">
+<td>AlignmentPoint</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-toalignmentpoint">toAlignmentPoint</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Convert IntervalAlignmentType to AlignmentPoint.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-gatherwitheventalignment">gatherWithEventAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; alignment_events, double pre_window, double post_window)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, AlignmentPoint align =AlignmentPoint::Start)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, AlignmentPoint align, double pre_window, double post_window)<br><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">Gather</a> data aligned to a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> with explicit window.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; size_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-pruneoverlappingalignmenttimes">pruneOverlappingAlignmentTimes</a></strong>(std::vector&lt; int64_t &gt; const &amp; alignment_times, int64_t pre_window, int64_t post_window)<br>Prune alignment times whose expanded windows would overlap.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; int64_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; events)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; int64_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; intervals, AlignmentPoint align)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createfilteredeventseries">createFilteredEventSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keeping only specified indices.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createfilteredintervalseries">createFilteredIntervalSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> keeping only specified indices.</td>
+</tr>
+<tr class="odd">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-countnonoverlappingalignmentevents">countNonOverlappingAlignmentEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Compute the number of alignment events that survive overlap pruning.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-getalignmentsource">getAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; alignment_key)<br>Look up alignment series from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-getfilteredalignmentsource">getFilteredAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Look up alignment source with optional overlap pruning.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> const * alignment_state)<br>Overload using <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> pointer.</td>
+</tr>
+<tr class="even">
+<td>glm::vec2</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-screentondc">screenToNDC</a></strong>(QPoint const &amp; screen_pos, int widget_width, int widget_height)<br>Convert screen pixel coordinates to normalized device coordinates (NDC).</td>
+</tr>
+<tr class="odd">
+<td>QPointF</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-screentoworld">screenToWorld</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, QPoint const &amp; screen_pos)<br>Convert screen pixel coordinates to world coordinates.</td>
+</tr>
+<tr class="even">
+<td>QPoint</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-worldtoscreen">worldToScreen</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, float world_x, float world_y)<br>Convert world coordinates to screen pixel coordinates.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;ViewStateLike ViewState&gt; <br>glm::mat4</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state, float x_range, float x_center, float y_range, float y_center)<br>Compute an orthographic projection matrix from zoom/pan view state.</td>
+</tr>
+<tr class="even">
+<td>template &lt;ViewStateWithBounds ViewState&gt; <br>glm::mat4</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state)<br>Compute orthographic projection from view state with bounds.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, float x_range, float y_range, int widget_width, int widget_height)<br>Apply a pixel-space drag delta as a pan update to the state.</td>
+</tr>
+<tr class="even">
+<td>template &lt;ZoomPanSettable State,ViewStateWithBounds ViewState&gt; <br>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, int widget_width, int widget_height)<br>Apply pan from view state with bounds (derives x_range/y_range).</td>
+</tr>
+<tr class="odd">
+<td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-handlezoom">handleZoom</a></strong>(State &amp; state, ViewState const &amp; view_state, float delta, bool y_only, bool both_axes)<br>Apply a scroll-wheel zoom step to the state.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-extractedgeevents">extractEdgeEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> edge)<br>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-runheatmappipeline">runHeatmapPipeline</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineConfig.html">HeatmapPipelineConfig</a> const &amp; config)<br>Execute the heatmap data pipeline without an OpenGL context.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::size_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computesortorder">computeSortOrder</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> const &amp; result, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Files/HeatmapState_8hpp.html#enum-heatmapsortmode">HeatmapSortMode</a> sort_mode, bool ascending)<br>Compute a permutation vector that sorts the pipeline rows.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-applysortorder">applySortOrder</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> &amp; result, std::vector&lt; std::string &gt; &amp; unit_keys, std::vector&lt; std::size_t &gt; const &amp; sort_indices)<br>Apply a precomputed permutation to the pipeline result and unit keys.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="enum-scalingmode" class="level3">
+<h3 class="anchored" data-anchor-id="enum-scalingmode">enum ScalingMode</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>FiringRateHz</td>
+<td></td>
+<td>count / (sample_spacing_s × num_trials) → spikes/s</td>
+</tr>
+<tr class="even">
+<td>ZScore</td>
+<td></td>
+<td>Per-unit z-score: (rate - mean) / std across all time points.</td>
+</tr>
+<tr class="odd">
+<td>Normalized01</td>
+<td></td>
+<td>Per-unit min-max normalization to [0, 1].</td>
+</tr>
+<tr class="even">
+<td>RawCount</td>
+<td></td>
+<td>Raw event count (no normalization)</td>
+</tr>
+<tr class="odd">
+<td>CountPerTrial</td>
+<td></td>
+<td>count / num_trials</td>
+</tr>
+</tbody>
+</table>
+<p>Scaling mode for rate estimate values.</p>
+<p>Controls how raw event counts are transformed. Shared between <a href="../../api_generated/Classes/classHeatmapWidget.html">HeatmapWidget</a>, <a href="../../api_generated/Classes/classPSTHWidget.html">PSTHWidget</a>, and any future rate-based plot widgets. Applied per-unit (per-row for heatmaps) after rate estimation.</p>
+</section>
+<section id="using-estimationparams" class="level3">
+<h3 class="anchored" data-anchor-id="using-estimationparams">using EstimationParams</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span>BinningParams<span class="op">,</span> GaussianKernelParams<span class="op">,</span> CausalExponentialParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Tagged union of all supported rate estimation method parameter structs.</p>
+<p><strong>Note</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1GaussianKernelParams.html">GaussianKernelParams</a> and <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1CausalExponentialParams.html">CausalExponentialParams</a> are included in the variant but their implementations return empty <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a> (stub).</p>
+<p>This is the single variation point for estimation method selection. Selecting a method at runtime is zero-overhead compared to a virtual base-class strategy — <code>std::visit</code> dispatches via a jump table.</p>
+<p>To add a new method:</p>
+<ol type="1">
+<li>Define a new <code>*Params</code> struct above</li>
+<li>Append it to this alias</li>
+<li>Add the implementation in <code>[EventRateEstimation.cpp](/api_generated/Files/EventRateEstimation_8cpp.md#file-eventrateestimation.cpp)</code></li>
+</ol>
+</section>
+<section id="using-heatmapscaling" class="level3">
+<h3 class="anchored" data-anchor-id="using-heatmapscaling">using HeatmapScaling</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>HeatmapScaling <span class="op">=</span> <span class="kw">typedef</span> ScalingMode<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Deprecated</strong>:</p>
+<p>Use <code>ScalingMode</code> instead</p>
+</section>
+<section id="using-tooltiphittestfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-tooltiphittestfn">using TooltipHitTestFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>TooltipHitTestFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>optional<span class="op">&lt;</span>PlotTooltipHit<span class="op">&gt;(</span><span class="ex">QPoint</span> screen_pos<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback that performs a hit test at a screen position.</p>
+<p>Returns a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> on success, or std::nullopt if nothing is under the cursor. This callback may perform spatial queries (<a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a>, etc.) and is only called after the dwell timer fires.</p>
+</section>
+<section id="using-tooltiptextfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-tooltiptextfn">using TooltipTextFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>TooltipTextFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="ex">QString</span><span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback that generates tooltip text from a hit result.</p>
+</section>
+<section id="using-tooltipcontentfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-tooltipcontentfn">using TooltipContentFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>TooltipContentFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span>PlotTooltipContent<span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback that generates rich tooltip content from a hit result.</p>
+<p>Use this for expensive content generation (rendering glyphs, mini-plots). Returns a full <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipContent.html">PlotTooltipContent</a>, allowing the provider to choose between text and pixmap on a per-hit basis.</p>
+</section>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-createunitgathercontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-createunitgathercontext">function createUnitGatherContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> UnitGatherContext <span class="op">&gt;</span> createUnitGatherContext<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> event_key<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a <a href="">UnitGatherContext</a> for a single <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> containing the event and alignment series</li>
+<li><strong>event_key</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key of the <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code> to gather</li>
+<li><strong>alignment_data</strong> Alignment configuration (alignment key, window size, etc.)</li>
+</ul>
+<p><strong>Return</strong>: Populated <code>[UnitGatherContext](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.md)</code>, or <code>std::nullopt</code> on failure</p>
+<p>Calls <code>createAlignedGatherResult&lt;[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)&gt;</code> and also retrieves the source <code>[TimeFrame](/api_generated/Classes/classTimeFrame.md)</code>. Returns <code>std::nullopt</code> when:</p>
+<ul>
+<li><code>data_manager</code> is null or <code>event_key</code> is empty</li>
+<li>The gather result is empty (alignment key not found or no events in window)</li>
+<li>The source series does not have a <code>[TimeFrame](/api_generated/Classes/classTimeFrame.md)</code></li>
+</ul>
+</section>
+<section id="function-createunitgathercontexts" class="level3">
+<h3 class="anchored" data-anchor-id="function-createunitgathercontexts">function createUnitGatherContexts</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> UnitGatherContext <span class="op">&gt;</span> createUnitGatherContexts<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> event_keys<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create UnitGatherContexts for a batch of <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keys.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> containing the event and alignment series</li>
+<li><strong>event_keys</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> keys of the <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code> to gather</li>
+<li><strong>alignment_data</strong> Alignment configuration shared across all units</li>
+</ul>
+<p><strong>Return</strong>: Vector of successfully gathered <code>[UnitGatherContext](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.md)</code> objects</p>
+<p>Applies <code>createUnitGatherContext</code> to each key in <code>event_keys</code> with the same alignment settings. Keys for which gathering fails are silently skipped; the returned vector may therefore be shorter than <code>event_keys</code>.</p>
+<p>Order is preserved: the i-th element of the result corresponds to the i-th key that succeeded.</p>
+</section>
+<section id="function-estimaterate" class="level3">
+<h3 class="anchored" data-anchor-id="function-estimaterate">function estimateRate</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>RateEstimate estimateRate<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">*</span> time_frame<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size<span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params <span class="op">=</span>BinningParams<span class="op">{}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Estimate the rate for a single unit (aggregate across trials)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gathered</strong> Trial-aligned views of one <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code></li>
+<li><strong>time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> of the source series (may be null)</li>
+<li><strong>window_size</strong> Total window span in time units (bins cover ±window_size/2)</li>
+<li><strong>params</strong> Estimation method and parameters (default: <code>[BinningParams](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.md){}</code>)</li>
+</ul>
+<p><strong>Return</strong>: <code>[RateEstimate](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.md)</code> with times, values, num_trials, and metadata</p>
+<p>Returns a <code>[RateEstimate](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.md)</code> with paired <code>times[]</code> (bin centers for binning) and <code>values[]</code> (raw event counts summed across all trials).</p>
+<p>Uses <code>time_frame</code> to convert each event’s <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> to an absolute time before computing the relative time with respect to the per-trial alignment time from <code>gathered</code>.</p>
+<p>If <code>time_frame</code> is null, <code>[TimeFrameIndex::getValue()](/api_generated/Classes/structTimeFrameIndex.md#function-getvalue)</code> is used directly as the absolute time (identity mapping).</p>
+</section>
+<section id="function-estimateratewithtrials" class="level3">
+<h3 class="anchored" data-anchor-id="function-estimateratewithtrials">function estimateRateWithTrials</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>RateEstimateWithTrials estimateRateWithTrials<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">*</span> time_frame<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params <span class="op">=</span>BinningParams<span class="op">{}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Estimate rate with per-trial breakdown for a single unit.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gathered</strong> Trial-aligned views of one <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code></li>
+<li><strong>time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> of the source series (may be null)</li>
+<li><strong>window_size</strong> Total window span in time units</li>
+<li><strong>params</strong> Estimation method and parameters (default: <code>[BinningParams](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.md){}</code>)</li>
+</ul>
+<p><strong>Return</strong>: <code>[RateEstimateWithTrials](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.md)</code> with aggregate + per-trial data</p>
+<p>Same as <code>[estimateRate()](/api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.md#function-estimaterate)</code> but additionally returns per-trial rate curves in <code>[RateEstimateWithTrials::trials](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.md#variable-trials)</code>. The aggregate <code>estimate</code> is the trial-summed result (same as <code>[estimateRate()](/api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.md#function-estimaterate)</code>), and each trial’s individual histogram is stored separately.</p>
+<p>Use this when you need uncertainty quantification (SEM, CI, bootstrap) via the functions in <code>[RateUncertainty.hpp](/api_generated/Files/RateUncertainty_8hpp.md#file-rateuncertainty.hpp)</code>.</p>
+</section>
+<section id="function-estimaterates" class="level3">
+<h3 class="anchored" data-anchor-id="function-estimaterates">function estimateRates</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> RateEstimate <span class="op">&gt;</span> estimateRates<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> UnitGatherContext <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> units<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size<span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params <span class="op">=</span>BinningParams<span class="op">{}</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Estimate rates for multiple units.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>units</strong> Per-unit gather contexts (from <code>createUnitGatherContexts</code>)</li>
+<li><strong>window_size</strong> Total window span in time units</li>
+<li><strong>params</strong> Estimation method and parameters (default: <code>[BinningParams](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1BinningParams.md){}</code>)</li>
+</ul>
+<p><strong>Return</strong>: One <code>[RateEstimate](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.md)</code> per unit, in input order</p>
+<p>Applies <code>estimateRate</code> independently to each <code>[UnitGatherContext](/api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1UnitGatherContext.md)</code> in <code>units</code>. All units share the same <code>window_size</code> and <code>params</code>. The output vector is in the same order as the input and has the same length.</p>
+<p>This is the primary entry point for <code>[HeatmapWidget](/api_generated/Classes/classHeatmapWidget.md)</code>, which needs a <code>units × time_bins</code> rate matrix.</p>
+</section>
+<section id="function-scalinglabel" class="level3">
+<h3 class="anchored" data-anchor-id="function-scalinglabel">function scalingLabel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingLabel<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Return a human-readable label for a ScalingMode value.</p>
+</section>
+<section id="function-scalingaxislabel" class="level3">
+<h3 class="anchored" data-anchor-id="function-scalingaxislabel">function scalingAxisLabel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingAxisLabel<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Return the axis label appropriate for a scaling mode.</p>
+</section>
+<section id="function-allscalingmodes" class="level3">
+<h3 class="anchored" data-anchor-id="function-allscalingmodes">function allScalingModes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> ScalingMode <span class="op">&gt;</span> allScalingModes<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>All available scaling modes (for populating combo boxes)</p>
+</section>
+<section id="function-tofiringratehz" class="level3">
+<h3 class="anchored" data-anchor-id="function-tofiringratehz">function toFiringRateHz</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> toFiringRateHz<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">double</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_trials<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> sample_spacing<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_units_per_second</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert raw counts to firing rate (Hz)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>values</strong> Value vector to modify in-place</li>
+<li><strong>num_trials</strong> Number of trials</li>
+<li><strong>sample_spacing</strong> Spacing between evaluation points (in data time units)</li>
+<li><strong>time_units_per_second</strong> Conversion factor (e.g.&nbsp;1000.0 for milliseconds)</li>
+</ul>
+<p>Formula: values[i] /= (num_trials × sample_spacing_s) where sample_spacing_s = sample_spacing / time_units_per_second</p>
+</section>
+<section id="function-tocountpertrial" class="level3">
+<h3 class="anchored" data-anchor-id="function-tocountpertrial">function toCountPerTrial</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> toCountPerTrial<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">double</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_trials</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert raw counts to count-per-trial.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>values</strong> Value vector to modify in-place</li>
+<li><strong>num_trials</strong> Number of trials (no-op if 0)</li>
+</ul>
+<p>Formula: values[i] /= num_trials</p>
+</section>
+<section id="function-zscorenormalize" class="level3">
+<h3 class="anchored" data-anchor-id="function-zscorenormalize">function zScoreNormalize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> zScoreNormalize<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">double</span> <span class="op">&gt;</span> values</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply per-unit z-score normalization.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>values</strong> Value vector to modify in-place</li>
+</ul>
+<p>Formula: values[i] = (values[i] - mean) / std If std is zero (constant signal), all values become 0.</p>
+</section>
+<section id="function-minmaxnormalize" class="level3">
+<h3 class="anchored" data-anchor-id="function-minmaxnormalize">function minMaxNormalize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> minMaxNormalize<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">double</span> <span class="op">&gt;</span> values</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply per-unit min-max normalization to [0, 1].</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>values</strong> Value vector to modify in-place</li>
+</ul>
+<p>If all values are equal, all become 0.</p>
+</section>
+<section id="function-applyscaling" class="level3">
+<h3 class="anchored" data-anchor-id="function-applyscaling">function applyScaling</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applyScaling<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    RateEstimate <span class="op">&amp;</span> estimate<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_units_per_second</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply a named scaling to a <a href="">RateEstimate</a> in-place.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>estimate</strong> <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a> to modify in-place</li>
+<li><strong>mode</strong> Scaling mode to apply</li>
+<li><strong>time_units_per_second</strong> Conversion factor (e.g.&nbsp;1000.0 for ms)</li>
+</ul>
+<p>Dispatches to the appropriate normalization primitive based on <code>mode</code>. Reads <code>estimate.metadata.sample_spacing</code> and <code>estimate.num_trials</code> automatically.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>ScalingMode</th>
+<th>Transform</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>FiringRateHz</td>
+<td>count / (sample_spacing_s × num_trials)</td>
+</tr>
+<tr class="even">
+<td>CountPerTrial</td>
+<td>count / num_trials</td>
+</tr>
+<tr class="odd">
+<td>RawCount</td>
+<td>no transform</td>
+</tr>
+<tr class="even">
+<td>Normalized01</td>
+<td>per-unit (v - min) / (max - min)</td>
+</tr>
+<tr class="odd">
+<td>ZScore</td>
+<td>per-unit (v - mean) / std (after count/trial)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="function-applyscaling-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-applyscaling-1">function applyScaling</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applyScaling<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    RateEstimateWithTrials <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_units_per_second</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply scaling consistently to aggregate + all per-trial curves.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> to modify in-place</li>
+<li><strong>mode</strong> Scaling mode to apply</li>
+<li><strong>time_units_per_second</strong> Conversion factor (e.g.&nbsp;1000.0 for ms)</li>
+</ul>
+<p>For z-score: uses the <em>aggregate</em> mean/std to normalize all trials, ensuring CI bounds computed afterward are in the same z-score space as the mean.</p>
+</section>
+<section id="function-computesem" class="level3">
+<h3 class="anchored" data-anchor-id="function-computesem">function computeSEM</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>ConfidenceBand computeSEM<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    RateEstimateWithTrials <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> k <span class="op">=</span><span class="fl">1.0</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute SEM-based confidence band as mean ± k × SEM.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> (must have per-trial data)</li>
+<li><strong>k</strong> Multiplier for SEM (1.0 for ±1 SEM, 1.96 for 95% CI)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a> with lower and upper bounds</p>
+<p><strong>Note</strong>: Stub — returns empty bands. Implementation deferred to PSTH Phase 3.</p>
+</section>
+<section id="function-computepercentileci" class="level3">
+<h3 class="anchored" data-anchor-id="function-computepercentileci">function computePercentileCI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ConfidenceBand computePercentileCI<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    RateEstimateWithTrials <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> lower_pct <span class="op">=</span><span class="fl">2.5</span><span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> upper_pct <span class="op">=</span><span class="fl">97.5</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute percentile-based confidence band.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> (must have per-trial data)</li>
+<li><strong>lower_pct</strong> Lower percentile (e.g.&nbsp;2.5 for 95% CI)</li>
+<li><strong>upper_pct</strong> Upper percentile (e.g.&nbsp;97.5 for 95% CI)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a> with lower and upper bounds</p>
+<p><strong>Note</strong>: Stub — returns empty bands. Implementation deferred to PSTH Phase 3.</p>
+</section>
+<section id="function-bootstrapci" class="level3">
+<h3 class="anchored" data-anchor-id="function-bootstrapci">function bootstrapCI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ConfidenceBand bootstrapCI<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    RateEstimateWithTrials <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> n_resamples <span class="op">=</span><span class="dv">1000</span><span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> ci_level <span class="op">=</span><span class="fl">0.95</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Bootstrap confidence band (resamples trials)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> (must have per-trial data)</li>
+<li><strong>n_resamples</strong> Number of bootstrap resamples</li>
+<li><strong>ci_level</strong> Confidence level (e.g.&nbsp;0.95 for 95% CI)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a> with lower and upper bounds</p>
+<p><strong>Note</strong>: Stub — returns empty bands. Implementation deferred to PSTH Phase 3.</p>
+</section>
+<section id="function-buildlineselectionpreview" class="level3">
+<h3 class="anchored" data-anchor-id="function-buildlineselectionpreview">function buildLineSelectionPreview</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>GlyphPreview buildLineSelectionPreview<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> start_screen<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> end_screen<span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> remove_mode</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build a line-selection GlyphPreview for the selection rubber-band.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_screen</strong> Selection line start in widget pixel coordinates.</li>
+<li><strong>end_screen</strong> Selection line end in widget pixel coordinates.</li>
+<li><strong>remove_mode</strong> If true, use red stroke; otherwise white.</li>
+</ul>
+<p><strong>Return</strong>: GlyphPreview with Type::Line and stroke styling.</p>
+<p>PreviewRenderer expects canvas pixel coordinates (top-left origin). White stroke for normal selection, red for remove mode.</p>
+</section>
+<section id="function-runlineselectionintersection" class="level3">
+<h3 class="anchored" data-anchor-id="function-runlineselectionintersection">function runLineSelectionIntersection</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> CorePlotting<span class="op">::</span>LineBatchIndex <span class="op">&gt;</span> runLineSelectionIntersection<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ILineBatchIntersector <span class="op">&amp;</span> intersector<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>LineBatchData <span class="at">const</span> <span class="op">&amp;</span> cpu_data<span class="op">,</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec2 start_ndc<span class="op">,</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec2 end_ndc<span class="op">,</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> view_matrix</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run line-vs-batch intersection and return hit line indices.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intersector</strong> The intersector (CPU or GPU backend).</li>
+<li><strong>cpu_data</strong> Current line batch CPU data from the store.</li>
+<li><strong>start_ndc</strong> Selection line start in NDC [-1, 1].</li>
+<li><strong>end_ndc</strong> Selection line end in NDC [-1, 1].</li>
+<li><strong>projection_matrix</strong> Current orthographic projection matrix.</li>
+<li><strong>view_matrix</strong> Current view matrix (typically identity).</li>
+</ul>
+<p><strong>Return</strong>: Indices of lines that intersect the selection segment (0-based into cpu_data.lines). Empty if no intersector or batch empty.</p>
+<p>Builds a LineIntersectionQuery from the selection segment (NDC) and current projection/view matrices, then calls the intersector. The caller applies the result to its own selection state (e.g.&nbsp;trial indices or entity IDs).</p>
+</section>
+<section id="function-toalignmentpoint" class="level3">
+<h3 class="anchored" data-anchor-id="function-toalignmentpoint">function toAlignmentPoint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentPoint toAlignmentPoint<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert IntervalAlignmentType to AlignmentPoint.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>type</strong> UI alignment type (Beginning/End)</li>
+</ul>
+<p><strong>Return</strong>: Corresponding AlignmentPoint for <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> adapters</p>
+<p>Maps the UI-facing enum to the <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> API enum.</p>
+</section>
+<section id="function-gatherwitheventalignment" class="level3">
+<h3 class="anchored" data-anchor-id="function-gatherwitheventalignment">function gatherWithEventAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithEventAlignment<span class="op">(</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> alignment_events<span class="op">,</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gatherwithintervalalignment" class="level3">
+<h3 class="anchored" data-anchor-id="function-gatherwithintervalalignment">function gatherWithIntervalAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithIntervalAlignment<span class="op">(</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> alignment_intervals<span class="op">,</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gatherwithintervalalignment-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gatherwithintervalalignment-1">function gatherWithIntervalAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithIntervalAlignment<span class="op">(</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> alignment_intervals<span class="op">,</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">Gather</a> data aligned to a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> with explicit window.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source</strong> Source data to create views from</li>
+<li><strong>alignment_intervals</strong> Intervals defining alignment points</li>
+<li><strong>align</strong> Which point in each interval to use for alignment</li>
+<li><strong>pre_window</strong> Absolute time units before alignment to include</li>
+<li><strong>post_window</strong> Absolute time units after alignment to include</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> Data type to gather (e.g., <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>, <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with one view per interval</p>
+<p>Uses the specified alignment point (Start/End/Center) of each interval, but creates a view window of [alignment - pre_window, alignment + post_window] in absolute time units rather than using the raw interval bounds.</p>
+<p>This is essential for raster plots where the user specifies a display window that extends beyond the interval boundaries.</p>
+</section>
+<section id="function-pruneoverlappingalignmenttimes" class="level3">
+<h3 class="anchored" data-anchor-id="function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> pruneOverlappingAlignmentTimes<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prune alignment times whose expanded windows would overlap.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_times</strong> Sorted absolute alignment times</li>
+<li><strong>pre_window</strong> Time units before each alignment time</li>
+<li><strong>post_window</strong> Time units after each alignment time</li>
+</ul>
+<p><strong>Return</strong>: Indices into alignment_times that survive pruning</p>
+<p><strong>Precondition</strong>: alignment_times is sorted in ascending order</p>
+<p>Uses a greedy left-to-right scan: keeps the first alignment time, then for each subsequent time checks whether its window [time - pre_window, time + post_window] overlaps with the window of the last <em>kept</em> time. If it overlaps, the event is skipped; otherwise it is kept.</p>
+<p>Alignment times must be sorted in ascending order.</p>
+</section>
+<section id="function-extractalignmenttimes" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractalignmenttimes">function extractAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> events</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>events</strong> Event series to extract times from</li>
+</ul>
+<p><strong>Return</strong>: Vector of absolute times (sorted, matching event order)</p>
+<p>Converts each event’s <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> to absolute time using the series’ <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>. If the series has no <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, uses the raw index value.</p>
+</section>
+<section id="function-extractalignmenttimes-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractalignmenttimes-1">function extractAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Interval series to extract from</li>
+<li><strong>align</strong> Which point in each interval to use</li>
+</ul>
+<p><strong>Return</strong>: Vector of absolute alignment times (sorted, matching interval order)</p>
+<p>Extracts the alignment point (Start, End, or Center) for each interval and converts it to absolute time using the series’ <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</p>
+</section>
+<section id="function-createfilteredeventseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfilteredeventseries">function createFilteredEventSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createFilteredEventSeries<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keeping only specified indices.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source</strong> Source event series</li>
+<li><strong>kept_indices</strong> Indices (into the source’s view order) to keep</li>
+</ul>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> containing only the specified events</p>
+<p>The returned series shares the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> as the source but is a new owning series (not registered in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>).</p>
+</section>
+<section id="function-createfilteredintervalseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfilteredintervalseries">function createFilteredIntervalSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> createFilteredIntervalSeries<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> keeping only specified indices.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source</strong> Source interval series</li>
+<li><strong>kept_indices</strong> Indices (into the source’s view order) to keep</li>
+</ul>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> containing only the specified intervals</p>
+</section>
+<section id="function-countnonoverlappingalignmentevents" class="level3">
+<h3 class="anchored" data-anchor-id="function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> countNonOverlappingAlignmentEvents<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the number of alignment events that survive overlap pruning.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
+<li><strong>alignment_data</strong> Alignment configuration (includes window_size and prevent_overlap)</li>
+</ul>
+<p><strong>Return</strong>: Number of non-overlapping alignment events, or 0 on error</p>
+<p>Lightweight function for UI display — computes the count without creating a filtered series.</p>
+</section>
+<section id="function-getalignmentsource" class="level3">
+<h3 class="anchored" data-anchor-id="function-getalignmentsource">function getAlignmentSource</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getAlignmentSource<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> alignment_key</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Look up alignment series from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
+<li><strong>alignment_key</strong> Key of the alignment series</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> with the series or error info</p>
+<p>Determines whether the alignment key refers to a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> or <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> and retrieves the appropriate type.</p>
+</section>
+<section id="function-getfilteredalignmentsource" class="level3">
+<h3 class="anchored" data-anchor-id="function-getfilteredalignmentsource">function getFilteredAlignmentSource</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getFilteredAlignmentSource<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Look up alignment source with optional overlap pruning.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
+<li><strong>alignment_data</strong> Full alignment configuration</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> with (optionally filtered) series</p>
+<p>When alignment_data.prevent_overlap is true, the returned series is a filtered copy containing only non-overlapping alignment events. When false, this behaves identically to <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-getalignmentsource">getAlignmentSource()</a>.</p>
+<p>Pruning for intervals is based on the <strong>alignment point</strong> (Start/End/Center), not raw interval bounds. An interval whose raw end overlaps another interval’s alignment-point window is NOT pruned.</p>
+</section>
+<section id="function-createalignedgatherresult" class="level3">
+<h3 class="anchored" data-anchor-id="function-createalignedgatherresult">function createAlignedGatherResult</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createalignedgatherresult-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-createalignedgatherresult-1">function createAlignedGatherResult</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentState <span class="at">const</span> <span class="op">*</span> alignment_state</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Overload using <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> pointer.</p>
+<p>Convenience overload that extracts data() from the state object.</p>
+</section>
+<section id="function-screentondc" class="level3">
+<h3 class="anchored" data-anchor-id="function-screentondc">function screenToNDC</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> glm<span class="op">::</span>vec2 screenToNDC<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert screen pixel coordinates to normalized device coordinates (NDC).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>screen_pos</strong> Mouse position in widget-local pixels.</li>
+<li><strong>widget_width</strong> Widget width in pixels.</li>
+<li><strong>widget_height</strong> Widget height in pixels.</li>
+</ul>
+<p><strong>Return</strong>: NDC (x, y) as glm::vec2.</p>
+<p>NDC X is in [-1, 1] (left to right), NDC Y is in [-1, 1] (bottom to top). Same conversion used as the first step of screenToWorld; useful for selection rectangles and hit-testing in NDC space.</p>
+</section>
+<section id="function-screentoworld" class="level3">
+<h3 class="anchored" data-anchor-id="function-screentoworld">function screenToWorld</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPointF</span> screenToWorld<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert screen pixel coordinates to world coordinates.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>projection_matrix</strong> The current orthographic projection.</li>
+<li><strong>widget_width</strong> Widget width in pixels.</li>
+<li><strong>widget_height</strong> Widget height in pixels.</li>
+<li><strong>screen_pos</strong> Mouse position in widget-local pixels.</li>
+</ul>
+<p><strong>Return</strong>: World (x, y) as a QPointF.</p>
+<p>Uses the inverse of the projection matrix. Identical across all plot widgets.</p>
+</section>
+<section id="function-worldtoscreen" class="level3">
+<h3 class="anchored" data-anchor-id="function-worldtoscreen">function worldToScreen</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPoint</span> worldToScreen<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert world coordinates to screen pixel coordinates.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>projection_matrix</strong> The current orthographic projection.</li>
+<li><strong>widget_width</strong> Widget width in pixels.</li>
+<li><strong>widget_height</strong> Widget height in pixels.</li>
+<li><strong>world_x</strong> World X coordinate.</li>
+<li><strong>world_y</strong> World Y coordinate.</li>
+</ul>
+<p><strong>Return</strong>: Screen (x, y) as a QPoint.</p>
+</section>
+<section id="function-computeorthoprojection" class="level3">
+<h3 class="anchored" data-anchor-id="function-computeorthoprojection">function computeOrthoProjection</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_center<span class="op">,</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute an orthographic projection matrix from zoom/pan view state.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>view_state</strong> The cached view state (zoom + pan fields).</li>
+<li><strong>x_range</strong> Total data range on the X axis (e.g.&nbsp;x_max - x_min).</li>
+<li><strong>x_center</strong> Center of the data range on X (e.g.&nbsp;(x_min + x_max) / 2).</li>
+<li><strong>y_range</strong> Total data range on the Y axis.</li>
+<li><strong>y_center</strong> Center of the data range on Y.</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+</ul>
+<p><strong>Return</strong>: The orthographic projection matrix.</p>
+<p>This consolidates the updateMatrices() logic from all plot widgets. The caller provides the data ranges and centers (which vary per widget), and this function applies zoom and pan to produce the final projection.</p>
+</section>
+<section id="function-computeorthoprojection-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-computeorthoprojection-1">function computeOrthoProjection</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute orthographic projection from view state with bounds.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>view_state</strong> The cached view state (zoom, pan, and axis bounds).</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ViewState</strong> A type satisfying ViewStateWithBounds.</li>
+</ul>
+<p><strong>Return</strong>: The orthographic projection matrix.</p>
+<p>Convenience overload for view states that have x_min, x_max, y_min, y_max. Derives x_range, x_center, y_range, y_center and calls the 4-arg computeOrthoProjection.</p>
+</section>
+<section id="function-handlepanning" class="level3">
+<h3 class="anchored" data-anchor-id="function-handlepanning">function handlePanning</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply a pixel-space drag delta as a pan update to the state.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>state</strong> The mutable state object (setPan will be called).</li>
+<li><strong>view_state</strong> The cached view state snapshot.</li>
+<li><strong>delta_x</strong> Horizontal mouse drag in pixels.</li>
+<li><strong>delta_y</strong> Vertical mouse drag in pixels.</li>
+<li><strong>x_range</strong> Total data range on the X axis.</li>
+<li><strong>y_range</strong> Total data range on the Y axis.</li>
+<li><strong>widget_width</strong> Widget width in pixels.</li>
+<li><strong>widget_height</strong> Widget height in pixels.</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>State</strong> A type satisfying ZoomPanSettable (has setPan()).</li>
+<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+</ul>
+<p>Converts the pixel delta to world-space using the provided data ranges, widget dimensions, and current zoom level, then calls state.setPan().</p>
+</section>
+<section id="function-handlepanning-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-handlepanning-1">function handlePanning</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply pan from view state with bounds (derives x_range/y_range).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>state</strong> The mutable state object (setPan will be called).</li>
+<li><strong>view_state</strong> The cached view state snapshot (must have bounds).</li>
+<li><strong>delta_x</strong> Horizontal mouse drag in pixels.</li>
+<li><strong>delta_y</strong> Vertical mouse drag in pixels.</li>
+<li><strong>widget_width</strong> Widget width in pixels.</li>
+<li><strong>widget_height</strong> Widget height in pixels.</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>State</strong> A type satisfying ZoomPanSettable.</li>
+<li><strong>ViewState</strong> A type satisfying ViewStateWithBounds.</li>
+</ul>
+<p>Convenience overload for view states that have x_min, x_max, y_min, y_max. Derives x_range and y_range and calls the 8-arg handlePanning.</p>
+</section>
+<section id="function-handlezoom" class="level3">
+<h3 class="anchored" data-anchor-id="function-handlezoom">function handleZoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply a scroll-wheel zoom step to the state.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>state</strong> The mutable state object (setXZoom/setYZoom called).</li>
+<li><strong>view_state</strong> The cached view state snapshot.</li>
+<li><strong>delta</strong> Scroll wheel delta (positive = zoom in).</li>
+<li><strong>y_only</strong> If true, zoom only the Y axis.</li>
+<li><strong>both_axes</strong> If true, zoom both axes simultaneously.</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>State</strong> A type satisfying ZoomPanSettable.</li>
+<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+</ul>
+<p>The zoom factor is <code>1.1^delta</code>. Modifier keys select the axis:</p>
+<ul>
+<li>Default (no modifier): X-axis only</li>
+<li><code>y_only</code> (Shift): Y-axis only</li>
+<li><code>both_axes</code> (Ctrl): Both axes simultaneously</li>
+</ul>
+</section>
+<section id="function-extractedgeevents" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractedgeevents">function extractEdgeEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Source interval series to extract edges from</li>
+<li><strong>edge</strong> Which edge to extract (Beginning = start times, End = end times)</li>
+</ul>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> with one event per interval edge, or nullptr on error</p>
+<p>Creates a new <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> containing either the start or end times of each interval, depending on the specified edge type. The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> from the source interval series is propagated to the result.</p>
+</section>
+<section id="function-runheatmappipeline" class="level3">
+<h3 class="anchored" data-anchor-id="function-runheatmappipeline">function runHeatmapPipeline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute the heatmap data pipeline without an OpenGL context.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> with loaded event and alignment data</li>
+<li><strong>unit_keys</strong> <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keys (one per row)</li>
+<li><strong>alignment_data</strong> Alignment configuration (event key, window size, etc.)</li>
+<li><strong>config</strong> Pipeline configuration (scaling, estimation params, etc.)</li>
+</ul>
+<p><strong>Return</strong>: Pipeline result with rows and intermediate data; success is false when the pipeline produces no output (e.g.&nbsp;empty gather, no alignment).</p>
+<p>This function replicates the data flow from HeatmapOpenGLWidget::rebuildScene() as a testable free function:</p>
+<ol type="1">
+<li><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">Gather</a> trial-aligned <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> data for all unit keys</li>
+<li>Estimate firing rates for each unit</li>
+<li>Apply scaling (Hz, z-score, etc.)</li>
+<li>Convert <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1RateEstimate.html">RateEstimate</a> to <a href="../../api_generated/Classes/structCorePlotting_1_1HeatmapRowData.html">CorePlotting::HeatmapRowData</a></li>
+</ol>
+</section>
+<section id="function-computesortorder" class="level3">
+<h3 class="anchored" data-anchor-id="function-computesortorder">function computeSortOrder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute a permutation vector that sorts the pipeline rows.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>result</strong> Pipeline result containing rows and rate_estimates</li>
+<li><strong>unit_keys</strong> Unit keys (parallel to rows) — used for Alphabetical sort</li>
+<li><strong>sort_mode</strong> Sorting criterion</li>
+<li><strong>ascending</strong> Sort direction</li>
+</ul>
+<p><strong>Return</strong>: Index permutation of size <code>result.rows.size()</code></p>
+<p>Returns indices into the original row order such that <code>rows[result[0]]</code> is the first row in sorted order, etc.</p>
+</section>
+<section id="function-applysortorder" class="level3">
+<h3 class="anchored" data-anchor-id="function-applysortorder">function applySortOrder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply a precomputed permutation to the pipeline result and unit keys.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>result</strong> Pipeline result to reorder (modified in-place)</li>
+<li><strong>unit_keys</strong> Unit keys to reorder in parallel (modified in-place)</li>
+<li><strong>sort_indices</strong> Permutation from <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#function-computesortorder">computeSortOrder()</a></li>
+</ul>
+<p>Reorders <code>result.rows</code>, <code>result.rate_estimates</code>, and <code>unit_keys</code> in-place according to the given index permutation.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

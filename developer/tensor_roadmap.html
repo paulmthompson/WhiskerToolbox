@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>tensor_roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tensor-refactor-remaining-roadmap" id="toc-tensor-refactor-remaining-roadmap" class="nav-link active" data-scroll-target="#tensor-refactor-remaining-roadmap">Tensor Refactor — Remaining Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#completed-work-summary" id="toc-completed-work-summary" class="nav-link" data-scroll-target="#completed-work-summary">Completed Work Summary</a></li>
+  <li><a href="#remaining-work" id="toc-remaining-work" class="nav-link" data-scroll-target="#remaining-work">Remaining Work</a>
+  <ul class="collapse">
+  <li><a href="#interval-row-support-for-non-analog-types-from-column-refactor-phase-3.8" id="toc-interval-row-support-for-non-analog-types-from-column-refactor-phase-3.8" class="nav-link" data-scroll-target="#interval-row-support-for-non-analog-types-from-column-refactor-phase-3.8">1. Interval-Row Support for Non-Analog Types (from Column Refactor Phase 3.8)</a></li>
+  <li><a href="#viewtensorstorage-zero-copy-slicing-from-tensordata-refactor-step-6" id="toc-viewtensorstorage-zero-copy-slicing-from-tensordata-refactor-step-6" class="nav-link" data-scroll-target="#viewtensorstorage-zero-copy-slicing-from-tensordata-refactor-step-6">2. ViewTensorStorage — Zero-Copy Slicing (from TensorData Refactor Step 6)</a></li>
+  <li><a href="#multi-output-transforms-producing-tensordata-from-tensordata-refactor-step-9" id="toc-multi-output-transforms-producing-tensordata-from-tensordata-refactor-step-9" class="nav-link" data-scroll-target="#multi-output-transforms-producing-tensordata-from-tensordata-refactor-step-9">3. Multi-Output Transforms Producing TensorData (from TensorData Refactor Step 9)</a></li>
+  <li><a href="#lazy-row-resolution-from-column-refactor-phase-5" id="toc-lazy-row-resolution-from-column-refactor-phase-5" class="nav-link" data-scroll-target="#lazy-row-resolution-from-column-refactor-phase-5">4. Lazy Row Resolution (from Column Refactor Phase 5)</a></li>
+  <li><a href="#observer-lifetime-management-for-lazy-columns-from-tensordata-refactor-18" id="toc-observer-lifetime-management-for-lazy-columns-from-tensordata-refactor-18" class="nav-link" data-scroll-target="#observer-lifetime-management-for-lazy-columns-from-tensordata-refactor-18">5. Observer Lifetime Management for Lazy Columns (from TensorData Refactor §18)</a></li>
+  <li><a href="#tensordata-integration-with-containertraits-for-transforms-v2-from-tensordata-refactor-18" id="toc-tensordata-integration-with-containertraits-for-transforms-v2-from-tensordata-refactor-18" class="nav-link" data-scroll-target="#tensordata-integration-with-containertraits-for-transforms-v2-from-tensordata-refactor-18">6. TensorData Integration with ContainerTraits for Transforms V2 (from TensorData Refactor §18)</a></li>
+  </ul></li>
+  <li><a href="#future-considerations-not-planned" id="toc-future-considerations-not-planned" class="nav-link" data-scroll-target="#future-considerations-not-planned">Future Considerations (Not Planned)</a></li>
+  <li><a href="#priority-summary" id="toc-priority-summary" class="nav-link" data-scroll-target="#priority-summary">Priority Summary</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="tensor-refactor-remaining-roadmap" class="level1">
+<h1>Tensor Refactor — Remaining Roadmap</h1>
+<p><strong>Date:</strong> 2026-03-21 <strong>Source:</strong> Consolidated from <code>tensor_data_refactor_proposal.md</code> (TensorData CRTP storage refactor) and <code>tensor_column_refactor_proposal.md</code> (Tensor Column API / pipeline-first builders).</p>
+<hr>
+<section id="completed-work-summary" class="level2">
+<h2 class="anchored" data-anchor-id="completed-work-summary">Completed Work Summary</h2>
+<p>Everything below is implemented, tested, and merged. Detailed design rationale lives in the two source proposals.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>What Was Done</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>DimensionDescriptor</strong></td>
+<td>Named axes, shape/strides, column naming. Pure value type.</td>
+</tr>
+<tr class="even">
+<td><strong>RowDescriptor</strong></td>
+<td><code>TimeFrameIndex</code>, <code>Interval</code>, <code>Ordinal</code> row types with factories and per-row labeling.</td>
+</tr>
+<tr class="odd">
+<td><strong>CRTP Storage Base</strong></td>
+<td><code>TensorStorageBase&lt;Derived&gt;</code> with row-major semantics, cache, contiguity checks.</td>
+</tr>
+<tr class="even">
+<td><strong>ArmadilloTensorStorage</strong></td>
+<td>Default ≤3D backend. Column↔︎row-major translation. Zero-copy <code>arma::fmat</code>/<code>arma::fcube</code> access.</td>
+</tr>
+<tr class="odd">
+<td><strong>DenseTensorStorage</strong></td>
+<td>Flat <code>vector&lt;float&gt;</code> fallback for &gt;3D. Row-major with precomputed strides.</td>
+</tr>
+<tr class="even">
+<td><strong>LibTorchTensorStorage</strong></td>
+<td><code>torch::Tensor</code> wrapper behind <code>TENSOR_BACKEND_LIBTORCH</code>. Device management, dtype conversion.</td>
+</tr>
+<tr class="odd">
+<td><strong>LazyColumnTensorStorage</strong></td>
+<td>Type-erased <code>ColumnProviderFn</code> per column. Per-column caching, invalidation, <code>materializeAll()</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>TensorStorageWrapper</strong></td>
+<td>Sean Parent type-erasure. <code>tryGetAs&lt;T&gt;()</code> for zero-copy backend access. <code>sharedStorage()</code> for future views.</td>
+</tr>
+<tr class="odd">
+<td><strong>TensorData</strong></td>
+<td>Full public API: factories (<code>createTimeSeries2D</code>, <code>createFromIntervals</code>, <code>createND</code>, <code>createFromArmadillo</code>, <code>createOrdinal2D</code>, <code>createFromLazyColumns</code>, <code>createFromTorch</code>), element access, backend conversion (<code>toArmadillo</code>, <code>toLibTorch</code>), <code>DataTraits</code>, observer integration.</td>
+</tr>
+<tr class="even">
+<td><strong>Compile flags</strong></td>
+<td>Armadillo always linked. LibTorch opt-in per instance. Single build holds both.</td>
+</tr>
+<tr class="odd">
+<td><strong>extractTimeIndices()</strong></td>
+<td>Extracts <code>TimeIndexResult{indices, time_frame}</code> from any keyed data type via <code>DataTypeVariant</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>ColumnRecipe</strong></td>
+<td><code>gather_type</code> removed — derived from <code>DataManager::getType()</code> at build time. <code>pipeline_json</code> is primary.</td>
+</tr>
+<tr class="odd">
+<td><strong>ColumnConfigDialog</strong></td>
+<td>Pipeline-first UX: always-visible JSON editor, source key combo, interval property group.</td>
+</tr>
+<tr class="even">
+<td><strong>Pattern A builders</strong></td>
+<td><code>buildPipelineColumnProvider()</code> — generic timestamp-row builder via <code>executePipeline()</code>. Works with any source type that has a pipeline producing float.</td>
+</tr>
+<tr class="odd">
+<td><strong>Pattern B builders</strong></td>
+<td><code>buildIntervalPipelineProvider()</code> — generic interval-row builder via <code>gatherAndExecutePipeline()</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>GatherPipelineExecutor</strong></td>
+<td><code>gatherAndExecutePipeline()</code>, <code>extractSingleFloat()</code>, <code>applyRangeReductionToOutput()</code> in <code>TransformsV2/core/</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong>buildProviderFromRecipe()</strong></td>
+<td>Simplified dispatch: no per-type branching. Routes to Pattern A or Pattern B based on row type.</td>
+</tr>
+<tr class="even">
+<td><strong>Old builders deleted</strong></td>
+<td><code>buildDirectColumnProvider</code>, <code>buildTimeSeriesColumnProvider</code>, <code>buildIntervalReductionForAnalog/Events/Intervals</code>, <code>validateStepChainForFloats</code>, <code>buildElementChain</code>, <code>applyChainToFloat</code> — all removed.</td>
+</tr>
+<tr class="odd">
+<td><strong>Validation helpers</strong></td>
+<td><code>dmTypeToContainerTypeIndex()</code>, <code>getStepNames()</code>, <code>pipelineProducesFloat()</code> — all in anonymous namespace of <code>TensorColumnBuilders.cpp</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>IntervalReduction transforms</strong></td>
+<td><code>AnalogIntervalReduction</code>, <code>EventIntervalReduction</code>, <code>IntervalOverlapReduction</code> — binary container transforms producing <code>TensorData</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 3.8 tests (Pattern A)</strong></td>
+<td>Timestamp-row coverage for MaskData, LineData, PointData columns (valid data, missing timestamps, empty pipeline rejection).</td>
+</tr>
+<tr class="even">
+<td><strong>buildInvalidationWiringFn()</strong></td>
+<td>Observer registration helper for lazy column invalidation.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="remaining-work" class="level2">
+<h2 class="anchored" data-anchor-id="remaining-work">Remaining Work</h2>
+<section id="interval-row-support-for-non-analog-types-from-column-refactor-phase-3.8" class="level3">
+<h3 class="anchored" data-anchor-id="interval-row-support-for-non-analog-types-from-column-refactor-phase-3.8">1. Interval-Row Support for Non-Analog Types (from Column Refactor Phase 3.8)</h3>
+<p><strong>Priority:</strong> High — this is the last gap in the generic pipeline column system.</p>
+<p><strong>Problem:</strong> <code>buildIntervalPipelineProvider()</code> (Pattern B) works for <code>AnalogTimeSeries</code>, <code>DigitalEventSeries</code>, and <code>DigitalIntervalSeries</code>, but fails at runtime for <code>MaskData</code>, <code>LineData</code>, and <code>PointData</code>. Tests in <code>test_nonanalog_column_builders.test.cpp</code> document this as <code>[IntervalGap]</code>.</p>
+<p><strong>Root causes:</strong> 1. <code>GatherPipelineExecutor.cpp</code> does not include MaskData/LineData/PointData headers. 2. <code>CopyableTimeRangeDataType</code> concept is not satisfied for the gather path. 3. <code>element_type_of&lt;T&gt;</code> has no specialization for these types in the gather context.</p>
+<p><strong>Work:</strong> - Add header includes and template instantiations for MaskData, LineData, PointData in <code>GatherPipelineExecutor.cpp</code>. - Ensure <code>GatherResult&lt;MaskData&gt;</code>, <code>GatherResult&lt;LineData&gt;</code>, <code>GatherResult&lt;PointData&gt;</code> satisfy the required concepts. - Convert the <code>[IntervalGap]</code> tests from “expects runtime error” to verifying correct float output.</p>
+<p><strong>Files:</strong> <code>src/TransformsV2/core/GatherPipelineExecutor.cpp</code>, <code>tests/TransformsV2/test_nonanalog_column_builders.test.cpp</code></p>
+<hr>
+</section>
+<section id="viewtensorstorage-zero-copy-slicing-from-tensordata-refactor-step-6" class="level3">
+<h3 class="anchored" data-anchor-id="viewtensorstorage-zero-copy-slicing-from-tensordata-refactor-step-6">2. ViewTensorStorage — Zero-Copy Slicing (from TensorData Refactor Step 6)</h3>
+<p><strong>Priority:</strong> Medium — enables efficient sub-tensor access without materialization.</p>
+<p><strong>Problem:</strong> No way to create a lightweight view into an existing tensor. All sub-tensor access currently requires copying.</p>
+<p><strong>Design (documented in tensor_data_refactor_proposal.md §6.5):</strong></p>
+<pre><code>ViewTensorStorage : TensorStorageBase&lt;ViewTensorStorage&gt;
+  - Contiguous slice: (source, axis, start, end)
+  - Index-based selection: (source, axis, indices)
+  - isContiguous: true only for outermost-axis contiguous slices
+  - flatData: available when contiguous, throws otherwise
+  - Owns shared_ptr&lt;TensorStorageWrapper const&gt; to keep source alive</code></pre>
+<p><strong>Work:</strong> - Implement <code>ViewTensorStorage</code> CRTP backend (<code>.hpp</code>/<code>.cpp</code>). - Wire <code>TensorData</code> methods: <code>sliceRows(start, end)</code>, <code>selectRows(indices)</code>, <code>selectColumns(names)</code>, <code>sliceAxis(axis, start, end)</code>. - Tests for contiguous and non-contiguous views, lifetime safety, materialization round-trip.</p>
+<p><strong>Infrastructure already in place:</strong> <code>TensorStorageWrapper::sharedStorage()</code> exists for ownership sharing.</p>
+<p><strong>Files:</strong> New <code>src/DataManager/Tensors/storage/ViewTensorStorage.hpp/.cpp</code>, modifications to <code>TensorData.hpp/.cpp</code>.</p>
+<hr>
+</section>
+<section id="multi-output-transforms-producing-tensordata-from-tensordata-refactor-step-9" class="level3">
+<h3 class="anchored" data-anchor-id="multi-output-transforms-producing-tensordata-from-tensordata-refactor-step-9">3. Multi-Output Transforms Producing TensorData (from TensorData Refactor Step 9)</h3>
+<p><strong>Priority:</strong> Medium — enables Hilbert, spectrogram, and similar transforms to output named-column tensors natively.</p>
+<p><strong>Problem:</strong> Transforms like Hilbert (magnitude + phase) and spectrogram (time × frequency) currently either output separate <code>AnalogTimeSeries</code> objects or are not implemented as transforms at all.</p>
+<p><strong>Work:</strong> - Register multi-output pipeline steps that produce <code>TensorData</code> with named columns (e.g., <code>{"magnitude", "phase"}</code> for Hilbert). - Spectrogram transform producing a 2D <code>TensorData</code> (time × frequency) with frequency bin labels. - Ensure <code>DataTypeVariant</code> and the transforms v2 type chain handle <code>TensorData</code> as a pipeline output.</p>
+<p><strong>Note:</strong> <code>AnalogHilbertPhase</code> exists but outputs <code>AnalogTimeSeries</code>, not <code>TensorData</code>.</p>
+<hr>
+</section>
+<section id="lazy-row-resolution-from-column-refactor-phase-5" class="level3">
+<h3 class="anchored" data-anchor-id="lazy-row-resolution-from-column-refactor-phase-5">4. Lazy Row Resolution (from Column Refactor Phase 5)</h3>
+<p><strong>Priority:</strong> Low — deferred until the column pipeline system is stable.</p>
+<p><strong>Problem:</strong> <code>ColumnProviderFn</code> closures capture a snapshot of <code>row_times</code> or <code>intervals</code> at build time. If the row source grows after tensor creation, the snapshot does not update.</p>
+<p><strong>Work:</strong> 1. Change <code>ColumnProviderFn</code> closures to query <code>extractTimeIndices()</code> at materialization time rather than capturing a snapshot. 2. Add row-source invalidation that triggers tensor shape recalculation when the row count changes. 3. Ensure all columns are materialized against the same row snapshot in a single locked pass (already protected by <code>LazyColumnTensorStorage</code>’s mutex).</p>
+<p><strong>Trade-off:</strong> Changes the lazy evaluation contract. Requires careful handling to prevent inconsistent column lengths if rows change mid-materialization.</p>
+<hr>
+</section>
+<section id="observer-lifetime-management-for-lazy-columns-from-tensordata-refactor-18" class="level3">
+<h3 class="anchored" data-anchor-id="observer-lifetime-management-for-lazy-columns-from-tensordata-refactor-18">5. Observer Lifetime Management for Lazy Columns (from TensorData Refactor §18)</h3>
+<p><strong>Priority:</strong> Low — currently managed at the DataManager level (data objects outlive their observers in practice).</p>
+<p><strong>Problem:</strong> When a source <code>ObserverData</code> is destroyed before the <code>TensorData</code>, the registered observer callback becomes a dangling call.</p>
+<p><strong>Options:</strong> - (a) <code>weak_ptr</code> guards in callbacks - (b) Explicit cleanup via stored <code>CallbackID</code>s - (c) Accept current convention (DataManager lifetime guarantees)</p>
+<p><strong>Decision needed.</strong> No implementation required if option (c) is chosen.</p>
+<hr>
+</section>
+<section id="tensordata-integration-with-containertraits-for-transforms-v2-from-tensordata-refactor-18" class="level3">
+<h3 class="anchored" data-anchor-id="tensordata-integration-with-containertraits-for-transforms-v2-from-tensordata-refactor-18">6. TensorData Integration with ContainerTraits for Transforms V2 (from TensorData Refactor §18)</h3>
+<p><strong>Priority:</strong> Low — <code>DataTraits</code> already provides <code>element_type = float</code>, <code>is_ragged = false</code>, <code>is_temporal = true</code>.</p>
+<p><strong>Problem:</strong> Tensor transforms may need shape-awareness (e.g., “apply PCA across columns”). The current <code>ContainerTraits</code> system does not express dimensionality or column structure.</p>
+<p><strong>Work:</strong> Investigate whether a <code>TensorContainerTraits</code> extension or a new transform category is needed. May be deferred indefinitely if shape-aware transforms are implemented as standalone functions rather than generic pipeline steps.</p>
+<p><strong>See also:</strong> <code>docs/developer/tensor_transforms_roadmap.md</code> — comprehensive roadmap for TensorData → TensorData transforms (PCA, t-SNE, etc.) via the MLCore + TransformsV2 hybrid architecture. Phases 1-2 of that roadmap deliver tensor container transforms and scatter plot interaction without requiring ContainerTraits changes.</p>
+<hr>
+</section>
+</section>
+<section id="future-considerations-not-planned" class="level2">
+<h2 class="anchored" data-anchor-id="future-considerations-not-planned">Future Considerations (Not Planned)</h2>
+<p>These ideas are documented in the source proposals but have no implementation plan:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 38%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Idea</th>
+<th>Source</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Row Transforms</strong></td>
+<td>Column Refactor §4</td>
+<td>Pipeline on the row axis (e.g., filter timestamps, resample to 100 Hz). Would need <code>RowDefinition.pipeline_json</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>EntityID Rows</strong></td>
+<td>Column Refactor §4</td>
+<td><code>RowDescriptor::fromEntityIds()</code> factory. One value per entity. New pipeline execution path.</td>
+</tr>
+<tr class="odd">
+<td><strong>Dynamic Quick Pipeline Menu</strong></td>
+<td>Column Refactor §4</td>
+<td>Populate <code>ColumnConfigDialog</code> quick-pipeline options from <code>RangeReductionRegistry</code> instead of hardcoding.</td>
+</tr>
+<tr class="even">
+<td><strong>IntervalReductionRegistry</strong></td>
+<td>TensorData Refactor §17 Pattern B</td>
+<td>Standalone registry of named gather+reduce compositions. Deferred — Pattern A is sufficient.</td>
+</tr>
+<tr class="odd">
+<td><strong>MemoryMappedTensorStorage</strong></td>
+<td>TensorData Refactor §3</td>
+<td><code>mmap</code>’d binary file backend. Listed in architecture diagram, no design or plan.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="priority-summary" class="level2">
+<h2 class="anchored" data-anchor-id="priority-summary">Priority Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 13%">
+<col style="width: 23%">
+<col style="width: 27%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Item</th>
+<th>Priority</th>
+<th>Complexity</th>
+<th>Blocked By</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Interval-row support for MaskData/LineData/PointData</td>
+<td>High</td>
+<td>Medium</td>
+<td>Nothing</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>ViewTensorStorage (zero-copy slicing)</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Nothing</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Multi-output transforms → TensorData</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Nothing</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Lazy row resolution</td>
+<td>Low</td>
+<td>High</td>
+<td>Items 1-3 stable</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Observer lifetime for lazy columns</td>
+<td>Low</td>
+<td>Low</td>
+<td>Decision needed</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>TensorData ContainerTraits extension</td>
+<td>Low</td>
+<td>Low</td>
+<td>Design needed</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

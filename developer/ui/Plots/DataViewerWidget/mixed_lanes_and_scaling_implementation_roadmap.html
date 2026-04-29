@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>mixed_lanes_and_scaling_implementation_roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#dataviewer-mixed-lanes-and-y-scaling-implementation-roadmap" id="toc-dataviewer-mixed-lanes-and-y-scaling-implementation-roadmap" class="nav-link active" data-scroll-target="#dataviewer-mixed-lanes-and-y-scaling-implementation-roadmap">DataViewer Mixed-Lanes and Y-Scaling Implementation Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#purpose" id="toc-purpose" class="nav-link" data-scroll-target="#purpose">Purpose</a></li>
+  <li><a href="#scope" id="toc-scope" class="nav-link" data-scroll-target="#scope">Scope</a></li>
+  <li><a href="#success-criteria" id="toc-success-criteria" class="nav-link" data-scroll-target="#success-criteria">Success Criteria</a></li>
+  <li><a href="#high-level-delivery-order" id="toc-high-level-delivery-order" class="nav-link" data-scroll-target="#high-level-delivery-order">High-Level Delivery Order</a></li>
+  <li><a href="#progress-update-2026-04-21" id="toc-progress-update-2026-04-21" class="nav-link" data-scroll-target="#progress-update-2026-04-21">Progress Update (2026-04-21)</a></li>
+  <li><a href="#phase-1-scaling-bug-fix-and-stabilization" id="toc-phase-1-scaling-bug-fix-and-stabilization" class="nav-link" data-scroll-target="#phase-1-scaling-bug-fix-and-stabilization">Phase 1: Scaling Bug Fix and Stabilization</a>
+  <ul class="collapse">
+  <li><a href="#goal" id="toc-goal" class="nav-link" data-scroll-target="#goal">Goal</a></li>
+  <li><a href="#expected-root-cause-areas-to-verify" id="toc-expected-root-cause-areas-to-verify" class="nav-link" data-scroll-target="#expected-root-cause-areas-to-verify">Expected Root-Cause Areas to Verify</a></li>
+  <li><a href="#tasks" id="toc-tasks" class="nav-link" data-scroll-target="#tasks">Tasks</a></li>
+  <li><a href="#primary-files" id="toc-primary-files" class="nav-link" data-scroll-target="#primary-files">Primary Files</a></li>
+  <li><a href="#acceptance-criteria" id="toc-acceptance-criteria" class="nav-link" data-scroll-target="#acceptance-criteria">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-2-mixed-lane-data-model-and-serialization" id="toc-phase-2-mixed-lane-data-model-and-serialization" class="nav-link" data-scroll-target="#phase-2-mixed-lane-data-model-and-serialization">Phase 2: Mixed-Lane Data Model and Serialization</a>
+  <ul class="collapse">
+  <li><a href="#goal-1" id="toc-goal-1" class="nav-link" data-scroll-target="#goal-1">Goal</a></li>
+  <li><a href="#design-rules" id="toc-design-rules" class="nav-link" data-scroll-target="#design-rules">Design Rules</a></li>
+  <li><a href="#data-model-additions" id="toc-data-model-additions" class="nav-link" data-scroll-target="#data-model-additions">Data Model Additions</a></li>
+  <li><a href="#tasks-1" id="toc-tasks-1" class="nav-link" data-scroll-target="#tasks-1">Tasks</a></li>
+  <li><a href="#primary-files-1" id="toc-primary-files-1" class="nav-link" data-scroll-target="#primary-files-1">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-1" id="toc-acceptance-criteria-1" class="nav-link" data-scroll-target="#acceptance-criteria-1">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-3-layout-engine-support-for-grouped-and-weighted-lanes" id="toc-phase-3-layout-engine-support-for-grouped-and-weighted-lanes" class="nav-link" data-scroll-target="#phase-3-layout-engine-support-for-grouped-and-weighted-lanes">Phase 3: Layout Engine Support for Grouped and Weighted Lanes</a>
+  <ul class="collapse">
+  <li><a href="#goal-2" id="toc-goal-2" class="nav-link" data-scroll-target="#goal-2">Goal</a></li>
+  <li><a href="#implementation-approach" id="toc-implementation-approach" class="nav-link" data-scroll-target="#implementation-approach">Implementation Approach</a></li>
+  <li><a href="#tasks-2" id="toc-tasks-2" class="nav-link" data-scroll-target="#tasks-2">Tasks</a></li>
+  <li><a href="#primary-files-2" id="toc-primary-files-2" class="nav-link" data-scroll-target="#primary-files-2">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-2" id="toc-acceptance-criteria-2" class="nav-link" data-scroll-target="#acceptance-criteria-2">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-4-dataviewer-wiring-for-interspersed-and-shared-lanes" id="toc-phase-4-dataviewer-wiring-for-interspersed-and-shared-lanes" class="nav-link" data-scroll-target="#phase-4-dataviewer-wiring-for-interspersed-and-shared-lanes">Phase 4: DataViewer Wiring for Interspersed and Shared Lanes</a>
+  <ul class="collapse">
+  <li><a href="#goal-3" id="toc-goal-3" class="nav-link" data-scroll-target="#goal-3">Goal</a></li>
+  <li><a href="#behavior-policy" id="toc-behavior-policy" class="nav-link" data-scroll-target="#behavior-policy">Behavior Policy</a></li>
+  <li><a href="#tasks-3" id="toc-tasks-3" class="nav-link" data-scroll-target="#tasks-3">Tasks</a></li>
+  <li><a href="#primary-files-3" id="toc-primary-files-3" class="nav-link" data-scroll-target="#primary-files-3">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-3" id="toc-acceptance-criteria-3" class="nav-link" data-scroll-target="#acceptance-criteria-3">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-4b-interactive-lane-drag-and-drop-reordering" id="toc-phase-4b-interactive-lane-drag-and-drop-reordering" class="nav-link" data-scroll-target="#phase-4b-interactive-lane-drag-and-drop-reordering">Phase 4b: Interactive Lane Drag-and-Drop Reordering</a>
+  <ul class="collapse">
+  <li><a href="#goal-4" id="toc-goal-4" class="nav-link" data-scroll-target="#goal-4">Goal</a></li>
+  <li><a href="#why-this-fits-after-phase-4" id="toc-why-this-fits-after-phase-4" class="nav-link" data-scroll-target="#why-this-fits-after-phase-4">Why this fits after Phase 4</a></li>
+  <li><a href="#context-what-the-ordering-abstractions-roadmap-delivered" id="toc-context-what-the-ordering-abstractions-roadmap-delivered" class="nav-link" data-scroll-target="#context-what-the-ordering-abstractions-roadmap-delivered">Context: What the Ordering Abstractions Roadmap Delivered</a></li>
+  <li><a href="#ux-model-first-release" id="toc-ux-model-first-release" class="nav-link" data-scroll-target="#ux-model-first-release">UX Model (first release)</a></li>
+  <li><a href="#datastate-model-requirements" id="toc-datastate-model-requirements" class="nav-link" data-scroll-target="#datastate-model-requirements">Data/State Model Requirements</a></li>
+  <li><a href="#implementation-tasks" id="toc-implementation-tasks" class="nav-link" data-scroll-target="#implementation-tasks">Implementation Tasks</a></li>
+  <li><a href="#primary-files-4" id="toc-primary-files-4" class="nav-link" data-scroll-target="#primary-files-4">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-4" id="toc-acceptance-criteria-4" class="nav-link" data-scroll-target="#acceptance-criteria-4">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-4c-per-series-relative-ordering-ui" id="toc-phase-4c-per-series-relative-ordering-ui" class="nav-link" data-scroll-target="#phase-4c-per-series-relative-ordering-ui">Phase 4C: Per-Series Relative Ordering UI</a>
+  <ul class="collapse">
+  <li><a href="#goal-5" id="toc-goal-5" class="nav-link" data-scroll-target="#goal-5">Goal</a></li>
+  <li><a href="#ux-model" id="toc-ux-model" class="nav-link" data-scroll-target="#ux-model">UX Model</a></li>
+  <li><a href="#implementation-tasks-1" id="toc-implementation-tasks-1" class="nav-link" data-scroll-target="#implementation-tasks-1">Implementation Tasks</a></li>
+  <li><a href="#primary-files-5" id="toc-primary-files-5" class="nav-link" data-scroll-target="#primary-files-5">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-5" id="toc-acceptance-criteria-5" class="nav-link" data-scroll-target="#acceptance-criteria-5">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-4d-json-lane-layout-save-and-load" id="toc-phase-4d-json-lane-layout-save-and-load" class="nav-link" data-scroll-target="#phase-4d-json-lane-layout-save-and-load">Phase 4D: JSON Lane Layout Save and Load</a>
+  <ul class="collapse">
+  <li><a href="#goal-6" id="toc-goal-6" class="nav-link" data-scroll-target="#goal-6">Goal</a></li>
+  <li><a href="#json-schema" id="toc-json-schema" class="nav-link" data-scroll-target="#json-schema">JSON Schema</a></li>
+  <li><a href="#implementation-tasks-2" id="toc-implementation-tasks-2" class="nav-link" data-scroll-target="#implementation-tasks-2">Implementation Tasks</a></li>
+  <li><a href="#primary-files-6" id="toc-primary-files-6" class="nav-link" data-scroll-target="#primary-files-6">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-6" id="toc-acceptance-criteria-6" class="nav-link" data-scroll-target="#acceptance-criteria-6">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-4e-csv-spike-to-analog-pairing-loader" id="toc-phase-4e-csv-spike-to-analog-pairing-loader" class="nav-link" data-scroll-target="#phase-4e-csv-spike-to-analog-pairing-loader">Phase 4E: CSV Spike-to-Analog Pairing Loader</a>
+  <ul class="collapse">
+  <li><a href="#goal-7" id="toc-goal-7" class="nav-link" data-scroll-target="#goal-7">Goal</a></li>
+  <li><a href="#csv-format" id="toc-csv-format" class="nav-link" data-scroll-target="#csv-format">CSV Format</a></li>
+  <li><a href="#placement-modes-configurable-per-load" id="toc-placement-modes-configurable-per-load" class="nav-link" data-scroll-target="#placement-modes-configurable-per-load">Placement Modes (configurable per load)</a></li>
+  <li><a href="#implementation-tasks-3" id="toc-implementation-tasks-3" class="nav-link" data-scroll-target="#implementation-tasks-3">Implementation Tasks</a></li>
+  <li><a href="#primary-files-7" id="toc-primary-files-7" class="nav-link" data-scroll-target="#primary-files-7">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-7" id="toc-acceptance-criteria-7" class="nav-link" data-scroll-target="#acceptance-criteria-7">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-5-backward-compatibility-migration-and-test-matrix" id="toc-phase-5-backward-compatibility-migration-and-test-matrix" class="nav-link" data-scroll-target="#phase-5-backward-compatibility-migration-and-test-matrix">Phase 5: Backward Compatibility, Migration, and Test Matrix</a>
+  <ul class="collapse">
+  <li><a href="#goal-8" id="toc-goal-8" class="nav-link" data-scroll-target="#goal-8">Goal</a></li>
+  <li><a href="#test-matrix" id="toc-test-matrix" class="nav-link" data-scroll-target="#test-matrix">Test Matrix</a></li>
+  <li><a href="#tasks-4" id="toc-tasks-4" class="nav-link" data-scroll-target="#tasks-4">Tasks</a></li>
+  <li><a href="#acceptance-criteria-8" id="toc-acceptance-criteria-8" class="nav-link" data-scroll-target="#acceptance-criteria-8">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-6-developer-documentation-and-rollout" id="toc-phase-6-developer-documentation-and-rollout" class="nav-link" data-scroll-target="#phase-6-developer-documentation-and-rollout">Phase 6: Developer Documentation and Rollout</a>
+  <ul class="collapse">
+  <li><a href="#goal-9" id="toc-goal-9" class="nav-link" data-scroll-target="#goal-9">Goal</a></li>
+  <li><a href="#tasks-5" id="toc-tasks-5" class="nav-link" data-scroll-target="#tasks-5">Tasks</a></li>
+  <li><a href="#primary-files-8" id="toc-primary-files-8" class="nav-link" data-scroll-target="#primary-files-8">Primary Files</a></li>
+  <li><a href="#acceptance-criteria-9" id="toc-acceptance-criteria-9" class="nav-link" data-scroll-target="#acceptance-criteria-9">Acceptance Criteria</a></li>
+  </ul></li>
+  <li><a href="#suggested-pr-slicing" id="toc-suggested-pr-slicing" class="nav-link" data-scroll-target="#suggested-pr-slicing">Suggested PR Slicing</a></li>
+  <li><a href="#open-technical-decisions-to-resolve-early" id="toc-open-technical-decisions-to-resolve-early" class="nav-link" data-scroll-target="#open-technical-decisions-to-resolve-early">Open Technical Decisions To Resolve Early</a></li>
+  <li><a href="#definition-of-done" id="toc-definition-of-done" class="nav-link" data-scroll-target="#definition-of-done">Definition of Done</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="dataviewer-mixed-lanes-and-y-scaling-implementation-roadmap" class="level1">
+<h1>DataViewer Mixed-Lanes and Y-Scaling Implementation Roadmap</h1>
+<section id="purpose" class="level2">
+<h2 class="anchored" data-anchor-id="purpose">Purpose</h2>
+<p>This document is an execution roadmap for two related deliverables:</p>
+<ol type="1">
+<li>Fix the current DataViewer Y-scaling behavior so AnalogTimeSeries and DigitalEventSeries respond predictably to global scaling.</li>
+<li>Add lane placement controls that support:</li>
+</ol>
+<ul>
+<li>interspersed analog and digital-event lanes</li>
+<li>multiple signals in the same lane (overlay), scoped to AnalogTimeSeries plus DigitalEventSeries for the first release</li>
+</ul>
+<p>This roadmap is intentionally implementation-oriented and can be followed phase by phase by a developer.</p>
+</section>
+<section id="scope" class="level2">
+<h2 class="anchored" data-anchor-id="scope">Scope</h2>
+<p>In scope:</p>
+<ul>
+<li>Y-scaling bug fix and regression protection</li>
+<li>Layout model for mixed lane ordering and lane sharing</li>
+<li>Serialization for lane placement specification</li>
+<li>Backward compatibility with existing saved workspaces</li>
+<li>Documentation updates</li>
+</ul>
+<p>Out of scope for this first delivery:</p>
+<ul>
+<li>Full UI editor for lane assignment (JSON and state API first)</li>
+<li>Generalized overlay of all series types (first release is AnalogTimeSeries plus DigitalEventSeries)</li>
+<li>Any behavior changes for FullCanvas event and interval rendering</li>
+</ul>
+</section>
+<section id="success-criteria" class="level2">
+<h2 class="anchored" data-anchor-id="success-criteria">Success Criteria</h2>
+<ol type="1">
+<li>Analog channels are visible at sane global scale defaults in high-channel-count datasets.</li>
+<li>Mixed analog and digital-event datasets are readable without extreme tuning.</li>
+<li>Developers can define lane placement and overlay via serialized state.</li>
+<li>Backward compatibility with legacy serialized JSON is not required for this implementation branch.</li>
+<li>Existing analog external sorter behavior remains intact as a fallback ordering source.</li>
+</ol>
+</section>
+<section id="high-level-delivery-order" class="level2">
+<h2 class="anchored" data-anchor-id="high-level-delivery-order">High-Level Delivery Order</h2>
+<ol type="1">
+<li>Phase 1: Scaling bug fix and stabilization (completed)</li>
+<li>Phase 2: Mixed-lane data model and serialization</li>
+<li>Phase 3: Layout engine implementation for grouped and weighted lanes</li>
+<li>Phase 4: DataViewer wiring for ordering, rendering, and axis descriptors</li>
+<li>Ordering abstractions roadmap (prerequisite for Phase 4b)</li>
+<li>Phase 4b: Interactive lane drag-and-drop reordering</li>
+<li>Phase 4C: Per-series relative ordering UI (autocomplete dialog)</li>
+<li>Phase 4D: JSON lane layout save and load</li>
+<li>Phase 4E: CSV spike-to-analog pairing loader</li>
+<li>Phase 5: Compatibility and migration testing</li>
+<li>Phase 6: Documentation and handoff</li>
+</ol>
+</section>
+<section id="progress-update-2026-04-21" class="level2">
+<h2 class="anchored" data-anchor-id="progress-update-2026-04-21">Progress Update (2026-04-21)</h2>
+<p>Completed in Phase 1:</p>
+<ul>
+<li>Simplified analog Y-transform composition to remove duplicated normalization effects.</li>
+<li>Updated auto global scaling heuristic to align with normalized lane occupancy behavior.</li>
+<li>Made event glyph vertical sizing explicit and consistent across renderers.</li>
+<li>Added and validated focused regression tests for transform behavior and mixed occupancy expectations.</li>
+<li>Rebuilt with preset and ran targeted DataViewer/plotting test bundles successfully.</li>
+</ul>
+<p>Current status by phase:</p>
+<ul>
+<li>Phase 1: completed</li>
+<li>Phase 2: completed</li>
+<li>Phase 3: completed</li>
+<li>Phase 4: completed</li>
+<li>Ordering abstractions roadmap: completed</li>
+<li>Phase 4b: completed</li>
+<li>Phase 4C: completed</li>
+<li>Phase 4D: completed</li>
+<li>Phase 4E: completed</li>
+<li>Phase 5: not started</li>
+<li>Phase 6: in progress (roadmap/doc updates)</li>
+</ul>
+<p>Branch decision for this implementation:</p>
+<ul>
+<li>Legacy JSON backward compatibility is intentionally not maintained.</li>
+<li>The state schema now prioritizes the mixed-lane model directly.</li>
+</ul>
+<hr>
+</section>
+<section id="phase-1-scaling-bug-fix-and-stabilization" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-scaling-bug-fix-and-stabilization">Phase 1: Scaling Bug Fix and Stabilization</h2>
+<section id="goal" class="level3">
+<h3 class="anchored" data-anchor-id="goal">Goal</h3>
+<p>Eliminate inconsistent scaling behavior that currently makes analog traces require very large global_y_scale values while events appear correctly sized.</p>
+</section>
+<section id="expected-root-cause-areas-to-verify" class="level3">
+<h3 class="anchored" data-anchor-id="expected-root-cause-areas-to-verify">Expected Root-Cause Areas to Verify</h3>
+<ul>
+<li>Analog transform composition includes duplicated normalization effects.</li>
+<li>Auto-arrange and auto-scale logic compounds analog shrink.</li>
+<li>Event vertical sizing semantics are inconsistent with analog semantics.</li>
+</ul>
+</section>
+<section id="tasks" class="level3">
+<h3 class="anchored" data-anchor-id="tasks">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Audit and simplify analog Y transform composition in the DataViewer transform pipeline.</label></li>
+<li><label><input type="checkbox" checked="">Ensure analog normalization uses one coherent standard-deviation normalization path.</label></li>
+<li><label><input type="checkbox" checked="">Rework auto global scale heuristics to match the corrected transform equation.</label></li>
+<li><label><input type="checkbox" checked="">Resolve event height semantics so event sizing is explicit and predictable.</label></li>
+<li><label><input type="checkbox" checked="">Add targeted tests for analog occupancy and mixed analog/event occupancy.</label></li>
+</ul>
+</section>
+<section id="primary-files" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files">Primary Files</h3>
+<ul>
+<li>src/WhiskerToolbox/DataViewer_Widget/Rendering/TransformComposers.hpp</li>
+<li>src/WhiskerToolbox/DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp</li>
+</ul>
+</section>
+<section id="acceptance-criteria" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">32-channel analog datasets do not require extreme global scaling to be readable.</label></li>
+<li><label><input type="checkbox" checked="">Mixed analog plus digital-event views are readable with consistent global scaling behavior.</label></li>
+<li><label><input type="checkbox" checked="">No regressions in existing wheel and time-window behavior tests.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-2-mixed-lane-data-model-and-serialization" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-mixed-lane-data-model-and-serialization">Phase 2: Mixed-Lane Data Model and Serialization</h2>
+<section id="goal-1" class="level3">
+<h3 class="anchored" data-anchor-id="goal-1">Goal</h3>
+<p>Define a durable serialized representation for lane assignment, ordering, overlay, and lane weighting.</p>
+</section>
+<section id="design-rules" class="level3">
+<h3 class="anchored" data-anchor-id="design-rules">Design Rules</h3>
+<ul>
+<li>Defaults must exactly preserve legacy one-series-per-lane behavior.</li>
+<li>New fields are optional and backward compatible.</li>
+<li>No UI dependency is required to use the feature.</li>
+</ul>
+</section>
+<section id="data-model-additions" class="level3">
+<h3 class="anchored" data-anchor-id="data-model-additions">Data Model Additions</h3>
+<p>Add per-series layout override data in DataViewer state:</p>
+<ul>
+<li>lane_id: string, empty means legacy auto lane</li>
+<li>lane_order: integer, optional explicit ordering</li>
+<li>lane_weight: float, default 1.0</li>
+<li>overlay_mode: enum, default Auto</li>
+<li>overlay_z: integer, default 0</li>
+</ul>
+<p>Optional lane-level map keyed by lane_id:</p>
+<ul>
+<li>display_label</li>
+<li>lane_weight override</li>
+</ul>
+</section>
+<section id="tasks-1" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-1">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Add new serializable structs and fields in DataViewer state data.</label></li>
+<li><label><input type="checkbox" checked="">Add state API methods for set, clear, and query of lane overrides.</label></li>
+<li><label><input type="checkbox" checked="">Add validation for invalid or conflicting override values.</label></li>
+<li><label><input type="checkbox" checked="">Add roundtrip tests for new schema.</label></li>
+</ul>
+</section>
+<section id="primary-files-1" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-1">Primary Files</h3>
+<ul>
+<li>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.test.cpp</li>
+</ul>
+</section>
+<section id="acceptance-criteria-1" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-1">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">New fields serialize and deserialize correctly.</label></li>
+<li><label><input type="checkbox" checked="">Legacy saved state loads unchanged. (intentionally not required in this implementation)</label></li>
+<li><label><input type="checkbox" checked="">Invalid override input is rejected or normalized deterministically.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-3-layout-engine-support-for-grouped-and-weighted-lanes" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-layout-engine-support-for-grouped-and-weighted-lanes">Phase 3: Layout Engine Support for Grouped and Weighted Lanes</h2>
+<section id="goal-2" class="level3">
+<h3 class="anchored" data-anchor-id="goal-2">Goal</h3>
+<p>Allow multiple series to share one lane transform and support lane-height weighting.</p>
+</section>
+<section id="implementation-approach" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-approach">Implementation Approach</h3>
+<ul>
+<li>Extend series metadata for layout request with lane assignment and lane weight context.</li>
+<li>Group stackable series by lane_id during layout.</li>
+<li>Allocate lane bands by normalized lane_weight.</li>
+<li>Apply same lane transform to all series in a shared lane.</li>
+</ul>
+</section>
+<section id="tasks-2" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-2">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Extend layout request series metadata with lane assignment fields.</label></li>
+<li><label><input type="checkbox" checked="">Implement grouped-lane allocation in stacked layout strategy.</label></li>
+<li><label><input type="checkbox" checked="">Preserve visibility and culling behavior for grouped lanes.</label></li>
+<li><label><input type="checkbox" checked="">Add CorePlotting layout tests for overlay lanes and weighted lanes.</label></li>
+</ul>
+</section>
+<section id="primary-files-2" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-2">Primary Files</h3>
+<ul>
+<li>src/CorePlotting/Layout/LayoutEngine.hpp</li>
+<li>src/CorePlotting/Layout/StackedLayoutStrategy.cpp</li>
+<li>src/CorePlotting/Layout/LayoutEngine.cpp</li>
+<li>tests/CorePlotting/LayoutEngine.test.cpp</li>
+</ul>
+</section>
+<section id="acceptance-criteria-2" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-2">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Equal weights reproduce current lane sizing behavior.</label></li>
+<li><label><input type="checkbox" checked="">Weighted lanes produce expected relative heights.</label></li>
+<li><label><input type="checkbox" checked="">Shared lanes map all assigned series to same vertical band.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4-dataviewer-wiring-for-interspersed-and-shared-lanes" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-dataviewer-wiring-for-interspersed-and-shared-lanes">Phase 4: DataViewer Wiring for Interspersed and Shared Lanes</h2>
+<section id="goal-3" class="level3">
+<h3 class="anchored" data-anchor-id="goal-3">Goal</h3>
+<p>Use the new lane metadata in DataViewer request construction, rendering, and axis presentation.</p>
+</section>
+<section id="behavior-policy" class="level3">
+<h3 class="anchored" data-anchor-id="behavior-policy">Behavior Policy</h3>
+<p>Ordering precedence:</p>
+<ol type="1">
+<li>explicit lane_order override</li>
+<li>existing analog external sorter for analog-only fallback order</li>
+<li>legacy type-based fallback</li>
+</ol>
+</section>
+<section id="tasks-3" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-3">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Replace type-bucket request assembly with unified series ordering path.</label></li>
+<li><label><input type="checkbox" checked="">Map per-series overrides into layout request metadata.</label></li>
+<li><label><input type="checkbox" checked="">Keep non-stackable FullCanvas behavior unchanged.</label></li>
+<li><label><input type="checkbox" checked="">Update lane-axis descriptor generation to lane-level aggregation in shared lanes.</label></li>
+<li><label><input type="checkbox" checked="">Define lane label policy for overlay lanes.</label></li>
+</ul>
+</section>
+<section id="primary-files-3" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-3">Primary Files</h3>
+<ul>
+<li>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp</li>
+<li>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp</li>
+<li>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.cpp</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp</li>
+</ul>
+</section>
+<section id="acceptance-criteria-3" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-3">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Developers can intersperse analog and event lanes through state overrides.</label></li>
+<li><label><input type="checkbox" checked="">Developers can assign multiple analog/event series to a single lane.</label></li>
+<li><label><input type="checkbox" checked="">Axis labels remain stable and meaningful for overlays.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4b-interactive-lane-drag-and-drop-reordering" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4b-interactive-lane-drag-and-drop-reordering">Phase 4b: Interactive Lane Drag-and-Drop Reordering</h2>
+<p>Prerequisite roadmap:</p>
+<ul>
+<li>docs/developer/ui/Plots/DataViewerWidget/ordering_abstractions_implementation_roadmap.md</li>
+</ul>
+<section id="goal-4" class="level3">
+<h3 class="anchored" data-anchor-id="goal-4">Goal</h3>
+<p>Allow users to click-drag a lane on the vertical axis and drop it between other lanes, with deterministic persistence through lane override state.</p>
+</section>
+<section id="why-this-fits-after-phase-4" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-fits-after-phase-4">Why this fits after Phase 4</h3>
+<ul>
+<li>Phase 4 establishes lane identity and ordering in DataViewer request construction.</li>
+<li>Drag-and-drop should mutate the same source of truth (<code>series_lane_overrides</code>) rather than introducing a parallel ordering path.</li>
+</ul>
+</section>
+<section id="context-what-the-ordering-abstractions-roadmap-delivered" class="level3">
+<h3 class="anchored" data-anchor-id="context-what-the-ordering-abstractions-roadmap-delivered">Context: What the Ordering Abstractions Roadmap Delivered</h3>
+<p>The completed ordering abstractions roadmap changed several design constraints that Phase 4b was planned against:</p>
+<ul>
+<li><strong>Per-series <code>lane_order</code> is the universal ordering mechanism.</strong> Spike-sorter electrode positions are now converted to <code>SeriesLaneOverrideData.lane_order</code> overrides at load time inside <code>OpenGLWidget::loadSpikeSorterConfiguration</code>. There is no longer a separate spike-sorter fallback path in the resolver.</li>
+<li><strong>Resolver precedence (Phase D):</strong> explicit <code>lane_order</code> → relational constraints → deterministic tie-break. The spike-sorter fallback level is gone.</li>
+<li><strong>Signal wiring is already complete.</strong> <code>seriesLaneOverrideChanged</code> and <code>laneOverrideChanged</code> are wired in <code>OpenGLWidget::setState</code> to set <code>layout_response_dirty</code>, clear the scene, and call <code>update()</code>. Task 6 below requires no additional wiring.</li>
+<li><strong><code>LaneOverrideData</code> has no <code>lane_order</code> field.</strong> The ordering abstractions roadmap (Phase E) implemented relational constraints (<code>StackableOrderingConstraintData</code>) but did not add <code>lane_order</code> to <code>LaneOverrideData</code>. Given that the spike-sorter F2 approach routes through per-series <code>lane_order</code>, drag/drop should follow the same pattern: when a lane is dragged, update <code>lane_order</code> on all series that share the dragged <code>lane_id</code> to the new resolved rank. No new field in <code>LaneOverrideData</code> is needed.</li>
+</ul>
+</section>
+<section id="ux-model-first-release" class="level3">
+<h3 class="anchored" data-anchor-id="ux-model-first-release">UX Model (first release)</h3>
+<ul>
+<li>Drag handle surface: <code>MultiLaneVerticalAxisWidget</code> lane label area.</li>
+<li>Start drag: left-click press within a visible lane hit region.</li>
+<li>During drag: show insertion marker between target lanes and ghost highlight on dragged lane.</li>
+<li>Drop: commit a new lane ordering by updating <code>lane_order</code> on all series sharing the dragged <code>lane_id</code>, then recompute layout.</li>
+<li>Cancel: Escape key or mouse release outside valid target keeps existing order.</li>
+</ul>
+</section>
+<section id="datastate-model-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="datastate-model-requirements">Data/State Model Requirements</h3>
+<ol type="1">
+<li>Add stable lane identity to axis descriptors:
+<ul>
+<li>Extend <code>LaneAxisDescriptor</code> with <code>lane_id</code> (stable key matching the <code>lane_id</code> field in <code>SeriesLaneOverrideData</code>).</li>
+<li>Keep <code>label</code> as display-only.</li>
+<li>This is required so the axis widget can identify which override key to mutate on drop.</li>
+</ul></li>
+<li>No new lane-level <code>lane_order</code> field needed:
+<ul>
+<li><code>LaneOverrideData</code> does not need a <code>lane_order</code> field. Drag/drop reorder writes <code>lane_order</code> directly onto all <code>SeriesLaneOverrideData</code> entries whose <code>lane_id</code> matches the dragged lane — the same pattern used by <code>loadSpikeSorterConfiguration</code>.</li>
+<li>For a single-series lane: update the one series’ <code>lane_order</code>.</li>
+<li>For a shared lane (multiple series with the same <code>lane_id</code>): update all member series to the same new <code>lane_order</code> value.</li>
+</ul></li>
+<li>Ordering precedence (no change from resolver):
+<ol type="1">
+<li>explicit <code>lane_order</code> in <code>SeriesLaneOverrideData</code> (covers both spike-sorter-loaded and drag/drop results)</li>
+<li>relational constraints (<code>StackableOrderingConstraintData</code>)</li>
+<li>deterministic tie-break (series type precedence then stable key)</li>
+</ol></li>
+</ol>
+</section>
+<section id="implementation-tasks" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-tasks">Implementation Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Extend <code>LaneAxisDescriptor</code> with a <code>lane_id</code> field and populate it in the axis descriptor update path (<code>_updateLaneDescriptors</code> / <code>SceneBuildingHelpers</code>).</label></li>
+<li><label><input type="checkbox" checked="">Add mouse interaction handling to <code>MultiLaneVerticalAxisWidget</code> (<code>mousePressEvent</code>, <code>mouseMoveEvent</code>, <code>mouseReleaseEvent</code>, optional <code>keyPressEvent</code> for Escape).</label></li>
+<li><label><input type="checkbox" checked="">Add hit-testing helpers in axis widget to map pixel Y to lane index and insertion slot.</label></li>
+<li><label><input type="checkbox" checked="">Add a <code>laneReorderRequested(QString source_lane_id, int target_slot)</code> signal to <code>MultiLaneVerticalAxisWidget</code>.</label></li>
+<li><label><input type="checkbox" checked="">In <code>DataViewer_Widget</code>, connect <code>laneReorderRequested</code> and translate it into deterministic <code>DataViewerState</code> override updates: compute new <code>lane_order</code> ranks, call <code>state-&gt;setSeriesLaneOverride()</code> for all series sharing <code>source_lane_id</code>.</label></li>
+<li><label><input type="checkbox" checked="">Ensure OpenGL layout refresh is triggered from override changes — already wired: <code>seriesLaneOverrideChanged</code> / <code>laneOverrideChanged</code> → layout dirty + repaint in <code>OpenGLWidget::setState</code>.</label></li>
+<li><label><input type="checkbox" checked="">Add rendering affordances in axis widget for drag preview and insertion marker.</label></li>
+<li><label><input type="checkbox" checked="">Add tests for drag reorder behavior, state persistence, and mixed analog/event interspersing outcomes.</label></li>
+</ul>
+</section>
+<section id="primary-files-4" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-4">Primary Files</h3>
+<ul>
+<li>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp — add <code>lane_id</code> to <code>LaneAxisDescriptor</code></li>
+<li>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.hpp — add <code>laneReorderRequested</code> signal and mouse event overrides</li>
+<li>src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.cpp — mouse interaction and drag rendering</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp — connect <code>laneReorderRequested</code>, compute new <code>lane_order</code> ranks, call <code>setSeriesLaneOverride</code></li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp — populate <code>lane_id</code> on <code>LaneAxisDescriptor</code> entries</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp — reorder behavior and persistence tests</li>
+<li>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp — no new fields needed; <code>SeriesLaneOverrideData.lane_order</code> is the write target</li>
+</ul>
+</section>
+<section id="acceptance-criteria-4" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-4">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">User can drag a visible lane and drop it between two lanes using the Y-axis widget.</label></li>
+<li><label><input type="checkbox" checked="">Reorder result persists in <code>DataViewerState</code> via <code>SeriesLaneOverrideData.lane_order</code> and survives serialization roundtrip.</label></li>
+<li><label><input type="checkbox" checked="">Mixed analog/event lanes can be interspersed interactively without manual JSON edits.</label></li>
+<li><label><input type="checkbox" checked="">Reordering a shared overlay lane moves the lane as a unit (all member series sharing <code>lane_id</code> receive matching new <code>lane_order</code>).</label></li>
+<li><label><input type="checkbox" checked="">Full-canvas event/interval behavior remains unchanged.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4c-per-series-relative-ordering-ui" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4c-per-series-relative-ordering-ui">Phase 4C: Per-Series Relative Ordering UI</h2>
+<section id="goal-5" class="level3">
+<h3 class="anchored" data-anchor-id="goal-5">Goal</h3>
+<p>Allow a user to right-click any individual series currently displayed in the DataViewer tree and interactively place it above or below another named series. This complements axis drag-and-drop (Phase 4b) for high-channel-count datasets (e.g.&nbsp;384-channel Neuropixel) where a submenu list would be impractical.</p>
+</section>
+<section id="ux-model" class="level3">
+<h3 class="anchored" data-anchor-id="ux-model">UX Model</h3>
+<ul>
+<li>Right-click a leaf series item in <code>Feature_Tree_Widget</code> → context menu shows “Place relative to…”.</li>
+<li>Action opens <code>SeriesOrderingDialog</code>: a <code>QLineEdit</code> with <code>QCompleter</code> fed by all other currently-displayed series keys, plus a <code>QComboBox</code> (“Above” / “Below”).</li>
+<li>User types a partial key; the completer filters live matches. On accept the relative placement is committed to <code>DataViewerState</code> as a <code>lane_order</code> override.</li>
+<li>Reuses the same <code>(N - i) * 10</code> rank-assignment algorithm as <code>_handleLaneReorderRequest</code>.</li>
+</ul>
+</section>
+<section id="implementation-tasks-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-tasks-1">Implementation Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Create <code>SeriesOrderingDialog</code> (<code>DataViewer_Widget/UI/SeriesOrderingDialog.hpp/.cpp</code>): <code>QLineEdit</code> + <code>QCompleter</code> + <code>QComboBox</code> (“Above” / “Below”) + OK/Cancel. Constructor receives <code>std::vector&lt;std::string&gt; available_keys</code>. Returns <code>(target_key, bool above)</code> via accessor after <code>exec()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Extend <code>DataViewerPropertiesWidget.cpp</code> context menu handler (line ~356): add <code>else</code> branch for leaf items (<code>hasChildren == false</code>). Collect all other leaf keys from the tree, show a <code>QMenu</code> with “Place relative to…”, on trigger open <code>SeriesOrderingDialog</code>.</label></li>
+<li><label><input type="checkbox" checked="">Add signal to <code>DataViewerPropertiesWidget.hpp</code>: <code>void seriesRelativePlacementRequested(QString source_key, QString target_key, bool above)</code>.</label></li>
+<li><label><input type="checkbox" checked="">Wire signal in <code>DataViewerWidgetRegistration.cpp</code> → <code>DataViewer_Widget::_handleSeriesRelativePlacement</code>.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_handleSeriesRelativePlacement</code>: resolve both series’ <code>lane_id</code>s from overrides (falling back to <code>"__auto_lane__" + key</code>), locate the target’s visual slot in <code>_multi_lane_axis_widget-&gt;state()-&gt;lanes()</code>, insert source at <code>slot</code> (above) or <code>slot + 1</code> (below), then assign <code>lane_order = (N - i) * 10</code> to all lanes in the new visual order.</label></li>
+<li><label><input type="checkbox" checked="">Add tests in <code>DataViewer_Widget.test.cpp</code>: verify that after placement, source is immediately above/below target in visual order and that the result survives a <code>toJson</code>/<code>fromJson</code> roundtrip.</label></li>
+</ul>
+</section>
+<section id="primary-files-5" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-5">Primary Files</h3>
+<ul>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/SeriesOrderingDialog.hpp/.cpp</code> — new</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp</code> — new signal</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code> — leaf context menu branch</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp</code> — new connection</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp</code> — new private slot</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</code> — implement <code>_handleSeriesRelativePlacement</code></li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt</code> — add new source files</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp</code> — placement behavior tests</li>
+</ul>
+</section>
+<section id="acceptance-criteria-5" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-5">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Right-clicking a leaf series in the tree shows “Place relative to…”.</label></li>
+<li><label><input type="checkbox" checked="">Dialog <code>QCompleter</code> filters all currently-displayed keys as the user types.</label></li>
+<li><label><input type="checkbox" checked="">Committing “Below voltage_3” places the source series immediately below <code>voltage_3</code> in visual order.</label></li>
+<li><label><input type="checkbox" checked="">Placement result persists in <code>DataViewerState</code> and survives a <code>toJson</code>/<code>fromJson</code> roundtrip.</label></li>
+<li><label><input type="checkbox" checked="">Behavior is correct for both AnalogTimeSeries and DigitalEventSeries leaf items.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4d-json-lane-layout-save-and-load" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4d-json-lane-layout-save-and-load">Phase 4D: JSON Lane Layout Save and Load</h2>
+<section id="goal-6" class="level3">
+<h3 class="anchored" data-anchor-id="goal-6">Goal</h3>
+<p>Allow a developer or user to save the current DataViewer lane configuration — which series are displayed, their colors, and all lane overrides — to a <code>.dvlayout</code> JSON file, and reload it later. On load, series listed in the file that exist in the DataManager but are not currently displayed are automatically added.</p>
+</section>
+<section id="json-schema" class="level3">
+<h3 class="anchored" data-anchor-id="json-schema">JSON Schema</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"displayed_series"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_1"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#FF0000"</span><span class="fu">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"series_lane_overrides"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"voltage_1"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"lane_id"</span><span class="fu">:</span> <span class="st">""</span><span class="fu">,</span> <span class="dt">"lane_order"</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">"lane_weight"</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">"overlay_mode"</span><span class="fu">:</span> <span class="st">"Auto"</span><span class="fu">,</span> <span class="dt">"overlay_z"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"lane_overrides"</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>series_lane_overrides</code> and <code>lane_overrides</code> reuse the existing <code>SeriesLaneOverrideData</code> and <code>LaneOverrideData</code> structs directly via <code>rfl::json</code>.</p>
+</section>
+<section id="implementation-tasks-2" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-tasks-2">Implementation Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Create <code>LaneLayoutFile.hpp/.cpp</code> (<code>DataViewer_Widget/Ordering/</code>): define <code>LaneLayoutDisplayedSeries { std::string key; std::string color; }</code> and <code>LaneLayoutFile { int version; std::vector&lt;LaneLayoutDisplayedSeries&gt; displayed_series; std::map&lt;std::string, SeriesLaneOverrideData&gt; series_lane_overrides; std::map&lt;std::string, LaneOverrideData&gt; lane_overrides; }</code>. Implement <code>serializeLaneLayout()</code> and <code>deserializeLaneLayout()</code> via <code>rfl::json</code>.</label></li>
+<li><label><input type="checkbox" checked="">Edit <code>DataViewerPropertiesWidget.ui</code>: add a <code>QGroupBox</code> “Layout Presets” (after the “Actions” group) with buttons <code>save_lane_layout_button</code> (“Save Lane Layout”) and <code>load_lane_layout_button</code> (“Load Lane Layout”).</label></li>
+<li><label><input type="checkbox" checked="">Add signals to <code>DataViewerPropertiesWidget.hpp</code>: <code>void saveLaneLayoutRequested()</code> and <code>void loadLaneLayoutRequested()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Wire buttons in <code>DataViewerPropertiesWidget.cpp</code> → emit signals.</label></li>
+<li><label><input type="checkbox" checked="">Wire signals in <code>DataViewerWidgetRegistration.cpp</code> → new <code>DataViewer_Widget</code> slots.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_saveLaneLayout()</code>: collect currently-displayed keys and their colors from <code>OpenGLWidget</code>, build <code>LaneLayoutFile</code> from <code>_state-&gt;data()</code> overrides, serialize, open <code>QFileDialog::getSaveFileName</code> (filter <code>*.dvlayout</code>) and write.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_loadLaneLayout()</code>: open <code>QFileDialog::getOpenFileName</code>, parse with <code>deserializeLaneLayout</code>, for each entry in <code>displayed_series</code> call <code>DataManager::getType(key)</code> — skip if not found, call <code>addFeature(key, color)</code> if not already displayed. Apply all <code>setSeriesLaneOverride</code> and <code>setLaneOverride</code> entries from the file, then call <code>updateCanvas()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Add tests in <code>LaneLayoutFile.test.cpp</code> or <code>DataViewer_Widget.test.cpp</code>: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.</label></li>
+</ul>
+</section>
+<section id="primary-files-6" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-6">Primary Files</h3>
+<ul>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/Ordering/LaneLayoutFile.hpp/.cpp</code> — new</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui</code> — new GroupBox + buttons</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp</code> — new signals</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code> — button wiring</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp</code> — new connections</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp</code> — new private slots</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</code> — implement <code>_saveLaneLayout</code>, <code>_loadLaneLayout</code></li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt</code> — add new source files</li>
+</ul>
+</section>
+<section id="acceptance-criteria-6" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-6">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">“Save Lane Layout” serializes displayed series, colors, and all overrides to a <code>.dvlayout</code> JSON file.</label></li>
+<li><label><input type="checkbox" checked="">“Load Lane Layout” re-adds series that exist in DataManager but are not currently displayed.</label></li>
+<li><label><input type="checkbox" checked="">Series absent from DataManager are silently skipped during load.</label></li>
+<li><label><input type="checkbox" checked="">Lane overrides are fully restored after a save/load roundtrip.</label></li>
+<li><label><input type="checkbox" checked="">Layout roundtrip test passes for a mixed analog plus digital-event configuration.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4e-csv-spike-to-analog-pairing-loader" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4e-csv-spike-to-analog-pairing-loader">Phase 4E: CSV Spike-to-Analog Pairing Loader</h2>
+<section id="goal-7" class="level3">
+<h3 class="anchored" data-anchor-id="goal-7">Goal</h3>
+<p>Parse a CSV file where each row records a spike event <code>(timestamp, digital_channel, analog_channel)</code>, compute the modal analog channel assignment for each digital channel, and then place each <code>spikes_N</code> series adjacent to (or overlaid on) its paired <code>voltage_M</code> series. This mirrors the Swindale spike-sorter loader but derives relative ordering between digital and analog series rather than absolute electrode positions.</p>
+</section>
+<section id="csv-format" class="level3">
+<h3 class="anchored" data-anchor-id="csv-format">CSV Format</h3>
+<p>Whitespace- or comma-delimited; three columns: <code>timestamp</code> (ignored), <code>digital_channel</code> (1-based), <code>analog_channel</code> (1-based). Example:</p>
+<pre><code>0.01493,  8, 20
+0.01670, 24,  6
+0.04320, 24,  6</code></pre>
+<p>For each unique <code>digital_channel</code>, the <code>analog_channel</code> that appears most often (mode) is the pairing. Both channel numbers are converted to 0-based before lookup.</p>
+</section>
+<section id="placement-modes-configurable-per-load" class="level3">
+<h3 class="anchored" data-anchor-id="placement-modes-configurable-per-load">Placement Modes (configurable per load)</h3>
+<ul>
+<li><strong>Adjacent Below</strong>: <code>spikes_N</code> placed in its own lane immediately below <code>voltage_M</code>.</li>
+<li><strong>Adjacent Above</strong>: <code>spikes_N</code> placed in its own lane immediately above <code>voltage_M</code>.</li>
+<li><strong>Overlay</strong>: <code>spikes_N</code> shares <code>voltage_M</code>’s <code>lane_id</code> (rendered in the same lane band).</li>
+</ul>
+</section>
+<section id="implementation-tasks-3" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-tasks-3">Implementation Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Create <code>SpikeToAnalogPairingLoader.hpp/.cpp</code> (<code>DataViewer_Widget/Ordering/</code>): define <code>struct SpikeToAnalogPairing { int digital_channel; int analog_channel; }</code> (both 0-based). Implement <code>parseSpikeToAnalogCSV(std::string const&amp; text)</code> — skip malformed rows, count <code>(digital_ch → analog_ch)</code> occurrences, return one <code>SpikeToAnalogPairing</code> per unique digital channel (mode analog channel).</label></li>
+<li><label><input type="checkbox" checked="">Create <code>SpikeToAnalogConfigDialog.hpp/.cpp</code> (<code>DataViewer_Widget/UI/</code>): <code>QLineEdit</code> for digital group prefix (default <code>"spikes_"</code>), <code>QLineEdit</code> for analog group prefix (default <code>"voltage_"</code>), <code>QComboBox</code> for placement mode (“Adjacent Below” / “Adjacent Above” / “Overlay”), a file-path <code>QLineEdit</code> + “Browse…” button, OK/Cancel.</label></li>
+<li><label><input type="checkbox" checked="">Edit <code>DataViewerPropertiesWidget.ui</code>: add a <code>QPushButton</code> <code>load_spike_analog_button</code> (“Load Spike-to-Analog Pairing…”) to an appropriate existing or new group box.</label></li>
+<li><label><input type="checkbox" checked="">Add signal to <code>DataViewerPropertiesWidget.hpp</code>: <code>void loadSpikeToAnalogPairingRequested()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Wire button in <code>DataViewerPropertiesWidget.cpp</code> → emit signal.</label></li>
+<li><label><input type="checkbox" checked="">Wire signal in <code>DataViewerWidgetRegistration.cpp</code> → <code>DataViewer_Widget::_loadSpikeToAnalogPairing</code>.</label></li>
+<li><label><input type="checkbox" checked="">Add <code>OpenGLWidget::loadSpikeToAnalogPairing(digital_group, analog_group, pairings, PlacementMode)</code> (<code>OpenGLWidget.hpp/.cpp</code>). For <strong>Overlay</strong>: assigns a shared explicit <code>lane_id</code> to both the analog and digital series (minting <code>"__auto_lane__" + ana_key</code> if analog had no prior override), sets <code>overlay_mode = Overlay</code> on the digital series. For <strong>Adjacent</strong>: reads current visual order from <code>_state-&gt;multiLaneAxisState()-&gt;lanes()</code>, inserts each digital auto-lane at <code>analog_slot + 1</code> (Below) or <code>analog_slot</code> (Above) — processes in reverse analog-slot order to avoid index shifts — then assigns <code>lane_order = (N - i) * 10</code> and calls <code>setSeriesLaneOverride</code> for each key.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_loadSpikeToAnalogPairing()</code> and test-accessible <code>_loadSpikeToAnalogPairingFromText(QString digital_group, QString analog_group, QString text, int placement_mode)</code> (matching the pattern of <code>_loadSpikeSorterConfigurationFromText</code>): show <code>SpikeToAnalogConfigDialog</code>, on accept parse CSV, delegate to <code>openGLWidget-&gt;loadSpikeToAnalogPairing(...)</code>, call <code>updateCanvas()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Add tests in <code>DataViewer_Widget.test.cpp</code>: CSV parse correctness (mode wins ties deterministically), adjacent below placement, adjacent above placement, overlay lane sharing.</label></li>
+</ul>
+</section>
+<section id="primary-files-7" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-7">Primary Files</h3>
+<ul>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/Ordering/SpikeToAnalogPairingLoader.hpp/.cpp</code> — new</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/SpikeToAnalogConfigDialog.hpp/.cpp</code> — new</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui</code> — new button</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp</code> — new signal</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code> — button wiring</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp</code> — new connection</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp</code> — new private slots</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp</code> — implement <code>_loadSpikeToAnalogPairing</code>, <code>_loadSpikeToAnalogPairingFromText</code></li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp/.cpp</code> — implement <code>loadSpikeToAnalogPairing</code></li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt</code> — add new source files</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp</code> — CSV parse and placement tests</li>
+</ul>
+</section>
+<section id="acceptance-criteria-7" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-7">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked=""><code>parseSpikeToAnalogCSV</code> returns one pairing per unique digital channel (mode analog channel); malformed rows are skipped.</label></li>
+<li><label><input type="checkbox" checked="">“Adjacent Below” places each <code>spikes_N</code> in its own lane immediately below its paired <code>voltage_M</code>.</label></li>
+<li><label><input type="checkbox" checked="">“Adjacent Above” places each <code>spikes_N</code> immediately above its paired <code>voltage_M</code>.</label></li>
+<li><label><input type="checkbox" checked="">“Overlay” assigns <code>spikes_N</code> to <code>voltage_M</code>’s lane band (same <code>lane_id</code>).</label></li>
+<li><label><input type="checkbox" checked="">Placements are committed via <code>setSeriesLaneOverride</code> and survive a <code>toJson</code>/<code>fromJson</code> roundtrip.</label></li>
+<li><label><input type="checkbox" checked="">A test-accessible text-based entry point exists for automated tests (no file dialog).</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-5-backward-compatibility-migration-and-test-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-backward-compatibility-migration-and-test-matrix">Phase 5: Backward Compatibility, Migration, and Test Matrix</h2>
+<section id="goal-8" class="level3">
+<h3 class="anchored" data-anchor-id="goal-8">Goal</h3>
+<p>Guarantee safe adoption in existing workflows and robust regression coverage.</p>
+</section>
+<section id="test-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="test-matrix">Test Matrix</h3>
+<ol type="1">
+<li>Legacy workspace load and save unchanged</li>
+<li>Analog-only high channel count scaling</li>
+<li>Mixed analog plus event with no overrides</li>
+<li>Mixed analog plus event with explicit lane ordering</li>
+<li>Shared lane overlays with multiple events per analog lane</li>
+<li>Spike-sorter ordering fallback with no explicit lane_order</li>
+</ol>
+</section>
+<section id="tasks-4" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-4">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Add compatibility fixtures for legacy JSON blobs.</label></li>
+<li><label><input type="checkbox">Add deterministic assertions for ordering precedence.</label></li>
+<li><label><input type="checkbox">Add overlay lane visibility and culling checks.</label></li>
+<li><label><input type="checkbox">Re-run existing DataViewer wheel and interaction tests.</label></li>
+</ul>
+</section>
+<section id="acceptance-criteria-8" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-8">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">No behavioral regressions in legacy mode.</label></li>
+<li><label><input type="checkbox">New behavior is deterministic and test-covered.</label></li>
+<li><label><input type="checkbox">Save and restore for override configurations is stable.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-6-developer-documentation-and-rollout" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-developer-documentation-and-rollout">Phase 6: Developer Documentation and Rollout</h2>
+<section id="goal-9" class="level3">
+<h3 class="anchored" data-anchor-id="goal-9">Goal</h3>
+<p>Make the implementation discoverable, maintainable, and easy to continue.</p>
+</section>
+<section id="tasks-5" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-5">Tasks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Update DataViewer architecture docs with new lane model.</label></li>
+<li><label><input type="checkbox">Update roadmap docs to cross-link this implementation roadmap.</label></li>
+<li><label><input type="checkbox">Add a short JSON example in developer docs for lane override usage.</label></li>
+<li><label><input type="checkbox">Note known constraints and follow-up items.</label></li>
+</ul>
+</section>
+<section id="primary-files-8" class="level3">
+<h3 class="anchored" data-anchor-id="primary-files-8">Primary Files</h3>
+<ul>
+<li>docs/developer/ui/Plots/DataViewerWidget/index.qmd</li>
+<li>docs/developer/ui/Plots/DataViewerWidget/roadmap.qmd</li>
+<li>docs/developer/ui/Plots/DataViewerWidget/mixed_lanes_and_scaling_implementation_roadmap.md</li>
+</ul>
+</section>
+<section id="acceptance-criteria-9" class="level3">
+<h3 class="anchored" data-anchor-id="acceptance-criteria-9">Acceptance Criteria</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Developers can implement, test, and extend the feature from docs alone.</label></li>
+<li><label><input type="checkbox">Follow-up items are clearly separated from first-release scope.</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="suggested-pr-slicing" class="level2">
+<h2 class="anchored" data-anchor-id="suggested-pr-slicing">Suggested PR Slicing</h2>
+<ol type="1">
+<li>PR A: Scaling fix plus tests</li>
+<li>PR B: State schema and serialization tests</li>
+<li>PR C: CorePlotting grouped and weighted lane logic plus tests</li>
+<li>PR D: DataViewer integration and axis aggregation</li>
+<li>PR E: Docs and cleanup</li>
+</ol>
+<p>This ordering minimizes integration risk and keeps each review set focused.</p>
+</section>
+<section id="open-technical-decisions-to-resolve-early" class="level2">
+<h2 class="anchored" data-anchor-id="open-technical-decisions-to-resolve-early">Open Technical Decisions To Resolve Early</h2>
+<ol type="1">
+<li>Event vertical sizing source of truth: event_height, line_thickness, or explicit combined model.</li>
+<li>Overlay lane label policy: primary analog label only versus composite lane labels.</li>
+<li>Validation strategy for conflicting lane_order values: strict reject versus deterministic tie-break.</li>
+<li>Lane drag-drop order authority: lane-level <code>lane_order</code> only, or synchronized lane-level + per-series order fields.</li>
+</ol>
+</section>
+<section id="definition-of-done" class="level2">
+<h2 class="anchored" data-anchor-id="definition-of-done">Definition of Done</h2>
+<p>The work is done when:</p>
+<ul>
+<li>all phase acceptance criteria are met</li>
+<li>all relevant tests pass</li>
+<li>legacy workspaces remain behaviorally unchanged</li>
+<li>mixed-lane configuration is fully serializable and restorable</li>
+<li>developer docs clearly explain implementation and extension paths</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>EditorState – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#editorstate" id="toc-editorstate" class="nav-link active" data-scroll-target="#editorstate">EditorState</a>
+  <ul class="collapse">
+  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#protected-functions" id="toc-protected-functions" class="nav-link" data-scroll-target="#protected-functions">Protected Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#usage-pattern" id="toc-usage-pattern" class="nav-link" data-scroll-target="#usage-pattern">Usage Pattern</a></li>
+  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
+  <ul class="collapse">
+  <li><a href="#signal-statechanged" id="toc-signal-statechanged" class="nav-link" data-scroll-target="#signal-statechanged">signal stateChanged</a></li>
+  <li><a href="#signal-displaynamechanged" id="toc-signal-displaynamechanged" class="nav-link" data-scroll-target="#signal-displaynamechanged">signal displayNameChanged</a></li>
+  <li><a href="#signal-dirtychanged" id="toc-signal-dirtychanged" class="nav-link" data-scroll-target="#signal-dirtychanged">signal dirtyChanged</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-editorstate" id="toc-function-editorstate" class="nav-link" data-scroll-target="#function-editorstate">function EditorState</a></li>
+  <li><a href="#function-editorstate-1" id="toc-function-editorstate-1" class="nav-link" data-scroll-target="#function-editorstate-1">function ~EditorState</a></li>
+  <li><a href="#function-gettypename" id="toc-function-gettypename" class="nav-link" data-scroll-target="#function-gettypename">function getTypeName</a></li>
+  <li><a href="#function-getdisplayname" id="toc-function-getdisplayname" class="nav-link" data-scroll-target="#function-getdisplayname">function getDisplayName</a></li>
+  <li><a href="#function-setdisplayname" id="toc-function-setdisplayname" class="nav-link" data-scroll-target="#function-setdisplayname">function setDisplayName</a></li>
+  <li><a href="#function-getinstanceid" id="toc-function-getinstanceid" class="nav-link" data-scroll-target="#function-getinstanceid">function getInstanceId</a></li>
+  <li><a href="#function-tojson" id="toc-function-tojson" class="nav-link" data-scroll-target="#function-tojson">function toJson</a></li>
+  <li><a href="#function-markclean" id="toc-function-markclean" class="nav-link" data-scroll-target="#function-markclean">function markClean</a></li>
+  </ul></li>
+  <li><a href="#protected-functions-documentation" id="toc-protected-functions-documentation" class="nav-link" data-scroll-target="#protected-functions-documentation">Protected Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-markdirty" id="toc-function-markdirty" class="nav-link" data-scroll-target="#function-markdirty">function markDirty</a></li>
+  <li><a href="#function-setinstanceid" id="toc-function-setinstanceid" class="nav-link" data-scroll-target="#function-setinstanceid">function setInstanceId</a></li>
+  <li><a href="#function-generateinstanceid" id="toc-function-generateinstanceid" class="nav-link" data-scroll-target="#function-generateinstanceid">function generateInstanceId</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">EditorState</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="editorstate" class="level1">
+<h1>EditorState</h1>
+<p>Base class for all editor/widget states. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;EditorState.hpp&gt;</code></p>
+<p>Inherits from QObject</p>
+<p>Inherited by <a href="../../api_generated/Classes/classACFState.html">ACFState</a>, <a href="../../api_generated/Classes/classBatchProcessingState.html">BatchProcessingState</a>, <a href="../../api_generated/Classes/classCommandLogState.html">CommandLogState</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html">DataImportWidgetState</a>, <a href="../../api_generated/Classes/classDataInspectorState.html">DataInspectorState</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html">DataManagerWidgetState</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html">DataSynthesizerState</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html">DataTransformWidgetState</a>, <a href="../../api_generated/Classes/classDataViewerState.html">DataViewerState</a>, <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a>, <a href="../../api_generated/Classes/classEventPlotState.html">EventPlotState</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html">ExportVideoWidgetState</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html">GroupManagementWidgetState</a>, <a href="../../api_generated/Classes/classHeatmapState.html">HeatmapState</a>, <a href="../../api_generated/Classes/classKeybindingEditorState.html">KeybindingEditorState</a>, <a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html">MLCoreWidgetState</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a>, <a href="../../api_generated/Classes/classMockState.html">MockState</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html">OnionSkinViewState</a>, <a href="../../api_generated/Classes/classPSTHState.html">PSTHState</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html">PythonWidgetState</a>, <a href="../../api_generated/Classes/classScatterPlotState.html">ScatterPlotState</a>, <a href="../../api_generated/Classes/classSpectrogramState.html">SpectrogramState</a>, <a href="../../api_generated/Classes/classTableDesignerState.html">TableDesignerState</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html">TemporalProjectionViewState</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html">TerminalWidgetState</a>, <a href="../../api_generated/Classes/classTestState.html">TestState</a>, <a href="../../api_generated/Classes/classTestWidgetState.html">TestWidgetState</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html">ThreeDPlotState</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html">TimeScrollBarState</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html">TongueWidgetState</a>, <a href="../../api_generated/Classes/classTransformsV2State.html">TransformsV2State</a>, <a href="../../api_generated/Classes/classTriageSessionState.html">TriageSessionState</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html">WhiskerWidgetState</a></p>
+<section id="public-signals" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-statechanged">stateChanged</a></strong>()<br>Emitted when any state property changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-displaynamechanged">displayNameChanged</a></strong>(QString const &amp; newName)<br>Emitted when display name changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-dirtychanged">dirtyChanged</a></strong>(bool isDirty)<br>Emitted when dirty state changes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-editorstate">EditorState</a></strong>(QObject * parent =nullptr)<br>Construct a new <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-~editorstate">~EditorState</a></strong>() override =default<br>Virtual destructor.</td>
+</tr>
+<tr class="odd">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-gettypename">getTypeName</a></strong>() const =0<br>Get unique type name for this editor state.</td>
+</tr>
+<tr class="even">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-getdisplayname">getDisplayName</a></strong>() const<br>Get display name for UI.</td>
+</tr>
+<tr class="odd">
+<td>virtual void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-setdisplayname">setDisplayName</a></strong>(QString const &amp; name)<br>Set display name.</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-getinstanceid">getInstanceId</a></strong>() const<br>Get unique instance ID.</td>
+</tr>
+<tr class="odd">
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-tojson">toJson</a></strong>() const =0<br>Serialize state to JSON string.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-fromjson">fromJson</a></strong>(std::string const &amp; json) =0<br>Restore state from JSON string.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-isdirty">isDirty</a></strong>() const<br>Check if state has unsaved changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markclean">markClean</a></strong>()<br>Mark state as clean (after save)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="protected-functions" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions">Protected Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markdirty">markDirty</a></strong>()<br>Mark state as modified.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-setinstanceid">setInstanceId</a></strong>(QString const &amp; id)<br>Set instance ID (for deserialization)</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-generateinstanceid">generateInstanceId</a></strong>()<br>Generate a new unique instance ID.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EditorState<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Base class for all editor/widget states.</p>
+<p><a href="../../api_generated/Classes/classEditorState.html">EditorState</a> is designed to separate widget visual components from their underlying state. This enables:</p>
+<ol type="1">
+<li><strong>Multiple views of same state</strong>: Properties panels and main editors can both observe the same state object</li>
+<li><strong>Serialization</strong>: Complete application state can be saved/restored</li>
+<li><strong>Undo/Redo</strong>: Command pattern can operate on state objects</li>
+<li><strong>Testing</strong>: State logic can be tested without UI</li>
+</ol>
+</section>
+<section id="usage-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="usage-pattern">Usage Pattern</h2>
+<p>Subclasses should:</p>
+<ol type="1">
+<li>Define state data as a reflect-cpp compatible struct: ```cpp</li>
+</ol>
+<p>struct MyWidgetStateData { std::string selected_item; double zoom_level = 1.0; };</p>
+<pre><code>
+2. Inherit from [EditorState](/api_generated/Classes/classEditorState.md) and implement required methods: ```cpp
+
+class MyWidgetState : public EditorState {
+    Q_OBJECT
+public:
+    QString getTypeName() const override { return "MyWidget"; }
+    QString getDisplayName() const override { return _display_name; }
+    std::string toJson() const override;
+    bool fromJson(std::string const&amp; json) override;
+    
+    // Typed accessors
+    void setSelectedItem(std::string const&amp; item);
+    std::string getSelectedItem() const;
+    
+signals:
+    void selectedItemChanged(QString const&amp; item);
+    
+private:
+    MyWidgetStateData _data;
+};</code></pre>
+<ol start="3" type="1">
+<li>Call <a href="../../api_generated/Classes/classEditorState.html#function-markdirty">markDirty()</a> in setters to track unsaved changes</li>
+<li>Emit specific signals for each property change</li>
+</ol>
+</section>
+<section id="public-signals-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
+<section id="signal-statechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-statechanged">signal stateChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> stateChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when any state property changes.</p>
+<p>This is a catch-all signal. Subclasses should also emit more specific signals for individual properties.</p>
+</section>
+<section id="signal-displaynamechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-displaynamechanged">signal displayNameChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> displayNameChanged<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> newName</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when display name changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>newName</strong> The new display name</li>
+</ul>
+</section>
+<section id="signal-dirtychanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-dirtychanged">signal dirtyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dirtyChanged<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isDirty</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when dirty state changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>isDirty</strong> New dirty state</li>
+</ul>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-editorstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-editorstate">function EditorState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> EditorState<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a new <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>parent</strong> Parent QObject (usually nullptr, managed by WorkspaceManager)</li>
+</ul>
+</section>
+<section id="function-editorstate-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-editorstate-1">function ~EditorState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>EditorState<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Virtual destructor.</p>
+</section>
+<section id="function-gettypename" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettypename">function getTypeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="ex">QString</span> getTypeName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get unique type name for this editor state.</p>
+<p><strong>Return</strong>: Type name, e.g., “MediaWidget”, “DataViewerWidget”</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classBatchProcessingState.html#function-gettypename">BatchProcessingState::getTypeName</a>, <a href="../../api_generated/Classes/classCommandLogState.html#function-gettypename">CommandLogState::getTypeName</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html#function-gettypename">DataImportWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classDataInspectorState.html#function-gettypename">DataInspectorState::getTypeName</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html#function-gettypename">DataManagerWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html#function-gettypename">DataSynthesizerState::getTypeName</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html#function-gettypename">DataTransformWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classDataViewerState.html#function-gettypename">DataViewerState::getTypeName</a>, <a href="../../api_generated/Classes/classDeepLearningState.html#function-gettypename">DeepLearningState::getTypeName</a>, <a href="../../api_generated/Classes/classMockState.html#function-gettypename">MockState::getTypeName</a>, <a href="../../api_generated/Classes/classTestState.html#function-gettypename">TestState::getTypeName</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html#function-gettypename">ExportVideoWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html#function-gettypename">GroupManagementWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classKeybindingEditorState.html#function-gettypename">KeybindingEditorState::getTypeName</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html#function-gettypename">MediaWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html#function-gettypename">MLCoreWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html#function-gettypename">ThreeDPlotState::getTypeName</a>, <a href="../../api_generated/Classes/classACFState.html#function-gettypename">ACFState::getTypeName</a>, <a href="../../api_generated/Classes/classEventPlotState.html#function-gettypename">EventPlotState::getTypeName</a>, <a href="../../api_generated/Classes/classHeatmapState.html#function-gettypename">HeatmapState::getTypeName</a>, <a href="../../api_generated/Classes/classLinePlotState.html#function-gettypename">LinePlotState::getTypeName</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html#function-gettypename">OnionSkinViewState::getTypeName</a>, <a href="../../api_generated/Classes/classPSTHState.html#function-gettypename">PSTHState::getTypeName</a>, <a href="../../api_generated/Classes/classScatterPlotState.html#function-gettypename">ScatterPlotState::getTypeName</a>, <a href="../../api_generated/Classes/classSpectrogramState.html#function-gettypename">SpectrogramState::getTypeName</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html#function-gettypename">TemporalProjectionViewState::getTypeName</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html#function-gettypename">PythonWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classTableDesignerState.html#function-gettypename">TableDesignerState::getTypeName</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html#function-gettypename">TerminalWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classTestWidgetState.html#function-gettypename">TestWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html#function-gettypename">TimeScrollBarState::getTypeName</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html#function-gettypename">TongueWidgetState::getTypeName</a>, <a href="../../api_generated/Classes/classTransformsV2State.html#function-gettypename">TransformsV2State::getTypeName</a>, <a href="../../api_generated/Classes/classTriageSessionState.html#function-gettypename">TriageSessionState::getTypeName</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html#function-gettypename">WhiskerWidgetState::getTypeName</a></p>
+<p>This is used for:</p>
+<ul>
+<li>Factory registration</li>
+<li>Serialization type field</li>
+<li>Properties panel routing</li>
+</ul>
+</section>
+<section id="function-getdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdisplayname">function getDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="ex">QString</span> getDisplayName<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get display name for UI.</p>
+<p><strong>Return</strong>: Display name, e.g., “Media Viewer 1”</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classBatchProcessingState.html#function-getdisplayname">BatchProcessingState::getDisplayName</a>, <a href="../../api_generated/Classes/classCommandLogState.html#function-getdisplayname">CommandLogState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html#function-getdisplayname">DataImportWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataInspectorState.html#function-getdisplayname">DataInspectorState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html#function-getdisplayname">DataManagerWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html#function-getdisplayname">DataSynthesizerState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html#function-getdisplayname">DataTransformWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classDataViewerState.html#function-getdisplayname">DataViewerState::getDisplayName</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html#function-getdisplayname">ExportVideoWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html#function-getdisplayname">GroupManagementWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html#function-getdisplayname">MediaWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html#function-getdisplayname">MLCoreWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html#function-getdisplayname">ThreeDPlotState::getDisplayName</a>, <a href="../../api_generated/Classes/classACFState.html#function-getdisplayname">ACFState::getDisplayName</a>, <a href="../../api_generated/Classes/classEventPlotState.html#function-getdisplayname">EventPlotState::getDisplayName</a>, <a href="../../api_generated/Classes/classHeatmapState.html#function-getdisplayname">HeatmapState::getDisplayName</a>, <a href="../../api_generated/Classes/classLinePlotState.html#function-getdisplayname">LinePlotState::getDisplayName</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html#function-getdisplayname">OnionSkinViewState::getDisplayName</a>, <a href="../../api_generated/Classes/classPSTHState.html#function-getdisplayname">PSTHState::getDisplayName</a>, <a href="../../api_generated/Classes/classScatterPlotState.html#function-getdisplayname">ScatterPlotState::getDisplayName</a>, <a href="../../api_generated/Classes/classSpectrogramState.html#function-getdisplayname">SpectrogramState::getDisplayName</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html#function-getdisplayname">TemporalProjectionViewState::getDisplayName</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html#function-getdisplayname">PythonWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classTableDesignerState.html#function-getdisplayname">TableDesignerState::getDisplayName</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html#function-getdisplayname">TerminalWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classTestWidgetState.html#function-getdisplayname">TestWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html#function-getdisplayname">TimeScrollBarState::getDisplayName</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html#function-getdisplayname">TongueWidgetState::getDisplayName</a>, <a href="../../api_generated/Classes/classTransformsV2State.html#function-getdisplayname">TransformsV2State::getDisplayName</a>, <a href="../../api_generated/Classes/classTriageSessionState.html#function-getdisplayname">TriageSessionState::getDisplayName</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html#function-getdisplayname">WhiskerWidgetState::getDisplayName</a></p>
+<p>This is the user-visible name shown in tabs, window titles, etc. It may be customized by the user.</p>
+</section>
+<section id="function-setdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdisplayname">function setDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">void</span> setDisplayName<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set display name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> New display name</li>
+</ul>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classBatchProcessingState.html#function-setdisplayname">BatchProcessingState::setDisplayName</a>, <a href="../../api_generated/Classes/classCommandLogState.html#function-setdisplayname">CommandLogState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html#function-setdisplayname">DataImportWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataInspectorState.html#function-setdisplayname">DataInspectorState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html#function-setdisplayname">DataManagerWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html#function-setdisplayname">DataSynthesizerState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html#function-setdisplayname">DataTransformWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classDataViewerState.html#function-setdisplayname">DataViewerState::setDisplayName</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html#function-setdisplayname">ExportVideoWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html#function-setdisplayname">GroupManagementWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html#function-setdisplayname">MediaWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html#function-setdisplayname">MLCoreWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html#function-setdisplayname">ThreeDPlotState::setDisplayName</a>, <a href="../../api_generated/Classes/classACFState.html#function-setdisplayname">ACFState::setDisplayName</a>, <a href="../../api_generated/Classes/classEventPlotState.html#function-setdisplayname">EventPlotState::setDisplayName</a>, <a href="../../api_generated/Classes/classHeatmapState.html#function-setdisplayname">HeatmapState::setDisplayName</a>, <a href="../../api_generated/Classes/classLinePlotState.html#function-setdisplayname">LinePlotState::setDisplayName</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html#function-setdisplayname">OnionSkinViewState::setDisplayName</a>, <a href="../../api_generated/Classes/classPSTHState.html#function-setdisplayname">PSTHState::setDisplayName</a>, <a href="../../api_generated/Classes/classScatterPlotState.html#function-setdisplayname">ScatterPlotState::setDisplayName</a>, <a href="../../api_generated/Classes/classSpectrogramState.html#function-setdisplayname">SpectrogramState::setDisplayName</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html#function-setdisplayname">TemporalProjectionViewState::setDisplayName</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html#function-setdisplayname">PythonWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classTableDesignerState.html#function-setdisplayname">TableDesignerState::setDisplayName</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html#function-setdisplayname">TerminalWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classTestWidgetState.html#function-setdisplayname">TestWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html#function-setdisplayname">TimeScrollBarState::setDisplayName</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html#function-setdisplayname">TongueWidgetState::setDisplayName</a>, <a href="../../api_generated/Classes/classTransformsV2State.html#function-setdisplayname">TransformsV2State::setDisplayName</a>, <a href="../../api_generated/Classes/classTriageSessionState.html#function-setdisplayname">TriageSessionState::setDisplayName</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html#function-setdisplayname">WhiskerWidgetState::setDisplayName</a></p>
+</section>
+<section id="function-getinstanceid" class="level3">
+<h3 class="anchored" data-anchor-id="function-getinstanceid">function getInstanceId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QString</span> getInstanceId<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get unique instance ID.</p>
+<p><strong>Return</strong>: Instance ID as QString (UUID format)</p>
+<p>Each <a href="../../api_generated/Classes/classEditorState.html">EditorState</a> instance has a UUID that persists across serialization/deserialization. This enables:</p>
+<ul>
+<li>State lookup in WorkspaceManager</li>
+<li>Selection tracking</li>
+<li>Reference preservation during save/load</li>
+</ul>
+</section>
+<section id="function-tojson" class="level3">
+<h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Serialize state to JSON string.</p>
+<p><strong>Return</strong>: JSON string representation of state</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classBatchProcessingState.html#function-tojson">BatchProcessingState::toJson</a>, <a href="../../api_generated/Classes/classCommandLogState.html#function-tojson">CommandLogState::toJson</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html#function-tojson">DataImportWidgetState::toJson</a>, <a href="../../api_generated/Classes/classDataInspectorState.html#function-tojson">DataInspectorState::toJson</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html#function-tojson">DataManagerWidgetState::toJson</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html#function-tojson">DataSynthesizerState::toJson</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html#function-tojson">DataTransformWidgetState::toJson</a>, <a href="../../api_generated/Classes/classDataViewerState.html#function-tojson">DataViewerState::toJson</a>, <a href="../../api_generated/Classes/classDeepLearningState.html#function-tojson">DeepLearningState::toJson</a>, <a href="../../api_generated/Classes/classMockState.html#function-tojson">MockState::toJson</a>, <a href="../../api_generated/Classes/classTestState.html#function-tojson">TestState::toJson</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html#function-tojson">ExportVideoWidgetState::toJson</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html#function-tojson">GroupManagementWidgetState::toJson</a>, <a href="../../api_generated/Classes/classKeybindingEditorState.html#function-tojson">KeybindingEditorState::toJson</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html#function-tojson">MediaWidgetState::toJson</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html#function-tojson">MLCoreWidgetState::toJson</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html#function-tojson">ThreeDPlotState::toJson</a>, <a href="../../api_generated/Classes/classACFState.html#function-tojson">ACFState::toJson</a>, <a href="../../api_generated/Classes/classEventPlotState.html#function-tojson">EventPlotState::toJson</a>, <a href="../../api_generated/Classes/classHeatmapState.html#function-tojson">HeatmapState::toJson</a>, <a href="../../api_generated/Classes/classLinePlotState.html#function-tojson">LinePlotState::toJson</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html#function-tojson">OnionSkinViewState::toJson</a>, <a href="../../api_generated/Classes/classPSTHState.html#function-tojson">PSTHState::toJson</a>, <a href="../../api_generated/Classes/classScatterPlotState.html#function-tojson">ScatterPlotState::toJson</a>, <a href="../../api_generated/Classes/classSpectrogramState.html#function-tojson">SpectrogramState::toJson</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html#function-tojson">TemporalProjectionViewState::toJson</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html#function-tojson">PythonWidgetState::toJson</a>, <a href="../../api_generated/Classes/classTableDesignerState.html#function-tojson">TableDesignerState::toJson</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html#function-tojson">TerminalWidgetState::toJson</a>, <a href="../../api_generated/Classes/classTestWidgetState.html#function-tojson">TestWidgetState::toJson</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html#function-tojson">TimeScrollBarState::toJson</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html#function-tojson">TongueWidgetState::toJson</a>, <a href="../../api_generated/Classes/classTransformsV2State.html#function-tojson">TransformsV2State::toJson</a>, <a href="../../api_generated/Classes/classTriageSessionState.html#function-tojson">TriageSessionState::toJson</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html#function-tojson">WhiskerWidgetState::toJson</a></p>
+<p>Subclasses should use reflect-cpp for serialization: ```cpp</p>
+<p>std::string toJson() const override { return rfl::json::write(_data); }</p>
+<pre><code>
+
+### function fromJson
+
+```cpp
+virtual bool fromJson(
+    std::string const &amp; json
+) =0</code></pre>
+<p>Restore state from JSON string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>json</strong> JSON string to parse</li>
+</ul>
+<p><strong>Return</strong>: true if parsing succeeded, false on error</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classKeybindingEditorState.html#function-fromjson">KeybindingEditorState::fromJson</a>, <a href="../../api_generated/Classes/classBatchProcessingState.html#function-fromjson">BatchProcessingState::fromJson</a>, <a href="../../api_generated/Classes/classCommandLogState.html#function-fromjson">CommandLogState::fromJson</a>, <a href="../../api_generated/Classes/classDataImportWidgetState.html#function-fromjson">DataImportWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classDataInspectorState.html#function-fromjson">DataInspectorState::fromJson</a>, <a href="../../api_generated/Classes/classDataManagerWidgetState.html#function-fromjson">DataManagerWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classDataSynthesizerState.html#function-fromjson">DataSynthesizerState::fromJson</a>, <a href="../../api_generated/Classes/classDataTransformWidgetState.html#function-fromjson">DataTransformWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classDataViewerState.html#function-fromjson">DataViewerState::fromJson</a>, <a href="../../api_generated/Classes/classDeepLearningState.html#function-fromjson">DeepLearningState::fromJson</a>, <a href="../../api_generated/Classes/classMockState.html#function-fromjson">MockState::fromJson</a>, <a href="../../api_generated/Classes/classTestState.html#function-fromjson">TestState::fromJson</a>, <a href="../../api_generated/Classes/classExportVideoWidgetState.html#function-fromjson">ExportVideoWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classGroupManagementWidgetState.html#function-fromjson">GroupManagementWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classMediaWidgetState.html#function-fromjson">MediaWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classMLCoreWidgetState.html#function-fromjson">MLCoreWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classThreeDPlotState.html#function-fromjson">ThreeDPlotState::fromJson</a>, <a href="../../api_generated/Classes/classACFState.html#function-fromjson">ACFState::fromJson</a>, <a href="../../api_generated/Classes/classEventPlotState.html#function-fromjson">EventPlotState::fromJson</a>, <a href="../../api_generated/Classes/classHeatmapState.html#function-fromjson">HeatmapState::fromJson</a>, <a href="../../api_generated/Classes/classLinePlotState.html#function-fromjson">LinePlotState::fromJson</a>, <a href="../../api_generated/Classes/classOnionSkinViewState.html#function-fromjson">OnionSkinViewState::fromJson</a>, <a href="../../api_generated/Classes/classPSTHState.html#function-fromjson">PSTHState::fromJson</a>, <a href="../../api_generated/Classes/classScatterPlotState.html#function-fromjson">ScatterPlotState::fromJson</a>, <a href="../../api_generated/Classes/classSpectrogramState.html#function-fromjson">SpectrogramState::fromJson</a>, <a href="../../api_generated/Classes/classTemporalProjectionViewState.html#function-fromjson">TemporalProjectionViewState::fromJson</a>, <a href="../../api_generated/Classes/classPythonWidgetState.html#function-fromjson">PythonWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classTableDesignerState.html#function-fromjson">TableDesignerState::fromJson</a>, <a href="../../api_generated/Classes/classTerminalWidgetState.html#function-fromjson">TerminalWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classTestWidgetState.html#function-fromjson">TestWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classTimeScrollBarState.html#function-fromjson">TimeScrollBarState::fromJson</a>, <a href="../../api_generated/Classes/classTongueWidgetState.html#function-fromjson">TongueWidgetState::fromJson</a>, <a href="../../api_generated/Classes/classTransformsV2State.html#function-fromjson">TransformsV2State::fromJson</a>, <a href="../../api_generated/Classes/classTriageSessionState.html#function-fromjson">TriageSessionState::fromJson</a>, <a href="../../api_generated/Classes/classWhiskerWidgetState.html#function-fromjson">WhiskerWidgetState::fromJson</a></p>
+<p>Subclasses should use reflect-cpp for deserialization: ```cpp</p>
+<p>bool fromJson(std::string const&amp; json) override { auto result = rfl::json::read<mywidgetstatedata>(json); if (result) { _data = *result; emit stateChanged(); return true; } return false; }</mywidgetstatedata></p>
+<pre><code>
+
+### function isDirty
+
+```cpp
+inline bool isDirty() const</code></pre>
+<p>Check if state has unsaved changes.</p>
+<p><strong>Return</strong>: true if state has been modified since last <a href="../../api_generated/Classes/classEditorState.html#function-markclean">markClean()</a></p>
+</section>
+<section id="function-markclean" class="level3">
+<h3 class="anchored" data-anchor-id="function-markclean">function markClean</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> markClean<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mark state as clean (after save)</p>
+<p>Called after state has been persisted to reset dirty tracking.</p>
+</section>
+</section>
+<section id="protected-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
+<section id="function-markdirty" class="level3">
+<h3 class="anchored" data-anchor-id="function-markdirty">function markDirty</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> markDirty<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mark state as modified.</p>
+<p>Call this from setters to track unsaved changes. Also emits <a href="../../api_generated/Classes/classEditorState.html#signal-statechanged">stateChanged()</a>.</p>
+</section>
+<section id="function-setinstanceid" class="level3">
+<h3 class="anchored" data-anchor-id="function-setinstanceid">function setInstanceId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setInstanceId<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> id</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set instance ID (for deserialization)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>id</strong> Instance ID to set</li>
+</ul>
+<p>Normally the instance ID is generated in constructor, but during deserialization we need to restore the original ID.</p>
+</section>
+<section id="function-generateinstanceid" class="level3">
+<h3 class="anchored" data-anchor-id="function-generateinstanceid">function generateInstanceId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="ex">QString</span> generateInstanceId<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Generate a new unique instance ID.</p>
+<p><strong>Return</strong>: New UUID as QString</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:22 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

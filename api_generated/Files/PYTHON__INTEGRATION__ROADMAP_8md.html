@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>PYTHON_INTEGRATION_ROADMAP.md – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#python_integration_roadmap.md" id="toc-python_integration_roadmap.md" class="nav-link active" data-scroll-target="#python_integration_roadmap.md">PYTHON_INTEGRATION_ROADMAP.md</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a>
+  <ul class="collapse">
+  <li><a href="#build-changes" id="toc-build-changes" class="nav-link" data-scroll-target="#build-changes">2.3 Build Changes</a></li>
+  <li><a href="#deliverables" id="toc-deliverables" class="nav-link" data-scroll-target="#deliverables">2.4 Deliverables</a></li>
+  <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">2.5 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-2-complete-pybind11-bindings-whiskertoolbox_python" id="toc-phase-2-complete-pybind11-bindings-whiskertoolbox_python" class="nav-link" data-scroll-target="#phase-2-complete-pybind11-bindings-whiskertoolbox_python">3. Phase 2 — Complete pybind11 Bindings (<code>whiskertoolbox_python</code>)</a>
+  <ul class="collapse">
+  <li><a href="#binding-plan-by-data-type" id="toc-binding-plan-by-data-type" class="nav-link" data-scroll-target="#binding-plan-by-data-type">3.1 Binding Plan by Data Type</a></li>
+  <li><a href="#binding-file-organization" id="toc-binding-file-organization" class="nav-link" data-scroll-target="#binding-file-organization">3.2 Binding File Organization</a></li>
+  <li><a href="#deliverables-1" id="toc-deliverables-1" class="nav-link" data-scroll-target="#deliverables-1">3.3 Deliverables</a></li>
+  <li><a href="#implementation-notes-1" id="toc-implementation-notes-1" class="nav-link" data-scroll-target="#implementation-notes-1">3.4 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-3-python-datamanager-bridge" id="toc-phase-3-python-datamanager-bridge" class="nav-link" data-scroll-target="#phase-3-python-datamanager-bridge">4. Phase 3 — Python ↔︎ DataManager Bridge</a>
+  <ul class="collapse">
+  <li><a href="#pythonbridge-class" id="toc-pythonbridge-class" class="nav-link" data-scroll-target="#pythonbridge-class">4.1 <code>PythonBridge</code> Class</a></li>
+  <li><a href="#workflow-user-perspective" id="toc-workflow-user-perspective" class="nav-link" data-scroll-target="#workflow-user-perspective">4.2 Workflow: User Perspective</a></li>
+  <li><a href="#observer-integration" id="toc-observer-integration" class="nav-link" data-scroll-target="#observer-integration">4.3 Observer Integration</a></li>
+  <li><a href="#deliverables-2" id="toc-deliverables-2" class="nav-link" data-scroll-target="#deliverables-2">4.4 Deliverables</a></li>
+  <li><a href="#implementation-notes-2" id="toc-implementation-notes-2" class="nav-link" data-scroll-target="#implementation-notes-2">4.5 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-4-python_widget-ui" id="toc-phase-4-python_widget-ui" class="nav-link" data-scroll-target="#phase-4-python_widget-ui">5. Phase 4 — Python_Widget UI ✅</a>
+  <ul class="collapse">
+  <li><a href="#console-tab-pythonconsolewidget" id="toc-console-tab-pythonconsolewidget" class="nav-link" data-scroll-target="#console-tab-pythonconsolewidget">5.1 Console Tab (<code>PythonConsoleWidget</code>)</a></li>
+  <li><a href="#script-editor-tab-pythoneditorwidget" id="toc-script-editor-tab-pythoneditorwidget" class="nav-link" data-scroll-target="#script-editor-tab-pythoneditorwidget">5.2 Script Editor Tab (<code>PythonEditorWidget</code>)</a></li>
+  <li><a href="#properties-panel-pythonpropertieswidget" id="toc-properties-panel-pythonpropertieswidget" class="nav-link" data-scroll-target="#properties-panel-pythonpropertieswidget">5.3 Properties Panel (<code>PythonPropertiesWidget</code>)</a></li>
+  <li><a href="#state-extensions" id="toc-state-extensions" class="nav-link" data-scroll-target="#state-extensions">5.4 State Extensions</a></li>
+  <li><a href="#python-syntax-highlighting" id="toc-python-syntax-highlighting" class="nav-link" data-scroll-target="#python-syntax-highlighting">5.5 Python Syntax Highlighting</a></li>
+  <li><a href="#widget-layout" id="toc-widget-layout" class="nav-link" data-scroll-target="#widget-layout">5.6 Widget Layout</a></li>
+  <li><a href="#deliverables-3" id="toc-deliverables-3" class="nav-link" data-scroll-target="#deliverables-3">5.7 Deliverables</a></li>
+  <li><a href="#implementation-notes-3" id="toc-implementation-notes-3" class="nav-link" data-scroll-target="#implementation-notes-3">5.8 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-5-script-management-file-editor" id="toc-phase-5-script-management-file-editor" class="nav-link" data-scroll-target="#phase-5-script-management-file-editor">6. Phase 5 — Script Management &amp; File Editor ✅</a>
+  <ul class="collapse">
+  <li><a href="#tasks" id="toc-tasks" class="nav-link" data-scroll-target="#tasks">6.1 Tasks</a></li>
+  <li><a href="#deliverables-4" id="toc-deliverables-4" class="nav-link" data-scroll-target="#deliverables-4">6.2 Deliverables</a></li>
+  <li><a href="#implementation-notes-4" id="toc-implementation-notes-4" class="nav-link" data-scroll-target="#implementation-notes-4">6.3 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-6-virtual-environment-support" id="toc-phase-6-virtual-environment-support" class="nav-link" data-scroll-target="#phase-6-virtual-environment-support">7. Phase 6 — Virtual Environment Support ✅</a>
+  <ul class="collapse">
+  <li><a href="#design" id="toc-design" class="nav-link" data-scroll-target="#design">7.1 Design</a></li>
+  <li><a href="#tasks-1" id="toc-tasks-1" class="nav-link" data-scroll-target="#tasks-1">7.2 Tasks</a></li>
+  <li><a href="#deliverables-5" id="toc-deliverables-5" class="nav-link" data-scroll-target="#deliverables-5">7.3 Deliverables</a></li>
+  <li><a href="#implementation-notes-5" id="toc-implementation-notes-5" class="nav-link" data-scroll-target="#implementation-notes-5">7.4 Implementation Notes</a></li>
+  </ul></li>
+  <li><a href="#phase-7-advanced-features" id="toc-phase-7-advanced-features" class="nav-link" data-scroll-target="#phase-7-advanced-features">8. Phase 7 — Advanced Features</a>
+  <ul class="collapse">
+  <li><a href="#async-background-execution" id="toc-async-background-execution" class="nav-link" data-scroll-target="#async-background-execution">8.1 Async / Background Execution</a></li>
+  <li><a href="#variable-watch-window" id="toc-variable-watch-window" class="nav-link" data-scroll-target="#variable-watch-window">8.2 Variable Watch Window</a></li>
+  <li><a href="#plotting-integration" id="toc-plotting-integration" class="nav-link" data-scroll-target="#plotting-integration">8.3 Plotting Integration</a></li>
+  <li><a href="#transform-as-python-script" id="toc-transform-as-python-script" class="nav-link" data-scroll-target="#transform-as-python-script">8.4 Transform as Python Script</a></li>
+  <li><a href="#batch-processing" id="toc-batch-processing" class="nav-link" data-scroll-target="#batch-processing">8.5 Batch Processing</a></li>
+  <li><a href="#notebook-style-interface" id="toc-notebook-style-interface" class="nav-link" data-scroll-target="#notebook-style-interface">8.6 Notebook-Style Interface</a></li>
+  </ul></li>
+  <li><a href="#zero-copy-strategy" id="toc-zero-copy-strategy" class="nav-link" data-scroll-target="#zero-copy-strategy">9. Zero-Copy Strategy</a>
+  <ul class="collapse">
+  <li><a href="#read-path-c-python" id="toc-read-path-c-python" class="nav-link" data-scroll-target="#read-path-c-python">9.1 Read Path (C++ → Python)</a></li>
+  <li><a href="#write-path-python-c" id="toc-write-path-python-c" class="nav-link" data-scroll-target="#write-path-python-c">9.2 Write Path (Python → C++)</a></li>
+  <li><a href="#implementation-numpy_utils.hpp" id="toc-implementation-numpy_utils.hpp" class="nav-link" data-scroll-target="#implementation-numpy_utils.hpp">9.3 Implementation: <code>numpy_utils.hpp</code></a></li>
+  <li><a href="#lifetime-safety" id="toc-lifetime-safety" class="nav-link" data-scroll-target="#lifetime-safety">9.4 Lifetime Safety</a></li>
+  </ul></li>
+  <li><a href="#threading-safety" id="toc-threading-safety" class="nav-link" data-scroll-target="#threading-safety">10. Threading &amp; Safety</a>
+  <ul class="collapse">
+  <li><a href="#gil-management" id="toc-gil-management" class="nav-link" data-scroll-target="#gil-management">10.1 GIL Management</a></li>
+  <li><a href="#thread-model-phase-1-5" id="toc-thread-model-phase-1-5" class="nav-link" data-scroll-target="#thread-model-phase-1-5">10.2 Thread Model (Phase 1-5)</a></li>
+  <li><a href="#thread-model-phase-7---async" id="toc-thread-model-phase-7---async" class="nav-link" data-scroll-target="#thread-model-phase-7---async">10.3 Thread Model (Phase 7 - Async)</a></li>
+  <li><a href="#observer-safety" id="toc-observer-safety" class="nav-link" data-scroll-target="#observer-safety">10.4 Observer Safety</a></li>
+  </ul></li>
+  <li><a href="#testing-strategy" id="toc-testing-strategy" class="nav-link" data-scroll-target="#testing-strategy">11. Testing Strategy</a>
+  <ul class="collapse">
+  <li><a href="#unit-tests-testspython_bindings" id="toc-unit-tests-testspython_bindings" class="nav-link" data-scroll-target="#unit-tests-testspython_bindings">11.1 Unit Tests (<code>tests/python_bindings/</code>)</a></li>
+  <li><a href="#integration-tests" id="toc-integration-tests" class="nav-link" data-scroll-target="#integration-tests">11.2 Integration Tests</a></li>
+  <li><a href="#benchmark-tests" id="toc-benchmark-tests" class="nav-link" data-scroll-target="#benchmark-tests">11.3 Benchmark Tests</a></li>
+  </ul></li>
+  <li><a href="#open-questions-risks" id="toc-open-questions-risks" class="nav-link" data-scroll-target="#open-questions-risks">12. Open Questions &amp; Risks</a>
+  <ul class="collapse">
+  <li><a href="#design-decisions-resolved" id="toc-design-decisions-resolved" class="nav-link" data-scroll-target="#design-decisions-resolved">12.1 Design Decisions (Resolved)</a></li>
+  <li><a href="#risks" id="toc-risks" class="nav-link" data-scroll-target="#risks">12.2 Risks</a></li>
+  </ul></li>
+  <li><a href="#suggested-implementation-order" id="toc-suggested-implementation-order" class="nav-link" data-scroll-target="#suggested-implementation-order">Suggested Implementation Order</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PYTHON_INTEGRATION_ROADMAP.md</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="python_integration_roadmap.md" class="level1">
+<h1>PYTHON_INTEGRATION_ROADMAP.md</h1>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Python Integration Roadmap</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **Goal:** Allow users to pass WhiskerToolbox C++ data objects to Python, run analysis</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; scripts (interactive console or </span><span class="in">`.py`</span><span class="at"> files), and return new or modified data objects</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; back to the DataManager — all with zero-copy where possible.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## Progress Summary</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase <span class="pp">|</span> Status <span class="pp">|</span> Completed <span class="pp">|</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">|-------|--------|-----------|</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 1 — Embedded Interpreter <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 2 — pybind11 Bindings <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 3 — DataManager Bridge <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 4 — Python_Widget UI <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 5 — Script Management <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 6 — Virtual Environment <span class="pp">|</span> **Complete** <span class="pp">|</span> Feb 2026 <span class="pp">|</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Phase 7 — Advanced Features <span class="pp">|</span> Not started <span class="pp">|</span> — <span class="pp">|</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">## Table of Contents</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span><span class="co">[</span><span class="ot">Architecture Overview</span><span class="co">](#1-architecture-overview)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span><span class="co">[</span><span class="ot">Phase 1 — Embedded Interpreter &amp; Environment Management</span><span class="co">](#2-phase-1--embedded-interpreter--environment-management)</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span><span class="co">[</span><span class="ot">Phase 2 — Complete pybind11 Bindings (`whiskertoolbox_python`)</span><span class="co">](#3-phase-2--complete-pybind11-bindings-whiskertoolbox_python)</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span><span class="co">[</span><span class="ot">Phase 3 — Python ↔ DataManager Bridge</span><span class="co">](#4-phase-3--python--datamanager-bridge)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span><span class="co">[</span><span class="ot">Phase 4 — Python_Widget UI</span><span class="co">](#5-phase-4--python_widget-ui)</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span><span class="co">[</span><span class="ot">Phase 5 — Script Management &amp; File Editor</span><span class="co">](#6-phase-5--script-management--file-editor)</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span><span class="co">[</span><span class="ot">Phase 6 — Virtual Environment Support</span><span class="co">](#7-phase-6--virtual-environment-support)</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ss">8. </span><span class="co">[</span><span class="ot">Phase 7 — Advanced Features</span><span class="co">](#8-phase-7--advanced-features)</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="ss">9. </span><span class="co">[</span><span class="ot">Zero-Copy Strategy</span><span class="co">](#9-zero-copy-strategy)</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">10. </span><span class="co">[</span><span class="ot">Threading &amp; Safety</span><span class="co">](#10-threading--safety)</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">11. </span><span class="co">[</span><span class="ot">Testing Strategy</span><span class="co">](#11-testing-strategy)</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">12. </span><span class="co">[</span><span class="ot">Open Questions &amp; Risks</span><span class="co">](#12-open-questions--risks)</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1. Architecture Overview</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>┌──────────────────────────────────────────────────────────┐ │ Python_Widget (Qt UI) │ │ ┌──────────────┐ ┌──────────────┐ ┌────────────────┐ │ │ │ Console Tab │ │ Editor Tab │ │ Properties │ │ │ │ (REPL) │ │ (.py files) │ │ (env, font, │ │ │ │ │ │ │ │ venv selector) │ │ │ └──────┬───────┘ └──────┬───────┘ └────────┬───────┘ │ │ │ │ │ │ │ └─────────┬───────┘ │ │ │ ▼ │ │ │ ┌─────────────────┐ │ │ │ │ PythonEngine │◄───────────────────┘ │ │ │ (interpreter │ │ │ │ management) │ │ │ └────────┬────────┘ │ └──────────────────┼───────────────────────────────────────┘ │ ▼ ┌─────────────────┐ │ PythonBridge │ ← Non-Qt layer │ (DataManager ↔︎ │ │ Python scope) │ └────────┬────────┘ │ ▼ ┌──────────────────────────┐ │ whiskertoolbox_python │ ← pybind11 module │ (C++ type bindings) │ │ │ │ TimeFrameIndex │ │ AnalogTimeSeries ──┐ │ │ DigitalEventSeries │ │ │ DigitalIntervalSeries │ │ LineData │ │ │ MaskData │ zero│ │ PointData │ copy│ │ TensorData ────────┘ │ │ MediaData (read-only) │ │ DataManager (proxy) │ └──────────────────────────┘</p>
+<pre><code>
+### Library Dependency Graph
+</code></pre>
+<p>whiskertoolbox_python (pybind11 module) ├── DataManager (all data types) ├── TimeFrame ├── CoreGeometry ├── Entity └── Observer</p>
+<p>PythonBridge (static lib, non-Qt) ├── whiskertoolbox_python (embeds the module) ├── DataManager └── pybind11::embed</p>
+<p>Python_Widget (static lib, Qt) ├── PythonBridge ├── EditorState └── Qt6::Widgets</p>
+<pre><code>
+---
+
+## 2. Phase 1 — Embedded Interpreter &amp; Environment Management ✅
+
+&gt; **Status: COMPLETE** — All deliverables implemented and tested (14 tests, 59 assertions).
+
+**Goal:** Boot a `pybind11::embed` interpreter inside the application, execute arbitrary
+Python strings, and capture stdout/stderr.
+
+### 2.1 Tasks
+
+| # | Task | Details |
+|---|------|---------|
+| 1.1 | Add `pybind11::embed` to the build | Link `pybind11::embed` into a new `PythonBridge` static library. This library is **non-Qt** so the pybind11 bindings and the interpreter are decoupled from the UI. |
+| 1.2 | Create `PythonEngine` class | Singleton-style class that owns the `py::scoped_interpreter` and the GIL. Provides `execute(string code) → PythonResult{stdout, stderr, success}`. |
+| 1.3 | Redirect stdout/stderr | Use a custom Python `sys.stdout` / `sys.stderr` written in C++ (pybind11 class) that buffers output and emits it back to the engine. |
+| 1.4 | Scope / namespace management | `PythonEngine` maintains a persistent `py::dict` for `globals` and `locals` so that variables persist across `execute()` calls (REPL behavior). Provide `resetNamespace()` to clear. |
+| 1.5 | Error handling | Catch `py::error_already_set`, format tracebacks nicely, and return them in `PythonResult.stderr`. |
+
+### 2.2 `PythonEngine` API Sketch
+
+```cpp
+// src/python_bindings/PythonEngine.hpp
+struct PythonResult {
+    std::string stdout_text;
+    std::string stderr_text;
+    bool success;
+};
+
+class PythonEngine {
+public:
+    PythonEngine();
+    ~PythonEngine();
+
+    // Execute a code string in the persistent namespace
+    PythonResult execute(std::string const &amp; code);
+
+    // Execute a .py file
+    PythonResult executeFile(std::filesystem::path const &amp; path);
+
+    // Reset the interpreter namespace (clear all user variables)
+    void resetNamespace();
+
+    // Inject a C++ object into the Python namespace
+    void inject(std::string const &amp; name, py::object obj);
+
+    // Check if interpreter is initialized
+    bool isInitialized() const;
+
+    // Get the persistent globals dict (for bridge use)
+    py::dict &amp; globals();
+
+private:
+    std::unique_ptr&lt;py::scoped_interpreter&gt; _interpreter;
+    py::dict _globals;
+    py::dict _locals;
+};</code></pre>
+<section id="build-changes" class="level3">
+<h3 class="anchored" data-anchor-id="build-changes">2.3 Build Changes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cmake code-with-copy"><code class="sourceCode cmake"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># src/python_bindings/CMakeLists.txt  (revised)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">find_package</span>(<span class="im">Python3</span> <span class="ot">COMPONENTS</span> Interpreter Development <span class="ot">REQUIRED</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">find_package</span>(pybind11 <span class="ot">CONFIG</span> <span class="ot">REQUIRED</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 1. The pybind11 extension module (importable from Python) ---</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">pybind11_add_module</span>(whiskertoolbox_python bindings.cpp)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">whiskertoolbox_python</span> <span class="ot">PRIVATE</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">WhiskerToolbox::DataManager</span>   <span class="co"># all data types</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="bn">WhiskerToolbox::TimeFrame</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="bn">WhiskerToolbox::CoreGeometry</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="bn">WhiskerToolbox::Entity</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 2. The embedded-interpreter bridge (linked into the app) ---</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">add_library</span>(<span class="bn">PythonBridge</span> <span class="ot">STATIC</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    PythonEngine.hpp PythonEngine.cpp</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    PythonBridge.hpp PythonBridge.cpp</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">PythonBridge</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="ot">PUBLIC</span>  <span class="bn">pybind11::embed</span> <span class="bn">Python3::Python</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="ot">PRIVATE</span> <span class="bn">WhiskerToolbox::DataManager</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="kw">target_include_directories</span>(<span class="bn">PythonBridge</span> <span class="ot">PUBLIC</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="ot">$&lt;</span><span class="kw">BUILD_INTERFACE</span><span class="ot">:</span><span class="dv">${CMAKE_CURRENT_SOURCE_DIR}</span><span class="ot">&gt;</span><span class="st">"</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="deliverables" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables">2.4 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked=""><code>PythonEngine</code> can boot interpreter, run code, return stdout/stderr</label></li>
+<li><label><input type="checkbox" checked="">Unit test: <code>execute("print(2+2)")</code> → stdout = <code>"4\n"</code>, success = true</label></li>
+<li><label><input type="checkbox" checked="">Unit test: <code>execute("raise ValueError('x')")</code> → stderr contains traceback, success = false</label></li>
+<li><label><input type="checkbox" checked="">Namespace persists: <code>execute("x=5")</code> then <code>execute("print(x)")</code> → <code>"5\n"</code></label></li>
+</ul>
+</section>
+<section id="implementation-notes" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes">2.5 Implementation Notes</h3>
+<p><strong>Files delivered:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/python_bindings/PythonResult.hpp</code></td>
+<td><code>PythonResult</code> struct (stdout, stderr, success)</td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/OutputRedirector.hpp</code></td>
+<td>C++ <code>sys.stdout</code>/<code>sys.stderr</code> replacement with <code>write()</code>/<code>flush()</code>/<code>drain()</code></td>
+</tr>
+<tr class="odd">
+<td><code>src/python_bindings/PythonEngine.hpp</code></td>
+<td><code>PythonEngine</code> class declaration</td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/PythonEngine.cpp</code></td>
+<td>Full implementation — interpreter lifecycle, <code>execute()</code>, <code>executeFile()</code>, <code>resetNamespace()</code>, <code>inject()</code>, traceback formatting</td>
+</tr>
+<tr class="odd">
+<td><code>src/python_bindings/PythonEngine.test.cpp</code></td>
+<td>14 Catch2 test cases (59 assertions)</td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/CMakeLists.txt</code></td>
+<td>Added <code>PythonBridge</code> static library (<code>WhiskerToolbox::PythonBridge</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>tests/python_bindings/CMakeLists.txt</code></td>
+<td>Test target <code>test_python_engine</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions made during implementation:</strong></p>
+<ol type="1">
+<li><strong>Single static engine in tests</strong> — Python can only be initialized/finalized once per process. Tests share a single <code>PythonEngine</code> instance and call <code>resetNamespace()</code> for isolation.</li>
+<li><strong>Member init order</strong> — <code>_interpreter</code> must be constructed in the member initializer list (before <code>_globals</code>) because <code>py::dict</code> default constructor calls <code>PyDict_New()</code>, which requires a live interpreter.</li>
+<li><strong><code>PYBIND11_EMBEDDED_MODULE(_wt_internal, m)</code></strong> — Registers <code>OutputRedirector</code> and a disabled <code>input()</code> function into an internal module imported at engine startup.</li>
+<li><strong>Destructor safety</strong> — Restores <code>sys.stdout</code>/<code>sys.stderr</code> to originals before interpreter teardown; relies on reverse member destruction order.</li>
+</ol>
+<p><strong>Test coverage:</strong> - Interpreter init &amp; version query - stdout capture (simple, multi-line, <code>end=</code> parameter) - stderr on SyntaxError, ValueError, NameError (with traceback) - Namespace persistence (variables, functions, imports) - <code>resetNamespace()</code> isolation - <code>inject()</code> C++ → Python objects - <code>getUserVariableNames()</code> filtering - <code>input()</code> disabled (RuntimeError) - Empty/whitespace/comment-only code - <code>executeFile()</code> (success + missing file) - Error recovery (engine usable after exceptions) - stdout isolation between calls</p>
+<hr>
+</section>
+</section>
+<section id="phase-2-complete-pybind11-bindings-whiskertoolbox_python" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-complete-pybind11-bindings-whiskertoolbox_python">3. Phase 2 — Complete pybind11 Bindings (<code>whiskertoolbox_python</code>)</h2>
+<p><strong>Goal:</strong> Expose all core data types with zero-copy NumPy interop where possible.</p>
+<section id="binding-plan-by-data-type" class="level3">
+<h3 class="anchored" data-anchor-id="binding-plan-by-data-type">3.1 Binding Plan by Data Type</h3>
+<section id="timeframeindex-already-bound-extend" class="level4">
+<h4 class="anchored" data-anchor-id="timeframeindex-already-bound-extend">3.1.1 <code>TimeFrameIndex</code> (already bound — extend)</h4>
+<ul>
+<li>Add arithmetic operators (<code>+</code>, <code>-</code>, <code>+=</code>, <code>-=</code>)</li>
+<li>Add <code>__hash__</code> for use in Python dicts/sets</li>
+<li>Add <code>__int__</code> conversion</li>
+</ul>
+</section>
+<section id="timeframe" class="level4">
+<h4 class="anchored" data-anchor-id="timeframe">3.1.2 <code>TimeFrame</code></h4>
+<ul>
+<li><code>getTotalFrameCount() → int</code></li>
+<li><code>getTimeAtIndex(TimeFrameIndex) → int</code></li>
+<li><code>getIndexAtTime(float, bool preceding=True) → TimeFrameIndex</code></li>
+</ul>
+</section>
+<section id="analogtimeseries-zero-copy-priority" class="level4">
+<h4 class="anchored" data-anchor-id="analogtimeseries-zero-copy-priority">3.1.3 <code>AnalogTimeSeries</code> ★ (zero-copy priority)</h4>
+<ul>
+<li><strong>Zero-copy read:</strong> Expose <code>getAnalogTimeSeries()</code> as a NumPy array via the buffer protocol. The <code>std::span&lt;float const&gt;</code> maps directly to a 1-D <code>numpy.ndarray</code> with <code>dtype=float32</code>. The array should be <strong>read-only</strong> (non-writeable flag set) to prevent accidental mutation.</li>
+<li><strong>Zero-copy sub-range:</strong> <code>getDataInTimeFrameIndexRange(start, end)</code> → read-only NumPy array</li>
+<li><strong>Write path:</strong> Accept a NumPy array + time indices to construct a new <code>AnalogTimeSeries</code></li>
+<li><code>getNumSamples()</code>, <code>getAtTime()</code>, <code>getTimeSeries()</code>, <code>isView()</code>, <code>isLazy()</code></li>
+<li>Factory: <code>AnalogTimeSeries(numpy_array, time_indices)</code> — copies data in</li>
+</ul>
+</section>
+<section id="digitaleventseries-already-partially-bound-extend" class="level4">
+<h4 class="anchored" data-anchor-id="digitaleventseries-already-partially-bound-extend">3.1.4 <code>DigitalEventSeries</code> (already partially bound — extend)</h4>
+<ul>
+<li>Add <code>view()</code> iteration support via <code>__iter__</code> yielding <code>(time_index, entity_id)</code> tuples</li>
+<li>Add <code>getEventsInRange(start, stop)</code> → list of <code>TimeFrameIndex</code></li>
+<li>Add construction from Python list of ints</li>
+</ul>
+</section>
+<section id="digitalintervalseries" class="level4">
+<h4 class="anchored" data-anchor-id="digitalintervalseries">3.1.5 <code>DigitalIntervalSeries</code></h4>
+<ul>
+<li>Bind <code>Interval</code> type: <code>start</code>, <code>end</code>, <code>__repr__</code></li>
+<li><code>addEvent(Interval)</code>, <code>addEvent(start, end)</code></li>
+<li><code>removeInterval(Interval)</code>, <code>size()</code>, <code>clear()</code></li>
+<li><code>__iter__</code> yielding <code>(Interval, entity_id)</code> tuples</li>
+<li><code>hasIntervalAtTime()</code>, construction from list of <code>(start, end)</code> tuples</li>
+</ul>
+</section>
+<section id="linedata" class="level4">
+<h4 class="anchored" data-anchor-id="linedata">3.1.6 <code>LineData</code></h4>
+<ul>
+<li>Bind <code>Line2D</code> → list of <code>Point2D</code> or NumPy <code>(N, 2)</code> float array</li>
+<li><code>addAtTime(time, line)</code>, <code>getDataByEntityId(id) → Line2D</code></li>
+<li><code>__iter__</code> for iterating over <code>(time, entity_id, line)</code> entries</li>
+<li>Zero-copy: expose <code>Line2D</code> points as read-only <code>(N, 2)</code> NumPy view when contiguous</li>
+</ul>
+</section>
+<section id="maskdata" class="level4">
+<h4 class="anchored" data-anchor-id="maskdata">3.1.7 <code>MaskData</code></h4>
+<ul>
+<li>Bind <code>Mask2D</code> → NumPy <code>(N, 2)</code> uint32 array (point list) or <code>(H, W)</code> bool array (rasterized)</li>
+<li><code>addAtTime(time, mask)</code>, <code>getDataByEntityId(id)</code></li>
+<li>Provide Python helper to convert between point-list and raster representations</li>
+</ul>
+</section>
+<section id="pointdata" class="level4">
+<h4 class="anchored" data-anchor-id="pointdata">3.1.8 <code>PointData</code></h4>
+<ul>
+<li>Bind <code>Point2D&lt;float&gt;</code> with <code>.x</code>, <code>.y</code>, <code>__repr__</code></li>
+<li><code>addAtTime(time, point_or_points)</code></li>
+<li><code>getDataByEntityId(id) → Point2D</code></li>
+<li><code>__iter__</code> yielding <code>(time, entity_id, point)</code> tuples</li>
+</ul>
+</section>
+<section id="tensordata-zero-copy-priority" class="level4">
+<h4 class="anchored" data-anchor-id="tensordata-zero-copy-priority">3.1.9 <code>TensorData</code> ★ (zero-copy priority)</h4>
+<ul>
+<li><strong>Zero-copy read:</strong> <code>flatData()</code> → read-only NumPy array reshaped to <code>shape()</code></li>
+<li><strong>Metadata:</strong> <code>ndim()</code>, <code>shape()</code>, <code>columnNames()</code>, <code>rowType()</code></li>
+<li><strong>Column access:</strong> <code>getColumn(name_or_index)</code> → NumPy array (copy, since columns are non-contiguous)</li>
+<li><strong>Write path:</strong> <code>TensorData.createND(numpy_array, shape, ...)</code> — create from NumPy</li>
+<li><code>hasNamedColumns()</code>, <code>isEmpty()</code>, <code>isContiguous()</code></li>
+</ul>
+</section>
+<section id="mediadata-read-only" class="level4">
+<h4 class="anchored" data-anchor-id="mediadata-read-only">3.1.10 <code>MediaData</code> (read-only)</h4>
+<ul>
+<li><code>getRawData8(frame) → numpy (H, W) uint8 array</code> (copy — data is per-frame)</li>
+<li><code>getRawData32(frame) → numpy (H, W) float32 array</code></li>
+<li><code>getHeight()</code>, <code>getWidth()</code>, <code>getTotalFrameCount()</code>, <code>getMediaType()</code></li>
+<li>No write path initially (media is loaded from files)</li>
+</ul>
+</section>
+<section id="datamanager-proxy" class="level4">
+<h4 class="anchored" data-anchor-id="datamanager-proxy">3.1.11 <code>DataManager</code> (proxy)</h4>
+<ul>
+<li><code>getData(key, type_hint) → typed object</code></li>
+<li><code>setData(key, object, time_key)</code> — register new data</li>
+<li><code>deleteData(key) → bool</code></li>
+<li><code>getAllKeys() → list[str]</code></li>
+<li><code>getKeys(type_name) → list[str]</code></li>
+<li><code>getType(key) → str</code></li>
+<li><code>getTime(key) → TimeFrame</code></li>
+<li><code>getTimeKey(key) → str</code></li>
+</ul>
+</section>
+<section id="entity-groups-lightweight" class="level4">
+<h4 class="anchored" data-anchor-id="entity-groups-lightweight">3.1.12 Entity / Groups (lightweight)</h4>
+<ul>
+<li><code>EntityId</code>: <code>id</code>, <code>__repr__</code>, <code>__hash__</code>, <code>__eq__</code></li>
+<li>Read-only access to group names and members via <code>DataManager</code> proxy</li>
+</ul>
+</section>
+</section>
+<section id="binding-file-organization" class="level3">
+<h3 class="anchored" data-anchor-id="binding-file-organization">3.2 Binding File Organization</h3>
+<pre><code>src/python_bindings/
+├── CMakeLists.txt
+├── bindings.cpp                   # PYBIND11_MODULE + sub-module init calls
+├── bind_timeframe.cpp             # TimeFrameIndex, TimeFrame
+├── bind_analog.cpp                # AnalogTimeSeries (zero-copy)
+├── bind_digital_event.cpp         # DigitalEventSeries
+├── bind_digital_interval.cpp      # DigitalIntervalSeries
+├── bind_line.cpp                  # LineData, Line2D
+├── bind_mask.cpp                  # MaskData, Mask2D
+├── bind_point.cpp                 # PointData, Point2D
+├── bind_tensor.cpp                # TensorData (zero-copy)
+├── bind_media.cpp                 # MediaData (read-only)
+├── bind_datamanager.cpp           # DataManager proxy
+├── bind_entity.cpp                # EntityId, groups
+├── numpy_utils.hpp                # Helpers for span↔numpy conversion
+├── PythonEngine.hpp / .cpp        # Embedded interpreter
+├── PythonBridge.hpp / .cpp        # DataManager ↔ Python scope bridge
+└── PYTHON_INTEGRATION_ROADMAP.md  # This file</code></pre>
+</section>
+<section id="deliverables-1" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables-1">3.3 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">All data types bound with docstrings</label></li>
+<li><label><input type="checkbox" checked="">NumPy zero-copy implemented for <code>AnalogTimeSeries</code> and <code>TensorData</code> (via <code>numpy_utils.hpp</code>)</label></li>
+<li><label><input type="checkbox" checked="">Unit tests for each bound type (round-trip: C++ → Python → C++)</label></li>
+<li><label><input type="checkbox" checked=""><code>import whiskertoolbox_python</code> works from an embedded interpreter</label></li>
+</ul>
+</section>
+<section id="implementation-notes-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes-1">3.4 Implementation Notes</h3>
+<p><strong>Architecture change:</strong> Switched from <code>pybind11_add_module</code> (standalone <code>.so</code>) to <code>PYBIND11_EMBEDDED_MODULE</code> compiled into the <code>PythonBridge</code> static library. A force-linkage function (<code>ensure_whiskertoolbox_bindings_linked()</code>) called from <code>PythonEngine</code> constructor prevents the linker from stripping <code>bindings.o</code> out of the static archive.</p>
+<p><strong>Files delivered:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>bind_module.hpp</code></td>
+<td>Forward declarations for all <code>init_*()</code> functions + force-linkage function</td>
+</tr>
+<tr class="even">
+<td><code>numpy_utils.hpp</code></td>
+<td>Zero-copy <code>span_to_numpy_readonly()</code> and <code>numpy_to_vector()</code> helpers</td>
+</tr>
+<tr class="odd">
+<td><code>bindings.cpp</code></td>
+<td><code>PYBIND11_EMBEDDED_MODULE(whiskertoolbox_python, m)</code> + <code>ensure_whiskertoolbox_bindings_linked()</code></td>
+</tr>
+<tr class="even">
+<td><code>bind_geometry.cpp</code></td>
+<td><code>Point2D&lt;float&gt;</code>, <code>Point2D&lt;uint32_t&gt;</code>, <code>ImageSize</code></td>
+</tr>
+<tr class="odd">
+<td><code>bind_timeframe.cpp</code></td>
+<td><code>TimeFrameIndex</code> (extended: arithmetic, hash, int), <code>TimeFrame</code>, <code>Interval</code></td>
+</tr>
+<tr class="even">
+<td><code>bind_entity.cpp</code></td>
+<td><code>EntityId</code>, <code>GroupDescriptor</code>, <code>EntityGroupManager</code></td>
+</tr>
+<tr class="odd">
+<td><code>bind_analog.cpp</code></td>
+<td><code>AnalogTimeSeries</code> with zero-copy <code>values</code> property</td>
+</tr>
+<tr class="even">
+<td><code>bind_digital_event.cpp</code></td>
+<td><code>DigitalEventSeries</code> (add/remove/clear/toList/toListWithIds)</td>
+</tr>
+<tr class="odd">
+<td><code>bind_digital_interval.cpp</code></td>
+<td><code>DigitalIntervalSeries</code> (add/remove/toList/toListWithIds)</td>
+</tr>
+<tr class="even">
+<td><code>bind_line.cpp</code></td>
+<td><code>Line2D</code> (value type), <code>LineData</code> (ragged time series)</td>
+</tr>
+<tr class="odd">
+<td><code>bind_mask.cpp</code></td>
+<td><code>Mask2D</code> (value type), <code>MaskData</code> (ragged time series)</td>
+</tr>
+<tr class="even">
+<td><code>bind_point.cpp</code></td>
+<td><code>PointData</code> (ragged time series)</td>
+</tr>
+<tr class="odd">
+<td><code>bind_tensor.cpp</code></td>
+<td><code>TensorData</code> with zero-copy <code>values</code>/<code>flatValues</code> properties</td>
+</tr>
+<tr class="even">
+<td><code>bind_media.cpp</code></td>
+<td><code>MediaData</code> (read-only: frame access, metadata), <code>MediaType</code> enum</td>
+</tr>
+<tr class="odd">
+<td><code>bind_datamanager.cpp</code></td>
+<td><code>DataManager</code> proxy with type-dispatched <code>getData()</code>, <code>setData()</code> overloads, <code>DataType</code> enum</td>
+</tr>
+<tr class="even">
+<td><code>bindings.test.cpp</code></td>
+<td>24 Catch2 test cases covering all bound types</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions:</strong></p>
+<ol type="1">
+<li><strong>PYBIND11_EMBEDDED_MODULE</strong> — All bindings are compiled into the app, not as a standalone <code>.so</code>. This avoids shared library deployment issues.</li>
+<li><strong>Force-linkage pattern</strong> — <code>ensure_whiskertoolbox_bindings_linked()</code> is an empty function in <code>bindings.cpp</code> called from <code>PythonEngine()</code> to prevent static archive stripping.</li>
+<li><strong>Zero-copy via <code>span_to_numpy_readonly()</code></strong> — Uses <code>py::detail::array_proxy()-&gt;flags &amp;= ~NPY_ARRAY_WRITEABLE_</code> to mark arrays read-only.</li>
+<li><strong>DataManager.getData() auto-dispatch</strong> — Uses <code>getDataVariant()</code> + <code>std::visit</code> + <code>py::cast(ptr)</code> with <code>catch(py::cast_error)</code> fallback for unbound types (e.g., <code>RaggedAnalogTimeSeries</code> returns <code>None</code>).</li>
+<li><strong>Type-specific setData overloads</strong> — 7 overloads (one per data type) with pybind11 overload resolution, each constructing <code>TimeKey</code> from a string argument.</li>
+<li><strong>Copy-based fallbacks</strong> — Every type has <code>toList()</code> methods that work without NumPy at runtime.</li>
+</ol>
+<p><strong>Test coverage (24 tests):</strong> - Module import - Geometry types (Point2D, Point2DU32, ImageSize) - TimeFrameIndex arithmetic, hash, int conversion - TimeFrame construction and queries - Interval construction and fields - EntityId construction, hash, comparison - AnalogTimeSeries (empty, from vectors, toList, getAtTime) - DigitalEventSeries (add/remove/size/toList, construct from list) - DigitalIntervalSeries (addInterval/addEvent/toList) - Line2D construction and access (from points, from x/y vectors) - LineData add and retrieve - Mask2D construction (from points, from x/y vectors) - MaskData add and retrieve - PointData add and retrieve - TensorData (createOrdinal2D, shape, toList, named columns) - DataManager (setData/getData round-trip, type queries, key queries, delete, TimeFrame management) - DataType enum</p>
+<hr>
+</section>
+</section>
+<section id="phase-3-python-datamanager-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-python-datamanager-bridge">4. Phase 3 — Python ↔︎ DataManager Bridge</h2>
+<p><strong>Goal:</strong> Let Python code access and modify the live DataManager, creating new data keys and retrieving existing ones — while keeping the observer pattern working.</p>
+<section id="pythonbridge-class" class="level3">
+<h3 class="anchored" data-anchor-id="pythonbridge-class">4.1 <code>PythonBridge</code> Class</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/python_bindings/PythonBridge.hpp</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PythonBridge <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> PythonBridge<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> dm<span class="op">,</span> PythonEngine <span class="op">&amp;</span> engine<span class="op">);</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Inject the DataManager proxy object into Python namespace as `dm`</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> exposeDataManager<span class="op">();</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Convenience: inject a single data object by key</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> exposeData<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> python_name<span class="op">);</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// After script execution, scan Python namespace for new data objects</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// and register them in the DataManager</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> importNewData<span class="op">();</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Expose a specific TimeFrame</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> exposeTimeFrame<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> python_name<span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> _dm<span class="op">;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    PythonEngine <span class="op">&amp;</span> _engine<span class="op">;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="workflow-user-perspective" class="level3">
+<h3 class="anchored" data-anchor-id="workflow-user-perspective">4.2 Workflow: User Perspective</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Inside the WhiskerToolbox Python console:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. The DataManager is always available as `dm`</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> dm.getAllKeys()</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(keys)  <span class="co"># ['whisker_angle', 'lick_events', ...]</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Get data (zero-copy where possible)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>angle <span class="op">=</span> dm.getData(<span class="st">"whisker_angle"</span>)   <span class="co"># returns AnalogTimeSeries wrapper</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>arr <span class="op">=</span> np.array(angle, copy<span class="op">=</span><span class="va">False</span>)     <span class="co"># zero-copy view!</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(arr.mean())</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Do analysis</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.signal <span class="im">import</span> butter, filtfilt</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>b, a <span class="op">=</span> butter(<span class="dv">4</span>, <span class="fl">0.1</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>filtered <span class="op">=</span> filtfilt(b, a, arr).astype(np.float32)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Create new data and push back</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> whiskertoolbox_python <span class="im">import</span> AnalogTimeSeries</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> AnalogTimeSeries(filtered, angle.getTimeSeries())</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>dm.setData(<span class="st">"whisker_angle_filtered"</span>, ts, dm.getTimeKey(<span class="st">"whisker_angle"</span>))</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co"># → Now visible in WhiskerToolbox UI!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="observer-integration" class="level3">
+<h3 class="anchored" data-anchor-id="observer-integration">4.3 Observer Integration</h3>
+<p>When <code>dm.setData()</code> is called from Python, the C++ <code>DataManager::setData</code> fires <code>notifyObservers()</code>. Since the Python call happens on the main thread (GIL held), Qt widgets that observe the DataManager will update on next event-loop cycle.</p>
+<p><strong>Important:</strong> All Python execution must happen on the <strong>main thread</strong> or use <code>QMetaObject::invokeMethod</code> to marshal DataManager mutations back to the main thread. The observer pattern is not thread-safe.</p>
+</section>
+<section id="deliverables-2" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables-2">4.4 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked=""><code>PythonBridge</code> injects <code>dm</code> proxy into Python namespace</label></li>
+<li><label><input type="checkbox" checked=""><code>dm.getData("key")</code> returns typed Python wrapper</label></li>
+<li><label><input type="checkbox" checked=""><code>dm.setData("key", obj, time_key)</code> registers data in C++ DataManager</label></li>
+<li><label><input type="checkbox" checked="">Observer notifications fire correctly after Python mutations</label></li>
+<li><label><input type="checkbox" checked="">Integration test: create data in Python → verify visible via C++ DataManager API</label></li>
+</ul>
+</section>
+<section id="implementation-notes-2" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes-2">4.5 Implementation Notes</h3>
+<blockquote class="blockquote">
+<p><strong>Status: COMPLETE</strong> — All deliverables implemented and tested (27 tests, 90 assertions).</p>
+</blockquote>
+<p><strong>Files delivered:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/python_bindings/PythonBridge.hpp</code></td>
+<td><code>PythonBridge</code> class declaration — non-Qt bridge between DataManager and Python</td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/PythonBridge.cpp</code></td>
+<td>Full implementation — <code>exposeDataManager()</code>, <code>exposeData()</code>, <code>exposeTimeFrame()</code>, <code>importNewData()</code>, <code>execute()</code>, <code>executeFile()</code></td>
+</tr>
+<tr class="odd">
+<td><code>src/python_bindings/PythonBridge.test.cpp</code></td>
+<td>27 Catch2 test cases (90 assertions)</td>
+</tr>
+<tr class="even">
+<td><code>tests/python_bindings/CMakeLists.txt</code></td>
+<td>Added <code>test_python_bridge</code> target</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions:</strong></p>
+<ol type="1">
+<li><strong>Module import before cast</strong> — The embedded pybind11 module must be imported (<code>import whiskertoolbox_python</code>) before calling <code>py::cast()</code> on C++ types, since type registration happens lazily during module init.</li>
+<li><strong>Shared pointer identity</strong> — The <code>PythonBridge</code> injects the same <code>shared_ptr&lt;DataManager&gt;</code> that the C++ app owns, so mutations from Python are immediately visible in C++ and vice-versa.</li>
+<li><strong>exposeData() uses Python-side dispatch</strong> — Instead of <code>std::visit</code> on <code>DataTypeVariant</code> (which requires complete types for all variant alternatives), <code>exposeData()</code> delegates to the already-bound <code>DataManager.getData()</code> method in Python.</li>
+<li><strong>importNewData() type probing</strong> — Uses <code>py::cast&lt;shared_ptr&lt;T&gt;&gt;</code> with <code>catch(py::cast_error)</code> fallback to try each bound type. Non-data objects (ints, strings, modules) are silently skipped.</li>
+<li><strong>Observer correctness</strong> — Since all Python execution is synchronous on the main thread (Phase 1–5 threading model), <code>DataManager::setData()</code> calls from Python trigger <code>notifyObservers()</code> on the main thread — no marshalling needed.</li>
+</ol>
+<p><strong>Test coverage (27 tests):</strong> - DataManager exposure (<code>exposeDataManager</code>, auto-expose via <code>execute()</code>) - Shared pointer identity (C++ data visible from Python) - getData for AnalogTimeSeries, DigitalEventSeries, missing keys - setData from Python for all 6 writable types (Analog, DigitalEvent, DigitalInterval, Line, Point, Mask) - Observer notifications on setData and deleteData - importNewData: orphan discovery, skip-already-registered, multi-type, custom time key - exposeData / exposeTimeFrame (inject individual objects, missing key handling) - executeFile with dm available - Error recovery (bridge usable after Python exceptions) - resetNamespace + re-expose - End-to-end workflows (C++ → Python filter → C++ verify, Python event/interval creation)</p>
+<hr>
+</section>
+</section>
+<section id="phase-4-python_widget-ui" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-python_widget-ui">5. Phase 4 — Python_Widget UI ✅</h2>
+<blockquote class="blockquote">
+<p><strong>Status: COMPLETE</strong> — All deliverables implemented: Console tab, Editor tab, Properties panel, Syntax highlighting, State serialization, Keyboard shortcuts.</p>
+</blockquote>
+<p><strong>Goal:</strong> Build the interactive console and script editor in the existing Python_Widget shell.</p>
+<section id="console-tab-pythonconsolewidget" class="level3">
+<h3 class="anchored" data-anchor-id="console-tab-pythonconsolewidget">5.1 Console Tab (<code>PythonConsoleWidget</code>)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Input area</td>
+<td>Multi-line <code>QPlainTextEdit</code> (bottom), monospace font, syntax highlighting</td>
+</tr>
+<tr class="even">
+<td>Output area</td>
+<td>Read-only <code>QPlainTextEdit</code> (top), shows stdout/stderr in different colors</td>
+</tr>
+<tr class="odd">
+<td>Execute</td>
+<td>Shift+Enter or “Run” button sends input to <code>PythonEngine::execute()</code></td>
+</tr>
+<tr class="even">
+<td>History</td>
+<td>Up/Down arrow navigates command history (stored in state)</td>
+</tr>
+<tr class="odd">
+<td>Auto-scroll</td>
+<td>Toggle (already in state), scrolls output to bottom</td>
+</tr>
+<tr class="even">
+<td>Clear</td>
+<td>Button to clear output pane</td>
+</tr>
+<tr class="odd">
+<td>Interrupt</td>
+<td>Button that calls <code>PyErr_SetInterrupt()</code> to stop long-running scripts</td>
+</tr>
+<tr class="even">
+<td>Tab-completion</td>
+<td>Basic completion using Python’s <code>rlcompleter</code> module</td>
+</tr>
+<tr class="odd">
+<td>Prompt</td>
+<td><code>&gt;&gt;&gt;</code> for new statements, <code>...</code> for continuation lines</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="script-editor-tab-pythoneditorwidget" class="level3">
+<h3 class="anchored" data-anchor-id="script-editor-tab-pythoneditorwidget">5.2 Script Editor Tab (<code>PythonEditorWidget</code>)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Editor</td>
+<td><code>QPlainTextEdit</code> with line numbers, monospace font, basic Python syntax highlighting</td>
+</tr>
+<tr class="even">
+<td>Open / Save / Save As</td>
+<td>Standard file operations for <code>.py</code> files, path stored in state</td>
+</tr>
+<tr class="odd">
+<td>Run Script</td>
+<td>Executes the entire file via <code>PythonEngine::executeFile()</code></td>
+</tr>
+<tr class="even">
+<td>Run Selection</td>
+<td>Executes only highlighted text</td>
+</tr>
+<tr class="odd">
+<td>Recent files</td>
+<td>Stored in <code>PythonWidgetStateData</code></td>
+</tr>
+<tr class="even">
+<td>Modified indicator</td>
+<td>Asterisk in tab title when unsaved</td>
+</tr>
+<tr class="odd">
+<td>Font size</td>
+<td>Configurable via properties panel (already in state)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="properties-panel-pythonpropertieswidget" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel-pythonpropertieswidget">5.3 Properties Panel (<code>PythonPropertiesWidget</code>)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Environment info</td>
+<td>Show Python version, <code>sys.executable</code>, active venv</td>
+</tr>
+<tr class="even">
+<td>Venv selector</td>
+<td>Dropdown to select / activate a virtual environment</td>
+</tr>
+<tr class="odd">
+<td>Font size spinner</td>
+<td>Connected to <code>PythonWidgetState::setFontSize()</code></td>
+</tr>
+<tr class="even">
+<td>Auto-scroll toggle</td>
+<td>Connected to <code>PythonWidgetState::setAutoScroll()</code></td>
+</tr>
+<tr class="odd">
+<td>Namespace inspector</td>
+<td>Tree/table showing current Python variables, types, and shapes</td>
+</tr>
+<tr class="even">
+<td>Clear namespace</td>
+<td>Button to call <code>PythonEngine::resetNamespace()</code></td>
+</tr>
+<tr class="odd">
+<td>Available data</td>
+<td>List of DataManager keys with type, click to insert <code>dm.getData("key")</code> into console</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="state-extensions" class="level3">
+<h3 class="anchored" data-anchor-id="state-extensions">5.4 State Extensions</h3>
+<p>Add to <code>PythonWidgetStateData</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PythonWidgetStateData <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string instance_id<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Python Console"</span><span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string last_script_path<span class="op">;</span>     <span class="co">// existing</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> auto_scroll <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>          <span class="co">// existing</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> font_size <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>               <span class="co">// existing</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New fields:</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> command_history<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> recent_scripts<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string venv_path<span class="op">;</span>                       <span class="co">// active virtual environment</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string last_working_directory<span class="op">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_line_numbers <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string editor_content<span class="op">;</span>                  <span class="co">// unsaved editor buffer</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="python-syntax-highlighting" class="level3">
+<h3 class="anchored" data-anchor-id="python-syntax-highlighting">5.5 Python Syntax Highlighting</h3>
+<p>Create a <code>PythonSyntaxHighlighter : QSyntaxHighlighter</code> that highlights: - Keywords (<code>def</code>, <code>class</code>, <code>import</code>, <code>if</code>, <code>for</code>, <code>while</code>, <code>return</code>, <code>with</code>, <code>as</code>, <code>try</code>, <code>except</code>, …) - Built-in functions (<code>print</code>, <code>range</code>, <code>len</code>, <code>type</code>, …) - Strings (single/double/triple-quoted) - Comments (<code>#</code>) - Numbers (int, float, hex, scientific) - Decorators (<code>@</code>) - <code>self</code>, <code>True</code>, <code>False</code>, <code>None</code></p>
+</section>
+<section id="widget-layout" class="level3">
+<h3 class="anchored" data-anchor-id="widget-layout">5.6 Widget Layout</h3>
+<pre><code>┌─────────────────────────────────────────────┐
+│ Python_Widget (Center zone)                  │
+│ ┌─────────────────────────────────────────┐  │
+│ │ [Console] [Editor]           tabs       │  │
+│ ├─────────────────────────────────────────┤  │
+│ │                                         │  │
+│ │  Output area (read-only)                │  │
+│ │  &gt;&gt;&gt; print("hello")                     │  │
+│ │  hello                                  │  │
+│ │                                         │  │
+│ ├─────────────────────────────────────────┤  │
+│ │  &gt;&gt;&gt; _                  [Run] [Clear]   │  │
+│ │  Input area                             │  │
+│ └─────────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────┐
+│ Properties (Right)   │
+│ ┌─────────────────┐  │
+│ │ Environment      │  │
+│ │ Python 3.12.x    │  │
+│ │ venv: [dropdown] │  │
+│ ├─────────────────┤  │
+│ │ Settings         │  │
+│ │ Font: [10] ▾    │  │
+│ │ ☑ Auto-scroll   │  │
+│ │ ☑ Line numbers  │  │
+│ ├─────────────────┤  │
+│ │ Namespace        │  │
+│ │ x: int = 42     │  │
+│ │ arr: ndarray     │  │
+│ │   (1000,) f32   │  │
+│ ├─────────────────┤  │
+│ │ Data Keys        │  │
+│ │ whisker_angle    │  │
+│ │ lick_events      │  │
+│ │ [Insert ▸]       │  │
+│ └─────────────────┘  │
+└─────────────────────┘</code></pre>
+</section>
+<section id="deliverables-3" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables-3">5.7 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Console tab: execute code, show output, command history</label></li>
+<li><label><input type="checkbox" checked="">Editor tab: open/save/run <code>.py</code> files</label></li>
+<li><label><input type="checkbox" checked="">Properties panel: env info, settings, namespace inspector</label></li>
+<li><label><input type="checkbox" checked="">Syntax highlighting for both console and editor</label></li>
+<li><label><input type="checkbox" checked="">State serialization of all new fields</label></li>
+<li><label><input type="checkbox" checked="">Keyboard shortcuts (Shift+Enter to run, Ctrl+L to clear, Up/Down for history)</label></li>
+</ul>
+</section>
+<section id="implementation-notes-3" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes-3">5.8 Implementation Notes</h3>
+<p><strong>Files delivered:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonSyntaxHighlighter.hpp/.cpp</code></td>
+<td><code>QSyntaxHighlighter</code> subclass — keywords, builtins, strings, comments, numbers, decorators, triple-quoted strings with block state tracking</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonConsoleWidget.hpp/.cpp</code></td>
+<td>Interactive REPL with split output/input areas, color-coded stdout (grey) / stderr (red) / prompt (blue), command history with Up/Down, Shift+Enter to execute, Ctrl+L to clear</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonEditorWidget.hpp/.cpp</code></td>
+<td>Script editor with <code>LineNumberEditor</code> (QPlainTextEdit subclass with line number gutter), Open/Save/SaveAs/RunScript/RunSelection, modified indicator in tab title</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp</code></td>
+<td>Properties panel with QGroupBox sections: Environment (Python version, sys.executable), Settings (font size, auto-scroll, line numbers), Namespace inspector (QTreeWidget with variable names/types), Data Keys (DataManager keys with type, “Insert” button)</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.hpp/.cpp</code></td>
+<td>Main tabbed container owning <code>unique_ptr&lt;PythonEngine&gt;</code> + <code>unique_ptr&lt;PythonBridge&gt;</code>, QTabWidget with Console/Editor tabs, calls <code>exposeDataManager()</code> on construction</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/Core/PythonWidgetStateData.hpp</code></td>
+<td>Extended with <code>command_history</code>, <code>recent_scripts</code>, <code>venv_path</code>, <code>last_working_directory</code>, <code>show_line_numbers</code>, <code>editor_content</code></td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp</code></td>
+<td>New accessors/signals: <code>commandHistory()</code>, <code>recentScripts()</code>, <code>showLineNumbers()</code>, <code>editorContent()</code> with <code>showLineNumbersChanged</code> signal</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/PythonWidgetRegistration.cpp</code></td>
+<td>Rewritten to use <code>create_editor_custom</code> pattern — factory creates state, view (with engine+bridge), properties (sharing bridge), and wires <code>executionFinished</code> → <code>refreshNamespace</code> and <code>insertCodeRequested</code> → console input</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/CMakeLists.txt</code></td>
+<td>Added 6 new source files, linked <code>WhiskerToolbox::PythonBridge</code> (PUBLIC) and <code>DataManager</code> (PRIVATE)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions:</strong></p>
+<ol type="1">
+<li><strong>pybind11 before Qt includes</strong> — Python’s <code>object.h</code> has a <code>slots</code> member that conflicts with Qt’s <code>#define slots</code> macro. All <code>.cpp</code> files include PythonBridge/PythonEngine headers before any Qt headers.</li>
+<li><strong><code>create_editor_custom</code> registration</strong> — Uses the custom factory pattern (like DataImport_Widget) rather than separate <code>create_view</code>/<code>create_properties</code> to allow cross-wiring between view and properties widgets.</li>
+<li><strong>Engine+Bridge ownership</strong> — <code>PythonViewWidget</code> owns both <code>PythonEngine</code> and <code>PythonBridge</code> as <code>unique_ptr</code> members. Bridge is destroyed before Engine (bridge holds reference to engine). Properties panel receives a raw pointer to the shared bridge.</li>
+<li><strong>Programmatic UI</strong> — All UI is built in code (no <code>.ui</code> files) for better control over dark-themed styling and dynamic layout.</li>
+<li><strong>History management</strong> — Command history kept to 500 entries max; recent scripts deduplicated and capped at 10. Editor content state deliberately skips <code>markDirty()</code> to avoid excessive serialization.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="phase-5-script-management-file-editor" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-script-management-file-editor">6. Phase 5 — Script Management &amp; File Editor ✅</h2>
+<blockquote class="blockquote">
+<p><strong>Status: COMPLETE</strong> — All deliverables implemented and tested (15 tests, 39 assertions).</p>
+</blockquote>
+<p><strong>Goal:</strong> Support loading, editing, saving and running <code>.py</code> scripts with proper working-directory management.</p>
+<section id="tasks" class="level3">
+<h3 class="anchored" data-anchor-id="tasks">6.1 Tasks</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 33%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Task</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>5.1</td>
+<td>Working directory</td>
+<td><code>PythonEngine</code> sets <code>os.chdir()</code> to the script’s parent dir before execution. Also configurable in properties.</td>
+</tr>
+<tr class="even">
+<td>5.2</td>
+<td>Script arguments</td>
+<td>Allow passing <code>sys.argv</code> to scripts (text field in properties).</td>
+</tr>
+<tr class="odd">
+<td>5.3</td>
+<td>Auto-import prelude</td>
+<td>On interpreter init, auto-execute: <code>import numpy as np; from whiskertoolbox_python import *</code>. Configurable.</td>
+</tr>
+<tr class="even">
+<td>5.4</td>
+<td>Script templates</td>
+<td>“New from template” menu: blank, AnalogTimeSeries filter, batch processing, etc.</td>
+</tr>
+<tr class="odd">
+<td>5.5</td>
+<td>Drag-and-drop</td>
+<td>Drop <code>.py</code> file onto editor tab to open it.</td>
+</tr>
+<tr class="even">
+<td>5.6</td>
+<td>Recent files menu</td>
+<td>Stored in state, accessible from toolbar.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deliverables-4" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables-4">6.2 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Working directory configurable in properties panel and restored from state</label></li>
+<li><label><input type="checkbox" checked=""><code>sys.argv</code> configurable via text field in properties panel</label></li>
+<li><label><input type="checkbox" checked="">Auto-import prelude with enable/disable toggle and editable text area</label></li>
+<li><label><input type="checkbox" checked="">Prelude re-executes on namespace clear/reset</label></li>
+<li><label><input type="checkbox" checked="">6 script templates (Blank, AnalogTimeSeries Filter, Batch Processing, Data Export, Event Detection, Statistics Summary)</label></li>
+<li><label><input type="checkbox" checked="">Drag-and-drop <code>.py</code> files onto editor tab</label></li>
+<li><label><input type="checkbox" checked="">Recent files dropdown menu in editor toolbar with clear option</label></li>
+<li><label><input type="checkbox" checked="">Unit tests for all engine features (15 tests, 39 assertions)</label></li>
+</ul>
+</section>
+<section id="implementation-notes-4" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes-4">6.3 Implementation Notes</h3>
+<p><strong>Files created/modified:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/python_bindings/PythonEngine.hpp</code></td>
+<td>Added <code>setWorkingDirectory()</code>, <code>getWorkingDirectory()</code>, <code>setSysArgv()</code>, <code>executePrelude()</code></td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/PythonEngine.cpp</code></td>
+<td>Implementations: <code>os.chdir()</code>, <code>shlex.split()</code> for args parsing, prelude execution</td>
+</tr>
+<tr class="odd">
+<td><code>src/python_bindings/Phase5.test.cpp</code></td>
+<td>15 Catch2 test cases (39 assertions) covering all Phase 5 engine features</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/Core/PythonWidgetStateData.hpp</code></td>
+<td>Added <code>script_arguments</code>, <code>auto_import_prelude</code>, <code>prelude_enabled</code> fields</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp</code></td>
+<td>Added accessors/signals for new fields + 4 new signals</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonEditorWidget.hpp/.cpp</code></td>
+<td>Added templates menu, recent files menu, drag-and-drop, <code>openFilePath()</code>, <code>loadTemplate()</code></td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp</code></td>
+<td>Added Working Directory, Script Arguments, Auto-Import Prelude sections</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.cpp</code></td>
+<td>Prelude execution, working directory restore, sys.argv restore on startup</td>
+</tr>
+<tr class="odd">
+<td><code>tests/python_bindings/CMakeLists.txt</code></td>
+<td>Added <code>test_python_phase5</code> target</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions:</strong></p>
+<ol type="1">
+<li><strong><code>shlex.split()</code> for argument parsing</strong> — Uses Python’s <code>shlex</code> module to properly parse quoted strings and escape characters in <code>sys.argv</code>. Falls back to simple whitespace splitting if <code>shlex</code> is unavailable.</li>
+<li><strong>Prelude on reset</strong> — When the user clicks “Clear Namespace” in properties, the prelude is automatically re-executed (if enabled) after <code>resetNamespace()</code> and <code>exposeDataManager()</code>.</li>
+<li><strong>Template content in code</strong> — Templates are defined as <code>QString</code> constants in <code>_getTemplateContent()</code> rather than external files, avoiding deployment/path issues.</li>
+<li><strong>Recent files deduplication</strong> — Reuses the existing <code>PythonWidgetState::addRecentScript()</code> mechanism (capped at 10, most-recent-first). Menu is rebuilt on each open/save operation.</li>
+<li><strong>Drag-and-drop</strong> — <code>PythonEditorWidget</code> accepts drops via <code>setAcceptDrops(true)</code> and filters for <code>.py</code> file URLs.</li>
+<li><strong>Working directory persistence</strong> — The <code>last_working_directory</code> field is stored in state and restored on widget construction. The properties panel also shows the current working directory and allows browsing.</li>
+</ol>
+<p><strong>Test coverage (15 tests):</strong> - getWorkingDirectory returns non-empty path - setWorkingDirectory changes cwd (verified via <code>os.getcwd()</code>) - setWorkingDirectory with empty/nonexistent path is no-op - setSysArgv with arguments (basic, empty, quoted strings) - executePrelude runs code, empty string is no-op - executePrelude with imports (os/sys, whiskertoolbox_python) - executePrelude error doesn’t break engine - executePrelude with multiline code including function definitions - Bridge + prelude + sys.argv integration test - Working directory affects executeFile</p>
+<hr>
+</section>
+</section>
+<section id="phase-6-virtual-environment-support" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-virtual-environment-support">7. Phase 6 — Virtual Environment Support ✅</h2>
+<blockquote class="blockquote">
+<p><strong>Status: COMPLETE</strong> — All deliverables implemented and tested (18 tests, 46 assertions).</p>
+</blockquote>
+<p><strong>Goal:</strong> Detect, select, and activate Python virtual environments so users can <code>import scipy</code>, <code>import sklearn</code>, etc.</p>
+<section id="design" class="level3">
+<h3 class="anchored" data-anchor-id="design">7.1 Design</h3>
+<p>The embedded interpreter’s <code>sys.path</code> must be modified to include the venv’s <code>site-packages</code>. Since <code>pybind11::embed</code> uses the compile-time Python, the venv must match the same Python major.minor version.</p>
+</section>
+<section id="tasks-1" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-1">7.2 Tasks</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 33%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Task</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>6.1</td>
+<td>Venv discovery</td>
+<td>Scan common locations: <code>~/.virtualenvs/</code>, <code>~/.conda/envs/</code>, <code>~/.pyenv/versions/</code>, and user-configured paths.</td>
+</tr>
+<tr class="even">
+<td>6.2</td>
+<td>Venv activation</td>
+<td>Modify <code>sys.path</code> to prepend the venv’s <code>site-packages</code>. Set <code>sys.prefix</code> and <code>VIRTUAL_ENV</code>. <strong>Do not</strong> re-exec the interpreter — just update paths.</td>
+</tr>
+<tr class="odd">
+<td>6.3</td>
+<td>Venv validation</td>
+<td>Before activation, confirm the venv’s Python version matches the embedded interpreter (major.minor). Show warning if mismatched.</td>
+</tr>
+<tr class="even">
+<td>6.4</td>
+<td>Package listing</td>
+<td>After activation, <code>importlib.metadata.distributions()</code> to show installed packages in properties panel.</td>
+</tr>
+<tr class="odd">
+<td>6.5</td>
+<td>Install packages</td>
+<td>“Install package” dialog that runs <code>pip install &lt;pkg&gt;</code> via subprocess in the venv.</td>
+</tr>
+<tr class="even">
+<td>6.6</td>
+<td>Persistence</td>
+<td>Store selected venv path in <code>PythonWidgetStateData::venv_path</code>. Restore on next session.</td>
+</tr>
+<tr class="odd">
+<td>6.7</td>
+<td>Indicator</td>
+<td>Show active venv name + color status in properties panel.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deliverables-5" class="level3">
+<h3 class="anchored" data-anchor-id="deliverables-5">7.3 Deliverables</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="">Venv discovery scanning <code>~/.virtualenvs</code>, <code>~/.conda/envs</code>, <code>~/.pyenv/versions</code>, and user-configured paths</label></li>
+<li><label><input type="checkbox" checked="">Venv dropdown in properties with autodiscovery + browse button + refresh</label></li>
+<li><label><input type="checkbox" checked="">Activation modifies <code>sys.path</code>, <code>sys.prefix</code>, <code>sys.exec_prefix</code>, <code>VIRTUAL_ENV</code>, and <code>PATH</code></label></li>
+<li><label><input type="checkbox" checked="">Deactivation fully restores original <code>sys.path</code>, <code>sys.prefix</code>, <code>sys.exec_prefix</code>, and removes <code>VIRTUAL_ENV</code></label></li>
+<li><label><input type="checkbox" checked="">Version validation against embedded interpreter (major.minor match required)</label></li>
+<li><label><input type="checkbox" checked="">Package listing via <code>importlib.metadata.distributions()</code> with <code>pkg_resources</code> fallback</label></li>
+<li><label><input type="checkbox" checked="">Package install via <code>pip install</code> subprocess with confirmation dialog</label></li>
+<li><label><input type="checkbox" checked="">Persistence: venv path saved in state, restored on next session</label></li>
+<li><label><input type="checkbox" checked="">Active venv indicator (green label) in properties panel</label></li>
+<li><label><input type="checkbox" checked="">Unit tests for all engine features (18 tests, 46 assertions)</label></li>
+</ul>
+</section>
+<section id="implementation-notes-5" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-notes-5">7.4 Implementation Notes</h3>
+<p><strong>Files created/modified:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/python_bindings/PythonEngine.hpp</code></td>
+<td>Added <code>discoverVenvs()</code>, <code>validateVenv()</code>, <code>activateVenv()</code>, <code>deactivateVenv()</code>, <code>activeVenvPath()</code>, <code>isVenvActive()</code>, <code>listInstalledPackages()</code>, <code>installPackage()</code>, <code>pythonVersionTuple()</code> + private helpers <code>_findSitePackages()</code>, <code>_readVenvPythonVersion()</code>, <code>_looksLikeVenv()</code> + member variables for venv state</td>
+</tr>
+<tr class="even">
+<td><code>src/python_bindings/PythonEngine.cpp</code></td>
+<td>Full implementations for all venv methods. Discovery scans <code>HOME</code> + extra paths. Validation reads <code>pyvenv.cfg</code> for version. Activation deep-copies <code>sys.path</code> for safe restore. Deactivation uses <code>py::exec</code> for env cleanup.</td>
+</tr>
+<tr class="odd">
+<td><code>src/python_bindings/Phase6.test.cpp</code></td>
+<td>18 Catch2 test cases (46 assertions) covering all Phase 6 engine features</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp</code></td>
+<td>Added <code>venvPath()</code>, <code>setVenvPath()</code> accessor/signal</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp</code></td>
+<td>Added Virtual Environment section: QComboBox selector, browse/refresh/deactivate buttons, package tree, install input</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.cpp</code></td>
+<td>Venv restoration from state on startup</td>
+</tr>
+<tr class="odd">
+<td><code>tests/python_bindings/CMakeLists.txt</code></td>
+<td>Added <code>test_python_phase6</code> target</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key design decisions:</strong></p>
+<ol type="1">
+<li><strong>Deep copy for sys.path backup</strong> — When activating a venv, <code>sys.path</code> is deep-copied (element by element) into <code>_original_sys_path</code> to avoid aliasing issues with Python’s list reference semantics.</li>
+<li><strong><code>py::exec</code> for VIRTUAL_ENV cleanup</strong> — The <code>del os.environ['VIRTUAL_ENV']</code> operation is done via <code>py::exec()</code> rather than <code>dict.pop()</code> because <code>os.environ</code> is a special proxy object, not a plain dict.</li>
+<li><strong>Version detection from pyvenv.cfg</strong> — Reads the <code>version = X.Y.Z</code> line from the venv’s <code>pyvenv.cfg</code> file. Falls back to parsing directory names like <code>lib/python3.12/</code> if <code>pyvenv.cfg</code> is missing.</li>
+<li><strong><code>_looksLikeVenv()</code> heuristic</strong> — Checks for <code>pyvenv.cfg</code>, <code>bin/python</code>, <code>Scripts/python.exe</code>, or <code>conda-meta/</code> to support standard venvs, virtualenvs, and conda environments across platforms.</li>
+<li><strong><code>importlib.metadata</code> with fallback</strong> — Uses <code>importlib.metadata.distributions()</code> (Python 3.8+) for package listing, with <code>pkg_resources.working_set</code> as fallback for older setups.</li>
+<li><strong>Venv bin added to PATH</strong> — The venv’s <code>bin/</code> directory is prepended to <code>os.environ['PATH']</code> so that subprocess calls (e.g.&nbsp;<code>pip install</code>) use the venv’s executables.</li>
+<li><strong>Auto-deactivate on switch</strong> — Activating a new venv automatically deactivates any previously active one, restoring the original state first.</li>
+</ol>
+<p><strong>Test coverage (18 tests):</strong> - pythonVersionTuple returns valid major.minor - discoverVenvs returns vector (no crash), finds venvs in extra paths, handles nonexistent paths - validateVenv: empty path, nonexistent path, non-venv directory, version mismatch, matching version - initially no venv active - activateVenv: valid fake venv (sys.path, sys.prefix, VIRTUAL_ENV verified) - deactivateVenv: restores all state, VIRTUAL_ENV removed - activateVenv with invalid path returns error - activating new venv deactivates old one - listInstalledPackages: returns packages, sorted results - installPackage with empty name returns error - Integration: activate venv + bridge + execute together - deactivateVenv restores original sys.path length</p>
+<hr>
+</section>
+</section>
+<section id="phase-7-advanced-features" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-advanced-features">8. Phase 7 — Advanced Features</h2>
+<p>These are lower-priority enhancements to build after the core is solid.</p>
+<section id="async-background-execution" class="level3">
+<h3 class="anchored" data-anchor-id="async-background-execution">8.1 Async / Background Execution</h3>
+<ul>
+<li>Run long scripts in a <code>QThread</code>, holding the GIL only during actual Python execution.</li>
+<li>Show a progress bar / cancel button.</li>
+<li>Use <code>PyErr_SetInterrupt()</code> + <code>signal.SIGINT</code> for cancellation.</li>
+<li>DataManager mutations from background threads must be marshalled to the main thread.</li>
+</ul>
+</section>
+<section id="variable-watch-window" class="level3">
+<h3 class="anchored" data-anchor-id="variable-watch-window">8.2 Variable Watch Window</h3>
+<ul>
+<li>Show live-updating table of Python namespace variables.</li>
+<li>For NumPy arrays, show shape, dtype, min/max/mean.</li>
+<li>For WhiskerToolbox objects, show key, type, size.</li>
+<li>Refresh after each execution.</li>
+</ul>
+</section>
+<section id="plotting-integration" class="level3">
+<h3 class="anchored" data-anchor-id="plotting-integration">8.3 Plotting Integration</h3>
+<ul>
+<li><code>import matplotlib.pyplot as plt</code> → intercept <code>plt.show()</code> and render into a Qt widget using <code>matplotlib.backends.backend_qtagg.FigureCanvasQTAgg</code>.</li>
+<li>Or: provide a <code>wt.plot(analog_ts)</code> shortcut that opens a DataViewer_Widget.</li>
+</ul>
+</section>
+<section id="transform-as-python-script" class="level3">
+<h3 class="anchored" data-anchor-id="transform-as-python-script">8.4 Transform as Python Script</h3>
+<ul>
+<li>Allow users to register a Python function as a <code>TransformOperation</code>.</li>
+<li>The function takes a <code>DataTypeVariant</code> proxy and returns a new one.</li>
+<li>Appears in the DataTransform_Widget alongside C++ transforms.</li>
+</ul>
+</section>
+<section id="batch-processing" class="level3">
+<h3 class="anchored" data-anchor-id="batch-processing">8.5 Batch Processing</h3>
+<ul>
+<li>Run a script for each entity in a group or each interval in a <code>DigitalIntervalSeries</code>.</li>
+<li>Provide an iterator: <code>for entity in dm.getGroup("my_group"): ...</code></li>
+</ul>
+</section>
+<section id="notebook-style-interface" class="level3">
+<h3 class="anchored" data-anchor-id="notebook-style-interface">8.6 Notebook-Style Interface</h3>
+<ul>
+<li>Optional cell-based execution (like Jupyter) within the editor tab.</li>
+<li>Each cell remembers its output.</li>
+<li>Lower priority — the console + editor should cover most needs.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="zero-copy-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="zero-copy-strategy">9. Zero-Copy Strategy</h2>
+<section id="read-path-c-python" class="level3">
+<h3 class="anchored" data-anchor-id="read-path-c-python">9.1 Read Path (C++ → Python)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 16%">
+<col style="width: 22%">
+<col style="width: 26%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data Type</th>
+<th>Method</th>
+<th>Zero-Copy?</th>
+<th>NumPy dtype</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>AnalogTimeSeries</code></td>
+<td><code>getAnalogTimeSeries()</code> → <code>span&lt;float const&gt;</code></td>
+<td><strong>Yes</strong></td>
+<td><code>float32</code></td>
+<td>Set <code>ndarray.flags.writeable = False</code></td>
+</tr>
+<tr class="even">
+<td><code>AnalogTimeSeries</code></td>
+<td><code>getDataInTimeFrameIndexRange()</code> → <code>span&lt;float const&gt;</code></td>
+<td><strong>Yes</strong></td>
+<td><code>float32</code></td>
+<td>Sub-span of same buffer</td>
+</tr>
+<tr class="odd">
+<td><code>TensorData</code></td>
+<td><code>flatData()</code> → <code>span&lt;float const&gt;</code></td>
+<td><strong>Yes</strong></td>
+<td><code>float32</code></td>
+<td>Reshape to <code>shape()</code> in Python</td>
+</tr>
+<tr class="even">
+<td><code>LineData</code> / <code>Line2D</code></td>
+<td><code>Line2D::data()</code> → <code>vector&lt;Point2D&lt;float&gt;&gt;</code></td>
+<td><strong>Yes</strong>*</td>
+<td><code>float32 (N,2)</code></td>
+<td>If <code>Point2D</code> is <code>{float x,y}</code> with no padding, reinterpret as <code>(N,2)</code>. Verify with <code>static_assert(sizeof(Point2D&lt;float&gt;) == 2*sizeof(float))</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>MaskData</code> / <code>Mask2D</code></td>
+<td><code>Mask2D::data()</code> → <code>vector&lt;Point2D&lt;uint32_t&gt;&gt;</code></td>
+<td><strong>Yes</strong>*</td>
+<td><code>uint32 (N,2)</code></td>
+<td>Same reinterpret strategy</td>
+</tr>
+<tr class="even">
+<td><code>PointData</code></td>
+<td>Single <code>Point2D&lt;float&gt;</code></td>
+<td>Copy</td>
+<td><code>float32 (2,)</code></td>
+<td>Too small to benefit from zero-copy</td>
+</tr>
+<tr class="odd">
+<td><code>DigitalEventSeries</code></td>
+<td>Event times</td>
+<td>Copy</td>
+<td><code>int64</code></td>
+<td>Non-contiguous storage</td>
+</tr>
+<tr class="even">
+<td><code>DigitalIntervalSeries</code></td>
+<td>Interval pairs</td>
+<td>Copy</td>
+<td><code>int64 (N,2)</code></td>
+<td>Non-contiguous storage</td>
+</tr>
+<tr class="odd">
+<td><code>MediaData</code></td>
+<td><code>getRawData8/32(frame)</code></td>
+<td>Copy</td>
+<td><code>uint8/float32</code></td>
+<td>Per-frame, returned by const ref to vector</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="write-path-python-c" class="level3">
+<h3 class="anchored" data-anchor-id="write-path-python-c">9.2 Write Path (Python → C++)</h3>
+<p>Zero-copy writes are <strong>not safe</strong> for the general case because: 1. Python/NumPy owns the memory — if the Python object is GC’d, the C++ pointer dangles. 2. The observer pattern expects C++ to own data.</p>
+<p><strong>Instead:</strong> Accept NumPy arrays by copying into new C++ objects:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># User code:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>filtered <span class="op">=</span> np.array(filtfilt(b, a, arr), dtype<span class="op">=</span>np.float32)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> AnalogTimeSeries(filtered, time_indices)   <span class="co"># copies data</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>dm.setData(<span class="st">"filtered"</span>, ts, <span class="st">"default"</span>)           <span class="co"># DataManager takes ownership via shared_ptr</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For large data, consider a <code>move</code> variant that transfers ownership of a NumPy buffer to C++ via <code>py::buffer_info</code>, but this requires careful lifetime management and should be Phase 7.</p>
+</section>
+<section id="implementation-numpy_utils.hpp" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-numpy_utils.hpp">9.3 Implementation: <code>numpy_utils.hpp</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma once</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;pybind11/numpy.h&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;span&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> wt<span class="op">::</span>python <span class="op">{</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Zero-copy: create a read-only NumPy array viewing a C++ span.</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// The `owner` ref-counts the C++ object to keep the memory alive.</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;</span> span_to_numpy<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span>T <span class="at">const</span><span class="op">&gt;</span> data<span class="op">,</span> py<span class="op">::</span>object owner<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;(</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span>py<span class="op">::</span><span class="dt">ssize_t</span><span class="op">&gt;(</span>data<span class="op">.</span>size<span class="op">())},</span>  <span class="co">// shape</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="kw">sizeof</span><span class="op">(</span>T<span class="op">)},</span>                                <span class="co">// strides</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>data<span class="op">(),</span>                                <span class="co">// data pointer</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        owner                                       <span class="co">// prevent GC of C++ object</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Mark read-only</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">reinterpret_cast</span><span class="op">&lt;</span>PyArrayObject<span class="op">*&gt;(</span>result<span class="op">.</span>ptr<span class="op">())-&gt;</span>flags <span class="op">&amp;=</span> <span class="op">~</span>NPY_ARRAY_WRITEABLE<span class="op">;</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Copy: create a NumPy array from a C++ span (data is copied)</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;</span> span_to_numpy_copy<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span>T <span class="at">const</span><span class="op">&gt;</span> data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;(</span><span class="kw">static_cast</span><span class="op">&lt;</span>py<span class="op">::</span><span class="dt">ssize_t</span><span class="op">&gt;(</span>data<span class="op">.</span>size<span class="op">()));</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>copy<span class="op">(</span>data<span class="op">.</span>begin<span class="op">(),</span> data<span class="op">.</span>end<span class="op">(),</span> result<span class="op">.</span>mutable_data<span class="op">());</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Copy NumPy array into a std::vector</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">&gt;</span> numpy_to_vector<span class="op">(</span>py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">,</span> py<span class="op">::</span>array<span class="op">::</span>c_style <span class="op">|</span> py<span class="op">::</span>array<span class="op">::</span>forcecast<span class="op">&gt;</span> arr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> buf <span class="op">=</span> arr<span class="op">.</span>request<span class="op">();</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> ptr <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span>T<span class="op">*&gt;(</span>buf<span class="op">.</span>ptr<span class="op">);</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">&gt;(</span>ptr<span class="op">,</span> ptr <span class="op">+</span> buf<span class="op">.</span>size<span class="op">);</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace wt::python</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="lifetime-safety" class="level3">
+<h3 class="anchored" data-anchor-id="lifetime-safety">9.4 Lifetime Safety</h3>
+<p>The key to zero-copy reads is ensuring the C++ object stays alive while Python holds a view. This is handled by passing the <code>shared_ptr</code> holder as the <code>owner</code> parameter to the NumPy array constructor. pybind11 ref-counts the shared_ptr, preventing deallocation.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example in bind_analog.cpp:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cls<span class="op">.</span>def_property_readonly<span class="op">(</span><span class="st">"values"</span><span class="op">,</span> <span class="op">[](</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> self<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> span <span class="op">=</span> self<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Pass self as owner — prevents GC while array exists</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> wt<span class="op">::</span>python<span class="op">::</span>span_to_numpy<span class="op">(</span>span<span class="op">,</span> py<span class="op">::</span>cast<span class="op">(</span>self<span class="op">));</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="threading-safety" class="level2">
+<h2 class="anchored" data-anchor-id="threading-safety">10. Threading &amp; Safety</h2>
+<section id="gil-management" class="level3">
+<h3 class="anchored" data-anchor-id="gil-management">10.1 GIL Management</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 39%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>GIL State</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Python code running</td>
+<td>Held</td>
+<td>Normal execution</td>
+</tr>
+<tr class="even">
+<td>C++ binding code</td>
+<td>Released where safe</td>
+<td>Use <code>py::gil_scoped_release</code> in long C++ operations</td>
+</tr>
+<tr class="odd">
+<td>UI event handling</td>
+<td>Not held</td>
+<td>Qt event loop runs without GIL</td>
+</tr>
+<tr class="even">
+<td>DataManager mutation from Python</td>
+<td>Held</td>
+<td>Must be on main thread</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="thread-model-phase-1-5" class="level3">
+<h3 class="anchored" data-anchor-id="thread-model-phase-1-5">10.2 Thread Model (Phase 1-5)</h3>
+<p><strong>Single-threaded:</strong> All Python execution is synchronous on the main thread. The UI blocks during execution. This is simple and correct.</p>
+</section>
+<section id="thread-model-phase-7---async" class="level3">
+<h3 class="anchored" data-anchor-id="thread-model-phase-7---async">10.3 Thread Model (Phase 7 - Async)</h3>
+<p><strong>Worker thread with marshalling:</strong></p>
+<pre><code>Main Thread                Worker Thread
+     │                          │
+     │──── start script ───────►│
+     │                          │ acquire GIL
+     │                          │ execute Python
+     │                          │ release GIL
+     │◄─── results ────────────│
+     │                          │
+     │ update DataManager       │
+     │ notify observers         │</code></pre>
+<p>DataManager mutations from the worker thread must use:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QMetaObject::invokeMethod</span><span class="op">(</span><span class="ex">qApp</span><span class="op">,</span> <span class="op">[&amp;</span>dm<span class="op">,</span> key<span class="op">,</span> data<span class="op">,</span> time_key<span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setData<span class="op">(</span>key<span class="op">,</span> data<span class="op">,</span> time_key<span class="op">);</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> <span class="ex">Qt::BlockingQueuedConnection</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="observer-safety" class="level3">
+<h3 class="anchored" data-anchor-id="observer-safety">10.4 Observer Safety</h3>
+<p>The <code>ObserverData</code> pattern uses <code>std::function</code> callbacks and is <strong>not thread-safe</strong>. All observer notifications must happen on the main thread. This is naturally the case in Phase 1-5 (single-threaded). For Phase 7, use the marshalling pattern above.</p>
+<hr>
+</section>
+</section>
+<section id="testing-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="testing-strategy">11. Testing Strategy</h2>
+<section id="unit-tests-testspython_bindings" class="level3">
+<h3 class="anchored" data-anchor-id="unit-tests-testspython_bindings">11.1 Unit Tests (<code>tests/python_bindings/</code>)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 52%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test File</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PythonEngine.test.cpp</code></td>
+<td>Interpreter boot, execute, stdout/stderr capture, namespace persistence (14 tests, Phase 1)</td>
+</tr>
+<tr class="even">
+<td><code>bindings.test.cpp</code></td>
+<td>All Phase 2 bindings: geometry, timeframe, entity, analog, digital event/interval, line, mask, point, tensor, DataManager (24 tests, Phase 2)</td>
+</tr>
+<tr class="odd">
+<td><code>PythonBridge.test.cpp</code></td>
+<td>Bridge integration: expose dm, setData/getData round-trips, observer notifications, importNewData, exposeData/TimeFrame, error recovery, e2e workflows (27 tests, Phase 3)</td>
+</tr>
+<tr class="even">
+<td><code>Phase5.test.cpp</code></td>
+<td>Working directory, sys.argv, auto-import prelude, integration with bridge (15 tests, Phase 5)</td>
+</tr>
+<tr class="odd">
+<td><code>Phase6.test.cpp</code></td>
+<td>Venv discovery, validation, activation/deactivation, package listing, install error handling, integration with bridge (18 tests, Phase 6)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="integration-tests" class="level3">
+<h3 class="anchored" data-anchor-id="integration-tests">11.2 Integration Tests</h3>
+<ul>
+<li>Load a real dataset → run a Python script that filters analog data → verify filtered data appears in DataManager with correct time frame.</li>
+<li>Create data in Python (events, intervals) → verify observable by C++ widgets.</li>
+<li>Execute faulty script → verify error is captured, no crash, interpreter still usable.</li>
+</ul>
+</section>
+<section id="benchmark-tests" class="level3">
+<h3 class="anchored" data-anchor-id="benchmark-tests">11.3 Benchmark Tests</h3>
+<ul>
+<li>Zero-copy array access latency (should be &lt; 1μs for pointer wrapping).</li>
+<li>Roundtrip: C++ → NumPy → scipy.filtfilt → new C++ object for 1M-sample time series.</li>
+<li>Compare with <code>execute_file</code> for a realistic analysis script.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="open-questions-risks" class="level2">
+<h2 class="anchored" data-anchor-id="open-questions-risks">12. Open Questions &amp; Risks</h2>
+<section id="design-decisions-resolved" class="level3">
+<h3 class="anchored" data-anchor-id="design-decisions-resolved">12.1 Design Decisions (Resolved)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 43%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Question</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><strong>Single interpreter vs.&nbsp;sub-interpreters?</strong></td>
+<td><strong>Single interpreter.</strong> Simpler, all libraries work. Sub-interpreters (PEP 684) have limited ecosystem support.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><strong>Module import: embedded vs.&nbsp;external?</strong></td>
+<td><strong>Embedded only</strong> — compile bindings into the executable. No standalone <code>.so</code>/<code>.pyd</code> for external Python use.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><strong>Syntax highlighting library?</strong></td>
+<td><strong>Custom <code>QSyntaxHighlighter</code>.</strong> Minimal dependency; Python-only highlighting is manageable in-house.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><strong>Editor vs.&nbsp;external IDE?</strong></td>
+<td><strong>Built-in editor for quick work</strong>, with “Open in External Editor” button for complex scripts.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><strong>Matplotlib backend?</strong></td>
+<td><strong>Phase 1–5:</strong> No special support — matplotlib opens a separate window. <strong>Phase 7:</strong> Embed <code>FigureCanvasQTAgg</code> in the widget.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><strong>How to handle <code>input()</code>?</strong></td>
+<td><strong>Disallow</strong> — raise an error. Blocking <code>input()</code> complicates the event loop.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="risks" class="level3">
+<h3 class="anchored" data-anchor-id="risks">12.2 Risks</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 30%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>GIL contention</strong> blocks UI during long scripts</td>
+<td>High — UI freezes</td>
+<td>Phase 7 async execution; short-term: document that long scripts will block UI</td>
+</tr>
+<tr class="even">
+<td><strong>Python version mismatch</strong> between embedded and venv</td>
+<td>Medium — import failures</td>
+<td>Strict version validation on venv activation</td>
+</tr>
+<tr class="odd">
+<td><strong>Memory leaks</strong> from C++ ↔︎ Python ref-count cycles</td>
+<td>Medium</td>
+<td>Use weak references where possible; ensure shared_ptr holders are properly released</td>
+</tr>
+<tr class="even">
+<td><strong>pybind11 ABI compatibility</strong> with user-installed packages (e.g.&nbsp;numpy built with different compiler)</td>
+<td>Medium</td>
+<td>Pin pybind11 version; test with common packages; document supported configurations</td>
+</tr>
+<tr class="odd">
+<td><strong>Platform differences</strong> in Python paths and venv layout</td>
+<td>Low-Medium</td>
+<td>Abstract venv discovery behind platform-specific helpers (already cross-platform via CMake)</td>
+</tr>
+<tr class="even">
+<td><strong>Observer thread safety</strong> if async execution is added</td>
+<td>High — data corruption</td>
+<td>Strict main-thread marshalling for all DataManager mutations (Phase 7)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="suggested-implementation-order" class="level2">
+<h2 class="anchored" data-anchor-id="suggested-implementation-order">Suggested Implementation Order</h2>
+<pre><code>Phase 1 (Interpreter)      ████████████████████  COMPLETE
+Phase 2 (Bindings)          ████████████████████  COMPLETE
+Phase 3 (Bridge)            ████████████████████  COMPLETE
+Phase 4 (Widget UI)         ████████████████████  COMPLETE
+Phase 5 (Script Mgmt)       ████████████████████  COMPLETE
+Phase 6 (Venv)              ████████████████████  COMPLETE
+Phase 7 (Advanced)          ░░░░░░░░░░░░░░░░░░░░  ongoing   ← NEXT</code></pre>
+<p>Phases 1–3 can be developed and tested without any Qt UI (pure C++ + pybind11). Phase 4 builds the UI on top of the working engine (now complete). Phases 5–7 are incremental enhancements. Phase 7 items are independent and can be tackled as-needed. ```</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

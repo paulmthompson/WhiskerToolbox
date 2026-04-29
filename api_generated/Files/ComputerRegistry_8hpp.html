@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/DataManager/utils/TableView/ComputerRegistry.hpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcdatamanagerutilstableviewcomputerregistry.hpp" id="toc-srcdatamanagerutilstableviewcomputerregistry.hpp" class="nav-link active" data-scroll-target="#srcdatamanagerutilstableviewcomputerregistry.hpp">src/DataManager/utils/TableView/ComputerRegistry.hpp</a>
+  <ul class="collapse">
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
+  <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#using-computerfactory" id="toc-using-computerfactory" class="nav-link" data-scroll-target="#using-computerfactory">using ComputerFactory</a></li>
+  <li><a href="#using-multicomputerfactory" id="toc-using-multicomputerfactory" class="nav-link" data-scroll-target="#using-multicomputerfactory">using MultiComputerFactory</a></li>
+  <li><a href="#using-adapterfactory" id="toc-using-adapterfactory" class="nav-link" data-scroll-target="#using-adapterfactory">using AdapterFactory</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/DataManager/utils/TableView/ComputerRegistry.hpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcdatamanagerutilstableviewcomputerregistry.hpp" class="level1">
+<h1>src/DataManager/utils/TableView/ComputerRegistry.hpp</h1>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classIParameterDescriptor.html">IParameterDescriptor</a></strong> <br>Abstract base for parameter descriptors that provide UI hints without Qt dependencies.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classEnumParameterDescriptor.html">EnumParameterDescriptor</a></strong> <br>Parameter descriptor for enumerated/choice parameters.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classIntParameterDescriptor.html">IntParameterDescriptor</a></strong> <br>Parameter descriptor for integer numeric parameters.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classIComputerBase.html">IComputerBase</a></strong> <br>Non-templated base class for type-erased computer storage.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classComputerWrapper.html">ComputerWrapper</a></strong> <br>Template wrapper that implements <a href="../../api_generated/Classes/classIComputerBase.html">IComputerBase</a> for specific computer types.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMultiComputerWrapper.html">MultiComputerWrapper</a></strong> <br>Template wrapper to type-erase IMultiColumnComputer<t> in the registry.</t></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structComputerParameterInfo.html">ComputerParameterInfo</a></strong> <br>Information about available computer parameters.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structComputerInfo.html">ComputerInfo</a></strong> <br>Information about an available computer.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structAdapterInfo.html">AdapterInfo</a></strong> <br>Information about an available adapter.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classComputerRegistry.html">ComputerRegistry</a></strong> <br>Registry for <a href="../../api_generated/Classes/classTableView.html">TableView</a> column computers and data adapters.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types" class="level2">
+<h2 class="anchored" data-anchor-id="types">Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classIComputerBase.html">IComputerBase</a> &gt;(<a href="../../api_generated/Files/ComputerRegistryTypes_8hpp.html#using-datasourcevariant">DataSourceVariant</a> const &amp;source, std::map&lt; std::string, std::string &gt; const &amp;parameters)&gt;</td>
+<td><strong><a href="../../api_generated/Files/ComputerRegistry_8hpp.html#using-computerfactory">ComputerFactory</a></strong> <br>Factory function type for creating computer instances.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classIComputerBase.html">IComputerBase</a> &gt;(<a href="../../api_generated/Files/ComputerRegistryTypes_8hpp.html#using-datasourcevariant">DataSourceVariant</a> const &amp;source, std::map&lt; std::string, std::string &gt; const &amp;parameters)&gt;</td>
+<td><strong><a href="../../api_generated/Files/ComputerRegistry_8hpp.html#using-multicomputerfactory">MultiComputerFactory</a></strong></td>
+</tr>
+<tr class="odd">
+<td>using std::function&lt; <a href="../../api_generated/Files/ComputerRegistryTypes_8hpp.html#using-datasourcevariant">DataSourceVariant</a>(std::shared_ptr&lt; void &gt; const &amp;sourceData, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp;timeFrame, std::string const &amp;name, std::map&lt; std::string, std::string &gt; const &amp;parameters)&gt;</td>
+<td><strong><a href="../../api_generated/Files/ComputerRegistry_8hpp.html#using-adapterfactory">AdapterFactory</a></strong> <br>Factory function type for creating adapter instances.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="using-computerfactory" class="level3">
+<h3 class="anchored" data-anchor-id="using-computerfactory">using ComputerFactory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ComputerFactory <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;(</span> DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Factory function type for creating computer instances.</p>
+<p>The function takes a data source variant and a map of parameter values, and returns a type-erased computer instance.</p>
+</section>
+<section id="using-multicomputerfactory" class="level3">
+<h3 class="anchored" data-anchor-id="using-multicomputerfactory">using MultiComputerFactory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MultiComputerFactory <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;(</span> DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="using-adapterfactory" class="level3">
+<h3 class="anchored" data-anchor-id="using-adapterfactory">using AdapterFactory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> AdapterFactory <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span>DataSourceVariant<span class="op">(</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sourceData<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> timeFrame<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Factory function type for creating adapter instances.</p>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef COMPUTER_REGISTRY_HPP</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COMPUTER_REGISTRY_HPP</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/TableView/ComputerRegistryTypes.hpp"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/TableView/interfaces/IColumnComputer.h"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/TableView/interfaces/IMultiColumnComputer.h"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/TableView/interfaces/IRowSelector.h"</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;deque&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;functional&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;map&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;typeindex&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;variant&gt;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TimeFrame<span class="op">;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IParameterDescriptor <span class="op">{</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    IParameterDescriptor<span class="op">();</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>IParameterDescriptor<span class="op">();</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>string getDescription<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="dt">bool</span> isRequired<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>string getUIHint<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span><span class="co">// "enum", "text", "number", etc.</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> getUIProperties<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;</span> clone<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EnumParameterDescriptor <span class="op">:</span> <span class="kw">public</span> IParameterDescriptor <span class="op">{</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">name_</span><span class="op">;</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">description_</span><span class="op">;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="va">options_</span><span class="op">;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">defaultValue_</span><span class="op">;</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="va">required_</span><span class="op">;</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    EnumParameterDescriptor<span class="op">(</span><span class="bu">std::</span>string name<span class="op">,</span> <span class="bu">std::</span>string description<span class="op">,</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>                            <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> options<span class="op">,</span> <span class="bu">std::</span>string defaultValue <span class="op">=</span> <span class="st">""</span><span class="op">,</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>                            <span class="dt">bool</span> required <span class="op">=</span> <span class="kw">true</span><span class="op">)</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="va">name_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>name<span class="op">)),</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>          <span class="va">description_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>description<span class="op">)),</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>          <span class="va">options_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>options<span class="op">)),</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>          <span class="va">defaultValue_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>defaultValue<span class="op">)),</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>          <span class="va">required_</span><span class="op">(</span>required<span class="op">)</span> <span class="op">{}</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">name_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getDescription<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">description_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isRequired<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">required_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getUIHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">"enum"</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> getUIProperties<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> props<span class="op">;</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Join options with comma</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string optionsStr<span class="op">;</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="va">options_</span><span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> optionsStr <span class="op">+=</span> <span class="st">","</span><span class="op">;</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>            optionsStr <span class="op">+=</span> <span class="va">options_</span><span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        props<span class="op">[</span><span class="st">"options"</span><span class="op">]</span> <span class="op">=</span> optionsStr<span class="op">;</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>        props<span class="op">[</span><span class="st">"default"</span><span class="op">]</span> <span class="op">=</span> <span class="va">defaultValue_</span><span class="op">;</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> props<span class="op">;</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;</span> clone<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>EnumParameterDescriptor<span class="op">&gt;(</span><span class="va">name_</span><span class="op">,</span> <span class="va">description_</span><span class="op">,</span> <span class="va">options_</span><span class="op">,</span> <span class="va">defaultValue_</span><span class="op">,</span> <span class="va">required_</span><span class="op">);</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getOptions<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">options_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> getDefaultValue<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">defaultValue_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IntParameterDescriptor <span class="op">:</span> <span class="kw">public</span> IParameterDescriptor <span class="op">{</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">name_</span><span class="op">;</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">description_</span><span class="op">;</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="va">defaultValue_</span><span class="op">;</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="va">minValue_</span><span class="op">;</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="va">maxValue_</span><span class="op">;</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="va">required_</span><span class="op">;</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>    IntParameterDescriptor<span class="op">(</span><span class="bu">std::</span>string name<span class="op">,</span> <span class="bu">std::</span>string description<span class="op">,</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>                           <span class="dt">int</span> defaultValue <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">int</span> minValue <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">int</span> maxValue <span class="op">=</span> <span class="dv">1000000</span><span class="op">,</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>                           <span class="dt">bool</span> required <span class="op">=</span> <span class="kw">true</span><span class="op">)</span></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="va">name_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>name<span class="op">)),</span></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>          <span class="va">description_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>description<span class="op">)),</span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>          <span class="va">defaultValue_</span><span class="op">(</span>defaultValue<span class="op">),</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>          <span class="va">minValue_</span><span class="op">(</span>minValue<span class="op">),</span></span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>          <span class="va">maxValue_</span><span class="op">(</span>maxValue<span class="op">),</span></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>          <span class="va">required_</span><span class="op">(</span>required<span class="op">)</span> <span class="op">{}</span></span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">name_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getDescription<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">description_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isRequired<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">required_</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string getUIHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">"number"</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> getUIProperties<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{</span></span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"default"</span><span class="op">,</span> <span class="bu">std::</span>to_string<span class="op">(</span><span class="va">defaultValue_</span><span class="op">)},</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"min"</span><span class="op">,</span> <span class="bu">std::</span>to_string<span class="op">(</span><span class="va">minValue_</span><span class="op">)},</span></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"max"</span><span class="op">,</span> <span class="bu">std::</span>to_string<span class="op">(</span><span class="va">maxValue_</span><span class="op">)}};</span></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;</span> clone<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>IntParameterDescriptor<span class="op">&gt;(</span><span class="va">name_</span><span class="op">,</span> <span class="va">description_</span><span class="op">,</span> <span class="va">defaultValue_</span><span class="op">,</span> <span class="va">minValue_</span><span class="op">,</span> <span class="va">maxValue_</span><span class="op">,</span> <span class="va">required_</span><span class="op">);</span></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IComputerBase <span class="op">{</span></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>IComputerBase<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Make this class non-copyable and non-movable since it's a pure interface</span></span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>    IComputerBase<span class="op">(</span>IComputerBase <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>    IComputerBase <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>IComputerBase <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>    IComputerBase<span class="op">(</span>IComputerBase <span class="op">&amp;&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>    IComputerBase <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>IComputerBase <span class="op">&amp;&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>    IComputerBase<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ComputerWrapper <span class="op">:</span> <span class="kw">public</span> IComputerBase <span class="op">{</span></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> ComputerWrapper<span class="op">(</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> computer<span class="op">)</span></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="va">computer_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>computer<span class="op">))</span> <span class="op">{}</span></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>    IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*</span> get<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">computer_</span><span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> getComputer<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;(</span><span class="va">computer_</span><span class="op">.</span>get<span class="op">(),</span> <span class="op">[](</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*)</span> <span class="op">{});</span></span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> releaseComputer<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>move<span class="op">(</span><span class="va">computer_</span><span class="op">);</span></span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="va">computer_</span><span class="op">;</span></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MultiComputerWrapper <span class="op">:</span> <span class="kw">public</span> IComputerBase <span class="op">{</span></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> MultiComputerWrapper<span class="op">(</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> computer<span class="op">)</span></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="va">computer_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>computer<span class="op">))</span> <span class="op">{}</span></span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>    IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*</span> get<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">computer_</span><span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> getComputer<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;(</span><span class="va">computer_</span><span class="op">.</span>get<span class="op">(),</span> <span class="op">[](</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*)</span> <span class="op">{});</span></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> releaseComputer<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>move<span class="op">(</span><span class="va">computer_</span><span class="op">);</span></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="va">computer_</span><span class="op">;</span></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ComputerParameterInfo <span class="op">{</span></span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span>        </span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string description<span class="op">;</span> </span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index type<span class="op">;</span>    </span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isRequired<span class="op">;</span>         </span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string defaultValue<span class="op">;</span></span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a>    ComputerParameterInfo<span class="op">();</span></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>    ComputerParameterInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">type_</span><span class="op">,</span> <span class="dt">bool</span> required <span class="op">=</span> <span class="kw">false</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">defaultValue_</span> <span class="op">=</span> <span class="st">""</span><span class="op">);</span></span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>ComputerParameterInfo<span class="op">();</span></span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ComputerInfo <span class="op">{</span></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span>                                                       </span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string description<span class="op">;</span>                                                </span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index outputType<span class="op">;</span>                                             </span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string outputTypeName<span class="op">;</span>                                             </span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isVectorType<span class="op">;</span>                                                      </span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index elementType<span class="op">;</span>                                            </span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string elementTypeName<span class="op">;</span>                                            </span>
+<span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a>    RowSelectorType requiredRowSelector<span class="op">;</span>                                    </span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index requiredSourceType<span class="op">;</span>                                     </span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;&gt;</span> parameterDescriptors<span class="op">;</span></span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isMultiOutput <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>                                             </span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Optional factory to derive output suffixes from parameters for discovery/UI</span></span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;(</span><span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)&gt;</span> makeOutputSuffixes<span class="op">;</span></span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default constructor</span></span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">()</span></span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(),</span></span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(),</span></span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">)),</span></span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span><span class="st">"void"</span><span class="op">),</span></span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span><span class="kw">false</span><span class="op">),</span></span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">)),</span></span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span><span class="st">"void"</span><span class="op">),</span></span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span>RowSelectorType<span class="op">::</span>IntervalBased<span class="op">),</span></span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">)),</span></span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>          parameterDescriptors<span class="op">()</span> <span class="op">{}</span></span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper constructor for simple types</span></span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">outputType_</span><span class="op">,</span></span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>string <span class="va">outputTypeName_</span><span class="op">,</span> RowSelectorType <span class="va">rowSelector_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">sourceType_</span><span class="op">)</span></span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">name_</span><span class="op">)),</span></span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">description_</span><span class="op">)),</span></span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span><span class="kw">false</span><span class="op">),</span></span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">),</span></span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span><span class="va">rowSelector_</span><span class="op">),</span></span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span><span class="va">sourceType_</span><span class="op">),</span></span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>          parameterDescriptors<span class="op">()</span> <span class="op">{}</span></span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Constructor with parameter descriptors for simple types</span></span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">outputType_</span><span class="op">,</span></span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>string <span class="va">outputTypeName_</span><span class="op">,</span> RowSelectorType <span class="va">rowSelector_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">sourceType_</span><span class="op">,</span></span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;&gt;</span> <span class="va">parameterDescriptors_</span><span class="op">)</span></span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">name_</span><span class="op">)),</span></span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">description_</span><span class="op">)),</span></span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span><span class="kw">false</span><span class="op">),</span></span>
+<span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">),</span></span>
+<span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span><span class="va">rowSelector_</span><span class="op">),</span></span>
+<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span><span class="va">sourceType_</span><span class="op">),</span></span>
+<span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a>          parameterDescriptors<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">parameterDescriptors_</span><span class="op">))</span> <span class="op">{}</span></span>
+<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper constructor for vector types</span></span>
+<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">outputType_</span><span class="op">,</span></span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>string <span class="va">outputTypeName_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">elementType_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">elementTypeName_</span><span class="op">,</span></span>
+<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>                 RowSelectorType <span class="va">rowSelector_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">sourceType_</span><span class="op">)</span></span>
+<span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">name_</span><span class="op">)),</span></span>
+<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">description_</span><span class="op">)),</span></span>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span><span class="kw">true</span><span class="op">),</span></span>
+<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span><span class="va">elementType_</span><span class="op">),</span></span>
+<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">elementTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span><span class="va">rowSelector_</span><span class="op">),</span></span>
+<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span><span class="va">sourceType_</span><span class="op">),</span></span>
+<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>          parameterDescriptors<span class="op">()</span> <span class="op">{}</span></span>
+<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper constructor for vector types with parameter descriptors</span></span>
+<span id="cb4-255"><a href="#cb4-255" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">outputType_</span><span class="op">,</span></span>
+<span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>string <span class="va">outputTypeName_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">elementType_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">elementTypeName_</span><span class="op">,</span></span>
+<span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a>                 RowSelectorType <span class="va">rowSelector_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">sourceType_</span><span class="op">,</span></span>
+<span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a>                 <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IParameterDescriptor<span class="op">&gt;&gt;</span> <span class="va">parameterDescriptors_</span><span class="op">)</span></span>
+<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">name_</span><span class="op">)),</span></span>
+<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">description_</span><span class="op">)),</span></span>
+<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-262"><a href="#cb4-262" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">outputTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span><span class="kw">true</span><span class="op">),</span></span>
+<span id="cb4-264"><a href="#cb4-264" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span><span class="va">elementType_</span><span class="op">),</span></span>
+<span id="cb4-265"><a href="#cb4-265" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">elementTypeName_</span><span class="op">)),</span></span>
+<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span><span class="va">rowSelector_</span><span class="op">),</span></span>
+<span id="cb4-267"><a href="#cb4-267" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span><span class="va">sourceType_</span><span class="op">),</span></span>
+<span id="cb4-268"><a href="#cb4-268" aria-hidden="true" tabindex="-1"></a>          parameterDescriptors<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">parameterDescriptors_</span><span class="op">))</span> <span class="op">{}</span></span>
+<span id="cb4-269"><a href="#cb4-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-270"><a href="#cb4-270" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> hasParameters<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">!</span>parameterDescriptors<span class="op">.</span>empty<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb4-271"><a href="#cb4-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-272"><a href="#cb4-272" aria-hidden="true" tabindex="-1"></a>    ComputerInfo<span class="op">(</span>ComputerInfo <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">)</span></span>
+<span id="cb4-273"><a href="#cb4-273" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span>other<span class="op">.</span>name<span class="op">),</span></span>
+<span id="cb4-274"><a href="#cb4-274" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span>other<span class="op">.</span>description<span class="op">),</span></span>
+<span id="cb4-275"><a href="#cb4-275" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span>other<span class="op">.</span>outputType<span class="op">),</span></span>
+<span id="cb4-276"><a href="#cb4-276" aria-hidden="true" tabindex="-1"></a>          outputTypeName<span class="op">(</span>other<span class="op">.</span>outputTypeName<span class="op">),</span></span>
+<span id="cb4-277"><a href="#cb4-277" aria-hidden="true" tabindex="-1"></a>          isVectorType<span class="op">(</span>other<span class="op">.</span>isVectorType<span class="op">),</span></span>
+<span id="cb4-278"><a href="#cb4-278" aria-hidden="true" tabindex="-1"></a>          elementType<span class="op">(</span>other<span class="op">.</span>elementType<span class="op">),</span></span>
+<span id="cb4-279"><a href="#cb4-279" aria-hidden="true" tabindex="-1"></a>          elementTypeName<span class="op">(</span>other<span class="op">.</span>elementTypeName<span class="op">),</span></span>
+<span id="cb4-280"><a href="#cb4-280" aria-hidden="true" tabindex="-1"></a>          requiredRowSelector<span class="op">(</span>other<span class="op">.</span>requiredRowSelector<span class="op">),</span></span>
+<span id="cb4-281"><a href="#cb4-281" aria-hidden="true" tabindex="-1"></a>          requiredSourceType<span class="op">(</span>other<span class="op">.</span>requiredSourceType<span class="op">),</span></span>
+<span id="cb4-282"><a href="#cb4-282" aria-hidden="true" tabindex="-1"></a>          isMultiOutput<span class="op">(</span>other<span class="op">.</span>isMultiOutput<span class="op">),</span></span>
+<span id="cb4-283"><a href="#cb4-283" aria-hidden="true" tabindex="-1"></a>          makeOutputSuffixes<span class="op">(</span>other<span class="op">.</span>makeOutputSuffixes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-284"><a href="#cb4-284" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Deep copy parameter descriptors</span></span>
+<span id="cb4-285"><a href="#cb4-285" aria-hidden="true" tabindex="-1"></a>        parameterDescriptors<span class="op">.</span>reserve<span class="op">(</span>other<span class="op">.</span>parameterDescriptors<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb4-286"><a href="#cb4-286" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> param<span class="op">:</span> other<span class="op">.</span>parameterDescriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-287"><a href="#cb4-287" aria-hidden="true" tabindex="-1"></a>            parameterDescriptors<span class="op">.</span>push_back<span class="op">(</span>param<span class="op">-&gt;</span>clone<span class="op">());</span></span>
+<span id="cb4-288"><a href="#cb4-288" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-289"><a href="#cb4-289" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-290"><a href="#cb4-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-291"><a href="#cb4-291" aria-hidden="true" tabindex="-1"></a>    ComputerInfo <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>ComputerInfo <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-292"><a href="#cb4-292" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">this</span> <span class="op">!=</span> <span class="op">&amp;</span>other<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-293"><a href="#cb4-293" aria-hidden="true" tabindex="-1"></a>            name <span class="op">=</span> other<span class="op">.</span>name<span class="op">;</span></span>
+<span id="cb4-294"><a href="#cb4-294" aria-hidden="true" tabindex="-1"></a>            description <span class="op">=</span> other<span class="op">.</span>description<span class="op">;</span></span>
+<span id="cb4-295"><a href="#cb4-295" aria-hidden="true" tabindex="-1"></a>            outputType <span class="op">=</span> other<span class="op">.</span>outputType<span class="op">;</span></span>
+<span id="cb4-296"><a href="#cb4-296" aria-hidden="true" tabindex="-1"></a>            outputTypeName <span class="op">=</span> other<span class="op">.</span>outputTypeName<span class="op">;</span></span>
+<span id="cb4-297"><a href="#cb4-297" aria-hidden="true" tabindex="-1"></a>            isVectorType <span class="op">=</span> other<span class="op">.</span>isVectorType<span class="op">;</span></span>
+<span id="cb4-298"><a href="#cb4-298" aria-hidden="true" tabindex="-1"></a>            elementType <span class="op">=</span> other<span class="op">.</span>elementType<span class="op">;</span></span>
+<span id="cb4-299"><a href="#cb4-299" aria-hidden="true" tabindex="-1"></a>            elementTypeName <span class="op">=</span> other<span class="op">.</span>elementTypeName<span class="op">;</span></span>
+<span id="cb4-300"><a href="#cb4-300" aria-hidden="true" tabindex="-1"></a>            requiredRowSelector <span class="op">=</span> other<span class="op">.</span>requiredRowSelector<span class="op">;</span></span>
+<span id="cb4-301"><a href="#cb4-301" aria-hidden="true" tabindex="-1"></a>            requiredSourceType <span class="op">=</span> other<span class="op">.</span>requiredSourceType<span class="op">;</span></span>
+<span id="cb4-302"><a href="#cb4-302" aria-hidden="true" tabindex="-1"></a>            isMultiOutput <span class="op">=</span> other<span class="op">.</span>isMultiOutput<span class="op">;</span></span>
+<span id="cb4-303"><a href="#cb4-303" aria-hidden="true" tabindex="-1"></a>            makeOutputSuffixes <span class="op">=</span> other<span class="op">.</span>makeOutputSuffixes<span class="op">;</span></span>
+<span id="cb4-304"><a href="#cb4-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-305"><a href="#cb4-305" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Deep copy parameter descriptors</span></span>
+<span id="cb4-306"><a href="#cb4-306" aria-hidden="true" tabindex="-1"></a>            parameterDescriptors<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb4-307"><a href="#cb4-307" aria-hidden="true" tabindex="-1"></a>            parameterDescriptors<span class="op">.</span>reserve<span class="op">(</span>other<span class="op">.</span>parameterDescriptors<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb4-308"><a href="#cb4-308" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> param<span class="op">:</span> other<span class="op">.</span>parameterDescriptors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-309"><a href="#cb4-309" aria-hidden="true" tabindex="-1"></a>                parameterDescriptors<span class="op">.</span>push_back<span class="op">(</span>param<span class="op">-&gt;</span>clone<span class="op">());</span></span>
+<span id="cb4-310"><a href="#cb4-310" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb4-311"><a href="#cb4-311" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-312"><a href="#cb4-312" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">*</span><span class="kw">this</span><span class="op">;</span></span>
+<span id="cb4-313"><a href="#cb4-313" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-314"><a href="#cb4-314" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-315"><a href="#cb4-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-316"><a href="#cb4-316" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ComputerFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;(</span></span>
+<span id="cb4-317"><a href="#cb4-317" aria-hidden="true" tabindex="-1"></a>        DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb4-318"><a href="#cb4-318" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span>
+<span id="cb4-319"><a href="#cb4-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-320"><a href="#cb4-320" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MultiComputerFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;(</span></span>
+<span id="cb4-321"><a href="#cb4-321" aria-hidden="true" tabindex="-1"></a>        DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb4-322"><a href="#cb4-322" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span>
+<span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AdapterInfo <span class="op">{</span></span>
+<span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span>                             </span>
+<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string description<span class="op">;</span>                      </span>
+<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index inputType<span class="op">;</span>                    </span>
+<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index outputType<span class="op">;</span>                   </span>
+<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ComputerParameterInfo<span class="op">&gt;</span> parameters<span class="op">;</span></span>
+<span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a>    AdapterInfo<span class="op">()</span></span>
+<span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(),</span></span>
+<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(),</span></span>
+<span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a>          inputType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">)),</span></span>
+<span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">)),</span></span>
+<span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a>          parameters<span class="op">()</span> <span class="op">{}</span></span>
+<span id="cb4-337"><a href="#cb4-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-338"><a href="#cb4-338" aria-hidden="true" tabindex="-1"></a>    AdapterInfo<span class="op">(</span><span class="bu">std::</span>string <span class="va">name_</span><span class="op">,</span> <span class="bu">std::</span>string <span class="va">description_</span><span class="op">,</span> <span class="bu">std::</span>type_index <span class="va">inputType_</span><span class="op">,</span></span>
+<span id="cb4-339"><a href="#cb4-339" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>type_index <span class="va">outputType_</span><span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>ComputerParameterInfo<span class="op">&gt;</span> params <span class="op">=</span> <span class="op">{})</span></span>
+<span id="cb4-340"><a href="#cb4-340" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">name_</span><span class="op">)),</span></span>
+<span id="cb4-341"><a href="#cb4-341" aria-hidden="true" tabindex="-1"></a>          description<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span><span class="va">description_</span><span class="op">)),</span></span>
+<span id="cb4-342"><a href="#cb4-342" aria-hidden="true" tabindex="-1"></a>          inputType<span class="op">(</span><span class="va">inputType_</span><span class="op">),</span></span>
+<span id="cb4-343"><a href="#cb4-343" aria-hidden="true" tabindex="-1"></a>          outputType<span class="op">(</span><span class="va">outputType_</span><span class="op">),</span></span>
+<span id="cb4-344"><a href="#cb4-344" aria-hidden="true" tabindex="-1"></a>          parameters<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>params<span class="op">))</span> <span class="op">{}</span></span>
+<span id="cb4-345"><a href="#cb4-345" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-346"><a href="#cb4-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-347"><a href="#cb4-347" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> AdapterFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>DataSourceVariant<span class="op">(</span></span>
+<span id="cb4-348"><a href="#cb4-348" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sourceData<span class="op">,</span></span>
+<span id="cb4-349"><a href="#cb4-349" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> timeFrame<span class="op">,</span></span>
+<span id="cb4-350"><a href="#cb4-350" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb4-351"><a href="#cb4-351" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters<span class="op">)&gt;;</span></span>
+<span id="cb4-352"><a href="#cb4-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-353"><a href="#cb4-353" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ComputerRegistry <span class="op">{</span></span>
+<span id="cb4-354"><a href="#cb4-354" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-355"><a href="#cb4-355" aria-hidden="true" tabindex="-1"></a>    ComputerRegistry<span class="op">();</span></span>
+<span id="cb4-356"><a href="#cb4-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-357"><a href="#cb4-357" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Make registry non-copyable and non-movable</span></span>
+<span id="cb4-358"><a href="#cb4-358" aria-hidden="true" tabindex="-1"></a>    ComputerRegistry<span class="op">(</span>ComputerRegistry <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-359"><a href="#cb4-359" aria-hidden="true" tabindex="-1"></a>    ComputerRegistry <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>ComputerRegistry <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-360"><a href="#cb4-360" aria-hidden="true" tabindex="-1"></a>    ComputerRegistry<span class="op">(</span>ComputerRegistry <span class="op">&amp;&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-361"><a href="#cb4-361" aria-hidden="true" tabindex="-1"></a>    ComputerRegistry <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>ComputerRegistry <span class="op">&amp;&amp;)</span> <span class="op">=</span> <span class="kw">delete</span><span class="op">;</span></span>
+<span id="cb4-362"><a href="#cb4-362" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-363"><a href="#cb4-363" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ComputerInfo<span class="op">&gt;</span> getAvailableComputers<span class="op">(</span></span>
+<span id="cb4-364"><a href="#cb4-364" aria-hidden="true" tabindex="-1"></a>            RowSelectorType rowSelectorType<span class="op">,</span></span>
+<span id="cb4-365"><a href="#cb4-365" aria-hidden="true" tabindex="-1"></a>            DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> dataSource<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-366"><a href="#cb4-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-367"><a href="#cb4-367" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>AdapterInfo<span class="op">&gt;</span> getAvailableAdapters<span class="op">(</span><span class="bu">std::</span>type_index dataType<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-368"><a href="#cb4-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-369"><a href="#cb4-369" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;</span> createComputer<span class="op">(</span></span>
+<span id="cb4-370"><a href="#cb4-370" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">,</span></span>
+<span id="cb4-371"><a href="#cb4-371" aria-hidden="true" tabindex="-1"></a>            DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> dataSource<span class="op">,</span></span>
+<span id="cb4-372"><a href="#cb4-372" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters <span class="op">=</span> <span class="op">{})</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-373"><a href="#cb4-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-374"><a href="#cb4-374" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IComputerBase<span class="op">&gt;</span> createMultiComputer<span class="op">(</span></span>
+<span id="cb4-375"><a href="#cb4-375" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">,</span></span>
+<span id="cb4-376"><a href="#cb4-376" aria-hidden="true" tabindex="-1"></a>            DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> dataSource<span class="op">,</span></span>
+<span id="cb4-377"><a href="#cb4-377" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters <span class="op">=</span> <span class="op">{})</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-378"><a href="#cb4-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-379"><a href="#cb4-379" aria-hidden="true" tabindex="-1"></a>    DataSourceVariant createAdapter<span class="op">(</span></span>
+<span id="cb4-380"><a href="#cb4-380" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> adapterName<span class="op">,</span></span>
+<span id="cb4-381"><a href="#cb4-381" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sourceData<span class="op">,</span></span>
+<span id="cb4-382"><a href="#cb4-382" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> timeFrame<span class="op">,</span></span>
+<span id="cb4-383"><a href="#cb4-383" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">,</span></span>
+<span id="cb4-384"><a href="#cb4-384" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters <span class="op">=</span> <span class="op">{})</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-385"><a href="#cb4-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-386"><a href="#cb4-386" aria-hidden="true" tabindex="-1"></a>    ComputerInfo <span class="at">const</span> <span class="op">*</span> findComputerInfo<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-387"><a href="#cb4-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-388"><a href="#cb4-388" aria-hidden="true" tabindex="-1"></a>    AdapterInfo <span class="at">const</span> <span class="op">*</span> findAdapterInfo<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> adapterName<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-389"><a href="#cb4-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-390"><a href="#cb4-390" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> getAllComputerNames<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-391"><a href="#cb4-391" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-392"><a href="#cb4-392" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> getAllAdapterNames<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-393"><a href="#cb4-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-394"><a href="#cb4-394" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enhanced type discovery methods</span></span>
+<span id="cb4-395"><a href="#cb4-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-396"><a href="#cb4-396" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>type_index<span class="op">&gt;</span> getAvailableOutputTypes<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-397"><a href="#cb4-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-398"><a href="#cb4-398" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>type_index<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> getOutputTypeNames<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-399"><a href="#cb4-399" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-400"><a href="#cb4-400" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ComputerInfo<span class="op">&gt;</span> getComputersByOutputType<span class="op">(</span></span>
+<span id="cb4-401"><a href="#cb4-401" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>type_index outputType<span class="op">,</span></span>
+<span id="cb4-402"><a href="#cb4-402" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>optional<span class="op">&lt;</span>RowSelectorType<span class="op">&gt;</span> rowSelectorType <span class="op">=</span> <span class="bu">std::</span>nullopt<span class="op">,</span></span>
+<span id="cb4-403"><a href="#cb4-403" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>type_index<span class="op">&gt;</span> sourceType <span class="op">=</span> <span class="bu">std::</span>nullopt<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-404"><a href="#cb4-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-405"><a href="#cb4-405" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isVectorComputer<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-406"><a href="#cb4-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-407"><a href="#cb4-407" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index getElementType<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-408"><a href="#cb4-408" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-409"><a href="#cb4-409" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-410"><a href="#cb4-410" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> createTypedComputer<span class="op">(</span></span>
+<span id="cb4-411"><a href="#cb4-411" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">,</span></span>
+<span id="cb4-412"><a href="#cb4-412" aria-hidden="true" tabindex="-1"></a>            DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> dataSource<span class="op">,</span></span>
+<span id="cb4-413"><a href="#cb4-413" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters <span class="op">=</span> <span class="op">{})</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-414"><a href="#cb4-414" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> info <span class="op">=</span> findComputerInfo<span class="op">(</span>computerName<span class="op">);</span></span>
+<span id="cb4-415"><a href="#cb4-415" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>info <span class="op">||</span> info<span class="op">-&gt;</span>outputType <span class="op">!=</span> <span class="kw">typeid</span><span class="op">(</span>T<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb4-416"><a href="#cb4-416" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-417"><a href="#cb4-417" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-418"><a href="#cb4-418" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-419"><a href="#cb4-419" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> base_computer <span class="op">=</span> createComputer<span class="op">(</span>computerName<span class="op">,</span> dataSource<span class="op">,</span> parameters<span class="op">);</span></span>
+<span id="cb4-420"><a href="#cb4-420" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>base_computer<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-421"><a href="#cb4-421" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-422"><a href="#cb4-422" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-423"><a href="#cb4-423" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-424"><a href="#cb4-424" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Safe cast since we verified the type</span></span>
+<span id="cb4-425"><a href="#cb4-425" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> wrapper <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>ComputerWrapper<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*&gt;(</span>base_computer<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb4-426"><a href="#cb4-426" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>wrapper<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-427"><a href="#cb4-427" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-428"><a href="#cb4-428" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-429"><a href="#cb4-429" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extract the underlying computer and then delete the wrapper by resetting base_computer</span></span>
+<span id="cb4-430"><a href="#cb4-430" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> typed <span class="op">=</span> wrapper<span class="op">-&gt;</span>releaseComputer<span class="op">();</span></span>
+<span id="cb4-431"><a href="#cb4-431" aria-hidden="true" tabindex="-1"></a>        base_computer<span class="op">.</span>reset<span class="op">();</span></span>
+<span id="cb4-432"><a href="#cb4-432" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> typed<span class="op">;</span></span>
+<span id="cb4-433"><a href="#cb4-433" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-434"><a href="#cb4-434" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-435"><a href="#cb4-435" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-436"><a href="#cb4-436" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>IMultiColumnComputer<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> createTypedMultiComputer<span class="op">(</span></span>
+<span id="cb4-437"><a href="#cb4-437" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> computerName<span class="op">,</span></span>
+<span id="cb4-438"><a href="#cb4-438" aria-hidden="true" tabindex="-1"></a>            DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> dataSource<span class="op">,</span></span>
+<span id="cb4-439"><a href="#cb4-439" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parameters <span class="op">=</span> <span class="op">{})</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-440"><a href="#cb4-440" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> info <span class="op">=</span> findComputerInfo<span class="op">(</span>computerName<span class="op">);</span></span>
+<span id="cb4-441"><a href="#cb4-441" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>info <span class="op">||</span> info<span class="op">-&gt;</span>outputType <span class="op">!=</span> <span class="kw">typeid</span><span class="op">(</span>T<span class="op">)</span> <span class="op">||</span> <span class="op">!</span>info<span class="op">-&gt;</span>isMultiOutput<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-442"><a href="#cb4-442" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-443"><a href="#cb4-443" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-444"><a href="#cb4-444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-445"><a href="#cb4-445" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> base_computer <span class="op">=</span> createMultiComputer<span class="op">(</span>computerName<span class="op">,</span> dataSource<span class="op">,</span> parameters<span class="op">);</span></span>
+<span id="cb4-446"><a href="#cb4-446" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>base_computer<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-447"><a href="#cb4-447" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-448"><a href="#cb4-448" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-449"><a href="#cb4-449" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-450"><a href="#cb4-450" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> wrapper <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>MultiComputerWrapper<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">*&gt;(</span>base_computer<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb4-451"><a href="#cb4-451" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>wrapper<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-452"><a href="#cb4-452" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-453"><a href="#cb4-453" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-454"><a href="#cb4-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-455"><a href="#cb4-455" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> typed <span class="op">=</span> wrapper<span class="op">-&gt;</span>releaseComputer<span class="op">();</span></span>
+<span id="cb4-456"><a href="#cb4-456" aria-hidden="true" tabindex="-1"></a>        base_computer<span class="op">.</span>reset<span class="op">();</span></span>
+<span id="cb4-457"><a href="#cb4-457" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> typed<span class="op">;</span></span>
+<span id="cb4-458"><a href="#cb4-458" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-459"><a href="#cb4-459" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-460"><a href="#cb4-460" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb4-461"><a href="#cb4-461" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Computer registration storage</span></span>
+<span id="cb4-462"><a href="#cb4-462" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>deque<span class="op">&lt;</span>ComputerInfo<span class="op">&gt;</span> <span class="va">all_computers_</span><span class="op">;</span></span>
+<span id="cb4-463"><a href="#cb4-463" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> ComputerFactory<span class="op">&gt;</span> <span class="va">computer_factories_</span><span class="op">;</span></span>
+<span id="cb4-464"><a href="#cb4-464" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> MultiComputerFactory<span class="op">&gt;</span> <span class="va">multi_computer_factories_</span><span class="op">;</span></span>
+<span id="cb4-465"><a href="#cb4-465" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-466"><a href="#cb4-466" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Maps (RowSelectorType, SourceTypeIndex) -&gt; vector&lt;ComputerInfo*&gt;</span></span>
+<span id="cb4-467"><a href="#cb4-467" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>RowSelectorType<span class="op">,</span> <span class="bu">std::</span>type_index<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>ComputerInfo <span class="at">const</span> <span class="op">*&gt;&gt;</span> <span class="va">selector_source_to_computers_</span><span class="op">;</span></span>
+<span id="cb4-468"><a href="#cb4-468" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-469"><a href="#cb4-469" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Computer name lookup</span></span>
+<span id="cb4-470"><a href="#cb4-470" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> ComputerInfo <span class="at">const</span> <span class="op">*&gt;</span> <span class="va">name_to_computer_</span><span class="op">;</span></span>
+<span id="cb4-471"><a href="#cb4-471" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-472"><a href="#cb4-472" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Adapter registration storage</span></span>
+<span id="cb4-473"><a href="#cb4-473" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>deque<span class="op">&lt;</span>AdapterInfo<span class="op">&gt;</span> <span class="va">all_adapters_</span><span class="op">;</span></span>
+<span id="cb4-474"><a href="#cb4-474" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> AdapterFactory<span class="op">&gt;</span> <span class="va">adapter_factories_</span><span class="op">;</span></span>
+<span id="cb4-475"><a href="#cb4-475" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-476"><a href="#cb4-476" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Maps input type_index -&gt; vector&lt;AdapterInfo*&gt;</span></span>
+<span id="cb4-477"><a href="#cb4-477" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>type_index<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>AdapterInfo <span class="at">const</span> <span class="op">*&gt;&gt;</span> <span class="va">input_type_to_adapters_</span><span class="op">;</span></span>
+<span id="cb4-478"><a href="#cb4-478" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-479"><a href="#cb4-479" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Adapter name lookup</span></span>
+<span id="cb4-480"><a href="#cb4-480" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> AdapterInfo <span class="at">const</span> <span class="op">*&gt;</span> <span class="va">name_to_adapter_</span><span class="op">;</span></span>
+<span id="cb4-481"><a href="#cb4-481" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-482"><a href="#cb4-482" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerComputer<span class="op">(</span>ComputerInfo info<span class="op">,</span> ComputerFactory factory<span class="op">);</span></span>
+<span id="cb4-483"><a href="#cb4-483" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-484"><a href="#cb4-484" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerMultiComputer<span class="op">(</span>ComputerInfo info<span class="op">,</span> MultiComputerFactory factory<span class="op">);</span></span>
+<span id="cb4-485"><a href="#cb4-485" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-486"><a href="#cb4-486" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerAdapter<span class="op">(</span>AdapterInfo info<span class="op">,</span> AdapterFactory factory<span class="op">);</span></span>
+<span id="cb4-487"><a href="#cb4-487" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-488"><a href="#cb4-488" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> computeComputerMappings<span class="op">();</span></span>
+<span id="cb4-489"><a href="#cb4-489" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-490"><a href="#cb4-490" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> computeAdapterMappings<span class="op">();</span></span>
+<span id="cb4-491"><a href="#cb4-491" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-492"><a href="#cb4-492" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index getSourceTypeIndex<span class="op">(</span>DataSourceVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-493"><a href="#cb4-493" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-494"><a href="#cb4-494" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerBuiltInComputers<span class="op">();</span></span>
+<span id="cb4-495"><a href="#cb4-495" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-496"><a href="#cb4-496" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> registerBuiltInAdapters<span class="op">();</span></span>
+<span id="cb4-497"><a href="#cb4-497" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-498"><a href="#cb4-498" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-499"><a href="#cb4-499" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// COMPUTER_REGISTRY_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:24 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

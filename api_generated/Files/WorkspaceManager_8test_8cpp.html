@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/WhiskerToolbox/StateManagement/WorkspaceManager.test.cpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcwhiskertoolboxstatemanagementworkspacemanager.test.cpp" id="toc-srcwhiskertoolboxstatemanagementworkspacemanager.test.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxstatemanagementworkspacemanager.test.cpp">src/WhiskerToolbox/StateManagement/WorkspaceManager.test.cpp</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-test_case" id="toc-function-test_case" class="nav-link" data-scroll-target="#function-test_case">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-1" id="toc-function-test_case-1" class="nav-link" data-scroll-target="#function-test_case-1">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-2" id="toc-function-test_case-2" class="nav-link" data-scroll-target="#function-test_case-2">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-3" id="toc-function-test_case-3" class="nav-link" data-scroll-target="#function-test_case-3">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-4" id="toc-function-test_case-4" class="nav-link" data-scroll-target="#function-test_case-4">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-5" id="toc-function-test_case-5" class="nav-link" data-scroll-target="#function-test_case-5">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-6" id="toc-function-test_case-6" class="nav-link" data-scroll-target="#function-test_case-6">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-7" id="toc-function-test_case-7" class="nav-link" data-scroll-target="#function-test_case-7">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-8" id="toc-function-test_case-8" class="nav-link" data-scroll-target="#function-test_case-8">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-9" id="toc-function-test_case-9" class="nav-link" data-scroll-target="#function-test_case-9">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-10" id="toc-function-test_case-10" class="nav-link" data-scroll-target="#function-test_case-10">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-11" id="toc-function-test_case-11" class="nav-link" data-scroll-target="#function-test_case-11">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-12" id="toc-function-test_case-12" class="nav-link" data-scroll-target="#function-test_case-12">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-13" id="toc-function-test_case-13" class="nav-link" data-scroll-target="#function-test_case-13">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-14" id="toc-function-test_case-14" class="nav-link" data-scroll-target="#function-test_case-14">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-15" id="toc-function-test_case-15" class="nav-link" data-scroll-target="#function-test_case-15">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-16" id="toc-function-test_case-16" class="nav-link" data-scroll-target="#function-test_case-16">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-17" id="toc-function-test_case-17" class="nav-link" data-scroll-target="#function-test_case-17">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-18" id="toc-function-test_case-18" class="nav-link" data-scroll-target="#function-test_case-18">function TEST_CASE</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/WhiskerToolbox/StateManagement/WorkspaceManager.test.cpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcwhiskertoolboxstatemanagementworkspacemanager.test.cpp" class="level1">
+<h1>src/WhiskerToolbox/StateManagement/WorkspaceManager.test.cpp</h1>
+<p>Integration tests for WorkspaceManager. <a href="#detailed-description">More…</a></p>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - data <a href="../../api_generated/Files/Image__Data__Loader_8cpp.html#function-load">load</a> tracking” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - dirty flag and signals” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - current path and markRestored” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a> and <a href="../../api_generated/Files/Image__Data__Loader_8cpp.html#function-load">load</a> with no collaborators” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a> signals” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - read nonexistent file returns nullopt” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - recovery file path” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - no recovery file by default” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - deleteRecoveryFile is safe when no file” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - deleteRecoveryFile removes existing file” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - auto-<a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a> enable/disable” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - workspace file is valid JSON” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a> creates parent directories” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - pipeline tracking” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - pipeline round-trip <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a>/load” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - table definition tracking” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - table definitions round-trip <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a>/load” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - relative paths saved in workspace file” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/WorkspaceManager_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“WorkspaceManager - full round-trip with pipelines tables and relative paths” , “” [StateManagement][Workspace][Qt])</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<p>Integration tests for WorkspaceManager.</p>
+<p>Tests workspace save/load round-trip, auto-save, recovery file management, data load tracking, and dirty flag changes.</p>
+<p>These tests require Qt (for QObject, QTimer, signals) and use a temporary directory for file I/O.</p>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-test_case" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - data load tracking"</span> <span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-1">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - dirty flag and signals"</span> <span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-2">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - current path and markRestored"</span> <span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-3">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - save and load with no collaborators"</span> <span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-4">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - save signals"</span> <span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-5">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - read nonexistent file returns nullopt"</span> <span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-6">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - recovery file path"</span> <span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-7" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-7">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - no recovery file by default"</span> <span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-8" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-8">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - deleteRecoveryFile is safe when no file"</span> <span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-9" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-9">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - deleteRecoveryFile removes existing file"</span> <span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-10" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-10">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - auto-save enable/disable"</span> <span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-11" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-11">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - workspace file is valid JSON"</span> <span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-12" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-12">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - save creates parent directories"</span> <span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-13" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-13">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - pipeline tracking"</span> <span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-14" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-14">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - pipeline round-trip save/load"</span> <span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-15" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-15">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - table definition tracking"</span> <span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-16" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-16">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - table definitions round-trip save/load"</span> <span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-17" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-17">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - relative paths saved in workspace file"</span> <span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-18" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-18">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"WorkspaceManager - full round-trip with pipelines tables and relative paths"</span> <span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>StateManagement<span class="op">][</span>Workspace<span class="op">][</span><span class="ex">Qt</span><span class="op">]</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/WorkspaceManager.hpp"</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/WorkspaceData.hpp"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QCoreApplication&gt;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QDir&gt;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QFile&gt;</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QTemporaryDir&gt;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> StateManagement<span class="op">;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Data Load Tracking Tests</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - data load tracking"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordJsonConfigLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/config.json"</span><span class="op">));</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">()[</span><span class="dv">0</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"json_config"</span><span class="op">);</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>source_path <span class="op">==</span> <span class="st">"/data/config.json"</span><span class="op">);</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordVideoLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/video.mp4"</span><span class="op">));</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">()[</span><span class="dv">1</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"video"</span><span class="op">);</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordImagesLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/images/"</span><span class="op">));</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">()[</span><span class="dv">2</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"images"</span><span class="op">);</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>clearDataLoads<span class="op">();</span></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>dataLoads<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a><span class="co">// Dirty Flag Tests</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - dirty flag and signals"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dirty_signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> last_dirty_value <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>mgr<span class="op">,</span> <span class="op">&amp;</span>WorkspaceManager<span class="op">::</span>dirtyChanged<span class="op">,</span></span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;](</span><span class="dt">bool</span> dirty<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>                         dirty_signal_count<span class="op">++;</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>                         last_dirty_value <span class="op">=</span> dirty<span class="op">;</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recording a data load should set dirty</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordVideoLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/video.mp4"</span><span class="op">));</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>dirty_signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>last_dirty_value <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>    <span class="co">// markClean should clear dirty</span></span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>markClean<span class="op">();</span></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>dirty_signal_count <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>last_dirty_value <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>    <span class="co">// markDirty explicitly</span></span>
+<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>markDirty<span class="op">();</span></span>
+<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>dirty_signal_count <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Setting dirty again should NOT re-emit</span></span>
+<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>markDirty<span class="op">();</span></span>
+<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>dirty_signal_count <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a><span class="co">// Workspace Path Tests</span></span>
+<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - current path and markRestored"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>currentWorkspacePath<span class="op">().</span>isEmpty<span class="op">());</span></span>
+<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> path_signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> last_path<span class="op">;</span></span>
+<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>mgr<span class="op">,</span> <span class="op">&amp;</span>WorkspaceManager<span class="op">::</span>workspacePathChanged<span class="op">,</span></span>
+<span id="cb20-100"><a href="#cb20-100" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;](</span><span class="ex">QString</span> path<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a>                         path_signal_count<span class="op">++;</span></span>
+<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a>                         last_path <span class="op">=</span> path<span class="op">;</span></span>
+<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
+<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>markRestored<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/some/workspace.wtb"</span><span class="op">));</span></span>
+<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>currentWorkspacePath<span class="op">()</span> <span class="op">==</span> <span class="st">"/some/workspace.wtb"</span><span class="op">);</span></span>
+<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>path_signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>last_path <span class="op">==</span> <span class="st">"/some/workspace.wtb"</span><span class="op">);</span></span>
+<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a><span class="co">// Save &amp; Load Round-Trip Tests (no collaborators)</span></span>
+<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - save and load with no collaborators"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
+<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordJsonConfigLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/config.json"</span><span class="op">));</span></span>
+<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordVideoLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/video.mp4"</span><span class="op">));</span></span>
+<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>mgr<span class="op">.</span>currentWorkspacePath<span class="op">()</span> <span class="op">==</span> ws_path<span class="op">);</span></span>
+<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the file exists</span></span>
+<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span><span class="ex">QFile::exists</span><span class="op">(</span>ws_path<span class="op">));</span></span>
+<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
+<span id="cb20-138"><a href="#cb20-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-139"><a href="#cb20-139" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-140"><a href="#cb20-140" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-141"><a href="#cb20-141" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-142"><a href="#cb20-142" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>version <span class="op">==</span> <span class="st">"1.0"</span><span class="op">);</span></span>
+<span id="cb20-143"><a href="#cb20-143" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>data<span class="op">-&gt;</span>created_at<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-144"><a href="#cb20-144" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>data<span class="op">-&gt;</span>modified_at<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-145"><a href="#cb20-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-146"><a href="#cb20-146" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Data loads</span></span>
+<span id="cb20-147"><a href="#cb20-147" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-148"><a href="#cb20-148" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">0</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"json_config"</span><span class="op">);</span></span>
+<span id="cb20-149"><a href="#cb20-149" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">0</span><span class="op">].</span>source_path <span class="op">==</span> <span class="st">"/data/config.json"</span><span class="op">);</span></span>
+<span id="cb20-150"><a href="#cb20-150" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">1</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"video"</span><span class="op">);</span></span>
+<span id="cb20-151"><a href="#cb20-151" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">1</span><span class="op">].</span>source_path <span class="op">==</span> <span class="st">"/data/video.mp4"</span><span class="op">);</span></span>
+<span id="cb20-152"><a href="#cb20-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-153"><a href="#cb20-153" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No collaborators → empty states</span></span>
+<span id="cb20-154"><a href="#cb20-154" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>editor_states_json<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-155"><a href="#cb20-155" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>zone_layout_json<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-156"><a href="#cb20-156" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-157"><a href="#cb20-157" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-158"><a href="#cb20-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-159"><a href="#cb20-159" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - save signals"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-160"><a href="#cb20-160" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-161"><a href="#cb20-161" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-162"><a href="#cb20-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-163"><a href="#cb20-163" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-164"><a href="#cb20-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-165"><a href="#cb20-165" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> saved_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb20-166"><a href="#cb20-166" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> saved_path<span class="op">;</span></span>
+<span id="cb20-167"><a href="#cb20-167" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>mgr<span class="op">,</span> <span class="op">&amp;</span>WorkspaceManager<span class="op">::</span>workspaceSaved<span class="op">,</span></span>
+<span id="cb20-168"><a href="#cb20-168" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;](</span><span class="ex">QString</span> path<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-169"><a href="#cb20-169" aria-hidden="true" tabindex="-1"></a>                         saved_count<span class="op">++;</span></span>
+<span id="cb20-170"><a href="#cb20-170" aria-hidden="true" tabindex="-1"></a>                         saved_path <span class="op">=</span> path<span class="op">;</span></span>
+<span id="cb20-171"><a href="#cb20-171" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
+<span id="cb20-172"><a href="#cb20-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-173"><a href="#cb20-173" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-174"><a href="#cb20-174" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-175"><a href="#cb20-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-176"><a href="#cb20-176" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>saved_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-177"><a href="#cb20-177" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>saved_path <span class="op">==</span> ws_path<span class="op">);</span></span>
+<span id="cb20-178"><a href="#cb20-178" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-179"><a href="#cb20-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-180"><a href="#cb20-180" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - read nonexistent file returns nullopt"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-181"><a href="#cb20-181" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-182"><a href="#cb20-182" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-183"><a href="#cb20-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-184"><a href="#cb20-184" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-185"><a href="#cb20-185" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/nonexistent/path.wtb"</span><span class="op">));</span></span>
+<span id="cb20-186"><a href="#cb20-186" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-187"><a href="#cb20-187" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-188"><a href="#cb20-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-189"><a href="#cb20-189" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-190"><a href="#cb20-190" aria-hidden="true" tabindex="-1"></a><span class="co">// Recovery File Tests</span></span>
+<span id="cb20-191"><a href="#cb20-191" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-192"><a href="#cb20-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-193"><a href="#cb20-193" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - recovery file path"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-194"><a href="#cb20-194" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-195"><a href="#cb20-195" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-196"><a href="#cb20-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-197"><a href="#cb20-197" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-198"><a href="#cb20-198" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>recoveryFilePath<span class="op">()</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="st">"/recovery.wtb"</span><span class="op">);</span></span>
+<span id="cb20-199"><a href="#cb20-199" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-200"><a href="#cb20-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-201"><a href="#cb20-201" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - no recovery file by default"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-202"><a href="#cb20-202" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-203"><a href="#cb20-203" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-204"><a href="#cb20-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-205"><a href="#cb20-205" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-206"><a href="#cb20-206" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasRecoveryFile<span class="op">());</span></span>
+<span id="cb20-207"><a href="#cb20-207" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-208"><a href="#cb20-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-209"><a href="#cb20-209" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - deleteRecoveryFile is safe when no file"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-210"><a href="#cb20-210" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-211"><a href="#cb20-211" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-212"><a href="#cb20-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-213"><a href="#cb20-213" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-214"><a href="#cb20-214" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should not crash</span></span>
+<span id="cb20-215"><a href="#cb20-215" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>deleteRecoveryFile<span class="op">();</span></span>
+<span id="cb20-216"><a href="#cb20-216" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasRecoveryFile<span class="op">());</span></span>
+<span id="cb20-217"><a href="#cb20-217" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-218"><a href="#cb20-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-219"><a href="#cb20-219" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - deleteRecoveryFile removes existing file"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-220"><a href="#cb20-220" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-221"><a href="#cb20-221" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-222"><a href="#cb20-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-223"><a href="#cb20-223" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Manually create a recovery file</span></span>
+<span id="cb20-224"><a href="#cb20-224" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> recovery_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/recovery.wtb"</span><span class="op">);</span></span>
+<span id="cb20-225"><a href="#cb20-225" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-226"><a href="#cb20-226" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QFile</span> f<span class="op">(</span>recovery_path<span class="op">);</span></span>
+<span id="cb20-227"><a href="#cb20-227" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::WriteOnly</span><span class="op">);</span></span>
+<span id="cb20-228"><a href="#cb20-228" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>write<span class="op">(</span><span class="st">"</span><span class="sc">{}</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb20-229"><a href="#cb20-229" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb20-230"><a href="#cb20-230" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-231"><a href="#cb20-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-232"><a href="#cb20-232" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-233"><a href="#cb20-233" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>hasRecoveryFile<span class="op">());</span></span>
+<span id="cb20-234"><a href="#cb20-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-235"><a href="#cb20-235" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>deleteRecoveryFile<span class="op">();</span></span>
+<span id="cb20-236"><a href="#cb20-236" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>hasRecoveryFile<span class="op">());</span></span>
+<span id="cb20-237"><a href="#cb20-237" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-238"><a href="#cb20-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-239"><a href="#cb20-239" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-240"><a href="#cb20-240" aria-hidden="true" tabindex="-1"></a><span class="co">// Auto-Save Tests</span></span>
+<span id="cb20-241"><a href="#cb20-241" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-242"><a href="#cb20-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-243"><a href="#cb20-243" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - auto-save enable/disable"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-244"><a href="#cb20-244" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-245"><a href="#cb20-245" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-246"><a href="#cb20-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-247"><a href="#cb20-247" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-248"><a href="#cb20-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-249"><a href="#cb20-249" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>isAutoSaveEnabled<span class="op">());</span></span>
+<span id="cb20-250"><a href="#cb20-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-251"><a href="#cb20-251" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Note: enableAutoSave() creates a QTimer which needs a running event loop.</span></span>
+<span id="cb20-252"><a href="#cb20-252" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Without QCoreApplication the timer won't actually start, so we just</span></span>
+<span id="cb20-253"><a href="#cb20-253" aria-hidden="true" tabindex="-1"></a>    <span class="co">// verify that the calls don't crash and disable returns to initial state.</span></span>
+<span id="cb20-254"><a href="#cb20-254" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>enableAutoSave<span class="op">(</span><span class="dv">60000</span><span class="op">);</span></span>
+<span id="cb20-255"><a href="#cb20-255" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Timer may not be active without event loop, so skip checking isAutoSaveEnabled()</span></span>
+<span id="cb20-256"><a href="#cb20-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-257"><a href="#cb20-257" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>disableAutoSave<span class="op">();</span></span>
+<span id="cb20-258"><a href="#cb20-258" aria-hidden="true" tabindex="-1"></a>    CHECK_FALSE<span class="op">(</span>mgr<span class="op">.</span>isAutoSaveEnabled<span class="op">());</span></span>
+<span id="cb20-259"><a href="#cb20-259" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-260"><a href="#cb20-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-261"><a href="#cb20-261" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-262"><a href="#cb20-262" aria-hidden="true" tabindex="-1"></a><span class="co">// Workspace File Format Tests</span></span>
+<span id="cb20-263"><a href="#cb20-263" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-264"><a href="#cb20-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-265"><a href="#cb20-265" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - workspace file is valid JSON"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-266"><a href="#cb20-266" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-267"><a href="#cb20-267" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-268"><a href="#cb20-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-269"><a href="#cb20-269" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/format_test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-270"><a href="#cb20-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-271"><a href="#cb20-271" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-272"><a href="#cb20-272" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordJsonConfigLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/experiment.json"</span><span class="op">));</span></span>
+<span id="cb20-273"><a href="#cb20-273" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-274"><a href="#cb20-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-275"><a href="#cb20-275" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Read raw file content and verify it's valid JSON with expected keys</span></span>
+<span id="cb20-276"><a href="#cb20-276" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QFile</span> f<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-277"><a href="#cb20-277" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>f<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::ReadOnly</span> <span class="op">|</span> <span class="ex">QIODevice::Text</span><span class="op">));</span></span>
+<span id="cb20-278"><a href="#cb20-278" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> contents <span class="op">=</span> f<span class="op">.</span>readAll<span class="op">();</span></span>
+<span id="cb20-279"><a href="#cb20-279" aria-hidden="true" tabindex="-1"></a>    f<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb20-280"><a href="#cb20-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-281"><a href="#cb20-281" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should contain expected top-level keys</span></span>
+<span id="cb20-282"><a href="#cb20-282" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> text <span class="op">=</span> <span class="ex">QString::fromUtf8</span><span class="op">(</span>contents<span class="op">);</span></span>
+<span id="cb20-283"><a href="#cb20-283" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">version</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-284"><a href="#cb20-284" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">data_loads</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-285"><a href="#cb20-285" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">editor_states</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-286"><a href="#cb20-286" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">zone_layout</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-287"><a href="#cb20-287" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">created_at</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-288"><a href="#cb20-288" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">modified_at</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-289"><a href="#cb20-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-290"><a href="#cb20-290" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should contain our data load</span></span>
+<span id="cb20-291"><a href="#cb20-291" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"json_config"</span><span class="op">)));</span></span>
+<span id="cb20-292"><a href="#cb20-292" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"experiment.json"</span><span class="op">)));</span></span>
+<span id="cb20-293"><a href="#cb20-293" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-294"><a href="#cb20-294" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-295"><a href="#cb20-295" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - save creates parent directories"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-296"><a href="#cb20-296" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-297"><a href="#cb20-297" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-298"><a href="#cb20-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-299"><a href="#cb20-299" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/nested/deep/test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-300"><a href="#cb20-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-301"><a href="#cb20-301" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-302"><a href="#cb20-302" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-303"><a href="#cb20-303" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-304"><a href="#cb20-304" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span><span class="ex">QFile::exists</span><span class="op">(</span>ws_path<span class="op">));</span></span>
+<span id="cb20-305"><a href="#cb20-305" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-306"><a href="#cb20-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-307"><a href="#cb20-307" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-308"><a href="#cb20-308" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline Tracking Tests</span></span>
+<span id="cb20-309"><a href="#cb20-309" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-310"><a href="#cb20-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-311"><a href="#cb20-311" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - pipeline tracking"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-312"><a href="#cb20-312" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-313"><a href="#cb20-313" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-314"><a href="#cb20-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-315"><a href="#cb20-315" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-316"><a href="#cb20-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-317"><a href="#cb20-317" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>appliedPipelines<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-318"><a href="#cb20-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-319"><a href="#cb20-319" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordAppliedPipeline<span class="op">(</span><span class="st">R"(</span><span class="vs">{"name":"zscore","version":1}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-320"><a href="#cb20-320" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>appliedPipelines<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-321"><a href="#cb20-321" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>appliedPipelines<span class="op">()[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">R"(</span><span class="vs">{"name":"zscore","version":1}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-322"><a href="#cb20-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-323"><a href="#cb20-323" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordAppliedPipeline<span class="op">(</span><span class="st">R"(</span><span class="vs">{"name":"smooth","window":5}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-324"><a href="#cb20-324" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>appliedPipelines<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-325"><a href="#cb20-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-326"><a href="#cb20-326" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recording a pipeline should mark workspace dirty</span></span>
+<span id="cb20-327"><a href="#cb20-327" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-328"><a href="#cb20-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-329"><a href="#cb20-329" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>clearAppliedPipelines<span class="op">();</span></span>
+<span id="cb20-330"><a href="#cb20-330" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>appliedPipelines<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-331"><a href="#cb20-331" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-332"><a href="#cb20-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-333"><a href="#cb20-333" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - pipeline round-trip save/load"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-334"><a href="#cb20-334" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-335"><a href="#cb20-335" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-336"><a href="#cb20-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-337"><a href="#cb20-337" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/pipeline_test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-338"><a href="#cb20-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-339"><a href="#cb20-339" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save with pipelines</span></span>
+<span id="cb20-340"><a href="#cb20-340" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-341"><a href="#cb20-341" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-342"><a href="#cb20-342" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordAppliedPipeline<span class="op">(</span><span class="st">R"(</span><span class="vs">{"name":"zscore","version":1}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-343"><a href="#cb20-343" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordAppliedPipeline<span class="op">(</span><span class="st">R"(</span><span class="vs">{"name":"smooth","window":5}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-344"><a href="#cb20-344" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-345"><a href="#cb20-345" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-346"><a href="#cb20-346" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-347"><a href="#cb20-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-348"><a href="#cb20-348" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load and verify</span></span>
+<span id="cb20-349"><a href="#cb20-349" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-350"><a href="#cb20-350" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-351"><a href="#cb20-351" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-352"><a href="#cb20-352" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-353"><a href="#cb20-353" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>applied_pipelines<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-354"><a href="#cb20-354" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pipelines are stored as JSON objects (re-serialized), verify structure</span></span>
+<span id="cb20-355"><a href="#cb20-355" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>applied_pipelines<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"zscore"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-356"><a href="#cb20-356" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>applied_pipelines<span class="op">[</span><span class="dv">1</span><span class="op">].</span>find<span class="op">(</span><span class="st">"smooth"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-357"><a href="#cb20-357" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-358"><a href="#cb20-358" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-359"><a href="#cb20-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-360"><a href="#cb20-360" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-361"><a href="#cb20-361" aria-hidden="true" tabindex="-1"></a><span class="co">// Table Definition Tracking Tests</span></span>
+<span id="cb20-362"><a href="#cb20-362" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-363"><a href="#cb20-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-364"><a href="#cb20-364" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - table definition tracking"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-365"><a href="#cb20-365" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-366"><a href="#cb20-366" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-367"><a href="#cb20-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-368"><a href="#cb20-368" aria-hidden="true" tabindex="-1"></a>    WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-369"><a href="#cb20-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-370"><a href="#cb20-370" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>tableDefinitions<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-371"><a href="#cb20-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-372"><a href="#cb20-372" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordTableDefinition<span class="op">(</span><span class="st">"table_1"</span><span class="op">);</span></span>
+<span id="cb20-373"><a href="#cb20-373" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>tableDefinitions<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-374"><a href="#cb20-374" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>tableDefinitions<span class="op">()[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"table_1"</span><span class="op">);</span></span>
+<span id="cb20-375"><a href="#cb20-375" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-376"><a href="#cb20-376" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>recordTableDefinition<span class="op">(</span><span class="st">"table_2"</span><span class="op">);</span></span>
+<span id="cb20-377"><a href="#cb20-377" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>tableDefinitions<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-378"><a href="#cb20-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-379"><a href="#cb20-379" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recording should mark dirty</span></span>
+<span id="cb20-380"><a href="#cb20-380" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>hasUnsavedChanges<span class="op">());</span></span>
+<span id="cb20-381"><a href="#cb20-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-382"><a href="#cb20-382" aria-hidden="true" tabindex="-1"></a>    mgr<span class="op">.</span>clearTableDefinitions<span class="op">();</span></span>
+<span id="cb20-383"><a href="#cb20-383" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>tableDefinitions<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb20-384"><a href="#cb20-384" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-385"><a href="#cb20-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-386"><a href="#cb20-386" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - table definitions round-trip save/load"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-387"><a href="#cb20-387" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-388"><a href="#cb20-388" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-389"><a href="#cb20-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-390"><a href="#cb20-390" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/table_test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-391"><a href="#cb20-391" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-392"><a href="#cb20-392" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save with tables</span></span>
+<span id="cb20-393"><a href="#cb20-393" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-394"><a href="#cb20-394" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-395"><a href="#cb20-395" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordTableDefinition<span class="op">(</span><span class="st">"whisker_stats"</span><span class="op">);</span></span>
+<span id="cb20-396"><a href="#cb20-396" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordTableDefinition<span class="op">(</span><span class="st">"trial_summary"</span><span class="op">);</span></span>
+<span id="cb20-397"><a href="#cb20-397" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-398"><a href="#cb20-398" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-399"><a href="#cb20-399" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-400"><a href="#cb20-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-401"><a href="#cb20-401" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load and verify</span></span>
+<span id="cb20-402"><a href="#cb20-402" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-403"><a href="#cb20-403" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-404"><a href="#cb20-404" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-405"><a href="#cb20-405" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-406"><a href="#cb20-406" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>table_definitions<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb20-407"><a href="#cb20-407" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>table_definitions<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"whisker_stats"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-408"><a href="#cb20-408" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>table_definitions<span class="op">[</span><span class="dv">1</span><span class="op">].</span>find<span class="op">(</span><span class="st">"trial_summary"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-409"><a href="#cb20-409" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-410"><a href="#cb20-410" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-411"><a href="#cb20-411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-412"><a href="#cb20-412" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-413"><a href="#cb20-413" aria-hidden="true" tabindex="-1"></a><span class="co">// Relative Path Conversion Tests</span></span>
+<span id="cb20-414"><a href="#cb20-414" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-415"><a href="#cb20-415" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-416"><a href="#cb20-416" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - relative paths saved in workspace file"</span><span class="op">,</span> <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-417"><a href="#cb20-417" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-418"><a href="#cb20-418" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-419"><a href="#cb20-419" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-420"><a href="#cb20-420" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> data_dir <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data"</span><span class="op">);</span></span>
+<span id="cb20-421"><a href="#cb20-421" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QDir</span><span class="op">().</span>mkpath<span class="op">(</span>data_dir<span class="op">);</span></span>
+<span id="cb20-422"><a href="#cb20-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-423"><a href="#cb20-423" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a dummy config file so the path is valid</span></span>
+<span id="cb20-424"><a href="#cb20-424" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> config_path <span class="op">=</span> data_dir <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/config.json"</span><span class="op">);</span></span>
+<span id="cb20-425"><a href="#cb20-425" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-426"><a href="#cb20-426" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QFile</span> f<span class="op">(</span>config_path<span class="op">);</span></span>
+<span id="cb20-427"><a href="#cb20-427" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::WriteOnly</span><span class="op">);</span></span>
+<span id="cb20-428"><a href="#cb20-428" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>write<span class="op">(</span><span class="st">"</span><span class="sc">{}</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb20-429"><a href="#cb20-429" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb20-430"><a href="#cb20-430" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-431"><a href="#cb20-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-432"><a href="#cb20-432" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/project.wtb"</span><span class="op">);</span></span>
+<span id="cb20-433"><a href="#cb20-433" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-434"><a href="#cb20-434" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save — paths should be converted to relative</span></span>
+<span id="cb20-435"><a href="#cb20-435" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-436"><a href="#cb20-436" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-437"><a href="#cb20-437" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordJsonConfigLoad<span class="op">(</span>config_path<span class="op">);</span></span>
+<span id="cb20-438"><a href="#cb20-438" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-439"><a href="#cb20-439" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-440"><a href="#cb20-440" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-441"><a href="#cb20-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-442"><a href="#cb20-442" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Read raw file and check for relative_path field</span></span>
+<span id="cb20-443"><a href="#cb20-443" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-444"><a href="#cb20-444" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QFile</span> f<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-445"><a href="#cb20-445" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>f<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::ReadOnly</span> <span class="op">|</span> <span class="ex">QIODevice::Text</span><span class="op">));</span></span>
+<span id="cb20-446"><a href="#cb20-446" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> text <span class="op">=</span> <span class="ex">QString::fromUtf8</span><span class="op">(</span>f<span class="op">.</span>readAll<span class="op">());</span></span>
+<span id="cb20-447"><a href="#cb20-447" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb20-448"><a href="#cb20-448" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-449"><a href="#cb20-449" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">relative_path</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-450"><a href="#cb20-450" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"data/config.json"</span><span class="op">)));</span></span>
+<span id="cb20-451"><a href="#cb20-451" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-452"><a href="#cb20-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-453"><a href="#cb20-453" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load — verify relative path is populated</span></span>
+<span id="cb20-454"><a href="#cb20-454" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-455"><a href="#cb20-455" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-456"><a href="#cb20-456" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-457"><a href="#cb20-457" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-458"><a href="#cb20-458" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-459"><a href="#cb20-459" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">0</span><span class="op">].</span>relative_path<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-460"><a href="#cb20-460" aria-hidden="true" tabindex="-1"></a>        <span class="co">// source_path should still contain the original absolute path</span></span>
+<span id="cb20-461"><a href="#cb20-461" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">0</span><span class="op">].</span>source_path<span class="op">.</span>find<span class="op">(</span><span class="st">"config.json"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-462"><a href="#cb20-462" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-463"><a href="#cb20-463" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-464"><a href="#cb20-464" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-465"><a href="#cb20-465" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-466"><a href="#cb20-466" aria-hidden="true" tabindex="-1"></a><span class="co">// Combined Save/Load with All Phase 2b Fields</span></span>
+<span id="cb20-467"><a href="#cb20-467" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-468"><a href="#cb20-468" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-469"><a href="#cb20-469" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"WorkspaceManager - full round-trip with pipelines tables and relative paths"</span><span class="op">,</span></span>
+<span id="cb20-470"><a href="#cb20-470" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[StateManagement][Workspace][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-471"><a href="#cb20-471" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb20-472"><a href="#cb20-472" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb20-473"><a href="#cb20-473" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-474"><a href="#cb20-474" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/full_test.wtb"</span><span class="op">);</span></span>
+<span id="cb20-475"><a href="#cb20-475" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-476"><a href="#cb20-476" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save with all provenance</span></span>
+<span id="cb20-477"><a href="#cb20-477" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-478"><a href="#cb20-478" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-479"><a href="#cb20-479" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordJsonConfigLoad<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"/data/config.json"</span><span class="op">));</span></span>
+<span id="cb20-480"><a href="#cb20-480" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordAppliedPipeline<span class="op">(</span><span class="st">R"(</span><span class="vs">{"name":"normalize"}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb20-481"><a href="#cb20-481" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>recordTableDefinition<span class="op">(</span><span class="st">"main_table"</span><span class="op">);</span></span>
+<span id="cb20-482"><a href="#cb20-482" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> saved <span class="op">=</span> mgr<span class="op">.</span>saveWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-483"><a href="#cb20-483" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>saved<span class="op">);</span></span>
+<span id="cb20-484"><a href="#cb20-484" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-485"><a href="#cb20-485" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-486"><a href="#cb20-486" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load and verify all fields preserved</span></span>
+<span id="cb20-487"><a href="#cb20-487" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb20-488"><a href="#cb20-488" aria-hidden="true" tabindex="-1"></a>        WorkspaceManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb20-489"><a href="#cb20-489" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> mgr<span class="op">.</span>readWorkspace<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-490"><a href="#cb20-490" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb20-491"><a href="#cb20-491" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-492"><a href="#cb20-492" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Data loads present</span></span>
+<span id="cb20-493"><a href="#cb20-493" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-494"><a href="#cb20-494" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>data_loads<span class="op">[</span><span class="dv">0</span><span class="op">].</span><span class="dt">loader_type</span> <span class="op">==</span> <span class="st">"json_config"</span><span class="op">);</span></span>
+<span id="cb20-495"><a href="#cb20-495" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-496"><a href="#cb20-496" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pipelines present</span></span>
+<span id="cb20-497"><a href="#cb20-497" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>applied_pipelines<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-498"><a href="#cb20-498" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>applied_pipelines<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"normalize"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-499"><a href="#cb20-499" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-500"><a href="#cb20-500" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Table definitions present</span></span>
+<span id="cb20-501"><a href="#cb20-501" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>data<span class="op">-&gt;</span>table_definitions<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-502"><a href="#cb20-502" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">-&gt;</span>table_definitions<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"main_table"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-503"><a href="#cb20-503" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-504"><a href="#cb20-504" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Workspace file format keys present</span></span>
+<span id="cb20-505"><a href="#cb20-505" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QFile</span> f<span class="op">(</span>ws_path<span class="op">);</span></span>
+<span id="cb20-506"><a href="#cb20-506" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>f<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::ReadOnly</span> <span class="op">|</span> <span class="ex">QIODevice::Text</span><span class="op">));</span></span>
+<span id="cb20-507"><a href="#cb20-507" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> text <span class="op">=</span> <span class="ex">QString::fromUtf8</span><span class="op">(</span>f<span class="op">.</span>readAll<span class="op">());</span></span>
+<span id="cb20-508"><a href="#cb20-508" aria-hidden="true" tabindex="-1"></a>        f<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb20-509"><a href="#cb20-509" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-510"><a href="#cb20-510" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">applied_pipelines</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-511"><a href="#cb20-511" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>text<span class="op">.</span>contains<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"</span><span class="sc">\"</span><span class="st">table_definitions</span><span class="sc">\"</span><span class="st">"</span><span class="op">)));</span></span>
+<span id="cb20-512"><a href="#cb20-512" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb20-513"><a href="#cb20-513" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

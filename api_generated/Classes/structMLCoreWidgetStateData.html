@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>MLCoreWidgetStateData – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#mlcorewidgetstatedata" id="toc-mlcorewidgetstatedata" class="nav-link active" data-scroll-target="#mlcorewidgetstatedata">MLCoreWidgetStateData</a>
+  <ul class="collapse">
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-instance_id" id="toc-variable-instance_id" class="nav-link" data-scroll-target="#variable-instance_id">variable instance_id</a></li>
+  <li><a href="#variable-display_name" id="toc-variable-display_name" class="nav-link" data-scroll-target="#variable-display_name">variable display_name</a></li>
+  <li><a href="#variable-feature_tensor_key" id="toc-variable-feature_tensor_key" class="nav-link" data-scroll-target="#variable-feature_tensor_key">variable feature_tensor_key</a></li>
+  <li><a href="#variable-classification_zscore_normalize" id="toc-variable-classification_zscore_normalize" class="nav-link" data-scroll-target="#variable-classification_zscore_normalize">variable classification_zscore_normalize</a></li>
+  <li><a href="#variable-training_region_key" id="toc-variable-training_region_key" class="nav-link" data-scroll-target="#variable-training_region_key">variable training_region_key</a></li>
+  <li><a href="#variable-prediction_region_key" id="toc-variable-prediction_region_key" class="nav-link" data-scroll-target="#variable-prediction_region_key">variable prediction_region_key</a></li>
+  <li><a href="#variable-validation_region_key" id="toc-variable-validation_region_key" class="nav-link" data-scroll-target="#variable-validation_region_key">variable validation_region_key</a></li>
+  <li><a href="#variable-constrained_decoding" id="toc-variable-constrained_decoding" class="nav-link" data-scroll-target="#variable-constrained_decoding">variable constrained_decoding</a></li>
+  <li><a href="#variable-hmm_diagonal_covariance" id="toc-variable-hmm_diagonal_covariance" class="nav-link" data-scroll-target="#variable-hmm_diagonal_covariance">variable hmm_diagonal_covariance</a></li>
+  <li><a href="#variable-hmm_gmm_emissions" id="toc-variable-hmm_gmm_emissions" class="nav-link" data-scroll-target="#variable-hmm_gmm_emissions">variable hmm_gmm_emissions</a></li>
+  <li><a href="#variable-hmm_num_gaussians" id="toc-variable-hmm_num_gaussians" class="nav-link" data-scroll-target="#variable-hmm_num_gaussians">variable hmm_num_gaussians</a></li>
+  <li><a href="#variable-label_source_type" id="toc-variable-label_source_type" class="nav-link" data-scroll-target="#variable-label_source_type">variable label_source_type</a></li>
+  <li><a href="#variable-label_interval_key" id="toc-variable-label_interval_key" class="nav-link" data-scroll-target="#variable-label_interval_key">variable label_interval_key</a></li>
+  <li><a href="#variable-label_positive_class_name" id="toc-variable-label_positive_class_name" class="nav-link" data-scroll-target="#variable-label_positive_class_name">variable label_positive_class_name</a></li>
+  <li><a href="#variable-label_negative_class_name" id="toc-variable-label_negative_class_name" class="nav-link" data-scroll-target="#variable-label_negative_class_name">variable label_negative_class_name</a></li>
+  <li><a href="#variable-label_group_ids" id="toc-variable-label_group_ids" class="nav-link" data-scroll-target="#variable-label_group_ids">variable label_group_ids</a></li>
+  <li><a href="#variable-label_data_key" id="toc-variable-label_data_key" class="nav-link" data-scroll-target="#variable-label_data_key">variable label_data_key</a></li>
+  <li><a href="#variable-label_event_key" id="toc-variable-label_event_key" class="nav-link" data-scroll-target="#variable-label_event_key">variable label_event_key</a></li>
+  <li><a href="#variable-selected_model_name" id="toc-variable-selected_model_name" class="nav-link" data-scroll-target="#variable-selected_model_name">variable selected_model_name</a></li>
+  <li><a href="#variable-model_parameters_json" id="toc-variable-model_parameters_json" class="nav-link" data-scroll-target="#variable-model_parameters_json">variable model_parameters_json</a></li>
+  <li><a href="#variable-balancing_enabled" id="toc-variable-balancing_enabled" class="nav-link" data-scroll-target="#variable-balancing_enabled">variable balancing_enabled</a></li>
+  <li><a href="#variable-balancing_strategy" id="toc-variable-balancing_strategy" class="nav-link" data-scroll-target="#variable-balancing_strategy">variable balancing_strategy</a></li>
+  <li><a href="#variable-balancing_max_ratio" id="toc-variable-balancing_max_ratio" class="nav-link" data-scroll-target="#variable-balancing_max_ratio">variable balancing_max_ratio</a></li>
+  <li><a href="#variable-cv_enabled" id="toc-variable-cv_enabled" class="nav-link" data-scroll-target="#variable-cv_enabled">variable cv_enabled</a></li>
+  <li><a href="#variable-max_cv_folds" id="toc-variable-max_cv_folds" class="nav-link" data-scroll-target="#variable-max_cv_folds">variable max_cv_folds</a></li>
+  <li><a href="#variable-output_prefix" id="toc-variable-output_prefix" class="nav-link" data-scroll-target="#variable-output_prefix">variable output_prefix</a></li>
+  <li><a href="#variable-probability_threshold" id="toc-variable-probability_threshold" class="nav-link" data-scroll-target="#variable-probability_threshold">variable probability_threshold</a></li>
+  <li><a href="#variable-output_probabilities" id="toc-variable-output_probabilities" class="nav-link" data-scroll-target="#variable-output_probabilities">variable output_probabilities</a></li>
+  <li><a href="#variable-output_predictions" id="toc-variable-output_predictions" class="nav-link" data-scroll-target="#variable-output_predictions">variable output_predictions</a></li>
+  <li><a href="#variable-clustering_tensor_key" id="toc-variable-clustering_tensor_key" class="nav-link" data-scroll-target="#variable-clustering_tensor_key">variable clustering_tensor_key</a></li>
+  <li><a href="#variable-clustering_model_name" id="toc-variable-clustering_model_name" class="nav-link" data-scroll-target="#variable-clustering_model_name">variable clustering_model_name</a></li>
+  <li><a href="#variable-clustering_output_prefix" id="toc-variable-clustering_output_prefix" class="nav-link" data-scroll-target="#variable-clustering_output_prefix">variable clustering_output_prefix</a></li>
+  <li><a href="#variable-clustering_write_intervals" id="toc-variable-clustering_write_intervals" class="nav-link" data-scroll-target="#variable-clustering_write_intervals">variable clustering_write_intervals</a></li>
+  <li><a href="#variable-clustering_write_probabilities" id="toc-variable-clustering_write_probabilities" class="nav-link" data-scroll-target="#variable-clustering_write_probabilities">variable clustering_write_probabilities</a></li>
+  <li><a href="#variable-clustering_zscore_normalize" id="toc-variable-clustering_zscore_normalize" class="nav-link" data-scroll-target="#variable-clustering_zscore_normalize">variable clustering_zscore_normalize</a></li>
+  <li><a href="#variable-dim_reduction_tensor_key" id="toc-variable-dim_reduction_tensor_key" class="nav-link" data-scroll-target="#variable-dim_reduction_tensor_key">variable dim_reduction_tensor_key</a></li>
+  <li><a href="#variable-dim_reduction_model_name" id="toc-variable-dim_reduction_model_name" class="nav-link" data-scroll-target="#variable-dim_reduction_model_name">variable dim_reduction_model_name</a></li>
+  <li><a href="#variable-dim_reduction_output_key" id="toc-variable-dim_reduction_output_key" class="nav-link" data-scroll-target="#variable-dim_reduction_output_key">variable dim_reduction_output_key</a></li>
+  <li><a href="#variable-dim_reduction_n_components" id="toc-variable-dim_reduction_n_components" class="nav-link" data-scroll-target="#variable-dim_reduction_n_components">variable dim_reduction_n_components</a></li>
+  <li><a href="#variable-dim_reduction_zscore_normalize" id="toc-variable-dim_reduction_zscore_normalize" class="nav-link" data-scroll-target="#variable-dim_reduction_zscore_normalize">variable dim_reduction_zscore_normalize</a></li>
+  <li><a href="#variable-dim_reduction_supervised" id="toc-variable-dim_reduction_supervised" class="nav-link" data-scroll-target="#variable-dim_reduction_supervised">variable dim_reduction_supervised</a></li>
+  <li><a href="#variable-dim_reduction_label_source_type" id="toc-variable-dim_reduction_label_source_type" class="nav-link" data-scroll-target="#variable-dim_reduction_label_source_type">variable dim_reduction_label_source_type</a></li>
+  <li><a href="#variable-dim_reduction_label_interval_key" id="toc-variable-dim_reduction_label_interval_key" class="nav-link" data-scroll-target="#variable-dim_reduction_label_interval_key">variable dim_reduction_label_interval_key</a></li>
+  <li><a href="#variable-dim_reduction_label_positive_class" id="toc-variable-dim_reduction_label_positive_class" class="nav-link" data-scroll-target="#variable-dim_reduction_label_positive_class">variable dim_reduction_label_positive_class</a></li>
+  <li><a href="#variable-dim_reduction_label_negative_class" id="toc-variable-dim_reduction_label_negative_class" class="nav-link" data-scroll-target="#variable-dim_reduction_label_negative_class">variable dim_reduction_label_negative_class</a></li>
+  <li><a href="#variable-dim_reduction_label_event_key" id="toc-variable-dim_reduction_label_event_key" class="nav-link" data-scroll-target="#variable-dim_reduction_label_event_key">variable dim_reduction_label_event_key</a></li>
+  <li><a href="#variable-dim_reduction_label_group_ids" id="toc-variable-dim_reduction_label_group_ids" class="nav-link" data-scroll-target="#variable-dim_reduction_label_group_ids">variable dim_reduction_label_group_ids</a></li>
+  <li><a href="#variable-dim_reduction_label_data_key" id="toc-variable-dim_reduction_label_data_key" class="nav-link" data-scroll-target="#variable-dim_reduction_label_data_key">variable dim_reduction_label_data_key</a></li>
+  <li><a href="#variable-dim_reduction_training_region_key" id="toc-variable-dim_reduction_training_region_key" class="nav-link" data-scroll-target="#variable-dim_reduction_training_region_key">variable dim_reduction_training_region_key</a></li>
+  <li><a href="#variable-active_tab" id="toc-variable-active_tab" class="nav-link" data-scroll-target="#variable-active_tab">variable active_tab</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">MLCoreWidgetStateData</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="mlcorewidgetstatedata" class="level1">
+<h1>MLCoreWidgetStateData</h1>
+<p><code>#include &lt;MLCoreWidgetStateData.hpp&gt;</code></p>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-instance-id">instance_id</a></strong> <br>Unique instance identifier (matches <a href="">EditorState::getInstanceId</a>)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-display-name">display_name</a></strong> <br>Display name shown in dock tab.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-feature-tensor-key">feature_tensor_key</a></strong> <br><a href="">DataManager</a> key of the <a href="">TensorData</a> to use as the feature matrix.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-classification-zscore-normalize">classification_zscore_normalize</a></strong> <br>Whether to z-score normalize features before classification.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-training-region-key">training_region_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key defining the training region.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-prediction-region-key">prediction_region_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key defining the prediction region (empty = all frames)</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-validation-region-key">validation_region_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key defining the validation region (empty = no validation)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-constrained-decoding">constrained_decoding</a></strong> <br>For sequence models (HMM), clamp initial state to ground truth at boundaries.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-hmm-diagonal-covariance">hmm_diagonal_covariance</a></strong> <br>Use diagonal covariance for HMM emissions (reduces parameters per state)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-hmm-gmm-emissions">hmm_gmm_emissions</a></strong> <br>Use Gaussian Mixture Model emissions for HMM (multi-modal per state)</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-hmm-num-gaussians">hmm_num_gaussians</a></strong> <br>Number of Gaussian components per state when using GMM emissions.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-source-type">label_source_type</a></strong> <br>Label source type: “intervals”, “groups”, or “entity_groups”.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-interval-key">label_interval_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key for binary interval-based labels.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-positive-class-name">label_positive_class_name</a></strong> <br>Class name for the positive class (inside intervals) in interval mode.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-negative-class-name">label_negative_class_name</a></strong> <br>Class name for the negative class (outside intervals) in interval mode.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; uint64_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-group-ids">label_group_ids</a></strong> <br><a href="">EntityGroupManager</a> group IDs for group-based labeling.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-data-key">label_data_key</a></strong> <br><a href="">DataManager</a> key for data-entity group labeling (entity_groups mode)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-label-event-key">label_event_key</a></strong> <br><a href="">DataManager</a> key for event series labeling (events mode)</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-selected-model-name">selected_model_name</a></strong> <br>Registry name of the selected MLModelOperation (e.g.&nbsp;“Random Forest”)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-model-parameters-json">model_parameters_json</a></strong> <br>JSON string of model-specific parameters.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-balancing-enabled">balancing_enabled</a></strong> <br>Whether class balancing is enabled.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-balancing-strategy">balancing_strategy</a></strong> <br>Balancing strategy: “subsample” or “oversample”.</td>
+</tr>
+<tr class="odd">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-balancing-max-ratio">balancing_max_ratio</a></strong> <br>Maximum ratio of majority to minority class samples.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-cv-enabled">cv_enabled</a></strong> <br>Whether leave-one-interval-out cross-validation is enabled.</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-max-cv-folds">max_cv_folds</a></strong> <br>Maximum number of CV folds (0 = disabled, default 5)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-output-prefix">output_prefix</a></strong> <br>Prefix for output data keys (e.g.&nbsp;“ml_contact” → “Predicted:contact”)</td>
+</tr>
+<tr class="odd">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-probability-threshold">probability_threshold</a></strong> <br>Decision threshold for binary classification.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-output-probabilities">output_probabilities</a></strong> <br>Whether to output probability values as <a href="">AnalogTimeSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-output-predictions">output_predictions</a></strong> <br>Whether to output predictions as <a href="">DigitalIntervalSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-tensor-key">clustering_tensor_key</a></strong> <br><a href="">DataManager</a> key of the <a href="">TensorData</a> to use for clustering.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-model-name">clustering_model_name</a></strong> <br>Registry name of the selected clustering algorithm (e.g.&nbsp;“K-Means”)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-output-prefix">clustering_output_prefix</a></strong> <br>Output prefix for clustering results.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-write-intervals">clustering_write_intervals</a></strong> <br>Whether to write cluster intervals to <a href="">DataManager</a>.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-write-probabilities">clustering_write_probabilities</a></strong> <br>Whether to write cluster probabilities (if model supports them)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-clustering-zscore-normalize">clustering_zscore_normalize</a></strong> <br>Whether to normalize features (z-score) before clustering.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-tensor-key">dim_reduction_tensor_key</a></strong> <br><a href="">DataManager</a> key of the <a href="">TensorData</a> to reduce.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-model-name">dim_reduction_model_name</a></strong> <br>Registry name of the selected dim reduction algorithm (e.g.&nbsp;“PCA”)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-output-key">dim_reduction_output_key</a></strong> <br>Output key for the reduced <a href="">TensorData</a>.</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-n-components">dim_reduction_n_components</a></strong> <br>Number of output components.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-zscore-normalize">dim_reduction_zscore_normalize</a></strong> <br>Whether to z-score normalize features before reduction.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-supervised">dim_reduction_supervised</a></strong> <br>Whether the dim reduction panel is in supervised mode.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-source-type">dim_reduction_label_source_type</a></strong> <br>Label source type for supervised dim reduction: “intervals”, “groups”, “entity_groups”, “events”.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-interval-key">dim_reduction_label_interval_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key for interval-based labels (supervised mode)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-positive-class">dim_reduction_label_positive_class</a></strong> <br>Positive class name for binary label modes (supervised mode)</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-negative-class">dim_reduction_label_negative_class</a></strong> <br>Negative class name for binary label modes (supervised mode)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-event-key">dim_reduction_label_event_key</a></strong> <br><a href="">DigitalEventSeries</a> key for event-based labels (supervised mode)</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; uint64_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-group-ids">dim_reduction_label_group_ids</a></strong> <br><a href="">EntityGroupManager</a> group IDs for group-based labels (supervised mode)</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-label-data-key">dim_reduction_label_data_key</a></strong> <br><a href="">DataManager</a> key for data-entity group labeling (supervised mode)</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-dim-reduction-training-region-key">dim_reduction_training_region_key</a></strong> <br><a href="">DigitalIntervalSeries</a> key defining the training region for supervised dim reduction.</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structMLCoreWidgetStateData.html#variable-active-tab">active_tab</a></strong> <br>Active workflow tab index (0 = classification, 1 = clustering)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-instance_id" class="level3">
+<h3 class="anchored" data-anchor-id="variable-instance_id">variable instance_id</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string instance_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Unique instance identifier (matches <a href="">EditorState::getInstanceId</a>)</p>
+</section>
+<section id="variable-display_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-display_name">variable display_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"ML Workflow"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Display name shown in dock tab.</p>
+</section>
+<section id="variable-feature_tensor_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-feature_tensor_key">variable feature_tensor_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string feature_tensor_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key of the <a href="">TensorData</a> to use as the feature matrix.</p>
+</section>
+<section id="variable-classification_zscore_normalize" class="level3">
+<h3 class="anchored" data-anchor-id="variable-classification_zscore_normalize">variable classification_zscore_normalize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> classification_zscore_normalize <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to z-score normalize features before classification.</p>
+</section>
+<section id="variable-training_region_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-training_region_key">variable training_region_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string training_region_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key defining the training region.</p>
+</section>
+<section id="variable-prediction_region_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-prediction_region_key">variable prediction_region_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string prediction_region_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key defining the prediction region (empty = all frames)</p>
+</section>
+<section id="variable-validation_region_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-validation_region_key">variable validation_region_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string validation_region_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key defining the validation region (empty = no validation)</p>
+</section>
+<section id="variable-constrained_decoding" class="level3">
+<h3 class="anchored" data-anchor-id="variable-constrained_decoding">variable constrained_decoding</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> constrained_decoding <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For sequence models (HMM), clamp initial state to ground truth at boundaries.</p>
+</section>
+<section id="variable-hmm_diagonal_covariance" class="level3">
+<h3 class="anchored" data-anchor-id="variable-hmm_diagonal_covariance">variable hmm_diagonal_covariance</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hmm_diagonal_covariance <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use diagonal covariance for HMM emissions (reduces parameters per state)</p>
+</section>
+<section id="variable-hmm_gmm_emissions" class="level3">
+<h3 class="anchored" data-anchor-id="variable-hmm_gmm_emissions">variable hmm_gmm_emissions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hmm_gmm_emissions <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use Gaussian Mixture Model emissions for HMM (multi-modal per state)</p>
+</section>
+<section id="variable-hmm_num_gaussians" class="level3">
+<h3 class="anchored" data-anchor-id="variable-hmm_num_gaussians">variable hmm_num_gaussians</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> hmm_num_gaussians <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of Gaussian components per state when using GMM emissions.</p>
+</section>
+<section id="variable-label_source_type" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_source_type">variable label_source_type</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">label_source_type</span> <span class="op">=</span> <span class="st">"groups"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Label source type: “intervals”, “groups”, or “entity_groups”.</p>
+</section>
+<section id="variable-label_interval_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_interval_key">variable label_interval_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string label_interval_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key for binary interval-based labels.</p>
+</section>
+<section id="variable-label_positive_class_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_positive_class_name">variable label_positive_class_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string label_positive_class_name <span class="op">=</span> <span class="st">"Inside"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Class name for the positive class (inside intervals) in interval mode.</p>
+</section>
+<section id="variable-label_negative_class_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_negative_class_name">variable label_negative_class_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string label_negative_class_name <span class="op">=</span> <span class="st">"Outside"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Class name for the negative class (outside intervals) in interval mode.</p>
+</section>
+<section id="variable-label_group_ids" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_group_ids">variable label_group_ids</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint64_t</span> <span class="op">&gt;</span> label_group_ids<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">EntityGroupManager</a> group IDs for group-based labeling.</p>
+</section>
+<section id="variable-label_data_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_data_key">variable label_data_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string label_data_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key for data-entity group labeling (entity_groups mode)</p>
+</section>
+<section id="variable-label_event_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-label_event_key">variable label_event_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string label_event_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key for event series labeling (events mode)</p>
+</section>
+<section id="variable-selected_model_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-selected_model_name">variable selected_model_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string selected_model_name <span class="op">=</span> <span class="st">"Random Forest"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry name of the selected MLModelOperation (e.g.&nbsp;“Random Forest”)</p>
+</section>
+<section id="variable-model_parameters_json" class="level3">
+<h3 class="anchored" data-anchor-id="variable-model_parameters_json">variable model_parameters_json</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string model_parameters_json<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>JSON string of model-specific parameters.</p>
+</section>
+<section id="variable-balancing_enabled" class="level3">
+<h3 class="anchored" data-anchor-id="variable-balancing_enabled">variable balancing_enabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> balancing_enabled <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether class balancing is enabled.</p>
+</section>
+<section id="variable-balancing_strategy" class="level3">
+<h3 class="anchored" data-anchor-id="variable-balancing_strategy">variable balancing_strategy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string balancing_strategy <span class="op">=</span> <span class="st">"subsample"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Balancing strategy: “subsample” or “oversample”.</p>
+</section>
+<section id="variable-balancing_max_ratio" class="level3">
+<h3 class="anchored" data-anchor-id="variable-balancing_max_ratio">variable balancing_max_ratio</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> balancing_max_ratio <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum ratio of majority to minority class samples.</p>
+</section>
+<section id="variable-cv_enabled" class="level3">
+<h3 class="anchored" data-anchor-id="variable-cv_enabled">variable cv_enabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> cv_enabled <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether leave-one-interval-out cross-validation is enabled.</p>
+</section>
+<section id="variable-max_cv_folds" class="level3">
+<h3 class="anchored" data-anchor-id="variable-max_cv_folds">variable max_cv_folds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> max_cv_folds <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum number of CV folds (0 = disabled, default 5)</p>
+</section>
+<section id="variable-output_prefix" class="level3">
+<h3 class="anchored" data-anchor-id="variable-output_prefix">variable output_prefix</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string output_prefix <span class="op">=</span> <span class="st">"ml"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prefix for output data keys (e.g.&nbsp;“ml_contact” → “Predicted:contact”)</p>
+</section>
+<section id="variable-probability_threshold" class="level3">
+<h3 class="anchored" data-anchor-id="variable-probability_threshold">variable probability_threshold</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> probability_threshold <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Decision threshold for binary classification.</p>
+</section>
+<section id="variable-output_probabilities" class="level3">
+<h3 class="anchored" data-anchor-id="variable-output_probabilities">variable output_probabilities</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> output_probabilities <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to output probability values as <a href="">AnalogTimeSeries</a>.</p>
+</section>
+<section id="variable-output_predictions" class="level3">
+<h3 class="anchored" data-anchor-id="variable-output_predictions">variable output_predictions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> output_predictions <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to output predictions as <a href="">DigitalIntervalSeries</a>.</p>
+</section>
+<section id="variable-clustering_tensor_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_tensor_key">variable clustering_tensor_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string clustering_tensor_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key of the <a href="">TensorData</a> to use for clustering.</p>
+</section>
+<section id="variable-clustering_model_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_model_name">variable clustering_model_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string clustering_model_name <span class="op">=</span> <span class="st">"K-Means"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry name of the selected clustering algorithm (e.g.&nbsp;“K-Means”)</p>
+</section>
+<section id="variable-clustering_output_prefix" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_output_prefix">variable clustering_output_prefix</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string clustering_output_prefix <span class="op">=</span> <span class="st">"Cluster:"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output prefix for clustering results.</p>
+</section>
+<section id="variable-clustering_write_intervals" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_write_intervals">variable clustering_write_intervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> clustering_write_intervals <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to write cluster intervals to <a href="">DataManager</a>.</p>
+</section>
+<section id="variable-clustering_write_probabilities" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_write_probabilities">variable clustering_write_probabilities</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> clustering_write_probabilities <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to write cluster probabilities (if model supports them)</p>
+</section>
+<section id="variable-clustering_zscore_normalize" class="level3">
+<h3 class="anchored" data-anchor-id="variable-clustering_zscore_normalize">variable clustering_zscore_normalize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> clustering_zscore_normalize <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to normalize features (z-score) before clustering.</p>
+</section>
+<section id="variable-dim_reduction_tensor_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_tensor_key">variable dim_reduction_tensor_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_tensor_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key of the <a href="">TensorData</a> to reduce.</p>
+</section>
+<section id="variable-dim_reduction_model_name" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_model_name">variable dim_reduction_model_name</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_model_name <span class="op">=</span> <span class="st">"PCA"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry name of the selected dim reduction algorithm (e.g.&nbsp;“PCA”)</p>
+</section>
+<section id="variable-dim_reduction_output_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_output_key">variable dim_reduction_output_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_output_key <span class="op">=</span> <span class="st">"reduced"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output key for the reduced <a href="">TensorData</a>.</p>
+</section>
+<section id="variable-dim_reduction_n_components" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_n_components">variable dim_reduction_n_components</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> dim_reduction_n_components <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of output components.</p>
+</section>
+<section id="variable-dim_reduction_zscore_normalize" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_zscore_normalize">variable dim_reduction_zscore_normalize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> dim_reduction_zscore_normalize <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to z-score normalize features before reduction.</p>
+</section>
+<section id="variable-dim_reduction_supervised" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_supervised">variable dim_reduction_supervised</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> dim_reduction_supervised <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether the dim reduction panel is in supervised mode.</p>
+</section>
+<section id="variable-dim_reduction_label_source_type" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_source_type">variable dim_reduction_label_source_type</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">dim_reduction_label_source_type</span> <span class="op">=</span> <span class="st">"intervals"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Label source type for supervised dim reduction: “intervals”, “groups”, “entity_groups”, “events”.</p>
+</section>
+<section id="variable-dim_reduction_label_interval_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_interval_key">variable dim_reduction_label_interval_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_label_interval_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key for interval-based labels (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_label_positive_class" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_positive_class">variable dim_reduction_label_positive_class</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_label_positive_class <span class="op">=</span> <span class="st">"Inside"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Positive class name for binary label modes (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_label_negative_class" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_negative_class">variable dim_reduction_label_negative_class</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_label_negative_class <span class="op">=</span> <span class="st">"Outside"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Negative class name for binary label modes (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_label_event_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_event_key">variable dim_reduction_label_event_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_label_event_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalEventSeries</a> key for event-based labels (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_label_group_ids" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_group_ids">variable dim_reduction_label_group_ids</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint64_t</span> <span class="op">&gt;</span> dim_reduction_label_group_ids<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">EntityGroupManager</a> group IDs for group-based labels (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_label_data_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_label_data_key">variable dim_reduction_label_data_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_label_data_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DataManager</a> key for data-entity group labeling (supervised mode)</p>
+</section>
+<section id="variable-dim_reduction_training_region_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-dim_reduction_training_region_key">variable dim_reduction_training_region_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string dim_reduction_training_region_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalIntervalSeries</a> key defining the training region for supervised dim reduction.</p>
+</section>
+<section id="variable-active_tab" class="level3">
+<h3 class="anchored" data-anchor-id="variable-active_tab">variable active_tab</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> active_tab <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Active workflow tab index (0 = classification, 1 = clustering)</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:21 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

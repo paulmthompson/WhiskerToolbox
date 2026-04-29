@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcdatamanagertransformsanalogtimeseriesanalogfilteranalog_filter.test.cpp" id="toc-srcdatamanagertransformsanalogtimeseriesanalogfilteranalog_filter.test.cpp" class="nav-link active" data-scroll-target="#srcdatamanagertransformsanalogtimeseriesanalogfilteranalog_filter.test.cpp">src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-test_case_method" id="toc-function-test_case_method" class="nav-link" data-scroll-target="#function-test_case_method">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-1" id="toc-function-test_case_method-1" class="nav-link" data-scroll-target="#function-test_case_method-1">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-2" id="toc-function-test_case_method-2" class="nav-link" data-scroll-target="#function-test_case_method-2">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case" id="toc-function-test_case" class="nav-link" data-scroll-target="#function-test_case">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-1" id="toc-function-test_case-1" class="nav-link" data-scroll-target="#function-test_case-1">function TEST_CASE</a></li>
+  <li><a href="#function-test_case_method-3" id="toc-function-test_case_method-3" class="nav-link" data-scroll-target="#function-test_case_method-3">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-4" id="toc-function-test_case_method-4" class="nav-link" data-scroll-target="#function-test_case_method-4">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case_method-5" id="toc-function-test_case_method-5" class="nav-link" data-scroll-target="#function-test_case_method-5">function TEST_CASE_METHOD</a></li>
+  <li><a href="#function-test_case-2" id="toc-function-test_case-2" class="nav-link" data-scroll-target="#function-test_case-2">function TEST_CASE</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcdatamanagertransformsanalogtimeseriesanalogfilteranalog_filter.test.cpp" class="level1">
+<h1>src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp</h1>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter <a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-analog">Analog</a><a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-time">Time</a> Series” , “” [transforms][analog_filter])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter <a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-analog">Analog</a><a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-time">Time</a> Series - Operation Class Tests” , “” [transforms][analog_filter][operation])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter <a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-analog">Analog</a><a href="../../api_generated/Files/DM__DataType_8hpp.html#enumvalue-time">Time</a> Series - New Interface Features” , “” [transforms][analog_filter][new_interface])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“Data Transform: Filter Specification - Validation” , “” [transforms][analog_filter][specification])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“Data Transform: Filter Specification - <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> Serialization” , “” [transforms][analog_filter][specification][json])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter Specification - Filter Creation” , “” [transforms][analog_filter][specification])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter - <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> Pipeline Integration” , “” [transforms][analog_filter][pipeline])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case-method">TEST_CASE_METHOD</a></strong>(AnalogFilterTestFixture , “Data Transform: Filter - Multiple Filter Types in Pipeline” , “” [transforms][analog_filter][pipeline])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/analog__filter_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“Data Transform: Filter - Invalid Specification in Pipeline” , “” [transforms][analog_filter][pipeline])</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-test_case_method" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter AnalogTime Series"</span> <span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-1">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter AnalogTime Series - Operation Class Tests"</span> <span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>operation<span class="op">]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-2">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter AnalogTime Series - New Interface Features"</span> <span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>new_interface<span class="op">]</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter Specification - Validation"</span> <span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>specification<span class="op">]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-1">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter Specification - JSON Serialization"</span> <span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>specification<span class="op">][</span>json<span class="op">]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-3">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter Specification - Filter Creation"</span> <span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>specification<span class="op">]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-4">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter - JSON Pipeline Integration"</span> <span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>pipeline<span class="op">]</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case_method-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case_method-5">function TEST_CASE_METHOD</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    AnalogFilterTestFixture <span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter - Multiple Filter Types in Pipeline"</span> <span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>pipeline<span class="op">]</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-2">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Data Transform: Filter - Invalid Specification in Pipeline"</span> <span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>analog_filter<span class="op">][</span>pipeline<span class="op">]</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"analog_filter.hpp"</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/Analog_Time_Series.hpp"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/ParameterFactory.hpp"</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/TransformPipeline.hpp"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/TransformRegistry.hpp"</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/filter/FilterFactory.hpp"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"utils/filter/IFilter.hpp"</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/AnalogFilterTestFixture.hpp"</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_approx.hpp&gt;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;fstream&gt;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span> <span class="st">"Data Transform: Filter Analog Time Series"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"sine_10hz_2000"</span><span class="op">];</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">size_t</span> num_samples <span class="op">=</span> <span class="dv">2000</span><span class="op">;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">double</span> sampling_rate <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">double</span> signal_freq <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Low-pass filter"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use the new filter interface with Butterworth lowpass</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createButterworthLowpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">3.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">)));</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check that high frequency content is attenuated</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> max_amplitude <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip initial transient</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> sample <span class="op">:</span> filtered<span class="op">-&gt;</span>getAllSamples<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;=</span> <span class="dv">500</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>                max_amplitude <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_amplitude<span class="op">,</span> <span class="bu">std::</span>abs<span class="op">(</span>sample<span class="op">.</span>value<span class="op">()));</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>            <span class="op">++</span>i<span class="op">;</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>max_amplitude <span class="op">&lt;</span> <span class="fl">0.15</span><span class="bu">f</span><span class="op">);</span> <span class="co">// More stringent requirement</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"High-pass filter"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use the new filter interface with Butterworth highpass</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createButterworthHighpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">20.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">)));</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check that low frequency content is attenuated</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> max_amplitude <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip initial transient</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> sample <span class="op">:</span> filtered<span class="op">-&gt;</span>getAllSamples<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;=</span> <span class="dv">500</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>                max_amplitude <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_amplitude<span class="op">,</span> <span class="bu">std::</span>abs<span class="op">(</span>sample<span class="op">.</span>value<span class="op">()));</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>            <span class="op">++</span>i<span class="op">;</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>max_amplitude <span class="op">&lt;</span> <span class="fl">0.15</span><span class="bu">f</span><span class="op">);</span> <span class="co">// More stringent requirement</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Band-pass filter around signal frequency"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use the new filter interface with Butterworth bandpass</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createButterworthBandpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">9.0</span><span class="op">,</span> <span class="fl">11.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">)));</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Signal should be preserved (allowing for some attenuation)</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> max_amplitude <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip longer transient for bandpass</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> sample <span class="op">:</span> filtered<span class="op">-&gt;</span>getAllSamples<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;=</span> <span class="dv">500</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>                max_amplitude <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_amplitude<span class="op">,</span> <span class="bu">std::</span>abs<span class="op">(</span>sample<span class="op">.</span>value<span class="op">()));</span></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>            <span class="op">++</span>i<span class="op">;</span></span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>max_amplitude <span class="op">&gt;</span> <span class="fl">0.7</span><span class="bu">f</span><span class="op">);</span> <span class="co">// Signal should be mostly preserved</span></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Notch filter at signal frequency"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create a notch filter at 10 Hz with very narrow bandwidth using RBJ</span></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createRBJBandstop<span class="op">(</span>signal_freq<span class="op">,</span> sampling_rate<span class="op">,</span> <span class="fl">200.0</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span> <span class="co">// Zero-phase for better attenuation</span></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">)));</span></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get filtered data</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered_data <span class="op">=</span> filtered<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip first 1000 samples to avoid transient response</span></span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> max_amplitude <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span> i <span class="op">&lt;</span> filtered_data<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>            max_amplitude <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_amplitude<span class="op">,</span> <span class="bu">std::</span>abs<span class="op">(</span>filtered_data<span class="op">[</span>i<span class="op">]));</span></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The notch filter should significantly attenuate the 10 Hz signal</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>max_amplitude <span class="op">&lt;</span> <span class="fl">0.2</span><span class="op">);</span></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span><span class="st">"Data Transform: Filter Analog Time Series - Operation Class Tests"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][operation]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>    AnalogFilterOperation operation<span class="op">;</span></span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Basic operation properties"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>operation<span class="op">.</span>getName<span class="op">()</span> <span class="op">==</span> <span class="st">"Filter"</span><span class="op">);</span></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>operation<span class="op">.</span>getTargetInputTypeIndex<span class="op">()</span> <span class="op">==</span> <span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;));</span></span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Default parameters"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> operation<span class="op">.</span>getDefaultParameters<span class="op">();</span></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">);</span></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span><span class="op">*</span> filterParams <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>AnalogFilterParams<span class="op">*&gt;(</span>params<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filterParams<span class="op">);</span></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can apply to correct type"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;();</span></span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant variant<span class="op">(</span>series<span class="op">);</span></span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>operation<span class="op">.</span>canApply<span class="op">(</span>variant<span class="op">));</span></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Execute with progress callback"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"constant_1000"</span><span class="op">];</span></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant input<span class="op">(</span>series<span class="op">);</span></span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create parameters using new filter interface</span></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createButterworthLowpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">10.0</span><span class="op">,</span> <span class="fl">100.0</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>AnalogFilterParams<span class="op">&gt;(</span></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a>            AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">))));</span></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> progress_called <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> operation<span class="op">.</span>execute<span class="op">(</span>input<span class="op">,</span> params<span class="op">.</span>get<span class="op">(),</span> </span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>            <span class="op">[&amp;</span>progress_called<span class="op">](</span><span class="dt">int</span> progress<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>progress <span class="op">==</span> <span class="dv">100</span><span class="op">)</span> progress_called <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>progress_called<span class="op">);</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span><span class="bu">std::</span>holds_alternative<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;&gt;(</span>result<span class="op">));</span></span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> <span class="bu">std::</span>get<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;&gt;(</span>result<span class="op">);</span></span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span> <span class="st">"Data Transform: Filter Analog Time Series - New Interface Features"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][new_interface]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"pattern_1000"</span><span class="op">];</span></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">size_t</span> num_samples <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">double</span> sampling_rate <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Filter factory function approach"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create parameters using factory function</span></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFactory<span class="op">([]()</span> <span class="op">{</span></span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> FilterFactory<span class="op">::</span>createButterworthLowpass<span class="op">&lt;</span><span class="dv">2</span><span class="op">&gt;(</span><span class="fl">50.0</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Direct filter instance approach"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create filter instance directly</span></span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> FilterFactory<span class="op">::</span>createChebyshevILowpass<span class="op">&lt;</span><span class="dv">3</span><span class="op">&gt;(</span><span class="fl">100.0</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>filter<span class="op">)));</span></span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check that filter name is available</span></span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>params<span class="op">.</span>getFilterName<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>getFilterName<span class="op">().</span>find<span class="op">(</span><span class="st">"Chebyshev I"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Default parameters test"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test that default parameters work correctly</span></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>createDefault<span class="op">(</span><span class="fl">1000.0</span><span class="op">,</span> <span class="fl">75.0</span><span class="op">);</span></span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Default constructor test"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test that default constructor creates a working filter</span></span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">();</span>  <span class="co">// Should use default constructor</span></span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>params<span class="op">.</span>getFilterName<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Different filter types comparison"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Compare different filter types on the same data</span></span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> butterworth <span class="op">=</span> FilterFactory<span class="op">::</span>createButterworthLowpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">50.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> chebyshev1 <span class="op">=</span> FilterFactory<span class="op">::</span>createChebyshevILowpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">50.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> chebyshev2 <span class="op">=</span> FilterFactory<span class="op">::</span>createChebyshevIILowpass<span class="op">&lt;</span><span class="dv">4</span><span class="op">&gt;(</span><span class="fl">50.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="fl">20.0</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> rbj <span class="op">=</span> FilterFactory<span class="op">::</span>createRBJLowpass<span class="op">(</span><span class="fl">50.0</span><span class="op">,</span> sampling_rate<span class="op">,</span> <span class="fl">0.707</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_butter <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>butterworth<span class="op">)));</span></span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_cheby1 <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>chebyshev1<span class="op">)));</span></span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_cheby2 <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>chebyshev2<span class="op">)));</span></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_rbj <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withFilter<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IFilter<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>rbj<span class="op">)));</span></span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered_butter <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params_butter<span class="op">);</span></span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered_cheby1 <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params_cheby1<span class="op">);</span></span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered_cheby2 <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params_cheby2<span class="op">);</span></span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered_rbj <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params_rbj<span class="op">);</span></span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_butter<span class="op">);</span></span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_cheby1<span class="op">);</span></span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_cheby2<span class="op">);</span></span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_rbj<span class="op">);</span></span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All should have same number of samples</span></span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_butter<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_cheby1<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_cheby2<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered_rbj<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Data Transform: Filter Specification - Validation"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][specification]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Valid Butterworth lowpass specification"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>Butterworth<span class="op">;</span></span>
+<span id="cb10-242"><a href="#cb10-242" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Lowpass<span class="op">;</span></span>
+<span id="cb10-243"><a href="#cb10-243" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span></span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec<span class="op">.</span>validate<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid order"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>  <span class="co">// Too high</span></span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-258"><a href="#cb10-258" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"order"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-259"><a href="#cb10-259" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-260"><a href="#cb10-260" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-261"><a href="#cb10-261" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid sampling rate"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-262"><a href="#cb10-262" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="op">-</span><span class="fl">100.0</span><span class="op">;</span></span>
+<span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-265"><a href="#cb10-265" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-266"><a href="#cb10-266" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-267"><a href="#cb10-267" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"Sampling rate"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-268"><a href="#cb10-268" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-269"><a href="#cb10-269" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-270"><a href="#cb10-270" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Cutoff above Nyquist"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-271"><a href="#cb10-271" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-272"><a href="#cb10-272" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">600.0</span><span class="op">;</span></span>
+<span id="cb10-273"><a href="#cb10-273" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span>  <span class="co">// Nyquist = 500 Hz</span></span>
+<span id="cb10-274"><a href="#cb10-274" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-275"><a href="#cb10-275" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-276"><a href="#cb10-276" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-277"><a href="#cb10-277" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"Nyquist"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-278"><a href="#cb10-278" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-279"><a href="#cb10-279" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-280"><a href="#cb10-280" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid bandpass frequencies"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-281"><a href="#cb10-281" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-282"><a href="#cb10-282" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Bandpass<span class="op">;</span></span>
+<span id="cb10-283"><a href="#cb10-283" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_low_hz <span class="op">=</span> <span class="fl">50.0</span><span class="op">;</span></span>
+<span id="cb10-284"><a href="#cb10-284" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_high_hz <span class="op">=</span> <span class="fl">30.0</span><span class="op">;</span>  <span class="co">// Low &gt; High</span></span>
+<span id="cb10-285"><a href="#cb10-285" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-286"><a href="#cb10-286" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-287"><a href="#cb10-287" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-288"><a href="#cb10-288" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-289"><a href="#cb10-289" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"Low cutoff"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-290"><a href="#cb10-290" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-291"><a href="#cb10-291" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-292"><a href="#cb10-292" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Missing ripple for Chebyshev"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-293"><a href="#cb10-293" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-294"><a href="#cb10-294" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>ChebyshevI<span class="op">;</span></span>
+<span id="cb10-295"><a href="#cb10-295" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>ripple_db <span class="op">=</span> <span class="op">-</span><span class="fl">1.0</span><span class="op">;</span>  <span class="co">// Invalid</span></span>
+<span id="cb10-296"><a href="#cb10-296" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-297"><a href="#cb10-297" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-298"><a href="#cb10-298" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-299"><a href="#cb10-299" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"Ripple"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-300"><a href="#cb10-300" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-301"><a href="#cb10-301" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-302"><a href="#cb10-302" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"RBJ only supports bandstop"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-303"><a href="#cb10-303" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-304"><a href="#cb10-304" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>RBJ<span class="op">;</span></span>
+<span id="cb10-305"><a href="#cb10-305" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Lowpass<span class="op">;</span>  <span class="co">// Invalid for RBJ</span></span>
+<span id="cb10-306"><a href="#cb10-306" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-307"><a href="#cb10-307" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> errors <span class="op">=</span> spec<span class="op">.</span>validate<span class="op">();</span></span>
+<span id="cb10-308"><a href="#cb10-308" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>errors<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-309"><a href="#cb10-309" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>errors<span class="op">[</span><span class="dv">0</span><span class="op">].</span>find<span class="op">(</span><span class="st">"RBJ"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-310"><a href="#cb10-310" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-311"><a href="#cb10-311" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-312"><a href="#cb10-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-313"><a href="#cb10-313" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Data Transform: Filter Specification - JSON Serialization"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][specification][json]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-314"><a href="#cb10-314" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Butterworth lowpass roundtrip"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-315"><a href="#cb10-315" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-316"><a href="#cb10-316" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>Butterworth<span class="op">;</span></span>
+<span id="cb10-317"><a href="#cb10-317" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Lowpass<span class="op">;</span></span>
+<span id="cb10-318"><a href="#cb10-318" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb10-319"><a href="#cb10-319" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span></span>
+<span id="cb10-320"><a href="#cb10-320" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-321"><a href="#cb10-321" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-322"><a href="#cb10-322" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-323"><a href="#cb10-323" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> json <span class="op">=</span> spec<span class="op">.</span>toJson<span class="op">();</span></span>
+<span id="cb10-324"><a href="#cb10-324" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> spec2 <span class="op">=</span> FilterSpecification<span class="op">::</span>fromJson<span class="op">(</span>json<span class="op">);</span></span>
+<span id="cb10-325"><a href="#cb10-325" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-326"><a href="#cb10-326" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>family <span class="op">==</span> spec<span class="op">.</span>family<span class="op">);</span></span>
+<span id="cb10-327"><a href="#cb10-327" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>response <span class="op">==</span> spec<span class="op">.</span>response<span class="op">);</span></span>
+<span id="cb10-328"><a href="#cb10-328" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>order <span class="op">==</span> spec<span class="op">.</span>order<span class="op">);</span></span>
+<span id="cb10-329"><a href="#cb10-329" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>cutoff_hz <span class="op">==</span> spec<span class="op">.</span>cutoff_hz<span class="op">);</span></span>
+<span id="cb10-330"><a href="#cb10-330" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>sampling_rate_hz <span class="op">==</span> spec<span class="op">.</span>sampling_rate_hz<span class="op">);</span></span>
+<span id="cb10-331"><a href="#cb10-331" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>zero_phase <span class="op">==</span> spec<span class="op">.</span>zero_phase<span class="op">);</span></span>
+<span id="cb10-332"><a href="#cb10-332" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-333"><a href="#cb10-333" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-334"><a href="#cb10-334" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Chebyshev I bandpass roundtrip"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-335"><a href="#cb10-335" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-336"><a href="#cb10-336" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>ChebyshevI<span class="op">;</span></span>
+<span id="cb10-337"><a href="#cb10-337" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Bandpass<span class="op">;</span></span>
+<span id="cb10-338"><a href="#cb10-338" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">6</span><span class="op">;</span></span>
+<span id="cb10-339"><a href="#cb10-339" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_low_hz <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span>
+<span id="cb10-340"><a href="#cb10-340" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_high_hz <span class="op">=</span> <span class="fl">20.0</span><span class="op">;</span></span>
+<span id="cb10-341"><a href="#cb10-341" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">100.0</span><span class="op">;</span></span>
+<span id="cb10-342"><a href="#cb10-342" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>ripple_db <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span>
+<span id="cb10-343"><a href="#cb10-343" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-344"><a href="#cb10-344" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-345"><a href="#cb10-345" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> json <span class="op">=</span> spec<span class="op">.</span>toJson<span class="op">();</span></span>
+<span id="cb10-346"><a href="#cb10-346" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> spec2 <span class="op">=</span> FilterSpecification<span class="op">::</span>fromJson<span class="op">(</span>json<span class="op">);</span></span>
+<span id="cb10-347"><a href="#cb10-347" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-348"><a href="#cb10-348" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>family <span class="op">==</span> spec<span class="op">.</span>family<span class="op">);</span></span>
+<span id="cb10-349"><a href="#cb10-349" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>response <span class="op">==</span> spec<span class="op">.</span>response<span class="op">);</span></span>
+<span id="cb10-350"><a href="#cb10-350" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>order <span class="op">==</span> spec<span class="op">.</span>order<span class="op">);</span></span>
+<span id="cb10-351"><a href="#cb10-351" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>cutoff_low_hz <span class="op">==</span> spec<span class="op">.</span>cutoff_low_hz<span class="op">);</span></span>
+<span id="cb10-352"><a href="#cb10-352" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>cutoff_high_hz <span class="op">==</span> spec<span class="op">.</span>cutoff_high_hz<span class="op">);</span></span>
+<span id="cb10-353"><a href="#cb10-353" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>sampling_rate_hz <span class="op">==</span> spec<span class="op">.</span>sampling_rate_hz<span class="op">);</span></span>
+<span id="cb10-354"><a href="#cb10-354" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>ripple_db <span class="op">==</span> spec<span class="op">.</span>ripple_db<span class="op">);</span></span>
+<span id="cb10-355"><a href="#cb10-355" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>zero_phase <span class="op">==</span> spec<span class="op">.</span>zero_phase<span class="op">);</span></span>
+<span id="cb10-356"><a href="#cb10-356" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-357"><a href="#cb10-357" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-358"><a href="#cb10-358" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"RBJ notch roundtrip"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-359"><a href="#cb10-359" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-360"><a href="#cb10-360" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>RBJ<span class="op">;</span></span>
+<span id="cb10-361"><a href="#cb10-361" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Bandstop<span class="op">;</span></span>
+<span id="cb10-362"><a href="#cb10-362" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">60.0</span><span class="op">;</span>  <span class="co">// 60 Hz notch</span></span>
+<span id="cb10-363"><a href="#cb10-363" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-364"><a href="#cb10-364" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>q_factor <span class="op">=</span> <span class="fl">30.0</span><span class="op">;</span></span>
+<span id="cb10-365"><a href="#cb10-365" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-366"><a href="#cb10-366" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-367"><a href="#cb10-367" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> json <span class="op">=</span> spec<span class="op">.</span>toJson<span class="op">();</span></span>
+<span id="cb10-368"><a href="#cb10-368" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> spec2 <span class="op">=</span> FilterSpecification<span class="op">::</span>fromJson<span class="op">(</span>json<span class="op">);</span></span>
+<span id="cb10-369"><a href="#cb10-369" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-370"><a href="#cb10-370" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>family <span class="op">==</span> spec<span class="op">.</span>family<span class="op">);</span></span>
+<span id="cb10-371"><a href="#cb10-371" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>response <span class="op">==</span> spec<span class="op">.</span>response<span class="op">);</span></span>
+<span id="cb10-372"><a href="#cb10-372" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>cutoff_hz <span class="op">==</span> spec<span class="op">.</span>cutoff_hz<span class="op">);</span></span>
+<span id="cb10-373"><a href="#cb10-373" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>sampling_rate_hz <span class="op">==</span> spec<span class="op">.</span>sampling_rate_hz<span class="op">);</span></span>
+<span id="cb10-374"><a href="#cb10-374" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>q_factor <span class="op">==</span> spec<span class="op">.</span>q_factor<span class="op">);</span></span>
+<span id="cb10-375"><a href="#cb10-375" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spec2<span class="op">.</span>zero_phase <span class="op">==</span> spec<span class="op">.</span>zero_phase<span class="op">);</span></span>
+<span id="cb10-376"><a href="#cb10-376" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-377"><a href="#cb10-377" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-378"><a href="#cb10-378" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid JSON missing required field"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-379"><a href="#cb10-379" aria-hidden="true" tabindex="-1"></a>        nlohmann<span class="op">::</span>json json <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-380"><a href="#cb10-380" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"butterworth"</span><span class="op">},</span></span>
+<span id="cb10-381"><a href="#cb10-381" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"order"</span><span class="op">,</span> <span class="dv">4</span><span class="op">}</span></span>
+<span id="cb10-382"><a href="#cb10-382" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Missing filter_response</span></span>
+<span id="cb10-383"><a href="#cb10-383" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb10-384"><a href="#cb10-384" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-385"><a href="#cb10-385" aria-hidden="true" tabindex="-1"></a>        REQUIRE_THROWS_AS<span class="op">(</span>FilterSpecification<span class="op">::</span>fromJson<span class="op">(</span>json<span class="op">),</span> <span class="bu">std::</span>invalid_argument<span class="op">);</span></span>
+<span id="cb10-386"><a href="#cb10-386" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-387"><a href="#cb10-387" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-388"><a href="#cb10-388" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid JSON unknown filter family"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-389"><a href="#cb10-389" aria-hidden="true" tabindex="-1"></a>        nlohmann<span class="op">::</span>json json <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-390"><a href="#cb10-390" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"unknown_filter"</span><span class="op">},</span></span>
+<span id="cb10-391"><a href="#cb10-391" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"filter_response"</span><span class="op">,</span> <span class="st">"lowpass"</span><span class="op">},</span></span>
+<span id="cb10-392"><a href="#cb10-392" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"order"</span><span class="op">,</span> <span class="dv">4</span><span class="op">},</span></span>
+<span id="cb10-393"><a href="#cb10-393" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"cutoff_hz"</span><span class="op">,</span> <span class="fl">10.0</span><span class="op">},</span></span>
+<span id="cb10-394"><a href="#cb10-394" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"sampling_rate_hz"</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">}</span></span>
+<span id="cb10-395"><a href="#cb10-395" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb10-396"><a href="#cb10-396" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-397"><a href="#cb10-397" aria-hidden="true" tabindex="-1"></a>        REQUIRE_THROWS_AS<span class="op">(</span>FilterSpecification<span class="op">::</span>fromJson<span class="op">(</span>json<span class="op">),</span> <span class="bu">std::</span>invalid_argument<span class="op">);</span></span>
+<span id="cb10-398"><a href="#cb10-398" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-399"><a href="#cb10-399" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-400"><a href="#cb10-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-401"><a href="#cb10-401" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span> <span class="st">"Data Transform: Filter Specification - Filter Creation"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][specification]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-402"><a href="#cb10-402" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"sine_10hz_1000"</span><span class="op">];</span></span>
+<span id="cb10-403"><a href="#cb10-403" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">size_t</span> num_samples <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb10-404"><a href="#cb10-404" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-405"><a href="#cb10-405" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Create and apply Butterworth lowpass"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-406"><a href="#cb10-406" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-407"><a href="#cb10-407" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>Butterworth<span class="op">;</span></span>
+<span id="cb10-408"><a href="#cb10-408" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Lowpass<span class="op">;</span></span>
+<span id="cb10-409"><a href="#cb10-409" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb10-410"><a href="#cb10-410" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span>
+<span id="cb10-411"><a href="#cb10-411" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-412"><a href="#cb10-412" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-413"><a href="#cb10-413" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-414"><a href="#cb10-414" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> spec<span class="op">.</span>createFilter<span class="op">();</span></span>
+<span id="cb10-415"><a href="#cb10-415" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filter<span class="op">);</span></span>
+<span id="cb10-416"><a href="#cb10-416" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filter<span class="op">-&gt;</span>getName<span class="op">().</span>find<span class="op">(</span><span class="st">"Butterworth"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-417"><a href="#cb10-417" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-418"><a href="#cb10-418" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Apply filter</span></span>
+<span id="cb10-419"><a href="#cb10-419" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withSpecification<span class="op">(</span>spec<span class="op">);</span></span>
+<span id="cb10-420"><a href="#cb10-420" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-421"><a href="#cb10-421" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-422"><a href="#cb10-422" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-423"><a href="#cb10-423" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-424"><a href="#cb10-424" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-425"><a href="#cb10-425" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Create and apply Chebyshev II highpass"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-426"><a href="#cb10-426" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-427"><a href="#cb10-427" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>family <span class="op">=</span> FilterFamily<span class="op">::</span>ChebyshevII<span class="op">;</span></span>
+<span id="cb10-428"><a href="#cb10-428" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>response <span class="op">=</span> FilterResponse<span class="op">::</span>Highpass<span class="op">;</span></span>
+<span id="cb10-429"><a href="#cb10-429" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb10-430"><a href="#cb10-430" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>cutoff_hz <span class="op">=</span> <span class="fl">20.0</span><span class="op">;</span></span>
+<span id="cb10-431"><a href="#cb10-431" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>sampling_rate_hz <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb10-432"><a href="#cb10-432" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>ripple_db <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb10-433"><a href="#cb10-433" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>zero_phase <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-434"><a href="#cb10-434" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-435"><a href="#cb10-435" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filter <span class="op">=</span> spec<span class="op">.</span>createFilter<span class="op">();</span></span>
+<span id="cb10-436"><a href="#cb10-436" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filter<span class="op">);</span></span>
+<span id="cb10-437"><a href="#cb10-437" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filter<span class="op">-&gt;</span>getName<span class="op">().</span>find<span class="op">(</span><span class="st">"Chebyshev II"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb10-438"><a href="#cb10-438" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-439"><a href="#cb10-439" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params <span class="op">=</span> AnalogFilterParams<span class="op">::</span>withSpecification<span class="op">(</span>spec<span class="op">);</span></span>
+<span id="cb10-440"><a href="#cb10-440" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> filter_analog<span class="op">(</span>series<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb10-441"><a href="#cb10-441" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-442"><a href="#cb10-442" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-443"><a href="#cb10-443" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-444"><a href="#cb10-444" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-445"><a href="#cb10-445" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Invalid specification throws on filter creation"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-446"><a href="#cb10-446" aria-hidden="true" tabindex="-1"></a>        FilterSpecification spec<span class="op">;</span></span>
+<span id="cb10-447"><a href="#cb10-447" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>order <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>  <span class="co">// Invalid</span></span>
+<span id="cb10-448"><a href="#cb10-448" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-449"><a href="#cb10-449" aria-hidden="true" tabindex="-1"></a>        REQUIRE_THROWS_AS<span class="op">(</span>spec<span class="op">.</span>createFilter<span class="op">(),</span> <span class="bu">std::</span>invalid_argument<span class="op">);</span></span>
+<span id="cb10-450"><a href="#cb10-450" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-451"><a href="#cb10-451" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-452"><a href="#cb10-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-453"><a href="#cb10-453" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span> <span class="st">"Data Transform: Filter - JSON Pipeline Integration"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][pipeline]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-454"><a href="#cb10-454" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> nlohmann<span class="op">::</span>json json_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-455"><a href="#cb10-455" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"steps"</span><span class="op">,</span> <span class="op">{{</span></span>
+<span id="cb10-456"><a href="#cb10-456" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"step_id"</span><span class="op">,</span> <span class="st">"filter_step_1"</span><span class="op">},</span></span>
+<span id="cb10-457"><a href="#cb10-457" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"transform_name"</span><span class="op">,</span> <span class="st">"Filter"</span><span class="op">},</span></span>
+<span id="cb10-458"><a href="#cb10-458" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"input_key"</span><span class="op">,</span> <span class="st">"raw_signal"</span><span class="op">},</span></span>
+<span id="cb10-459"><a href="#cb10-459" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"output_key"</span><span class="op">,</span> <span class="st">"filtered_signal"</span><span class="op">},</span></span>
+<span id="cb10-460"><a href="#cb10-460" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"parameters"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-461"><a href="#cb10-461" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"filter_specification"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-462"><a href="#cb10-462" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"butterworth"</span><span class="op">},</span></span>
+<span id="cb10-463"><a href="#cb10-463" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_response"</span><span class="op">,</span> <span class="st">"lowpass"</span><span class="op">},</span></span>
+<span id="cb10-464"><a href="#cb10-464" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"order"</span><span class="op">,</span> <span class="dv">4</span><span class="op">},</span></span>
+<span id="cb10-465"><a href="#cb10-465" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"cutoff_hz"</span><span class="op">,</span> <span class="fl">10.0</span><span class="op">},</span></span>
+<span id="cb10-466"><a href="#cb10-466" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"sampling_rate_hz"</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">},</span></span>
+<span id="cb10-467"><a href="#cb10-467" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"zero_phase"</span><span class="op">,</span> <span class="kw">true</span><span class="op">}</span></span>
+<span id="cb10-468"><a href="#cb10-468" aria-hidden="true" tabindex="-1"></a>                <span class="op">}}</span></span>
+<span id="cb10-469"><a href="#cb10-469" aria-hidden="true" tabindex="-1"></a>            <span class="op">}}</span></span>
+<span id="cb10-470"><a href="#cb10-470" aria-hidden="true" tabindex="-1"></a>        <span class="op">}}}</span></span>
+<span id="cb10-471"><a href="#cb10-471" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb10-472"><a href="#cb10-472" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-473"><a href="#cb10-473" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
+<span id="cb10-474"><a href="#cb10-474" aria-hidden="true" tabindex="-1"></a>    TransformRegistry registry<span class="op">;</span></span>
+<span id="cb10-475"><a href="#cb10-475" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-476"><a href="#cb10-476" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> time_frame <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
+<span id="cb10-477"><a href="#cb10-477" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> time_frame<span class="op">);</span></span>
+<span id="cb10-478"><a href="#cb10-478" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-479"><a href="#cb10-479" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"multi_freq_5_50"</span><span class="op">];</span></span>
+<span id="cb10-480"><a href="#cb10-480" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">size_t</span> num_samples <span class="op">=</span> <span class="dv">2000</span><span class="op">;</span></span>
+<span id="cb10-481"><a href="#cb10-481" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-482"><a href="#cb10-482" aria-hidden="true" tabindex="-1"></a>    series<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
+<span id="cb10-483"><a href="#cb10-483" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"raw_signal"</span><span class="op">,</span> series<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
+<span id="cb10-484"><a href="#cb10-484" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-485"><a href="#cb10-485" aria-hidden="true" tabindex="-1"></a>    TransformPipeline pipeline<span class="op">(&amp;</span>dm<span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb10-486"><a href="#cb10-486" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>pipeline<span class="op">.</span>loadFromJson<span class="op">(</span>json_config<span class="op">));</span></span>
+<span id="cb10-487"><a href="#cb10-487" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-488"><a href="#cb10-488" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> pipeline<span class="op">.</span>execute<span class="op">();</span></span>
+<span id="cb10-489"><a href="#cb10-489" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb10-490"><a href="#cb10-490" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>steps_completed <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-491"><a href="#cb10-491" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-492"><a href="#cb10-492" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the filtered output</span></span>
+<span id="cb10-493"><a href="#cb10-493" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> filtered_series <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="st">"filtered_signal"</span><span class="op">);</span></span>
+<span id="cb10-494"><a href="#cb10-494" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>filtered_series <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-495"><a href="#cb10-495" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>filtered_series<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-496"><a href="#cb10-496" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-497"><a href="#cb10-497" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The 50 Hz component should be attenuated (cutoff at 10 Hz)</span></span>
+<span id="cb10-498"><a href="#cb10-498" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Original signal: 1.0 amplitude at 5 Hz + 0.5 amplitude at 50 Hz</span></span>
+<span id="cb10-499"><a href="#cb10-499" aria-hidden="true" tabindex="-1"></a>    <span class="co">// After 10 Hz lowpass: 5 Hz should pass through, 50 Hz should be heavily attenuated</span></span>
+<span id="cb10-500"><a href="#cb10-500" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> filtered_data <span class="op">=</span> filtered_series<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb10-501"><a href="#cb10-501" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-502"><a href="#cb10-502" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check that the signal is dominated by the low frequency (5 Hz) component</span></span>
+<span id="cb10-503"><a href="#cb10-503" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The filtered max amplitude should be close to the original 5 Hz component (1.0)</span></span>
+<span id="cb10-504"><a href="#cb10-504" aria-hidden="true" tabindex="-1"></a>    <span class="co">// and much less than the original combined signal (would be ~1.5)</span></span>
+<span id="cb10-505"><a href="#cb10-505" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> max_amplitude <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-506"><a href="#cb10-506" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">500</span><span class="op">;</span> i <span class="op">&lt;</span> filtered_data<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-507"><a href="#cb10-507" aria-hidden="true" tabindex="-1"></a>        max_amplitude <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_amplitude<span class="op">,</span> <span class="bu">std::</span>abs<span class="op">(</span>filtered_data<span class="op">[</span>i<span class="op">]));</span></span>
+<span id="cb10-508"><a href="#cb10-508" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-509"><a href="#cb10-509" aria-hidden="true" tabindex="-1"></a>    <span class="co">// With 10 Hz lowpass, the output should be dominated by the 5 Hz component</span></span>
+<span id="cb10-510"><a href="#cb10-510" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Allow some tolerance for passband ripple and phase effects</span></span>
+<span id="cb10-511"><a href="#cb10-511" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>max_amplitude <span class="op">&gt;</span> <span class="fl">0.8</span><span class="bu">f</span><span class="op">);</span>  <span class="co">// 5 Hz component mostly preserved</span></span>
+<span id="cb10-512"><a href="#cb10-512" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>max_amplitude <span class="op">&lt;</span> <span class="fl">1.3</span><span class="bu">f</span><span class="op">);</span>  <span class="co">// 50 Hz component significantly attenuated</span></span>
+<span id="cb10-513"><a href="#cb10-513" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-514"><a href="#cb10-514" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-515"><a href="#cb10-515" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>AnalogFilterTestFixture<span class="op">,</span> <span class="st">"Data Transform: Filter - Multiple Filter Types in Pipeline"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][pipeline]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-516"><a href="#cb10-516" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> nlohmann<span class="op">::</span>json json_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-517"><a href="#cb10-517" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"steps"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-518"><a href="#cb10-518" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb10-519"><a href="#cb10-519" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"step_id"</span><span class="op">,</span> <span class="st">"lowpass_filter"</span><span class="op">},</span></span>
+<span id="cb10-520"><a href="#cb10-520" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"transform_name"</span><span class="op">,</span> <span class="st">"Filter"</span><span class="op">},</span></span>
+<span id="cb10-521"><a href="#cb10-521" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"input_key"</span><span class="op">,</span> <span class="st">"raw_signal"</span><span class="op">},</span></span>
+<span id="cb10-522"><a href="#cb10-522" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"output_key"</span><span class="op">,</span> <span class="st">"lowpass_signal"</span><span class="op">},</span></span>
+<span id="cb10-523"><a href="#cb10-523" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"phase"</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb10-524"><a href="#cb10-524" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"parameters"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-525"><a href="#cb10-525" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_specification"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-526"><a href="#cb10-526" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"butterworth"</span><span class="op">},</span></span>
+<span id="cb10-527"><a href="#cb10-527" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"filter_response"</span><span class="op">,</span> <span class="st">"lowpass"</span><span class="op">},</span></span>
+<span id="cb10-528"><a href="#cb10-528" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"order"</span><span class="op">,</span> <span class="dv">4</span><span class="op">},</span></span>
+<span id="cb10-529"><a href="#cb10-529" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"cutoff_hz"</span><span class="op">,</span> <span class="fl">50.0</span><span class="op">},</span></span>
+<span id="cb10-530"><a href="#cb10-530" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"sampling_rate_hz"</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">},</span></span>
+<span id="cb10-531"><a href="#cb10-531" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"zero_phase"</span><span class="op">,</span> <span class="kw">false</span><span class="op">}</span></span>
+<span id="cb10-532"><a href="#cb10-532" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}}</span></span>
+<span id="cb10-533"><a href="#cb10-533" aria-hidden="true" tabindex="-1"></a>                <span class="op">}}</span></span>
+<span id="cb10-534"><a href="#cb10-534" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb10-535"><a href="#cb10-535" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb10-536"><a href="#cb10-536" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"step_id"</span><span class="op">,</span> <span class="st">"notch_filter"</span><span class="op">},</span></span>
+<span id="cb10-537"><a href="#cb10-537" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"transform_name"</span><span class="op">,</span> <span class="st">"Filter"</span><span class="op">},</span></span>
+<span id="cb10-538"><a href="#cb10-538" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"input_key"</span><span class="op">,</span> <span class="st">"lowpass_signal"</span><span class="op">},</span></span>
+<span id="cb10-539"><a href="#cb10-539" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"output_key"</span><span class="op">,</span> <span class="st">"notch_signal"</span><span class="op">},</span></span>
+<span id="cb10-540"><a href="#cb10-540" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"phase"</span><span class="op">,</span> <span class="dv">1</span><span class="op">},</span></span>
+<span id="cb10-541"><a href="#cb10-541" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"parameters"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-542"><a href="#cb10-542" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_specification"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-543"><a href="#cb10-543" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"rbj"</span><span class="op">},</span></span>
+<span id="cb10-544"><a href="#cb10-544" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"filter_response"</span><span class="op">,</span> <span class="st">"bandstop"</span><span class="op">},</span></span>
+<span id="cb10-545"><a href="#cb10-545" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"cutoff_hz"</span><span class="op">,</span> <span class="fl">60.0</span><span class="op">},</span></span>
+<span id="cb10-546"><a href="#cb10-546" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"sampling_rate_hz"</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">},</span></span>
+<span id="cb10-547"><a href="#cb10-547" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"q_factor"</span><span class="op">,</span> <span class="fl">30.0</span><span class="op">},</span></span>
+<span id="cb10-548"><a href="#cb10-548" aria-hidden="true" tabindex="-1"></a>                        <span class="op">{</span><span class="st">"zero_phase"</span><span class="op">,</span> <span class="kw">true</span><span class="op">}</span></span>
+<span id="cb10-549"><a href="#cb10-549" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}}</span></span>
+<span id="cb10-550"><a href="#cb10-550" aria-hidden="true" tabindex="-1"></a>                <span class="op">}}</span></span>
+<span id="cb10-551"><a href="#cb10-551" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb10-552"><a href="#cb10-552" aria-hidden="true" tabindex="-1"></a>        <span class="op">}}</span></span>
+<span id="cb10-553"><a href="#cb10-553" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb10-554"><a href="#cb10-554" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-555"><a href="#cb10-555" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
+<span id="cb10-556"><a href="#cb10-556" aria-hidden="true" tabindex="-1"></a>    TransformRegistry registry<span class="op">;</span></span>
+<span id="cb10-557"><a href="#cb10-557" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-558"><a href="#cb10-558" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> time_frame <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
+<span id="cb10-559"><a href="#cb10-559" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> time_frame<span class="op">);</span></span>
+<span id="cb10-560"><a href="#cb10-560" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-561"><a href="#cb10-561" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series <span class="op">=</span> <span class="va">m_test_analog_signals</span><span class="op">[</span><span class="st">"multi_freq_10_60_100"</span><span class="op">];</span></span>
+<span id="cb10-562"><a href="#cb10-562" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="dt">size_t</span> num_samples <span class="op">=</span> <span class="dv">2000</span><span class="op">;</span></span>
+<span id="cb10-563"><a href="#cb10-563" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-564"><a href="#cb10-564" aria-hidden="true" tabindex="-1"></a>    series<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
+<span id="cb10-565"><a href="#cb10-565" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"raw_signal"</span><span class="op">,</span> series<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
+<span id="cb10-566"><a href="#cb10-566" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-567"><a href="#cb10-567" aria-hidden="true" tabindex="-1"></a>    TransformPipeline pipeline<span class="op">(&amp;</span>dm<span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb10-568"><a href="#cb10-568" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>pipeline<span class="op">.</span>loadFromJson<span class="op">(</span>json_config<span class="op">));</span></span>
+<span id="cb10-569"><a href="#cb10-569" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-570"><a href="#cb10-570" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> pipeline<span class="op">.</span>execute<span class="op">();</span></span>
+<span id="cb10-571"><a href="#cb10-571" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb10-572"><a href="#cb10-572" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>steps_completed <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-573"><a href="#cb10-573" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-574"><a href="#cb10-574" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify both outputs exist</span></span>
+<span id="cb10-575"><a href="#cb10-575" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> lowpass_series <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="st">"lowpass_signal"</span><span class="op">);</span></span>
+<span id="cb10-576"><a href="#cb10-576" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>lowpass_series <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-577"><a href="#cb10-577" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-578"><a href="#cb10-578" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> notch_series <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="st">"notch_signal"</span><span class="op">);</span></span>
+<span id="cb10-579"><a href="#cb10-579" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>notch_series <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-580"><a href="#cb10-580" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>notch_series<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> num_samples<span class="op">);</span></span>
+<span id="cb10-581"><a href="#cb10-581" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-582"><a href="#cb10-582" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-583"><a href="#cb10-583" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Data Transform: Filter - Invalid Specification in Pipeline"</span><span class="op">,</span> <span class="st">"[transforms][analog_filter][pipeline]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-584"><a href="#cb10-584" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> nlohmann<span class="op">::</span>json json_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-585"><a href="#cb10-585" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">"steps"</span><span class="op">,</span> <span class="op">{{</span></span>
+<span id="cb10-586"><a href="#cb10-586" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"step_id"</span><span class="op">,</span> <span class="st">"invalid_filter"</span><span class="op">},</span></span>
+<span id="cb10-587"><a href="#cb10-587" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"transform_name"</span><span class="op">,</span> <span class="st">"Filter"</span><span class="op">},</span></span>
+<span id="cb10-588"><a href="#cb10-588" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"input_key"</span><span class="op">,</span> <span class="st">"raw_signal"</span><span class="op">},</span></span>
+<span id="cb10-589"><a href="#cb10-589" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"output_key"</span><span class="op">,</span> <span class="st">"filtered_signal"</span><span class="op">},</span></span>
+<span id="cb10-590"><a href="#cb10-590" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"parameters"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-591"><a href="#cb10-591" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span><span class="st">"filter_specification"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-592"><a href="#cb10-592" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_family"</span><span class="op">,</span> <span class="st">"butterworth"</span><span class="op">},</span></span>
+<span id="cb10-593"><a href="#cb10-593" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"filter_response"</span><span class="op">,</span> <span class="st">"lowpass"</span><span class="op">},</span></span>
+<span id="cb10-594"><a href="#cb10-594" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"order"</span><span class="op">,</span> <span class="dv">10</span><span class="op">},</span>  <span class="co">// Invalid order</span></span>
+<span id="cb10-595"><a href="#cb10-595" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"cutoff_hz"</span><span class="op">,</span> <span class="fl">10.0</span><span class="op">},</span></span>
+<span id="cb10-596"><a href="#cb10-596" aria-hidden="true" tabindex="-1"></a>                    <span class="op">{</span><span class="st">"sampling_rate_hz"</span><span class="op">,</span> <span class="fl">1000.0</span><span class="op">}</span></span>
+<span id="cb10-597"><a href="#cb10-597" aria-hidden="true" tabindex="-1"></a>                <span class="op">}}</span></span>
+<span id="cb10-598"><a href="#cb10-598" aria-hidden="true" tabindex="-1"></a>            <span class="op">}}</span></span>
+<span id="cb10-599"><a href="#cb10-599" aria-hidden="true" tabindex="-1"></a>        <span class="op">}}}</span></span>
+<span id="cb10-600"><a href="#cb10-600" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb10-601"><a href="#cb10-601" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-602"><a href="#cb10-602" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
+<span id="cb10-603"><a href="#cb10-603" aria-hidden="true" tabindex="-1"></a>    TransformRegistry registry<span class="op">;</span></span>
+<span id="cb10-604"><a href="#cb10-604" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-605"><a href="#cb10-605" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The pipeline should fail to load due to invalid filter specification</span></span>
+<span id="cb10-606"><a href="#cb10-606" aria-hidden="true" tabindex="-1"></a>    TransformPipeline pipeline<span class="op">(&amp;</span>dm<span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb10-607"><a href="#cb10-607" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>pipeline<span class="op">.</span>loadFromJson<span class="op">(</span>json_config<span class="op">));</span></span>
+<span id="cb10-608"><a href="#cb10-608" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:24 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

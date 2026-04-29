@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>TensorData – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tensordata" id="toc-tensordata" class="nav-link active" data-scroll-target="#tensordata">TensorData</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#quick-start" id="toc-quick-start" class="nav-link" data-scroll-target="#quick-start">Quick Start</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-tensordata" id="toc-function-tensordata" class="nav-link" data-scroll-target="#function-tensordata">function TensorData</a></li>
+  <li><a href="#function-tensordata-1" id="toc-function-tensordata-1" class="nav-link" data-scroll-target="#function-tensordata-1">function ~TensorData</a></li>
+  <li><a href="#function-tensordata-2" id="toc-function-tensordata-2" class="nav-link" data-scroll-target="#function-tensordata-2">function TensorData</a></li>
+  <li><a href="#function-operator" id="toc-function-operator" class="nav-link" data-scroll-target="#function-operator">function operator=</a></li>
+  <li><a href="#function-tensordata-3" id="toc-function-tensordata-3" class="nav-link" data-scroll-target="#function-tensordata-3">function TensorData</a></li>
+  <li><a href="#function-operator-1" id="toc-function-operator-1" class="nav-link" data-scroll-target="#function-operator-1">function operator=</a></li>
+  <li><a href="#function-dimensions" id="toc-function-dimensions" class="nav-link" data-scroll-target="#function-dimensions">function dimensions</a></li>
+  <li><a href="#function-ndim" id="toc-function-ndim" class="nav-link" data-scroll-target="#function-ndim">function ndim</a></li>
+  <li><a href="#function-shape" id="toc-function-shape" class="nav-link" data-scroll-target="#function-shape">function shape</a></li>
+  <li><a href="#function-rows" id="toc-function-rows" class="nav-link" data-scroll-target="#function-rows">function rows</a></li>
+  <li><a href="#function-rowtype" id="toc-function-rowtype" class="nav-link" data-scroll-target="#function-rowtype">function rowType</a></li>
+  <li><a href="#function-numrows" id="toc-function-numrows" class="nav-link" data-scroll-target="#function-numrows">function numRows</a></li>
+  <li><a href="#function-hasnamedcolumns" id="toc-function-hasnamedcolumns" class="nav-link" data-scroll-target="#function-hasnamedcolumns">function hasNamedColumns</a></li>
+  <li><a href="#function-columnnames" id="toc-function-columnnames" class="nav-link" data-scroll-target="#function-columnnames">function columnNames</a></li>
+  <li><a href="#function-numcolumns" id="toc-function-numcolumns" class="nav-link" data-scroll-target="#function-numcolumns">function numColumns</a></li>
+  <li><a href="#function-getcolumn" id="toc-function-getcolumn" class="nav-link" data-scroll-target="#function-getcolumn">function getColumn</a></li>
+  <li><a href="#function-getcolumn-1" id="toc-function-getcolumn-1" class="nav-link" data-scroll-target="#function-getcolumn-1">function getColumn</a></li>
+  <li><a href="#function-at" id="toc-function-at" class="nav-link" data-scroll-target="#function-at">function at</a></li>
+  <li><a href="#function-row" id="toc-function-row" class="nav-link" data-scroll-target="#function-row">function row</a></li>
+  <li><a href="#function-flatdata" id="toc-function-flatdata" class="nav-link" data-scroll-target="#function-flatdata">function flatData</a></li>
+  <li><a href="#function-materializeflat" id="toc-function-materializeflat" class="nav-link" data-scroll-target="#function-materializeflat">function materializeFlat</a></li>
+  <li><a href="#function-materialize" id="toc-function-materialize" class="nav-link" data-scroll-target="#function-materialize">function materialize</a></li>
+  <li><a href="#function-toarmadillo" id="toc-function-toarmadillo" class="nav-link" data-scroll-target="#function-toarmadillo">function toArmadillo</a></li>
+  <li><a href="#function-asarmadillomatrix" id="toc-function-asarmadillomatrix" class="nav-link" data-scroll-target="#function-asarmadillomatrix">function asArmadilloMatrix</a></li>
+  <li><a href="#function-asarmadillocube" id="toc-function-asarmadillocube" class="nav-link" data-scroll-target="#function-asarmadillocube">function asArmadilloCube</a></li>
+  <li><a href="#function-setdata" id="toc-function-setdata" class="nav-link" data-scroll-target="#function-setdata">function setData</a></li>
+  <li><a href="#function-setdata-1" id="toc-function-setdata-1" class="nav-link" data-scroll-target="#function-setdata-1">function setData</a></li>
+  <li><a href="#function-appendcolumn" id="toc-function-appendcolumn" class="nav-link" data-scroll-target="#function-appendcolumn">function appendColumn</a></li>
+  <li><a href="#function-removecolumn" id="toc-function-removecolumn" class="nav-link" data-scroll-target="#function-removecolumn">function removeColumn</a></li>
+  <li><a href="#function-appendrow" id="toc-function-appendrow" class="nav-link" data-scroll-target="#function-appendrow">function appendRow</a></li>
+  <li><a href="#function-appendrow-1" id="toc-function-appendrow-1" class="nav-link" data-scroll-target="#function-appendrow-1">function appendRow</a></li>
+  <li><a href="#function-insertrow" id="toc-function-insertrow" class="nav-link" data-scroll-target="#function-insertrow">function insertRow</a></li>
+  <li><a href="#function-insertrow-1" id="toc-function-insertrow-1" class="nav-link" data-scroll-target="#function-insertrow-1">function insertRow</a></li>
+  <li><a href="#function-setrow" id="toc-function-setrow" class="nav-link" data-scroll-target="#function-setrow">function setRow</a></li>
+  <li><a href="#function-upsertrows" id="toc-function-upsertrows" class="nav-link" data-scroll-target="#function-upsertrows">function upsertRows</a></li>
+  <li><a href="#function-storage" id="toc-function-storage" class="nav-link" data-scroll-target="#function-storage">function storage</a></li>
+  <li><a href="#function-iscontiguous" id="toc-function-iscontiguous" class="nav-link" data-scroll-target="#function-iscontiguous">function isContiguous</a></li>
+  <li><a href="#function-isempty" id="toc-function-isempty" class="nav-link" data-scroll-target="#function-isempty">function isEmpty</a></li>
+  <li><a href="#function-settimeframe" id="toc-function-settimeframe" class="nav-link" data-scroll-target="#function-settimeframe">function setTimeFrame</a></li>
+  <li><a href="#function-gettimeframe" id="toc-function-gettimeframe" class="nav-link" data-scroll-target="#function-gettimeframe">function getTimeFrame</a></li>
+  <li><a href="#function-setcolumnnames" id="toc-function-setcolumnnames" class="nav-link" data-scroll-target="#function-setcolumnnames">function setColumnNames</a></li>
+  <li><a href="#function-createtimeseries2d" id="toc-function-createtimeseries2d" class="nav-link" data-scroll-target="#function-createtimeseries2d">function createTimeSeries2D</a></li>
+  <li><a href="#function-createtimeseries2d-1" id="toc-function-createtimeseries2d-1" class="nav-link" data-scroll-target="#function-createtimeseries2d-1">function createTimeSeries2D</a></li>
+  <li><a href="#function-createtimeseries2dfromstorage" id="toc-function-createtimeseries2dfromstorage" class="nav-link" data-scroll-target="#function-createtimeseries2dfromstorage">function createTimeSeries2DFromStorage</a></li>
+  <li><a href="#function-createfromintervals" id="toc-function-createfromintervals" class="nav-link" data-scroll-target="#function-createfromintervals">function createFromIntervals</a></li>
+  <li><a href="#function-createfromintervals-1" id="toc-function-createfromintervals-1" class="nav-link" data-scroll-target="#function-createfromintervals-1">function createFromIntervals</a></li>
+  <li><a href="#function-createfromintervalsfromstorage" id="toc-function-createfromintervalsfromstorage" class="nav-link" data-scroll-target="#function-createfromintervalsfromstorage">function createFromIntervalsFromStorage</a></li>
+  <li><a href="#function-creatend" id="toc-function-creatend" class="nav-link" data-scroll-target="#function-creatend">function createND</a></li>
+  <li><a href="#function-createfromarmadillo" id="toc-function-createfromarmadillo" class="nav-link" data-scroll-target="#function-createfromarmadillo">function createFromArmadillo</a></li>
+  <li><a href="#function-createfromarmadillo-1" id="toc-function-createfromarmadillo-1" class="nav-link" data-scroll-target="#function-createfromarmadillo-1">function createFromArmadillo</a></li>
+  <li><a href="#function-createordinal2d" id="toc-function-createordinal2d" class="nav-link" data-scroll-target="#function-createordinal2d">function createOrdinal2D</a></li>
+  <li><a href="#function-createordinal2dfromstorage" id="toc-function-createordinal2dfromstorage" class="nav-link" data-scroll-target="#function-createordinal2dfromstorage">function createOrdinal2DFromStorage</a></li>
+  <li><a href="#function-createfromlazycolumns" id="toc-function-createfromlazycolumns" class="nav-link" data-scroll-target="#function-createfromlazycolumns">function createFromLazyColumns</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TensorData</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="tensordata" class="level1">
+<h1>TensorData</h1>
+<p>Refactored N-dimensional tensor with named axes, multiple storage backends, and first-class <a href="">DataManager</a> integration. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;TensorData.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structTensorData_1_1DataTraits.html">DataTraits</a></strong> <br>Traits for generic trait-based dispatch in transforms v2.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-tensordata">TensorData</a></strong>()<br>Default constructor — empty tensor (no storage, ordinal 0 rows)</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-~tensordata">~TensorData</a></strong>()<br>Destructor (non-trivial due to shared_ptr members)</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-tensordata">TensorData</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; other)<br>Copy.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; other)</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-tensordata">TensorData</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &amp;&amp; other)<br>Move.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &amp;&amp; other)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classDimensionDescriptor.html">DimensionDescriptor</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-dimensions">dimensions</a></strong>() const<br>Get the full dimension descriptor.</td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-ndim">ndim</a></strong>() const<br>Number of dimensions (axes)</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::size_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-shape">shape</a></strong>() const<br>Shape as a vector of sizes (one per axis)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-rows">rows</a></strong>() const<br>Get the row descriptor.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Files/RowDescriptor_8hpp.html#enum-rowtype">RowType</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-rowtype">rowType</a></strong>() const<br>Get the row type (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, Interval, or Ordinal)</td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-numrows">numRows</a></strong>() const<br>Number of rows (axis 0 size, or <a href="">RowDescriptor::count()</a> for ordinal)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-hasnamedcolumns">hasNamedColumns</a></strong>() const<br>Whether this tensor has named columns.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; std::string &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-columnnames">columnNames</a></strong>() const<br>Get the column names (empty if not set)</td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns</a></strong>() const<br>Number of columns (last axis size for ≥2D, 1 for 1D, 0 for scalar)</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-getcolumn">getColumn</a></strong>(std::size_t index) const<br>Get column data by index.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-getcolumn">getColumn</a></strong>(std::string_view name) const<br>Get column data by name.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-at">at</a></strong>(std::span&lt; std::size_t const &gt; indices) const<br>Get a single element by multi-dimensional index.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-row">row</a></strong>(std::size_t index) const<br>Get an entire row as a flat vector (all columns for that row)</td>
+</tr>
+<tr class="even">
+<td>std::span&lt; float const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-flatdata">flatData</a></strong>() const<br>Fast-path flat data access (contiguous storage only)</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-materializeflat">materializeFlat</a></strong>() const<br>Materialize all data as a row-major flat vector (always works)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-materialize">materialize</a></strong>() const<br>Materialize the tensor into owned storage.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-toarmadillo">toArmadillo</a></strong>() const<br>Convert to Armadillo-backed tensor (must be ≤3D)</td>
+</tr>
+<tr class="even">
+<td>arma::fmat const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-asarmadillomatrix">asArmadilloMatrix</a></strong>() const<br>Direct access to the underlying Armadillo matrix (2D only)</td>
+</tr>
+<tr class="odd">
+<td>arma::fcube const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-asarmadillocube">asArmadilloCube</a></strong>() const<br>Direct access to the underlying Armadillo cube (3D only)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-setdata">setData</a></strong>(std::vector&lt; float &gt; const &amp; data, std::vector&lt; std::size_t &gt; const &amp; new_shape)<br>Replace all data with new flat data and shape.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-setdata">setData</a></strong>(std::vector&lt; float &gt; &amp;&amp; data, std::vector&lt; std::size_t &gt; const &amp; new_shape)<br>Replace all data with new flat data and shape (move overload)</td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-appendcolumn">appendColumn</a></strong>(std::string name, <a href="../../api_generated/Files/LazyColumnTensorStorage_8hpp.html#using-columnproviderfn">ColumnProviderFn</a> provider)<br>Append a new lazy column.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-removecolumn">removeColumn</a></strong>(std::size_t col)<br>Remove a column by index.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-appendrow">appendRow</a></strong>(std::span&lt; float const &gt; row_data)<br>Append a row to the end of the tensor.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-appendrow">appendRow</a></strong>(std::span&lt; float const &gt; row_data, <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> interval)<br>Append a row with an associated interval.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-insertrow">insertRow</a></strong>(std::size_t index, std::span&lt; float const &gt; row_data)<br>Insert a row at a specific position.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-insertrow">insertRow</a></strong>(std::size_t index, std::span&lt; float const &gt; row_data, <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> interval)<br>Insert a row with an associated interval.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-setrow">setRow</a></strong>(std::size_t index, std::span&lt; float const &gt; row_data)<br>Overwrite an existing row’s data in-place.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-upsertrows">upsertRows</a></strong>(std::vector&lt; std::pair&lt; int, std::vector&lt; float &gt; &gt; &gt; const &amp; frame_rows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame)<br>Upsert rows keyed by <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-storage">storage</a></strong>() const<br>Get the underlying storage wrapper (for advanced backend access)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-iscontiguous">isContiguous</a></strong>() const<br>Whether the underlying storage is contiguous in memory.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-isempty">isEmpty</a></strong>() const<br>Whether this tensor has valid (non-empty) storage.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-settimeframe">setTimeFrame</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; tf)<br>Set the time frame for this tensor.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-gettimeframe">getTimeFrame</a></strong>() const<br>Get the time frame (may be nullptr for ordinal tensors)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-setcolumnnames">setColumnNames</a></strong>(std::vector&lt; std::string &gt; names)<br>Set or replace column names.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createtimeseries2d">createTimeSeries2D</a></strong>(std::vector&lt; float &gt; const &amp; data, std::size_t num_rows, std::size_t num_cols, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; time_storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D time-series tensor (rows = time, columns = features)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createtimeseries2d">createTimeSeries2D</a></strong>(arma::fmat matrix, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; time_storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D time-series tensor from a pre-built Armadillo matrix.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createtimeseries2dfromstorage">createTimeSeries2DFromStorage</a></strong>(<a href="../../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; time_storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D time-series tensor from a custom storage backend.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromintervals">createFromIntervals</a></strong>(std::vector&lt; float &gt; const &amp; data, std::size_t num_rows, std::size_t num_cols, std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; intervals, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D tensor with interval-based rows.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromintervals">createFromIntervals</a></strong>(arma::fmat matrix, std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; intervals, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D tensor with interval-based rows from an Armadillo matrix.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromintervalsfromstorage">createFromIntervalsFromStorage</a></strong>(<a href="../../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> storage, std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; intervals, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D tensor with interval-based rows from a custom storage backend.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-creatend">createND</a></strong>(std::vector&lt; float &gt; const &amp; data, std::vector&lt; <a href="../../api_generated/Classes/structAxisDescriptor.html">AxisDescriptor</a> &gt; const &amp; axes)<br>Create an N-dimensional tensor from flat data and axis descriptors.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromarmadillo">createFromArmadillo</a></strong>(arma::fmat matrix, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D tensor from an Armadillo matrix (zero-copy)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromarmadillo">createFromArmadillo</a></strong>(arma::fcube cube, std::vector&lt; <a href="../../api_generated/Classes/structAxisDescriptor.html">AxisDescriptor</a> &gt; axes ={})<br>Create a 3D tensor from an Armadillo cube (zero-copy)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createordinal2d">createOrdinal2D</a></strong>(std::vector&lt; float &gt; const &amp; data, std::size_t num_rows, std::size_t num_cols, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D ordinal tensor from flat data.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createordinal2dfromstorage">createOrdinal2DFromStorage</a></strong>(<a href="../../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame =nullptr, std::vector&lt; std::string &gt; column_names ={})<br>Create a 2D ordinal tensor from a custom storage backend.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTensorData.html">TensorData</a></td>
+<td><strong><a href="../../api_generated/Classes/classTensorData.html#function-createfromlazycolumns">createFromLazyColumns</a></strong>(std::size_t num_rows, std::vector&lt; <a href="../../api_generated/Classes/structColumnSource.html">ColumnSource</a> &gt; columns, <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> rows, <a href="../../api_generated/Files/TensorData_8hpp.html#using-invalidationwiringfn">InvalidationWiringFn</a> const &amp; wiring ={})<br>Create a 2D tensor with lazily-computed columns.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Types inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; void()&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a></strong> <br>Type alias for observer callback functions.</td>
+</tr>
+<tr class="even">
+<td>using int</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></strong> <br>Type alias for callback identifiers.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback)<br>Register a new observer callback.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-notifyobservers">notifyObservers</a></strong>()<br>Notify all registered observers.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-removeobserver">removeObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a> id)<br>Remove a previously registered observer.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TensorData<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Refactored N-dimensional tensor with named axes, multiple storage backends, and first-class <a href="">DataManager</a> integration.</p>
+</section>
+<section id="quick-start" class="level2">
+<h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 2D time-series matrix (e.g., spectrogram)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> spec <span class="op">=</span> TensorData<span class="op">::</span>createTimeSeries2D<span class="op">(</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    flat_magnitudes<span class="op">,</span> num_time_bins<span class="op">,</span> num_freq_bins<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    time_storage<span class="op">,</span> time_frame<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">"0-10 Hz"</span><span class="op">,</span> <span class="st">"10-20 Hz"</span><span class="op">,</span> <span class="st">"20-30 Hz"</span><span class="op">});</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> band <span class="op">=</span> spec<span class="op">.</span>getColumn<span class="op">(</span><span class="st">"10-20 Hz"</span><span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Direct Armadillo access for mlpack</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>arma<span class="op">::</span>fmat <span class="at">const</span><span class="op">&amp;</span> m <span class="op">=</span> spec<span class="op">.</span>asArmadilloMatrix<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>tensor_data_refactor_proposal.md for full design rationale</p>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-tensordata" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensordata">function TensorData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TensorData<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Default constructor — empty tensor (no storage, ordinal 0 rows)</p>
+</section>
+<section id="function-tensordata-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensordata-1">function ~TensorData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>TensorData<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Destructor (non-trivial due to shared_ptr members)</p>
+</section>
+<section id="function-tensordata-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensordata-2">function TensorData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TensorData<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> other</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Copy.</p>
+</section>
+<section id="function-operator" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TensorData <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> other</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-tensordata-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensordata-3">function TensorData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TensorData<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="op">&amp;&amp;</span> other</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Move.</p>
+</section>
+<section id="function-operator-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator-1">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TensorData <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="op">&amp;&amp;</span> other</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-dimensions" class="level3">
+<h3 class="anchored" data-anchor-id="function-dimensions">function dimensions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>DimensionDescriptor <span class="at">const</span> <span class="op">&amp;</span> dimensions<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the full dimension descriptor.</p>
+</section>
+<section id="function-ndim" class="level3">
+<h3 class="anchored" data-anchor-id="function-ndim">function ndim</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t ndim<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of dimensions (axes)</p>
+</section>
+<section id="function-shape" class="level3">
+<h3 class="anchored" data-anchor-id="function-shape">function shape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> shape<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Shape as a vector of sizes (one per axis)</p>
+</section>
+<section id="function-rows" class="level3">
+<h3 class="anchored" data-anchor-id="function-rows">function rows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>RowDescriptor <span class="at">const</span> <span class="op">&amp;</span> rows<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the row descriptor.</p>
+</section>
+<section id="function-rowtype" class="level3">
+<h3 class="anchored" data-anchor-id="function-rowtype">function rowType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>RowType rowType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the row type (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, Interval, or Ordinal)</p>
+</section>
+<section id="function-numrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-numrows">function numRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t numRows<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of rows (axis 0 size, or <a href="">RowDescriptor::count()</a> for ordinal)</p>
+</section>
+<section id="function-hasnamedcolumns" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasnamedcolumns">function hasNamedColumns</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasNamedColumns<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether this tensor has named columns.</p>
+</section>
+<section id="function-columnnames" class="level3">
+<h3 class="anchored" data-anchor-id="function-columnnames">function columnNames</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> columnNames<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the column names (empty if not set)</p>
+</section>
+<section id="function-numcolumns" class="level3">
+<h3 class="anchored" data-anchor-id="function-numcolumns">function numColumns</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t numColumns<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of columns (last axis size for ≥2D, 1 for 1D, 0 for scalar)</p>
+</section>
+<section id="function-getcolumn" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcolumn">function getColumn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> getColumn<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t index</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get column data by index.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> index (0-based)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::out_of_range</strong> if index &gt;= <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Returns a vector of float values for all rows at the given column.</p>
+</section>
+<section id="function-getcolumn-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getcolumn-1">function getColumn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> getColumn<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view name</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get column data by name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> name (must match one set via setColumnNames / factory)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> if name not found or no named columns</li>
+</ul>
+</section>
+<section id="function-at" class="level3">
+<h3 class="anchored" data-anchor-id="function-at">function at</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> at<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="at">const</span> <span class="op">&gt;</span> indices</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a single element by multi-dimensional index.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>indices</strong> One index per dimension</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::out_of_range</strong> / std::invalid_argument on index errors</li>
+</ul>
+</section>
+<section id="function-row" class="level3">
+<h3 class="anchored" data-anchor-id="function-row">function row</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> row<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t index</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get an entire row as a flat vector (all columns for that row)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Row index (axis 0)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::out_of_range</strong> if index &gt;= axis(0).size</li>
+</ul>
+<p>For a 2D tensor with shape [R, C], returns C floats. For a 3D tensor with shape [D0, D1, D2], returns D1*D2 floats.</p>
+</section>
+<section id="function-flatdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-flatdata">function flatData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> flatData<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fast-path flat data access (contiguous storage only)</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if storage is not contiguous</li>
+</ul>
+<p><strong>Note</strong>: Layout depends on the backend — Armadillo is column-major, Dense is row-major. For guaranteed row-major, use <a href="../../api_generated/Classes/classTensorData.html#function-materializeflat">materializeFlat()</a>.</p>
+</section>
+<section id="function-materializeflat" class="level3">
+<h3 class="anchored" data-anchor-id="function-materializeflat">function materializeFlat</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> materializeFlat<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Materialize all data as a row-major flat vector (always works)</p>
+<p>If storage is already contiguous and row-major, returns a copy of <a href="../../api_generated/Classes/classTensorData.html#function-flatdata">flatData()</a>. Otherwise, reconstructs row-major order from element access.</p>
+</section>
+<section id="function-materialize" class="level3">
+<h3 class="anchored" data-anchor-id="function-materialize">function materialize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>TensorData materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Materialize the tensor into owned storage.</p>
+<p>If the tensor is already backed by owned storage (Armadillo or Dense), returns a copy. If backed by a View or Lazy storage, computes and returns a new <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with materialized data.</p>
+<p>Uses <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> for ≤3D, <a href="../../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a> for &gt;3D.</p>
+</section>
+<section id="function-toarmadillo" class="level3">
+<h3 class="anchored" data-anchor-id="function-toarmadillo">function toArmadillo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>TensorData toArmadillo<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert to Armadillo-backed tensor (must be ≤3D)</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if <a href="../../api_generated/Classes/classTensorData.html#function-ndim">ndim()</a> &gt; 3</li>
+</ul>
+<p>If already Armadillo-backed, returns a shallow copy (shared storage). Otherwise, materializes into a new <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>.</p>
+</section>
+<section id="function-asarmadillomatrix" class="level3">
+<h3 class="anchored" data-anchor-id="function-asarmadillomatrix">function asArmadilloMatrix</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>arma<span class="op">::</span>fmat <span class="at">const</span> <span class="op">&amp;</span> asArmadilloMatrix<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Direct access to the underlying Armadillo matrix (2D only)</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if not 2D or not Armadillo-backed</li>
+</ul>
+</section>
+<section id="function-asarmadillocube" class="level3">
+<h3 class="anchored" data-anchor-id="function-asarmadillocube">function asArmadilloCube</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>arma<span class="op">::</span>fcube <span class="at">const</span> <span class="op">&amp;</span> asArmadilloCube<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Direct access to the underlying Armadillo cube (3D only)</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if not 3D or not Armadillo-backed</li>
+</ul>
+</section>
+<section id="function-setdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdata">function setData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setData<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> new_shape</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Replace all data with new flat data and shape.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> New flat row-major data</li>
+<li><strong>new_shape</strong> New shape</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> on size mismatch</li>
+</ul>
+<p>Creates new owned storage (Armadillo ≤3D, Dense &gt;3D). Notifies observers.</p>
+</section>
+<section id="function-setdata-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdata-1">function setData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setData<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> new_shape</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Replace all data with new flat data and shape (move overload)</p>
+</section>
+<section id="function-appendcolumn" class="level3">
+<h3 class="anchored" data-anchor-id="function-appendcolumn">function appendColumn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t appendColumn<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    ColumnProviderFn provider</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Append a new lazy column.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> name</li>
+<li><strong>provider</strong> Provider function that returns <code>[numRows()](/api_generated/Classes/classTensorData.md#function-numrows)</code> floats</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if the storage is not <a href="../../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a></li>
+<li><strong>std::invalid_argument</strong> if provider is null</li>
+</ul>
+<p><strong>Return</strong>: The index of the newly appended column</p>
+<p>Adds a column to the end of the tensor. Only valid when the underlying storage is <code>[LazyColumnTensorStorage](/api_generated/Classes/classLazyColumnTensorStorage.md)</code>. Updates the dimension descriptor (axis size + column names) and notifies observers.</p>
+</section>
+<section id="function-removecolumn" class="level3">
+<h3 class="anchored" data-anchor-id="function-removecolumn">function removeColumn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> removeColumn<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t col</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove a column by index.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>col</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> index to remove</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if the storage is not <a href="../../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a></li>
+<li><strong>std::out_of_range</strong> if col &gt;= <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+<li><strong>std::logic_error</strong> if removing the column would leave zero columns</li>
+</ul>
+<p>Removes the column at the given index. Only valid when the underlying storage is <code>[LazyColumnTensorStorage](/api_generated/Classes/classLazyColumnTensorStorage.md)</code>. The tensor must have more than one column. Updates the dimension descriptor and notifies observers.</p>
+</section>
+<section id="function-appendrow" class="level3">
+<h3 class="anchored" data-anchor-id="function-appendrow">function appendRow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> appendRow<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> row_data</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Append a row to the end of the tensor.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>row_data</strong> Values for the new row (size must equal <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a>)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if the tensor is not 2D, is backed by an unsupported storage type, or has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows</li>
+<li><strong>std::invalid_argument</strong> if row_data.size() != <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Works for 2D tensors backed by <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> or <a href="../../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a> with Ordinal or Interval row semantics.</p>
+<p>For Ordinal rows, the ordinal count is incremented. For Interval rows, the provided interval is appended to the row descriptor. <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows are not supported (time index storage is immutable).</p>
+<p>Updates the dimension descriptor (axis 0 size) and notifies observers.</p>
+</section>
+<section id="function-appendrow-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-appendrow-1">function appendRow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> appendRow<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> row_data<span class="op">,</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval interval</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Append a row with an associated interval.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>row_data</strong> Values for the new row</li>
+<li><strong>interval</strong> Time interval for the new row</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if <a href="../../api_generated/Classes/classTensorData.html#function-rowtype">rowType()</a> != <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-interval">RowType::Interval</a>, or storage is unsupported</li>
+<li><strong>std::invalid_argument</strong> if row_data.size() != <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Convenience overload for tensors with Interval row semantics.</p>
+</section>
+<section id="function-insertrow" class="level3">
+<h3 class="anchored" data-anchor-id="function-insertrow">function insertRow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> insertRow<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t index<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> row_data</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Insert a row at a specific position.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Position to insert before (0-based; <a href="../../api_generated/Classes/classTensorData.html#function-numrows">numRows()</a> appends)</li>
+<li><strong>row_data</strong> Values for the new row</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if unsupported storage or <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows</li>
+<li><strong>std::out_of_range</strong> if index &gt; <a href="../../api_generated/Classes/classTensorData.html#function-numrows">numRows()</a></li>
+<li><strong>std::invalid_argument</strong> if row_data.size() != <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Same storage and row-type constraints as <a href="../../api_generated/Classes/classTensorData.html#function-appendrow">appendRow()</a>. Existing rows at and after the insertion point are shifted down.</p>
+</section>
+<section id="function-insertrow-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-insertrow-1">function insertRow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> insertRow<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t index<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> row_data<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval interval</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Insert a row with an associated interval.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Position to insert before</li>
+<li><strong>row_data</strong> Values for the new row</li>
+<li><strong>interval</strong> Time interval for the new row</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if <a href="../../api_generated/Classes/classTensorData.html#function-rowtype">rowType()</a> != <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-interval">RowType::Interval</a>, or storage is unsupported</li>
+<li><strong>std::out_of_range</strong> if index &gt; <a href="../../api_generated/Classes/classTensorData.html#function-numrows">numRows()</a></li>
+<li><strong>std::invalid_argument</strong> if row_data.size() != <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Convenience overload for tensors with Interval row semantics.</p>
+</section>
+<section id="function-setrow" class="level3">
+<h3 class="anchored" data-anchor-id="function-setrow">function setRow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setRow<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t index<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> row_data</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Overwrite an existing row’s data in-place.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Row index to overwrite (0-based)</li>
+<li><strong>row_data</strong> New values for the row (size must equal <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a>)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::logic_error</strong> if the tensor is not 2D or has unsupported storage</li>
+<li><strong>std::out_of_range</strong> if index &gt;= <a href="../../api_generated/Classes/classTensorData.html#function-numrows">numRows()</a></li>
+<li><strong>std::invalid_argument</strong> if row_data.size() != <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a></li>
+</ul>
+<p>Works for 2D tensors backed by <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> or <a href="../../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a>. The row must already exist. Row descriptor and dimension metadata are unchanged. Notifies observers.</p>
+</section>
+<section id="function-upsertrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-upsertrows">function upsertRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> upsertRows<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> frame_rows<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Upsert rows keyed by <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>frame_rows</strong> Pairs of (frame_index, row_data); row_data sizes must all equal <a href="../../api_generated/Classes/classTensorData.html#function-numcolumns">numColumns()</a> (or each other for empty tensors)</li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for the resulting time-indexed rows</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> if frame_rows is empty, row sizes are inconsistent, or time_frame is null</li>
+<li><strong>std::logic_error</strong> if the tensor is non-empty and not 2D, or has unsupported storage</li>
+</ul>
+<p><strong>Precondition</strong>: All row_data vectors must have the same size</p>
+<p>Merges the given frame→row-data pairs into this tensor. For each pair:</p>
+<ul>
+<li>If a row for that frame already exists, its data is overwritten.</li>
+<li>If no row exists for that frame, a new row is inserted in sorted order.</li>
+</ul>
+<p>After the operation, the tensor’s rows are sorted by <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> and backed by a fresh <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a>. The tensor must be 2D and backed by <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> or <a href="../../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a>. If the tensor is empty (no storage), it is initialized from the provided rows.</p>
+</section>
+<section id="function-storage" class="level3">
+<h3 class="anchored" data-anchor-id="function-storage">function storage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>TensorStorageWrapper <span class="at">const</span> <span class="op">&amp;</span> storage<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the underlying storage wrapper (for advanced backend access)</p>
+</section>
+<section id="function-iscontiguous" class="level3">
+<h3 class="anchored" data-anchor-id="function-iscontiguous">function isContiguous</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isContiguous<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether the underlying storage is contiguous in memory.</p>
+</section>
+<section id="function-isempty" class="level3">
+<h3 class="anchored" data-anchor-id="function-isempty">function isEmpty</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isEmpty<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether this tensor has valid (non-empty) storage.</p>
+</section>
+<section id="function-settimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-settimeframe">function setTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setTimeFrame<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> tf</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the time frame for this tensor.</p>
+<p>This is set automatically by factory methods that take a <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>. Can also be set manually for ordinal tensors that later gain time semantics.</p>
+</section>
+<section id="function-gettimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeframe">function getTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time frame (may be nullptr for ordinal tensors)</p>
+</section>
+<section id="function-setcolumnnames" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcolumnnames">function setColumnNames</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setColumnNames<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> names</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set or replace column names.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>names</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> names; must match the last axis size</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> on size mismatch</li>
+</ul>
+</section>
+<section id="function-createtimeseries2d" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtimeseries2d">function createTimeSeries2D</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createTimeSeries2D<span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_rows<span class="op">,</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_cols<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> time_storage<span class="op">,</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D time-series tensor (rows = time, columns = features)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> Flat row-major data (size must == num_rows * num_cols)</li>
+<li><strong>num_rows</strong> Number of rows (time points)</li>
+<li><strong>num_cols</strong> Number of columns (features / frequency bins / channels)</li>
+<li><strong>time_storage</strong> <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> mapping row indices to <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for absolute time reference (may be nullptr; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> assigns the correct <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> when registered)</li>
+<li><strong>column_names</strong> Optional column labels (size must match num_cols if provided)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> on size mismatches or null time_storage</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>time_storage != nullptr (enforcement: exception)</li>
+<li>time_storage-&gt;size() == num_rows (enforcement: exception)</li>
+<li>data.size() == num_rows * num_cols (enforcement: exception)</li>
+<li>column_names.empty() || column_names.size() == num_cols (enforcement: exception)</li>
+<li>num_rows * num_cols does not overflow std::size_t (enforcement: none) [LOW]</li>
+</ul>
+<p>Uses <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> internally. Axes named “time” and “channel”.</p>
+</section>
+<section id="function-createtimeseries2d-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtimeseries2d-1">function createTimeSeries2D</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createTimeSeries2D<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>fmat matrix<span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> time_storage<span class="op">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D time-series tensor from a pre-built Armadillo matrix.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>matrix</strong> Armadillo float matrix (moved into storage)</li>
+<li><strong>time_storage</strong> <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> mapping row indices to <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for absolute time reference (may be nullptr)</li>
+<li><strong>column_names</strong> Optional column labels</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>time_storage != nullptr (enforcement: exception)</li>
+<li>time_storage-&gt;size() == matrix.n_rows (enforcement: exception)</li>
+<li>matrix.n_rows &gt; 0 &amp;&amp; matrix.n_cols &gt; 0 (enforcement: exception)</li>
+<li>column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)</li>
+</ul>
+<p>Zero-copy variant: the matrix is moved directly into <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>, avoiding row-major → column-major conversion overhead. Axes named “time” and “channel”.</p>
+</section>
+<section id="function-createtimeseries2dfromstorage" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtimeseries2dfromstorage">function createTimeSeries2DFromStorage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createTimeSeries2DFromStorage<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    TensorStorageWrapper storage<span class="op">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> time_storage<span class="op">,</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D time-series tensor from a custom storage backend.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>storage</strong> Type-erased storage wrapper (must report 2D shape).</li>
+<li><strong>time_storage</strong> Dense time index storage (size must match storage rows).</li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for time reference (may be nullptr; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> assigns the correct <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> when registered).</li>
+<li><strong>column_names</strong> Optional column labels.</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>time_storage != nullptr (enforcement: exception)</li>
+<li>time_storage-&gt;size() == storage.shape()[0] (enforcement: exception)</li>
+<li>storage.shape().size() == 2 (enforcement: exception)</li>
+</ul>
+<p>Enables non-Armadillo backends (e.g., <a href="../../api_generated/Classes/classMmapTensorStorage.html">MmapTensorStorage</a>) to be used as <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with time-indexed rows.</p>
+</section>
+<section id="function-createfromintervals" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromintervals">function createFromIntervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromIntervals<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_rows<span class="op">,</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_cols<span class="op">,</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D tensor with interval-based rows.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> Flat row-major data (size must == num_rows * num_cols)</li>
+<li><strong>num_rows</strong> Number of rows (intervals)</li>
+<li><strong>num_cols</strong> Number of columns</li>
+<li><strong>intervals</strong> One TimeFrameInterval per row</li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for time reference (may be nullptr; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> assigns the correct <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> when registered)</li>
+<li><strong>column_names</strong> Optional column labels</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> on size mismatches</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>intervals.size() == num_rows (enforcement: exception)</li>
+<li>data.size() == num_rows * num_cols (enforcement: exception)</li>
+<li>column_names.empty() || column_names.size() == num_cols (enforcement: exception)</li>
+<li>num_rows * num_cols does not overflow std::size_t (enforcement: none) [LOW]</li>
+</ul>
+<p>Each row corresponds to an interval (e.g., trial). Uses <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>.</p>
+</section>
+<section id="function-createfromintervals-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromintervals-1">function createFromIntervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromIntervals<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>fmat matrix<span class="op">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D tensor with interval-based rows from an Armadillo matrix.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>matrix</strong> Armadillo float matrix (moved into storage)</li>
+<li><strong>intervals</strong> One TimeFrameInterval per row</li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for time reference (may be nullptr)</li>
+<li><strong>column_names</strong> Optional column labels</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> on size mismatches</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>intervals.size() == matrix.n_rows (enforcement: exception)</li>
+<li>matrix.n_rows &gt; 0 &amp;&amp; matrix.n_cols &gt; 0 (enforcement: exception)</li>
+<li>column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)</li>
+</ul>
+<p>Zero-copy variant: the matrix is moved directly into <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>, avoiding row-major to column-major conversion overhead.</p>
+</section>
+<section id="function-createfromintervalsfromstorage" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromintervalsfromstorage">function createFromIntervalsFromStorage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromIntervalsFromStorage<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    TensorStorageWrapper storage<span class="op">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D tensor with interval-based rows from a custom storage backend.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>storage</strong> Type-erased storage wrapper (must report 2D shape).</li>
+<li><strong>intervals</strong> One TimeFrameInterval per row.</li>
+<li><strong>time_frame</strong> Shared <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for time reference (may be nullptr).</li>
+<li><strong>column_names</strong> Optional column labels.</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>storage.shape().size() == 2 (enforcement: exception)</li>
+<li>intervals.size() == storage.shape()[0] (enforcement: exception)</li>
+</ul>
+<p>Enables non-Armadillo backends (for example LibTorchTensorStorage) to be used while preserving interval row semantics.</p>
+</section>
+<section id="function-creatend" class="level3">
+<h3 class="anchored" data-anchor-id="function-creatend">function createND</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createND<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> AxisDescriptor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> axes</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an N-dimensional tensor from flat data and axis descriptors.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> Flat row-major data</li>
+<li><strong>axes</strong> Ordered axis descriptors (outermost first)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> if data size doesn’t match total elements</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>!axes.empty() (enforcement: exception)</li>
+<li>data.size() == product of all ax.size in axes (enforcement: exception)</li>
+<li>product of all ax.size does not overflow std::size_t (enforcement: none) [LOW]</li>
+</ul>
+<p>Uses <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a> for ≤3D, <a href="../../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a> for &gt;3D. Row descriptor is Ordinal (no time semantics).</p>
+</section>
+<section id="function-createfromarmadillo" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromarmadillo">function createFromArmadillo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromArmadillo<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>fmat matrix<span class="op">,</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D tensor from an Armadillo matrix (zero-copy)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>matrix</strong> Armadillo float matrix (moved into storage)</li>
+<li><strong>column_names</strong> Optional column labels</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>matrix.n_rows &gt; 0 &amp;&amp; matrix.n_cols &gt; 0 (enforcement: exception)</li>
+<li>column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)</li>
+</ul>
+<p><a href="../../api_generated/Classes/classColumn.html">Column</a> names are optional. Row descriptor is Ordinal.</p>
+</section>
+<section id="function-createfromarmadillo-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromarmadillo-1">function createFromArmadillo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromArmadillo<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>fcube cube<span class="op">,</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> AxisDescriptor <span class="op">&gt;</span> axes <span class="op">={}</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 3D tensor from an Armadillo cube (zero-copy)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>cube</strong> Armadillo float cube (moved into storage)</li>
+<li><strong>axes</strong> Optional axis descriptors; if empty, defaults to {“dim0”, nslices}, {“dim1”, nrows}, {“dim2”, ncols}</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>cube.n_slices &gt; 0 &amp;&amp; cube.n_rows &gt; 0 &amp;&amp; cube.n_cols &gt; 0 (enforcement: exception)</li>
+<li>axes.empty() || axes.size() == 3 (enforcement: none) [IMPORTANT]</li>
+<li>If !axes.empty(): axes[0].size == cube.n_slices, axes[1].size == cube.n_rows, axes[2].size == cube.n_cols — mismatched sizes will make dims.shape() lie silently (enforcement: none) [IMPORTANT]</li>
+<li>No zero-size axes and no duplicate axis names in provided axes (enforcement: exception)</li>
+</ul>
+</section>
+<section id="function-createordinal2d" class="level3">
+<h3 class="anchored" data-anchor-id="function-createordinal2d">function createOrdinal2D</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createOrdinal2D<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_rows<span class="op">,</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_cols<span class="op">,</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D ordinal tensor from flat data.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data</strong> Flat row-major data</li>
+<li><strong>num_rows</strong> Number of rows</li>
+<li><strong>num_cols</strong> Number of columns</li>
+<li><strong>column_names</strong> Optional column labels</li>
+</ul>
+<p>Convenience for matrices without time semantics. Uses <a href="../../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>.</p>
+</section>
+<section id="function-createordinal2dfromstorage" class="level3">
+<h3 class="anchored" data-anchor-id="function-createordinal2dfromstorage">function createOrdinal2DFromStorage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createOrdinal2DFromStorage<span class="op">(</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    TensorStorageWrapper storage<span class="op">,</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> column_names <span class="op">={}</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D ordinal tensor from a custom storage backend.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>storage</strong> Type-erased storage wrapper (must report 2D shape).</li>
+<li><strong>time_frame</strong> Optional <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> metadata to preserve.</li>
+<li><strong>column_names</strong> Optional column labels.</li>
+</ul>
+<p><strong>Precondition</strong>: storage.shape().size() == 2 (enforcement: exception)</p>
+<p>Enables non-Armadillo backends (for example LibTorchTensorStorage) to be wrapped as ordinal <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> without materializing to Armadillo first.</p>
+</section>
+<section id="function-createfromlazycolumns" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromlazycolumns">function createFromLazyColumns</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> TensorData createFromLazyColumns<span class="op">(</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_rows<span class="op">,</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ColumnSource <span class="op">&gt;</span> columns<span class="op">,</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    RowDescriptor rows<span class="op">,</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    InvalidationWiringFn <span class="at">const</span> <span class="op">&amp;</span> wiring <span class="op">={}</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a 2D tensor with lazily-computed columns.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>num_rows</strong> Number of rows (each provider must return this many floats)</li>
+<li><strong>columns</strong> <a href="../../api_generated/Classes/classColumn.html">Column</a> sources (name + provider); must not be empty</li>
+<li><strong>rows</strong> Row descriptor (ordinal, time-indexed, or interval)</li>
+<li><strong>wiring</strong> Optional callback for observer invalidation wiring; called once after construction with references to the <a href="../../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a> and <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::invalid_argument</strong> if num_rows == 0 or columns is empty</li>
+</ul>
+<p>Each column is backed by a type-erased provider function that computes the column data on demand. Results are cached per-column and can be invalidated to trigger recomputation.</p>
+<p><a href="../../api_generated/Classes/classColumn.html">Column</a> names are taken from the <a href="../../api_generated/Classes/structColumnSource.html#variable-name">ColumnSource::name</a> fields. Row semantics are specified by the <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a>.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:21 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>tensor_transforms_roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tensor-transform-library-design-roadmap" id="toc-tensor-transform-library-design-roadmap" class="nav-link active" data-scroll-target="#tensor-transform-library-design-roadmap">Tensor Transform Library — Design Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation">Motivation</a></li>
+  <li><a href="#target-workflow" id="toc-target-workflow" class="nav-link" data-scroll-target="#target-workflow">Target Workflow</a>
+  <ul class="collapse">
+  <li><a href="#workflow-status" id="toc-workflow-status" class="nav-link" data-scroll-target="#workflow-status">Workflow Status</a></li>
+  </ul></li>
+  <li><a href="#architecture-hybrid-option-d" id="toc-architecture-hybrid-option-d" class="nav-link" data-scroll-target="#architecture-hybrid-option-d">Architecture: Hybrid (Option D)</a></li>
+  <li><a href="#implementation-roadmap" id="toc-implementation-roadmap" class="nav-link" data-scroll-target="#implementation-roadmap">Implementation Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#phase-1-pca-foundation" id="toc-phase-1-pca-foundation" class="nav-link" data-scroll-target="#phase-1-pca-foundation">Phase 1: PCA Foundation ✅</a></li>
+  <li><a href="#phase-2-scatter-selection-entity-groups" id="toc-phase-2-scatter-selection-entity-groups" class="nav-link" data-scroll-target="#phase-2-scatter-selection-entity-groups">Phase 2: Scatter Selection → Entity Groups ✅</a></li>
+  <li><a href="#phase-3-tapkee-integration-in-progress" id="toc-phase-3-tapkee-integration-in-progress" class="nav-link" data-scroll-target="#phase-3-tapkee-integration-in-progress">Phase 3: Tapkee Integration — IN PROGRESS</a></li>
+  <li><a href="#phase-4-mlcore-widget-dim-reduction-tab-auto-focus" id="toc-phase-4-mlcore-widget-dim-reduction-tab-auto-focus" class="nav-link" data-scroll-target="#phase-4-mlcore-widget-dim-reduction-tab-auto-focus">Phase 4: MLCore Widget Dim Reduction Tab + Auto-Focus ✅</a></li>
+  <li><a href="#phase-5-clustering-scatter-feedback-loop" id="toc-phase-5-clustering-scatter-feedback-loop" class="nav-link" data-scroll-target="#phase-5-clustering-scatter-feedback-loop">Phase 5: Clustering ↔︎ Scatter Feedback Loop ✅</a></li>
+  <li><a href="#phase-6-elemental-tensor-transforms" id="toc-phase-6-elemental-tensor-transforms" class="nav-link" data-scroll-target="#phase-6-elemental-tensor-transforms">Phase 6: Elemental Tensor Transforms</a></li>
+  <li><a href="#phase-7-advanced-features" id="toc-phase-7-advanced-features" class="nav-link" data-scroll-target="#phase-7-advanced-features">Phase 7: Advanced Features</a></li>
+  <li><a href="#phase-8-supervised-dimensionality-reduction-logit-projection-complete-8a-8b-8c" id="toc-phase-8-supervised-dimensionality-reduction-logit-projection-complete-8a-8b-8c" class="nav-link" data-scroll-target="#phase-8-supervised-dimensionality-reduction-logit-projection-complete-8a-8b-8c">Phase 8: Supervised Dimensionality Reduction (Logit Projection) — ✅ COMPLETE (8a, 8b, 8c)</a></li>
+  </ul></li>
+  <li><a href="#cross-widget-communication-patterns-reference" id="toc-cross-widget-communication-patterns-reference" class="nav-link" data-scroll-target="#cross-widget-communication-patterns-reference">Cross-Widget Communication Patterns (Reference)</a>
+  <ul class="collapse">
+  <li><a href="#pattern-1-transform-output-scatter-visualization" id="toc-pattern-1-transform-output-scatter-visualization" class="nav-link" data-scroll-target="#pattern-1-transform-output-scatter-visualization">Pattern 1: Transform Output → Scatter Visualization</a></li>
+  <li><a href="#pattern-2-scatter-selection-entity-group" id="toc-pattern-2-scatter-selection-entity-group" class="nav-link" data-scroll-target="#pattern-2-scatter-selection-entity-group">Pattern 2: Scatter Selection → Entity Group</a></li>
+  <li><a href="#pattern-3-clustering-scatter-color-update" id="toc-pattern-3-clustering-scatter-color-update" class="nav-link" data-scroll-target="#pattern-3-clustering-scatter-color-update">Pattern 3: Clustering → Scatter Color Update</a></li>
+  <li><a href="#pattern-4-supervised-dim-reduction-logit-scatter-phase-8" id="toc-pattern-4-supervised-dim-reduction-logit-scatter-phase-8" class="nav-link" data-scroll-target="#pattern-4-supervised-dim-reduction-logit-scatter-phase-8">Pattern 4: Supervised Dim Reduction → Logit Scatter (Phase 8)</a></li>
+  </ul></li>
+  <li><a href="#dependency-graph" id="toc-dependency-graph" class="nav-link" data-scroll-target="#dependency-graph">Dependency Graph</a></li>
+  <li><a href="#priority-summary" id="toc-priority-summary" class="nav-link" data-scroll-target="#priority-summary">Priority Summary</a></li>
+  <li><a href="#decision-summary" id="toc-decision-summary" class="nav-link" data-scroll-target="#decision-summary">Decision Summary</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="tensor-transform-library-design-roadmap" class="level1">
+<h1>Tensor Transform Library — Design Roadmap</h1>
+<p><strong>Last updated:</strong> 2026-03-29</p>
+<section id="motivation" class="level2">
+<h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
+<p>TensorData is the richest numeric container in WhiskerToolbox, supporting 2D matrices, 3D cubes, and N-dimensional arrays across multiple storage backends (Armadillo, Dense, LibTorch). Many scientific workflows require <strong>tensor-in → tensor-out</strong> operations: dimensionality reduction (PCA, t-SNE, UMAP), spectral decomposition (SVD, NMF), normalization, slicing, and reshaping. These transforms differ from element-level transforms because:</p>
+<ol type="1">
+<li><strong>Shape-dependence</strong> — A PCA requires 2D; a conv-filter might need 3D.</li>
+<li><strong>Whole-container semantics</strong> — Operates on the <em>entire</em> matrix, not element-by-element.</li>
+<li><strong>Output shape differs from input</strong> — PCA(N×D) → (N×K) where K &lt; D.</li>
+<li><strong>Shared state</strong> — Some algorithms produce fitted models reusable for projection.</li>
+</ol>
+<hr>
+</section>
+<section id="target-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="target-workflow">Target Workflow</h2>
+<p>The primary motivating use case is the <strong>encoder → embedding → visualization → interaction</strong> loop:</p>
+<pre><code>Video (frames)
+  │  DeepLearning_Widget: encoder + global average pooling
+  ▼
+TensorData  (N×192, TimeFrameIndex rows, "encoder_features")
+  │  DataTransform_Widget or MLCore Dim Reduction tab
+  ▼
+TensorData  (N×2, TimeFrameIndex rows, columns "PC1"/"PC2")
+  │  ScatterPlotWidget: X=PC1, Y=PC2, color-by-group
+  ▼
+Scatter visualization with interactive selection
+  │  User selects cluster → entity group created
+  ▼
+EntityGroupManager → downstream analysis</code></pre>
+<section id="workflow-status" class="level3">
+<h3 class="anchored" data-anchor-id="workflow-status">Workflow Status</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 44%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Component</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Encode video → TensorData</td>
+<td>DeepLearning_Widget + ResultProcessor</td>
+<td>✅ Exists</td>
+</tr>
+<tr class="even">
+<td>PCA on TensorData</td>
+<td>MLCore PCAOperation + TensorPCA TransformsV2 wrapper</td>
+<td>✅ Phase 1 complete</td>
+</tr>
+<tr class="odd">
+<td>t-SNE / manifold methods</td>
+<td>tapkee integration</td>
+<td>Phase 3 (t-SNE complete, others pending)</td>
+</tr>
+<tr class="even">
+<td>Scatter plot of reduced features</td>
+<td>ScatterPlotWidget (TensorData columns)</td>
+<td>✅ Exists</td>
+</tr>
+<tr class="odd">
+<td>Color points by group</td>
+<td>ScatterPlotWidget (<code>colorByGroup</code> + GroupManager)</td>
+<td>✅ Exists</td>
+</tr>
+<tr class="even">
+<td>Select points → create group</td>
+<td>ScatterPlotWidget → EntityGroupManager</td>
+<td>✅ Phase 2 complete</td>
+</tr>
+<tr class="odd">
+<td>Cluster automatically</td>
+<td>MLCore ClusteringPipeline + ContextAction</td>
+<td>✅ Phase 5 complete</td>
+</tr>
+<tr class="even">
+<td>Propagate groups to other widgets</td>
+<td>SelectionContext + DataFocusAware</td>
+<td>✅ Exists</td>
+</tr>
+<tr class="odd">
+<td>Dim reduction UI</td>
+<td>MLCore_Widget Dim Reduction tab</td>
+<td>✅ Phase 4 complete</td>
+</tr>
+<tr class="even">
+<td>Scatter ↔︎ clustering loop</td>
+<td>ContextActions + selective clustering + label overlay</td>
+<td>✅ Phase 5 complete</td>
+</tr>
+<tr class="odd">
+<td>Supervised dim reduction (logit projection)</td>
+<td>MLCore LogitProjectionOp + SupervisedDimReductionPipeline</td>
+<td>✅ Phase 8 complete (8a, 8b, 8c)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="architecture-hybrid-option-d" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-hybrid-option-d">Architecture: Hybrid (Option D)</h2>
+<p><strong>Decision:</strong> Algorithms live in MLCore; pipeline integration lives in TransformsV2. This was chosen over three alternatives (pure TransformsV2, standalone TensorTransforms library, pure MLCore). See the Decision Summary at the end of this document for rationale.</p>
+<pre><code>MLCore (algorithms)                TransformsV2 (pipeline wrappers)
+├── MLDimReductionOperation        ├── TensorPCA (container transform)
+├── MLSupervisedDimRedOp (P8)      ├── TensorTSNE (Phase 3)
+├── PCAOperation (mlpack)          ├── TensorIsomap (Phase 3)
+├── TSNEOperation (Phase 3)        ├── TensorLogitProjection (P8)
+├── LogitProjectionOperation (P8)  │
+├── SoftmaxRegressionOp ✅         │
+├── DimReductionPipeline           │
+├── SupervisedDimRedPipeline (P8)  │
+└── ClusteringPipeline             Widget Communication
+                                   ├── SelectionContext (setDataFocus)
+                                   ├── ContextActions (2 registered)
+                                   └── EntityGroupManager (observers)</code></pre>
+<hr>
+</section>
+<section id="implementation-roadmap" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-roadmap">Implementation Roadmap</h2>
+<section id="phase-1-pca-foundation" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-pca-foundation">Phase 1: PCA Foundation ✅</h3>
+<p><strong>Delivered:</strong> End-to-end TensorData → TensorData through TransformsV2 pipeline with time indices preserved.</p>
+<ul>
+<li><code>MLDimReductionOperation</code> base class (<code>src/MLCore/models/MLDimReductionOperation.hpp</code>)</li>
+<li><code>PCAOperation</code> using mlpack (<code>src/MLCore/models/unsupervised/PCAOperation.hpp/.cpp</code>)</li>
+<li><code>TensorPCA</code> TransformsV2 container transform with <code>RowDescriptor</code> preservation</li>
+<li>Unit tests: PCA correctness, TransformsV2 integration, shape validation, row descriptor preservation</li>
+</ul>
+<p><strong>Critical design decision:</strong> Container transforms preserve <code>RowDescriptor</code> from input — if input has <code>TimeFrameIndex</code> rows, output must copy them. This enables scatter plot time-based joining and point → frame navigation.</p>
+</section>
+<section id="phase-2-scatter-selection-entity-groups" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-scatter-selection-entity-groups">Phase 2: Scatter Selection → Entity Groups ✅</h3>
+<p><strong>Delivered:</strong> Users can lasso points in scatter and create entity groups.</p>
+<ul>
+<li>“Create Group from Selection” and “Add to Existing Group” context menus via <code>GroupContextMenuHandler</code></li>
+<li><code>EntityId</code> resolution: only <code>TimeFrameIndex</code> and <code>Interval</code> rows support entity selection (Ordinal rows return <code>nullopt</code>). Uses <code>DataManager::ensureTimeEntityId()</code> via <code>EntityRegistry</code>.</li>
+<li>Added <code>source_data_key</code> and <code>source_row_type</code> to <code>ScatterPointData</code> for provenance tracking</li>
+<li>Selection → group creation → scatter recolor loop verified (23 tests pass)</li>
+</ul>
+<p><strong>Future extension:</strong> Once interval-row support for non-analog types lands, entity preservation should generalize to interval-row TensorData.</p>
+</section>
+<section id="phase-3-tapkee-integration-in-progress" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-tapkee-integration-in-progress">Phase 3: Tapkee Integration — IN PROGRESS</h3>
+<p><strong>Goal:</strong> Non-linear dimensionality reduction (t-SNE, manifold methods).</p>
+<p><strong>t-SNE: Complete.</strong> Tapkee integrated via FetchContent (header-only, own CMakeLists.txt bypassed). <code>TSNEOperation</code> in MLCore wraps tapkee’s <code>tDistributedStochasticNeighborEmbedding</code>. <code>TensorTSNE</code> registered as TransformsV2 container transform. Full test coverage.</p>
+<p><strong>Remaining:</strong> Isomap, Laplacian Eigenmaps, and other manifold methods.</p>
+<p><strong>Note:</strong> <code>DimReductionPipeline</code> already exists from Phase 4 — only tapkee-specific operations and TransformsV2 wrappers need to be added for the remaining methods.</p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><p><strong>Add tapkee dependency</strong> — vcpkg preferred, FetchContent as fallback. Tapkee is header-only (Eigen internally); needs Armadillo ↔︎ Eigen adapter or raw pointer callbacks.</p></li>
+<li><p><strong>Implement tapkee operations in MLCore:</strong></p>
+<ul>
+<li><code>TSNEOperation</code> — <code>MLDimReductionOperation</code> subclass</li>
+<li><code>IsomapOperation</code> — geodesic distance-based manifold learning</li>
+<li><code>LaplacianEigenmapsOperation</code> — spectral, graph-based</li>
+</ul></li>
+<li><p><strong>Register TransformsV2 wrappers:</strong></p>
+<ul>
+<li><code>TensorTSNE</code>, <code>TensorIsomap</code>, <code>TensorLaplacianEigenmaps</code></li>
+<li>Each with reflect-cpp parameter structs + <code>RowDescriptor</code> preservation</li>
+</ul></li>
+<li><p><strong>Update DimReductionPanel UI:</strong></p>
+<ul>
+<li>Add algorithm selection dropdown (currently PCA only)</li>
+<li>Algorithm-specific parameter forms via <code>ParameterSchema</code></li>
+</ul></li>
+</ol>
+<p><strong>Alternative for PCA:</strong> mlpack’s built-in <code>mlpack::PCA</code> is already used. For methods mlpack doesn’t provide (t-SNE, Isomap, LLE, Diffusion Maps), tapkee fills the gap.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 45%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algorithm</th>
+<th>Tapkee Method</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>t-SNE</td>
+<td><code>tapkee::tDistributedStochasticNeighborEmbedding</code></td>
+<td>Non-linear, stochastic, O(N²)</td>
+</tr>
+<tr class="even">
+<td>Isomap</td>
+<td><code>tapkee::Isomap</code></td>
+<td>Non-linear, geodesic distances</td>
+</tr>
+<tr class="odd">
+<td>LLE</td>
+<td><code>tapkee::LocallyLinearEmbedding</code></td>
+<td>Non-linear, preserves local structure</td>
+</tr>
+<tr class="even">
+<td>Laplacian Eigenmaps</td>
+<td><code>tapkee::LaplacianEigenmaps</code></td>
+<td>Spectral, graph-based</td>
+</tr>
+<tr class="odd">
+<td>MDS</td>
+<td><code>tapkee::MultidimensionalScaling</code></td>
+<td>Classical scaling</td>
+</tr>
+<tr class="even">
+<td>Diffusion Maps</td>
+<td><code>tapkee::DiffusionMap</code></td>
+<td>Non-linear, diffusion distances</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Files to create/edit:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>vcpkg.json</code> or <code>src/MLCore/CMakeLists.txt</code></td>
+<td>Add tapkee dependency</td>
+</tr>
+<tr class="even">
+<td><code>src/MLCore/models/unsupervised/TSNEOperation.hpp/.cpp</code></td>
+<td>Create: t-SNE via tapkee</td>
+</tr>
+<tr class="odd">
+<td><code>src/MLCore/models/unsupervised/IsomapOperation.hpp/.cpp</code></td>
+<td>Create: Isomap via tapkee</td>
+</tr>
+<tr class="even">
+<td><code>src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.hpp/.cpp</code></td>
+<td>Create: TransformsV2 wrapper</td>
+</tr>
+<tr class="odd">
+<td><code>src/TransformsV2/algorithms/TensorIsomap/TensorIsomap.hpp/.cpp</code></td>
+<td>Create: TransformsV2 wrapper</td>
+</tr>
+<tr class="even">
+<td><code>tests/MLCore/test_TSNEOperation.cpp</code></td>
+<td>Create: unit tests</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phase-4-mlcore-widget-dim-reduction-tab-auto-focus" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4-mlcore-widget-dim-reduction-tab-auto-focus">Phase 4: MLCore Widget Dim Reduction Tab + Auto-Focus ✅</h3>
+<p><strong>Delivered:</strong> Integrated dim reduction UI with scatter visualization feedback loop.</p>
+<ul>
+<li>“Dimensionality Reduction” tab in MLCore_Widget with <code>DimReductionPanel</code> (tensor selection, PCA config, n_components, scale, z-score)</li>
+<li><code>DimReductionPipeline</code>: ValidateFeatures → ConvertFeatures → FitTransform → WriteOutput</li>
+<li>Worker thread (<code>DimReductionPipelineWorker</code>) with deferred main-thread writes for thread safety</li>
+<li>Shows explained variance ratio per component after completion</li>
+<li>Auto-focus output: both <code>MLCoreWidget</code> and <code>DataTransform_Widget</code> call <code>SelectionContext::setDataFocus()</code> after transform</li>
+<li><code>scatter_plot.visualize_2d_tensor</code> ContextAction enables one-click scatter visualization</li>
+</ul>
+</section>
+<section id="phase-5-clustering-scatter-feedback-loop" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5-clustering-scatter-feedback-loop">Phase 5: Clustering ↔︎ Scatter Feedback Loop ✅</h3>
+<p><strong>Delivered:</strong> Tight integration between MLCore clustering and scatter visualization.</p>
+<ul>
+<li><code>mlcore.cluster_tensor</code> ContextAction with <code>setActiveTab(1)</code> to switch to Clustering tab</li>
+<li>Scatter context menu dynamically populates applicable ContextActions from <code>SelectionContext</code></li>
+<li><strong>Selective clustering:</strong> “Cluster Selection…” creates filtered TensorData copy from polygon-selected rows, stores as <code>"&lt;key&gt;_selection"</code>, triggers clustering ContextAction</li>
+<li><strong>Cluster label overlay:</strong> QPainter overlay draws “GroupName (n=count)” at cluster centroids with group color + dark outline. Toggled via <code>show_cluster_labels</code> checkbox (serialized in <code>ScatterPlotStateData</code>).</li>
+</ul>
+</section>
+<section id="phase-6-elemental-tensor-transforms" class="level3">
+<h3 class="anchored" data-anchor-id="phase-6-elemental-tensor-transforms">Phase 6: Elemental Tensor Transforms</h3>
+<p><strong>Goal:</strong> Per-element operations on tensor data (square, log, clamp).</p>
+<ol type="1">
+<li>Register element-level transforms for TensorData (row-level <code>f(row) → row</code>)</li>
+<li>Consider <code>ContainerTraits</code> for TensorData to enable automatic lifting</li>
+</ol>
+</section>
+<section id="phase-7-advanced-features" class="level3">
+<h3 class="anchored" data-anchor-id="phase-7-advanced-features">Phase 7: Advanced Features</h3>
+<ol type="1">
+<li><strong>Fit/project workflow</strong> — <code>TensorPCAFit</code> + <code>TensorPCAProject</code> using <code>PipelineValueStore</code></li>
+<li><strong>Explained variance widget</strong> — Scree plot with interactive component count selection</li>
+<li><strong>3D embedding visualization</strong> — OpenGL 3D scatter for 3-component embeddings</li>
+<li><strong>Benchmarks</strong> — Google Benchmark suite for PCA/t-SNE at various matrix sizes</li>
+</ol>
+</section>
+<section id="phase-8-supervised-dimensionality-reduction-logit-projection-complete-8a-8b-8c" class="level3">
+<h3 class="anchored" data-anchor-id="phase-8-supervised-dimensionality-reduction-logit-projection-complete-8a-8b-8c">Phase 8: Supervised Dimensionality Reduction (Logit Projection) — ✅ COMPLETE (8a, 8b, 8c)</h3>
+<p><strong>Goal:</strong> Supervised linear projection via softmax regression, treating the logit space as a C-dimensional embedding optimized for class discrimination. Enables the encoder → logit projection → scatter visualization loop where labeled and unlabeled observations are projected into the same discriminative space. See <a href="../MLCore/logit_projection.qmd">logit_projection.qmd</a> and <a href="../MLCore/pipelines.qmd">pipelines.qmd</a> for full architecture details.</p>
+<section id="phase-8a-softmaxregressionoperation-mlcore-algorithm" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8a-softmaxregressionoperation-mlcore-algorithm">Phase 8a: SoftmaxRegressionOperation (MLCore algorithm) ✅</h4>
+<p><strong>Delivered:</strong> Multi-class logistic regression via <code>mlpack::SoftmaxRegression&lt;arma::mat&gt;</code>, registered as <code>"Softmax Regression"</code> with task type <code>MultiClassClassification</code>. 11 test cases, 434 assertions.</p>
+<ul>
+<li><code>SoftmaxRegressionOperation</code> — <code>MLModelOperation</code> subclass with pimpl, L-BFGS optimizer, cereal serialization. See <code>src/MLCore/models/supervised/SoftmaxRegressionOperation.hpp/.cpp</code>.</li>
+<li><code>SoftmaxRegressionParameters</code> — <code>lambda</code> (0.0001), <code>max_iterations</code> (10000). Added to <code>src/MLCore/models/MLModelParameters.hpp</code>.</li>
+<li>Registered in <code>src/MLCore/models/MLModelRegistry.cpp</code>.</li>
+<li>Tests in <code>tests/MLCore/SoftmaxRegressionOperation.test.cpp</code> cover: metadata, 3/4/5-class training, binary training, error handling, prediction accuracy, probability output (sum-to-one, range), save/load round-trip, parameter variations, registry integration.</li>
+<li>Developer documentation: <code>docs/developer/MLCore/softmax_regression.qmd</code>.</li>
+</ul>
+<p><strong>Implementation note:</strong> <code>mlpack::SoftmaxRegression</code> requires template argument <code>&lt;arma::mat&gt;</code>. The constructor argument order is <code>(data, labels, numClasses, optimizer, lambda, fitIntercept)</code> — optimizer precedes lambda.</p>
+</section>
+<section id="phase-8b-supervised-dim-reduction-operation-mlcore-interface-algorithm" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8b-supervised-dim-reduction-operation-mlcore-interface-algorithm">Phase 8b: Supervised Dim Reduction Operation (MLCore interface + algorithm) ✅</h4>
+<p><strong>Delivered:</strong> Abstract base class <code>MLSupervisedDimReductionOperation</code> and concrete <code>LogitProjectionOperation</code>, with <code>LogitProjectionParameters</code> and <code>SupervisedDimensionalityReduction</code> task type. 9 test cases, 79 assertions.</p>
+<ul>
+<li><code>MLSupervisedDimReductionOperation</code> — new abstract base in <code>src/MLCore/models/MLSupervisedDimReductionOperation.hpp</code>. Adds <code>fitTransform()</code>, <code>transform()</code>, <code>outputDimensions()</code>, <code>outputColumnNames()</code> pure virtuals. Routes <code>train()</code> to <code>fitTransform()</code> for registry compatibility.</li>
+<li><code>LogitProjectionOperation</code> — concrete implementation in <code>src/MLCore/models/supervised/LogitProjectionOperation.hpp/.cpp</code>. Uses <code>mlpack::SoftmaxRegression&lt;arma::mat&gt;</code> with <code>fitIntercept=true</code>. Extracts weight matrix <span class="math inline">\(W\)</span> (C×D) and bias <span class="math inline">\(b\)</span> (C) from <code>Parameters()</code> (column 0 = bias, columns 1..D = weights). Inference: <code>result = W * X; result.each_col() += b</code>.</li>
+<li><code>LogitProjectionParameters</code> — <code>lambda</code> (0.0001), <code>max_iterations</code> (10000), <code>scale_features</code> (false). When <code>scale_features=true</code>, scaling is absorbed into <span class="math inline">\(W\)</span> and <span class="math inline">\(b\)</span> at training time for transparent inference.</li>
+<li><code>SupervisedDimensionalityReduction</code> added to <code>MLTaskType</code> enum in <code>src/MLCore/models/MLTaskType.hpp</code>.</li>
+<li>Registered in <code>src/MLCore/models/MLModelRegistry.cpp</code> as <code>"Logit Projection"</code>.</li>
+<li>Save/load serializes only <span class="math inline">\(W\)</span> and <span class="math inline">\(b\)</span> (not the mlpack model) — inference works without mlpack after <code>load()</code>.</li>
+<li>Tests in <code>tests/MLCore/LogitProjectionOperation.test.cpp</code> cover: metadata, binary/3-class fitTransform output shape, class separation accuracy &gt;95%, transform consistency, all error cases, scale_features, save/load round-trip, registry integration.</li>
+<li>Developer documentation: <code>docs/developer/MLCore/logit_projection.qmd</code>.</li>
+</ul>
+</section>
+<section id="phase-8c-supervised-dim-reduction-pipeline" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8c-supervised-dim-reduction-pipeline">Phase 8c: Supervised Dim Reduction Pipeline ✅</h4>
+<p><strong>Delivered:</strong> Full <code>SupervisedDimReductionPipeline</code> end-to-end pipeline: trains on labeled rows only, then transforms ALL valid rows (labeled + unlabeled) for complete scatter visualization output. 9 test cases, 451 total assertions in the MLCore suite.</p>
+<p><strong>Key design decisions:</strong> - Trains <code>MLSupervisedDimReductionOperation</code> on <strong>labeled subset</strong> only - Projects <strong>all valid rows</strong> (labeled + unlabeled) for the output tensor — enables scatter visualization with context - Column names: <code>"Logit:&lt;ClassName&gt;"</code> using actual class names from <code>LabelAssembler</code> output (not generic indices) - Follows the <code>DimReductionPipeline</code> pattern for output TensorData construction (preserves <code>RowDescriptor</code>) - Integrates <code>ClassificationPipeline</code>’s 4-mode label assembly (<code>LabelFromIntervals</code>, <code>LabelFromTimeEntityGroups</code>, <code>LabelFromDataEntityGroups</code>, <code>LabelFromEvents</code>)</p>
+<p><strong>Delivered files:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/MLCore/pipelines/SupervisedDimReductionPipeline.hpp</code></td>
+<td>Config, Stage enum, Result, pipeline declaration</td>
+</tr>
+<tr class="even">
+<td><code>src/MLCore/pipelines/SupervisedDimReductionPipeline.cpp</code></td>
+<td>Full implementation with all 4 label modes</td>
+</tr>
+<tr class="odd">
+<td><code>tests/MLCore/SupervisedDimReductionPipeline.test.cpp</code></td>
+<td>9 test cases: 2-class, 3-class, NaN drop, class separation, defer_dm_writes, progress callback, error handling, stage names</td>
+</tr>
+<tr class="even">
+<td><code>docs/developer/MLCore/pipelines.qmd</code></td>
+<td>Updated to document the new pipeline</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pipeline stages:</strong></p>
+<pre><code>ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+FittingAndTransforming → WritingOutput → Complete</code></pre>
+<p><strong>Notable internals:</strong> - <code>collectLabeledCols()</code> — extracts labeled column indices by comparing against sentinel <code>num_classes</code> - <code>buildOutputTensor()</code> — mirrors <code>DimReductionPipeline</code> helper, handles TimeFrameIndex / Interval / Ordinal row types, filtered by <code>valid_row_indices</code> after NaN conversion - <code>dynamic_cast&lt;MLSupervisedDimReductionOperation*&gt;</code> — validates the registry model has the correct base class - <code>defer_dm_writes</code> mode — deferred output + key stored in result for thread-safe main-thread store</p>
+</section>
+<section id="phase-8d-dimreductionpanel-ui-supervised-mode-complete" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8d-dimreductionpanel-ui-supervised-mode-complete">Phase 8d: DimReductionPanel UI — Supervised Mode ✅ COMPLETE</h4>
+<p><strong>Goal:</strong> Extend the existing <code>DimReductionPanel</code> to support supervised algorithms with label source selection.</p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><strong>Add supervised/unsupervised toggle</strong> — radio buttons or combo at the top of <code>DimReductionPanel</code>
+<ul>
+<li>When “Unsupervised” is selected: show current algorithm list (PCA, t-SNE, Robust PCA)</li>
+<li>When “Supervised” is selected: show supervised algorithms (Logit Projection, future: LDA)</li>
+</ul></li>
+<li><strong>Add label source configuration</strong> — visible only in supervised mode
+<ul>
+<li><strong>Label source type</strong> combo: “Intervals”, “Events”, “Time Entity Groups”, “Data Entity Groups”</li>
+<li><strong>Label key</strong> combo: populated dynamically via <code>updateAllowedValues()</code> from DataManager
+<ul>
+<li>“Intervals” → <code>dm.getKeys&lt;DigitalIntervalSeries&gt;()</code></li>
+<li>“Events” → <code>dm.getKeys&lt;DigitalEventSeries&gt;()</code></li>
+<li>“Time Entity Groups” / “Data Entity Groups” → group selector from <code>EntityGroupManager</code></li>
+</ul></li>
+<li>Uses existing <code>dynamic_combo</code> + <code>include_none_sentinel</code> pattern from <code>ParameterSchema</code></li>
+</ul></li>
+<li><strong>Wire up <code>SupervisedDimReductionPipelineWorker</code></strong> — background thread execution
+<ul>
+<li>Same pattern as existing <code>DimReductionPipelineWorker</code> but calls <code>runSupervisedDimReductionPipeline()</code></li>
+<li>Deferred main-thread writes for thread safety</li>
+</ul></li>
+<li><strong>Display class-specific results</strong> — after completion, show:
+<ul>
+<li>Number of classes and class names discovered</li>
+<li>Unlabeled row count (for group-based modes)</li>
+<li>Output tensor shape (N×C)</li>
+</ul></li>
+<li><strong>Auto-focus output</strong> — call <code>SelectionContext::setDataFocus()</code> on the output logit tensor
+<ul>
+<li>Existing <code>scatter_plot.visualize_2d_tensor</code> ContextAction handles scatter visualization</li>
+</ul></li>
+</ol>
+<p><strong>Files to edit:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.hpp</code></td>
+<td>Edit: add supervised controls</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp</code></td>
+<td>Edit: add supervised logic</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.ui</code></td>
+<td>Edit: add supervised UI elements (if .ui exists)</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/MLCore_Widget/MLCore_Widget.cpp</code></td>
+<td>Edit: wire supervised pipeline worker</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phase-8e-transformsv2-wrapper" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8e-transformsv2-wrapper">Phase 8e: TransformsV2 Wrapper</h4>
+<p><strong>Goal:</strong> Register <code>TensorLogitProjection</code> as a container transform for pipeline composability.</p>
+<p><strong>Steps:</strong></p>
+<ol type="1">
+<li><strong>Create <code>TensorLogitProjection</code></strong> — TransformsV2 container transform
+<ul>
+<li>Input: TensorData (features) + parameter specifying label source key</li>
+<li>Output: TensorData (logits) with <code>RowDescriptor</code> preserved</li>
+<li>Reflect-cpp parameter struct with <code>dynamic_combo</code> for label key selection</li>
+<li>Static registration via RAII pattern (same as <code>TensorPCA</code>, <code>TensorTSNE</code>)</li>
+</ul></li>
+<li><strong><code>ParameterUIHints</code> specialization</strong> — annotate <code>label_key</code> field as <code>dynamic_combo</code></li>
+</ol>
+<p><strong>Note:</strong> The TransformsV2 wrapper for supervised transforms is more complex than unsupervised wrappers because it needs to specify label source configuration. Consider whether the TransformsV2 parameter struct should embed the full <code>LabelAssemblyConfig</code> variant or use a simpler “label_key + label_type” pair. The simpler pair is recommended for TransformsV2 to keep the pipeline JSON format clean.</p>
+<p><strong>Files to create:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/TransformsV2/algorithms/TensorLogitProjection/TensorLogitProjection.hpp</code></td>
+<td>Create</td>
+</tr>
+<tr class="even">
+<td><code>src/TransformsV2/algorithms/TensorLogitProjection/TensorLogitProjection.cpp</code></td>
+<td>Create</td>
+</tr>
+<tr class="odd">
+<td><code>tests/TransformsV2/test_TensorLogitProjection.cpp</code></td>
+<td>Create</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phase-8-design-decisions" class="level4">
+<h4 class="anchored" data-anchor-id="phase-8-design-decisions">Phase 8 Design Decisions</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 32%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Where does the supervised dim reduction base live?</td>
+<td><code>MLCore/models/MLSupervisedDimReductionOperation.hpp</code></td>
+<td>Parallel to <code>MLDimReductionOperation</code>; same directory</td>
+</tr>
+<tr class="even">
+<td>Binary vs multi-class handling?</td>
+<td><code>LogitProjectionOperation</code> auto-selects: 2 classes → <code>LogisticRegression</code>, ≥2 → <code>SoftmaxRegression</code></td>
+<td>Single entry point for users; algorithm detail is hidden</td>
+</tr>
+<tr class="odd">
+<td>How are logits extracted from mlpack?</td>
+<td><code>model.Parameters()</code> returns weight matrix; logits = <span class="math inline">\(Wx + b\)</span></td>
+<td>Both <code>LogisticRegression::Parameters()</code> and <code>SoftmaxRegression::Parameters()</code> expose this</td>
+</tr>
+<tr class="even">
+<td>New <code>MLTaskType</code> or reuse?</td>
+<td>Add <code>SupervisedDimensionalityReduction</code></td>
+<td>Keeps registry queries clean; DimReductionPanel can filter by unsupervised vs supervised</td>
+</tr>
+<tr class="odd">
+<td>How does label key reach the pipeline?</td>
+<td><code>SupervisedDimReductionPipelineConfig</code> embeds full <code>LabelAssemblyConfig</code></td>
+<td>Reuses proven 4-mode variant from ClassificationPipeline</td>
+</tr>
+<tr class="even">
+<td>How does label key reach the UI?</td>
+<td><code>dynamic_combo</code> + <code>updateAllowedValues()</code> on DimReductionPanel</td>
+<td>Existing pattern used by DeepLearning_Widget and AutoParamWidget</td>
+</tr>
+<tr class="odd">
+<td>New pipeline or extend existing?</td>
+<td>New <code>SupervisedDimReductionPipeline</code></td>
+<td>DimReductionPipeline has no label stage; adding one would complicate the unsupervised path</td>
+</tr>
+<tr class="even">
+<td>Output column naming?</td>
+<td><code>"Logit:ClassName"</code> per class</td>
+<td>Descriptive; avoids collision with PCA’s <code>"PC1"</code> naming</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="cross-widget-communication-patterns-reference" class="level2">
+<h2 class="anchored" data-anchor-id="cross-widget-communication-patterns-reference">Cross-Widget Communication Patterns (Reference)</h2>
+<section id="pattern-1-transform-output-scatter-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-1-transform-output-scatter-visualization">Pattern 1: Transform Output → Scatter Visualization</h3>
+<pre><code>DataTransform_Widget or MLCore Dim Reduction tab
+  │ executes TensorPCA → DataManager::setData("features_pca", tensor)
+  │ calls SelectionContext::setDataFocus("features_pca", "TensorData", source)
+  ▼
+ScatterPlotPropertiesWidget (DataFocusAware)
+  → onDataFocusChanged → refreshes key combos
+  → User selects X=PC1, Y=PC2 (or via "Visualize in Scatter" ContextAction)
+  ▼
+ScatterPlotOpenGLWidget → rendered scatter with TimeFrameIndex-based points</code></pre>
+</section>
+<section id="pattern-2-scatter-selection-entity-group" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-2-scatter-selection-entity-group">Pattern 2: Scatter Selection → Entity Group</h3>
+<pre><code>ScatterPlotOpenGLWidget
+  → User polygon-selects points → right-click → "Create Group from Selection..."
+  → selected_indices → ScatterPointData::time_indices → ensureTimeEntityId()
+  → EntityGroupManager::createGroup() + addEntitiesToGroup()
+  → observers notified → scatter recolors, GroupManagementWidget refreshes</code></pre>
+</section>
+<section id="pattern-3-clustering-scatter-color-update" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-3-clustering-scatter-color-update">Pattern 3: Clustering → Scatter Color Update</h3>
+<pre><code>MLCore_Widget → runs K-Means → ClusteringPipeline → EntityGroupManager
+  → observers notified → ScatterPlotWidget detects generation counter change
+  → scene dirty → applyGroupColorsToScene() → points colored by cluster</code></pre>
+</section>
+<section id="pattern-4-supervised-dim-reduction-logit-scatter-phase-8" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-4-supervised-dim-reduction-logit-scatter-phase-8">Pattern 4: Supervised Dim Reduction → Logit Scatter (Phase 8)</h3>
+<pre><code>DimReductionPanel (supervised mode)
+  │ User selects: features="encoder_features", algorithm="Logit Projection"
+  │ User selects: label source="Intervals", label_key="contact_labels"
+  │ → SupervisedDimReductionPipelineWorker (background thread)
+  │    → LabelAssembler: DigitalIntervalSeries → arma::Row&lt;size_t&gt; labels
+  │    → LogitProjectionOperation::fitTransform(features, labels, params, logits)
+  │    → Creates TensorData (N×C) with columns "Logit:Contact", "Logit:NoContact"
+  │    → (deferred write) DataManager::setData("encoder_features_logit", tensor)
+  │ → SelectionContext::setDataFocus("encoder_features_logit", "TensorData")
+  ▼
+ScatterPlotPropertiesWidget (DataFocusAware)
+  → onDataFocusChanged → refreshes columns
+  → User selects X="Logit:Contact", Y="Logit:NoContact"
+  ▼
+ScatterPlotOpenGLWidget → class separation visible in logit space
+  → Color by entity group shows labeled vs unlabeled</code></pre>
+<hr>
+</section>
+</section>
+<section id="dependency-graph" class="level2">
+<h2 class="anchored" data-anchor-id="dependency-graph">Dependency Graph</h2>
+<pre><code>                    ┌────────────────────────────┐
+                    │     ScatterPlotWidget       │
+                    │  (visualization + selection) │
+                    └──────────┬─────────────────┘
+                               │ reads TensorData, writes EntityGroups
+                               ▼
+┌─────────────────┐     ┌──────────────────┐     ┌───────────────────┐
+│   TransformsV2  │────▶│   MLCore           │     │ EntityGroupManager│
+│ TensorPCA       │     │ PCAOperation       │     │ createGroup()     │
+│ TensorTSNE (P3) │     │ TSNEOp (P3)        │     │ notifyObservers() │
+│ TensorLogit(P8) │     │ LogitProjection(P8)│────▶│                   │
+│ (thin wrappers) │     │ SoftmaxRegression ✅│     └────────┬──────────┘
+└────────┬────────┘     │  (P8a done)        │              │
+         │              │ Clustering         │              ▼
+         ▼              └──────┬─────────────┘     ┌───────────────────┐
+┌─────────────────┐            │                   │ SelectionContext   │
+│   TensorData    │            ▼                   │ + ContextActions   │
+│   (DataObjects) │     ┌──────────────┐           └───────────────────┘
+└─────────────────┘     │ Tapkee (P3)  │     ┌───────────────────┐
+                        └──────────────┘     │ LabelAssembler    │
+                                             │ (Intervals/Events/│
+                                             │  Groups) ← P8     │
+                                             └───────────────────┘</code></pre>
+<p>Widget interaction is mediated entirely through DataManager (transforms write output; widgets observe), SelectionContext (<code>setDataFocus()</code> broadcasts; <code>DataFocusAware</code> auto-updates), and EntityGroupManager (scatter selection creates groups; observers notify all widgets). No widget holds a pointer to any other widget.</p>
+<hr>
+</section>
+<section id="priority-summary" class="level2">
+<h2 class="anchored" data-anchor-id="priority-summary">Priority Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 15%">
+<col style="width: 22%">
+<col style="width: 17%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Phase</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Key Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>PCA Foundation</td>
+<td><strong>High</strong></td>
+<td>✅ Complete</td>
+<td>TensorData → TensorData; row preservation</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Scatter Selection → Groups</td>
+<td><strong>High</strong></td>
+<td>✅ Complete</td>
+<td>“Create Group from Selection” in scatter</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Tapkee (t-SNE, manifold)</td>
+<td><strong>Medium</strong></td>
+<td><strong>t-SNE complete</strong></td>
+<td>Non-linear dim reduction</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>MLCore Dim Reduction Tab</td>
+<td><strong>High</strong></td>
+<td>✅ Complete</td>
+<td>Integrated UI; auto-focus output</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Clustering ↔︎ Scatter Loop</td>
+<td><strong>High</strong></td>
+<td>✅ Complete</td>
+<td>ContextAction clustering; selective clustering; label overlay</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Elemental Tensor Transforms</td>
+<td>Low</td>
+<td>Not started</td>
+<td>Row-level element transforms</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Advanced Features</td>
+<td>Low</td>
+<td>Not started</td>
+<td>Fit/project, scree plot, 3D scatter, benchmarks</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Supervised Dim Reduction (Logit Projection)</td>
+<td><strong>High</strong></td>
+<td>✅ Complete</td>
+<td>Supervised TensorData → logit TensorData; logit scatter workflow</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="decision-summary" class="level2">
+<h2 class="anchored" data-anchor-id="decision-summary">Decision Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 32%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Where do algorithms live?</td>
+<td><strong>MLCore</strong></td>
+<td>Natural fit/transform API; isolates tapkee dependency; testable independently</td>
+</tr>
+<tr class="even">
+<td>Where does pipeline integration live?</td>
+<td><strong>TransformsV2</strong> (container transforms)</td>
+<td>Full pipeline composability; automatic UI; consistent with existing patterns</td>
+</tr>
+<tr class="odd">
+<td>Initial backend?</td>
+<td><strong>mlpack PCA</strong> (already a dependency)</td>
+<td>Zero new dependencies for Phase 1</td>
+</tr>
+<tr class="even">
+<td>Manifold methods backend?</td>
+<td><strong>Tapkee</strong> (Phase 3)</td>
+<td>Best C++ manifold learning library; header-only</td>
+</tr>
+<tr class="odd">
+<td>Cross-widget communication?</td>
+<td><strong>SelectionContext + EntityGroupManager + DataManager observers</strong></td>
+<td>All infrastructure exists; no widget-to-widget pointers</td>
+</tr>
+<tr class="even">
+<td>How do scatter selections become groups?</td>
+<td><strong>Context menu → EntityGroupManager</strong></td>
+<td>Scatter already has selection + GroupManager; add write path</td>
+</tr>
+<tr class="odd">
+<td>Elemental tensor transforms?</td>
+<td><strong>Phase 6</strong> (deferred)</td>
+<td>Requires ContainerTraits work for TensorData</td>
+</tr>
+<tr class="even">
+<td>Separate TensorTransforms library?</td>
+<td><strong>No</strong></td>
+<td>Hybrid approach avoids new infrastructure</td>
+</tr>
+<tr class="odd">
+<td>Supervised dim reduction: new pipeline or extend existing?</td>
+<td><strong>New <code>SupervisedDimReductionPipeline</code></strong></td>
+<td>DimReductionPipeline is unsupervised-only; label assembly doesn’t belong there</td>
+</tr>
+<tr class="even">
+<td>Logit projection: binary vs softmax handling?</td>
+<td><strong>Auto-select in <code>LogitProjectionOperation</code></strong></td>
+<td>2 classes → <code>LogisticRegression</code>, ≥2 → <code>SoftmaxRegression</code>; single user-facing entry</td>
+</tr>
+<tr class="odd">
+<td>Label key in UI?</td>
+<td><strong><code>dynamic_combo</code> + <code>updateAllowedValues()</code></strong></td>
+<td>Proven pattern from DeepLearning_Widget; populates from DataManager at runtime</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level2">
+<h2 class="anchored" data-anchor-id="see-also">See Also</h2>
+<ul>
+<li><a href="../developer/inter_widget_communication_roadmap.html">Inter-Widget Communication Roadmap</a> — ContextActions, OperationContext, cross-roadmap sequence</li>
+<li><a href="../developer/DataManager/Commands/roadmap.html">Command Architecture Roadmap</a> — command registration, CommandRecorder integration</li>
+<li><a href="../developer/DataManager/Commands/index.html">Command Architecture Design Document</a> — full types and patterns</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

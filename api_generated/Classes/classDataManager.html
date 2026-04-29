@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>DataManager – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#datamanager" id="toc-datamanager" class="nav-link active" data-scroll-target="#datamanager">DataManager</a>
+  <ul class="collapse">
+  <li><a href="#public-types" id="toc-public-types" class="nav-link" data-scroll-target="#public-types">Public Types</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#public-types-documentation" id="toc-public-types-documentation" class="nav-link" data-scroll-target="#public-types-documentation">Public Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#using-tableobserver" id="toc-using-tableobserver" class="nav-link" data-scroll-target="#using-tableobserver">using TableObserver</a></li>
+  <li><a href="#using-observercallback" id="toc-using-observercallback" class="nav-link" data-scroll-target="#using-observercallback">using ObserverCallback</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-datamanager" id="toc-function-datamanager" class="nav-link" data-scroll-target="#function-datamanager">function DataManager</a></li>
+  <li><a href="#function-datamanager-1" id="toc-function-datamanager-1" class="nav-link" data-scroll-target="#function-datamanager-1">function ~DataManager</a></li>
+  <li><a href="#function-gettableregistry" id="toc-function-gettableregistry" class="nav-link" data-scroll-target="#function-gettableregistry">function getTableRegistry</a></li>
+  <li><a href="#function-gettableregistry-1" id="toc-function-gettableregistry-1" class="nav-link" data-scroll-target="#function-gettableregistry-1">function getTableRegistry</a></li>
+  <li><a href="#function-addtableobserver" id="toc-function-addtableobserver" class="nav-link" data-scroll-target="#function-addtableobserver">function addTableObserver</a></li>
+  <li><a href="#function-removetableobserver" id="toc-function-removetableobserver" class="nav-link" data-scroll-target="#function-removetableobserver">function removeTableObserver</a></li>
+  <li><a href="#function-settime" id="toc-function-settime" class="nav-link" data-scroll-target="#function-settime">function setTime</a></li>
+  <li><a href="#function-gettime" id="toc-function-gettime" class="nav-link" data-scroll-target="#function-gettime">function getTime</a></li>
+  <li><a href="#function-gettime-1" id="toc-function-gettime-1" class="nav-link" data-scroll-target="#function-gettime-1">function getTime</a></li>
+  <li><a href="#function-removetime" id="toc-function-removetime" class="nav-link" data-scroll-target="#function-removetime">function removeTime</a></li>
+  <li><a href="#function-settimekey" id="toc-function-settimekey" class="nav-link" data-scroll-target="#function-settimekey">function setTimeKey</a></li>
+  <li><a href="#function-gettimekey" id="toc-function-gettimekey" class="nav-link" data-scroll-target="#function-gettimekey">function getTimeKey</a></li>
+  <li><a href="#function-gettimeframekeys" id="toc-function-gettimeframekeys" class="nav-link" data-scroll-target="#function-gettimeframekeys">function getTimeFrameKeys</a></li>
+  <li><a href="#function-reset" id="toc-function-reset" class="nav-link" data-scroll-target="#function-reset">function reset</a></li>
+  <li><a href="#function-addcallbacktodata" id="toc-function-addcallbacktodata" class="nav-link" data-scroll-target="#function-addcallbacktodata">function addCallbackToData</a></li>
+  <li><a href="#function-removecallbackfromdata" id="toc-function-removecallbackfromdata" class="nav-link" data-scroll-target="#function-removecallbackfromdata">function removeCallbackFromData</a></li>
+  <li><a href="#function-addobserver" id="toc-function-addobserver" class="nav-link" data-scroll-target="#function-addobserver">function addObserver</a></li>
+  <li><a href="#function-removeobserver" id="toc-function-removeobserver" class="nav-link" data-scroll-target="#function-removeobserver">function removeObserver</a></li>
+  <li><a href="#function-getallkeys" id="toc-function-getallkeys" class="nav-link" data-scroll-target="#function-getallkeys">function getAllKeys</a></li>
+  <li><a href="#function-getkeys" id="toc-function-getkeys" class="nav-link" data-scroll-target="#function-getkeys">function getKeys</a></li>
+  <li><a href="#function-getdatavariant" id="toc-function-getdatavariant" class="nav-link" data-scroll-target="#function-getdatavariant">function getDataVariant</a></li>
+  <li><a href="#function-getdata" id="toc-function-getdata" class="nav-link" data-scroll-target="#function-getdata">function getData</a></li>
+  <li><a href="#function-setdata" id="toc-function-setdata" class="nav-link" data-scroll-target="#function-setdata">function setData</a></li>
+  <li><a href="#function-setdata-1" id="toc-function-setdata-1" class="nav-link" data-scroll-target="#function-setdata-1">function setData</a></li>
+  <li><a href="#function-setdata-2" id="toc-function-setdata-2" class="nav-link" data-scroll-target="#function-setdata-2">function setData</a></li>
+  <li><a href="#function-deletedata" id="toc-function-deletedata" class="nav-link" data-scroll-target="#function-deletedata">function deleteData</a></li>
+  <li><a href="#function-gettype" id="toc-function-gettype" class="nav-link" data-scroll-target="#function-gettype">function getType</a></li>
+  <li><a href="#function-setoutputpath" id="toc-function-setoutputpath" class="nav-link" data-scroll-target="#function-setoutputpath">function setOutputPath</a></li>
+  <li><a href="#function-getoutputpath" id="toc-function-getoutputpath" class="nav-link" data-scroll-target="#function-getoutputpath">function getOutputPath</a></li>
+  <li><a href="#function-notifytableobservers" id="toc-function-notifytableobservers" class="nav-link" data-scroll-target="#function-notifytableobservers">function notifyTableObservers</a></li>
+  <li><a href="#function-ensuretimeentityid" id="toc-function-ensuretimeentityid" class="nav-link" data-scroll-target="#function-ensuretimeentityid">function ensureTimeEntityId</a></li>
+  <li><a href="#function-ensuretimeentityids" id="toc-function-ensuretimeentityids" class="nav-link" data-scroll-target="#function-ensuretimeentityids">function ensureTimeEntityIds</a></li>
+  <li><a href="#function-resolvetimeentity" id="toc-function-resolvetimeentity" class="nav-link" data-scroll-target="#function-resolvetimeentity">function resolveTimeEntity</a></li>
+  <li><a href="#function-gettimeindicesingroup" id="toc-function-gettimeindicesingroup" class="nav-link" data-scroll-target="#function-gettimeindicesingroup">function getTimeIndicesInGroup</a></li>
+  <li><a href="#function-gettimeindicesingroupconverted" id="toc-function-gettimeindicesingroupconverted" class="nav-link" data-scroll-target="#function-gettimeindicesingroupconverted">function getTimeIndicesInGroupConverted</a></li>
+  <li><a href="#function-getentityregistry" id="toc-function-getentityregistry" class="nav-link" data-scroll-target="#function-getentityregistry">function getEntityRegistry</a></li>
+  <li><a href="#function-getentitygroupmanager" id="toc-function-getentitygroupmanager" class="nav-link" data-scroll-target="#function-getentitygroupmanager">function getEntityGroupManager</a></li>
+  <li><a href="#function-getlineageregistry" id="toc-function-getlineageregistry" class="nav-link" data-scroll-target="#function-getlineageregistry">function getLineageRegistry</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">DataManager</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="datamanager" class="level1">
+<h1>DataManager</h1>
+<p><code>#include &lt;DataManager.hpp&gt;</code></p>
+<section id="public-types" class="level2">
+<h2 class="anchored" data-anchor-id="public-types">Public Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; void(<a href="../../api_generated/Classes/structTableEvent.html">TableEvent</a> const &amp;)&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#using-tableobserver">TableObserver</a></strong></td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; void()&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#using-observercallback">ObserverCallback</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-datamanager">DataManager</a></strong>()</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-~datamanager">~DataManager</a></strong>()</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classTableRegistry.html">TableRegistry</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettableregistry">getTableRegistry</a></strong>()<br>Get the centralized <a href="../../api_generated/Classes/classTableRegistry.html">TableRegistry</a> owned by this <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTableRegistry.html">TableRegistry</a> const *</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettableregistry">getTableRegistry</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-addtableobserver">addTableObserver</a></strong>(<a href="../../api_generated/Classes/classDataManager.html#using-tableobserver">TableObserver</a> callback)<br>Subscribe to table events.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-removetableobserver">removeTableObserver</a></strong>(int callback_id)<br>Unsubscribe from table events.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-settime">setTime</a></strong>(<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; key, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; timeframe, bool overwrite =false)<br>Register a new temporal coordinate system with a unique key.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettime">getTime</a></strong>()<br>Get the default time frame object.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettime">getTime</a></strong>(<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; key)<br>Get the time frame object for a specific key.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-removetime">removeTime</a></strong>(<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-settimekey">setTimeKey</a></strong>(std::string const &amp; data_key, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key)<br>Set the time key for a specific data key.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a></td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettimekey">getTimeKey</a></strong>(std::string const &amp; data_key)<br>Get the time key for a specific data key.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettimeframekeys">getTimeFrameKeys</a></strong>()<br>Get all registered <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> keys.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-reset">reset</a></strong>()<br>Clear all data and reset <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to initial state.</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-addcallbacktodata">addCallbackToData</a></strong>(std::string const &amp; key, <a href="../../api_generated/Classes/classDataManager.html#using-observercallback">ObserverCallback</a> callback)<br>Add a callback function to a specific data object.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-removecallbackfromdata">removeCallbackFromData</a></strong>(std::string const &amp; key, int callback_id)<br>Remove a callback from a specific data object.</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classDataManager.html#using-observercallback">ObserverCallback</a> callback)<br>Register a callback function for <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> state changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-removeobserver">removeObserver</a></strong>(int callback_id)</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getallkeys">getAllKeys</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getkeys">getKeys</a></strong>()</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getdatavariant">getDataVariant</a></strong>(std::string const &amp; key)<br>Get data as a variant type.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br>std::shared_ptr&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getdata">getData</a></strong>(std::string const &amp; key)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-setdata">setData</a></strong>(std::string const &amp; key, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-setdata">setData</a></strong>(std::string const &amp; key, <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> data, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-setdata">setData</a></strong>(std::string const &amp; key, std::shared_ptr&lt; T &gt; data, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key)</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-deletedata">deleteData</a></strong>(std::string const &amp; key)<br>Delete data associated with the specified key.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Files/DM__DataType_8hpp.html#enum-dm-datatype">DM_DataType</a></td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettype">getType</a></strong>(std::string const &amp; key) const</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-setoutputpath">setOutputPath</a></strong>(std::string const &amp; output_path)</td>
+</tr>
+<tr class="odd">
+<td>std::string const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getoutputpath">getOutputPath</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-notifytableobservers">notifyTableObservers</a></strong>(<a href="../../api_generated/Classes/structTableEvent.html">TableEvent</a> const &amp; ev)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-ensuretimeentityid">ensureTimeEntityId</a></strong>(<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> index)<br>Register (or retrieve) an <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for a specific time point on a clock.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-ensuretimeentityids">ensureTimeEntityIds</a></strong>(<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Batch-register EntityIds for a contiguous range of time points [start, end].</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; std::pair&lt; <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-resolvetimeentity">resolveTimeEntity</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> id) const<br>Resolve a TimeEntity’s <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> back to its (<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>).</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettimeindicesingroup">getTimeIndicesInGroup</a></strong>(<a href="../../api_generated/Files/DataManager_8hpp.html#using-groupid">GroupId</a> group_id, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key) const<br>Get all <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a group for a specific clock.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-gettimeindicesingroupconverted">getTimeIndicesInGroupConverted</a></strong>(<a href="../../api_generated/Files/DataManager_8hpp.html#using-groupid">GroupId</a> group_id, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; target_key) const<br>Get all <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a group, converted to a target clock.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getentityregistry">getEntityRegistry</a></strong>() const<br>Access the session-scoped <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a>.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classEntityGroupManager.html">EntityGroupManager</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getentitygroupmanager">getEntityGroupManager</a></strong>() const<br>Access the session-scoped <a href="../../api_generated/Classes/classEntityGroupManager.html">EntityGroupManager</a>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRegistry.html">WhiskerToolbox::Entity::Lineage::LineageRegistry</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classDataManager.html#function-getlineageregistry">getLineageRegistry</a></strong>() const<br>Access the session-scoped LineageRegistry.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-types-documentation">Public Types Documentation</h2>
+<section id="using-tableobserver" class="level3">
+<h3 class="anchored" data-anchor-id="using-tableobserver">using TableObserver</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DataManager<span class="op">::</span>TableObserver <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>TableEvent <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="using-observercallback" class="level3">
+<h3 class="anchored" data-anchor-id="using-observercallback">using ObserverCallback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DataManager<span class="op">::</span>ObserverCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">()&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-datamanager" class="level3">
+<h3 class="anchored" data-anchor-id="function-datamanager">function DataManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DataManager<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-datamanager-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-datamanager-1">function ~DataManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>DataManager<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gettableregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettableregistry">function getTableRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TableRegistry <span class="op">*</span> getTableRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the centralized <a href="../../api_generated/Classes/classTableRegistry.html">TableRegistry</a> owned by this <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
+</section>
+<section id="function-gettableregistry-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettableregistry-1">function getTableRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TableRegistry <span class="at">const</span> <span class="op">*</span> getTableRegistry<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-addtableobserver" class="level3">
+<h3 class="anchored" data-anchor-id="function-addtableobserver">function addTableObserver</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> addTableObserver<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    TableObserver callback</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Subscribe to table events.</p>
+<p><strong>Return</strong>: Subscription id (&gt;=1) or -1 on failure</p>
+</section>
+<section id="function-removetableobserver" class="level3">
+<h3 class="anchored" data-anchor-id="function-removetableobserver">function removeTableObserver</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeTableObserver<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> callback_id</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Unsubscribe from table events.</p>
+</section>
+<section id="function-settime" class="level3">
+<h3 class="anchored" data-anchor-id="function-settime">function setTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> setTime<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> timeframe<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> overwrite <span class="op">=</span><span class="kw">false</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a new temporal coordinate system with a unique key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The unique identifier for this <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a></li>
+<li><strong>timeframe</strong> The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> object to register</li>
+</ul>
+<p><strong>Return</strong>: bool True if the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> was successfully registered, false otherwise</p>
+<p><strong>Note</strong>: If the key already exists or timeframe is nullptr, a warning message will be printed to std::cerr and the function will return false</p>
+<p>This function stores a <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> object in the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> under the provided key. The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> specifies the temporal coordinate system that can be assigned to data objects.</p>
+</section>
+<section id="function-gettime" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettime">function getTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTime<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the default time frame object.</p>
+<p><strong>Return</strong>: A shared pointer to the default <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> object</p>
+<p><strong>Note</strong>: This function always returns a valid pointer since the default <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> is created in the constructor</p>
+<p>Returns the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> associated with the default “time” key.</p>
+</section>
+<section id="function-gettime-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettime-1">function getTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTime<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time frame object for a specific key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The key to retrieve the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for</li>
+</ul>
+<p><strong>Return</strong>: A shared pointer to the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> if the key exists, nullptr otherwise</p>
+</section>
+<section id="function-removetime" class="level3">
+<h3 class="anchored" data-anchor-id="function-removetime">function removeTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeTime<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-settimekey" class="level3">
+<h3 class="anchored" data-anchor-id="function-settimekey">function setTimeKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> setTimeKey<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the time key for a specific data key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key to set the time key for</li>
+<li><strong>time_key</strong> The time key to associate with the data</li>
+</ul>
+<p><strong>Return</strong>: bool True if the time frame was successfully set, false otherwise</p>
+<p><strong>Note</strong>: If data_key or time_key doesn’t exist, an error message will be printed to std::cerr and the function will return false</p>
+<p>Associates a data object with a specific temporal coordinate system.</p>
+</section>
+<section id="function-gettimekey" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimekey">function getTimeKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>TimeKey getTimeKey<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time key for a specific data key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> The data key to get the time frame for</li>
+</ul>
+<p><strong>Return</strong>: The <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, or empty string if an error occurred</p>
+<p><strong>Note</strong>: If data_key doesn’t exist or doesn’t have an associated <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, an error message will be printed to std::cerr and an empty string will be returned</p>
+<p>Retrieves the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key associated with a particular data object.</p>
+</section>
+<section id="function-gettimeframekeys" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeframekeys">function getTimeFrameKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TimeKey <span class="op">&gt;</span> getTimeFrameKeys<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all registered <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> keys.</p>
+<p><strong>Return</strong>: A vector of strings containing all <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> keys</p>
+<p><strong>Note</strong>: The default “time” key will always be included in the returned vector</p>
+<p>Retrieves a vector of all keys used for <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> objects in the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
+</section>
+<section id="function-reset" class="level3">
+<h3 class="anchored" data-anchor-id="function-reset">function reset</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> reset<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all data and reset <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to initial state.</p>
+<p><strong>Note</strong>: The default “time” <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and “media” data key are preserved but reset to empty state</p>
+<p>This function removes all loaded data objects, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> objects (except the default “time” frame), and clears all mappings between data keys and time frame keys. This is useful for batch processing where you want to load different datasets with the same configuration.</p>
+<p>The function will:</p>
+<ul>
+<li>Remove all data objects from _data</li>
+<li>Remove all <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> objects except the default “time” frame</li>
+<li>Clear all data-to-timeframe mappings</li>
+<li>Remove all TimeFrameV2 objects and mappings</li>
+<li>Reset media data to default empty state</li>
+<li>Notify observers of the state change</li>
+</ul>
+</section>
+<section id="function-addcallbacktodata" class="level3">
+<h3 class="anchored" data-anchor-id="function-addcallbacktodata">function addCallbackToData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> addCallbackToData<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    ObserverCallback callback</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a callback function to a specific data object.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key to attach the callback to</li>
+<li><strong>callback</strong> The function to call when the data changes</li>
+</ul>
+<p><strong>Return</strong>: int A unique identifier for the callback (&gt;= 0) or -1 if registration failed</p>
+<p><strong>Note</strong>: If the data key doesn’t exist, the function returns -1</p>
+<p>Registers a callback function that will be invoked when the specified data object changes.</p>
+</section>
+<section id="function-removecallbackfromdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-removecallbackfromdata">function removeCallbackFromData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeCallbackFromData<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> callback_id</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove a callback from a specific data object.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The data key from which to remove the callback</li>
+<li><strong>callback_id</strong> The unique identifier of the callback to remove</li>
+</ul>
+<p><strong>Return</strong>: bool True if the callback was successfully removed, false if the key doesn’t exist</p>
+<p><strong>Note</strong>: If the data key doesn’t exist, the function returns false. The underlying removeObserver implementation determines what happens if the callback_id is invalid.</p>
+<p>Removes a previously registered callback using its unique identifier.</p>
+</section>
+<section id="function-addobserver" class="level3">
+<h3 class="anchored" data-anchor-id="function-addobserver">function addObserver</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> addObserver<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    ObserverCallback callback</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a callback function for <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> state changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>callback</strong> The function to call when the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> state changes</li>
+</ul>
+<p><strong>Note</strong>: Unlike addCallbackToData, this function doesn’t return an ID, so callbacks cannot be selectively removed later</p>
+<p>Adds a callback function that will be invoked when the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>’s state changes, such as when data is added or modified.</p>
+</section>
+<section id="function-removeobserver" class="level3">
+<h3 class="anchored" data-anchor-id="function-removeobserver">function removeObserver</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> removeObserver<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> callback_id</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getallkeys" class="level3">
+<h3 class="anchored" data-anchor-id="function-getallkeys">function getAllKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getAllKeys<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getkeys" class="level3">
+<h3 class="anchored" data-anchor-id="function-getkeys">function getKeys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> getKeys<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getdatavariant" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdatavariant">function getDataVariant</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> DataTypeVariant <span class="op">&gt;</span> getDataVariant<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get data as a variant type.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The key associated with the data to retrieve</li>
+</ul>
+<p><strong>Return</strong>: An optional containing the data variant if the key exists, empty optional otherwise</p>
+<p>Retrieves data associated with the specified key as a variant wrapper, allowing access without knowing the concrete type at compile time.</p>
+</section>
+<section id="function-getdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdata">function getData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> getData<span class="op">(</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdata">function setData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setData<span class="op">(</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setdata-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdata-1">function setData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setData<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant data<span class="op">,</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setdata-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdata-2">function setData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setData<span class="op">(</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> data<span class="op">,</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-deletedata" class="level3">
+<h3 class="anchored" data-anchor-id="function-deletedata">function deleteData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> deleteData<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Delete data associated with the specified key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> The key of the data to delete</li>
+</ul>
+<p><strong>Return</strong>: bool True if the data was successfully deleted, false if the key doesn’t exist</p>
+<p><strong>Note</strong>: This method will:</p>
+<ul>
+<li>Remove the data from the internal storage</li>
+<li>Remove the time frame mapping for this data</li>
+<li>Notify all observers of the change</li>
+<li>The shared_ptr will be automatically cleaned up when no other references exist</li>
+</ul>
+<p>Removes the data object and its associated time frame mapping from the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>. All observers are notified of the change, allowing dependent widgets to clean up.</p>
+</section>
+<section id="function-gettype" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettype">function getType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>DM_DataType getType<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setoutputpath" class="level3">
+<h3 class="anchored" data-anchor-id="function-setoutputpath">function setOutputPath</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setOutputPath<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> output_path</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getoutputpath" class="level3">
+<h3 class="anchored" data-anchor-id="function-getoutputpath">function getOutputPath</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> getOutputPath<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-notifytableobservers" class="level3">
+<h3 class="anchored" data-anchor-id="function-notifytableobservers">function notifyTableObservers</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyTableObservers<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    TableEvent <span class="at">const</span> <span class="op">&amp;</span> ev</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-ensuretimeentityid" class="level3">
+<h3 class="anchored" data-anchor-id="function-ensuretimeentityid">function ensureTimeEntityId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>EntityId ensureTimeEntityId<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">,</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex index</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register (or retrieve) an <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for a specific time point on a clock.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_key</strong> The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key (clock identity)</li>
+<li><strong>index</strong> The <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> within that clock</li>
+</ul>
+<p><strong>Return</strong>: The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for this time point</p>
+<p>Uses the <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> string as the entity’s data_key and <a href="../../api_generated/Files/EntityTypes_8hpp.html#enumvalue-timeentity">EntityKind::TimeEntity</a>. The local_index is always 0 since a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> uniquely identifies a time point within a clock.</p>
+</section>
+<section id="function-ensuretimeentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-ensuretimeentityids">function ensureTimeEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> ensureTimeEntityIds<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Batch-register EntityIds for a contiguous range of time points [start, end].</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_key</strong> The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key (clock identity)</li>
+<li><strong>start</strong> First <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in the range</li>
+<li><strong>end</strong> Last <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in the range (inclusive)</li>
+</ul>
+<p><strong>Return</strong>: Vector of EntityIds, one per index in [start, end]</p>
+<p>Inclusive on both ends. Iterates the range and calls ensureTimeEntityId for each.</p>
+</section>
+<section id="function-resolvetimeentity" class="level3">
+<h3 class="anchored" data-anchor-id="function-resolvetimeentity">function resolveTimeEntity</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> TimeKey<span class="op">,</span> TimeFrameIndex <span class="op">&gt;</span> <span class="op">&gt;</span> resolveTimeEntity<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    EntityId id</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Resolve a TimeEntity’s <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> back to its (<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to look up</li>
+</ul>
+<p><strong>Return</strong>: A pair of (<a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>) if the entity is a TimeEntity, std::nullopt otherwise (including if the id is not registered)</p>
+</section>
+<section id="function-gettimeindicesingroup" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeindicesingroup">function getTimeIndicesInGroup</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> getTimeIndicesInGroup<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    GroupId group_id<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a group for a specific clock.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>group_id</strong> The group to query</li>
+<li><strong>time_key</strong> The clock to filter by</li>
+</ul>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values (unordered), empty if group doesn’t exist</p>
+<p>Iterates the group’s entities, filters to TimeEntity entries whose data_key matches the given <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a>, and returns their <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values. Non-TimeEntity members and TimeEntities from other clocks are skipped.</p>
+</section>
+<section id="function-gettimeindicesingroupconverted" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeindicesingroupconverted">function getTimeIndicesInGroupConverted</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> getTimeIndicesInGroupConverted<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    GroupId group_id<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> target_key</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a group, converted to a target clock.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>group_id</strong> The group to query</li>
+<li><strong>target_key</strong> The target clock to convert indices into</li>
+</ul>
+<p><strong>Return</strong>: Vector of converted <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values (unordered), empty if group doesn’t exist or target <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> is not registered</p>
+<p>For each TimeEntity in the group (regardless of its source clock), converts its index to the target clock using <a href="../../api_generated/Files/TimeFrame_8cpp.html#function-convert-time-index">convert_time_index()</a>. TimeEntities already on the target clock are included without conversion. Non-TimeEntity members are skipped. Requires that both the source and target TimeFrames are registered.</p>
+</section>
+<section id="function-getentityregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-getentityregistry">function getEntityRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityRegistry <span class="op">*</span> getEntityRegistry<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Access the session-scoped <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a>.</p>
+</section>
+<section id="function-getentitygroupmanager" class="level3">
+<h3 class="anchored" data-anchor-id="function-getentitygroupmanager">function getEntityGroupManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityGroupManager <span class="op">*</span> getEntityGroupManager<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Access the session-scoped <a href="../../api_generated/Classes/classEntityGroupManager.html">EntityGroupManager</a>.</p>
+</section>
+<section id="function-getlineageregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-getlineageregistry">function getLineageRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRegistry <span class="op">*</span> getLineageRegistry<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Access the session-scoped LineageRegistry.</p>
+<p>The LineageRegistry tracks relationships between derived data containers and their source containers, enabling entity propagation.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:22 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

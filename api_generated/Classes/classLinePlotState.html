@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>LinePlotState – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#lineplotstate" id="toc-lineplotstate" class="nav-link active" data-scroll-target="#lineplotstate">LinePlotState</a>
+  <ul class="collapse">
+  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
+  <ul class="collapse">
+  <li><a href="#signal-alignmenteventkeychanged" id="toc-signal-alignmenteventkeychanged" class="nav-link" data-scroll-target="#signal-alignmenteventkeychanged">signal alignmentEventKeyChanged</a></li>
+  <li><a href="#signal-intervalalignmenttypechanged" id="toc-signal-intervalalignmenttypechanged" class="nav-link" data-scroll-target="#signal-intervalalignmenttypechanged">signal intervalAlignmentTypeChanged</a></li>
+  <li><a href="#signal-offsetchanged" id="toc-signal-offsetchanged" class="nav-link" data-scroll-target="#signal-offsetchanged">signal offsetChanged</a></li>
+  <li><a href="#signal-windowsizechanged" id="toc-signal-windowsizechanged" class="nav-link" data-scroll-target="#signal-windowsizechanged">signal windowSizeChanged</a></li>
+  <li><a href="#signal-plotseriesadded" id="toc-signal-plotseriesadded" class="nav-link" data-scroll-target="#signal-plotseriesadded">signal plotSeriesAdded</a></li>
+  <li><a href="#signal-plotseriesremoved" id="toc-signal-plotseriesremoved" class="nav-link" data-scroll-target="#signal-plotseriesremoved">signal plotSeriesRemoved</a></li>
+  <li><a href="#signal-plotseriesoptionschanged" id="toc-signal-plotseriesoptionschanged" class="nav-link" data-scroll-target="#signal-plotseriesoptionschanged">signal plotSeriesOptionsChanged</a></li>
+  <li><a href="#signal-seriesstylechanged" id="toc-signal-seriesstylechanged" class="nav-link" data-scroll-target="#signal-seriesstylechanged">signal seriesStyleChanged</a></li>
+  <li><a href="#signal-viewstatechanged" id="toc-signal-viewstatechanged" class="nav-link" data-scroll-target="#signal-viewstatechanged">signal viewStateChanged</a></li>
+  <li><a href="#signal-colorbygroupchanged" id="toc-signal-colorbygroupchanged" class="nav-link" data-scroll-target="#signal-colorbygroupchanged">signal colorByGroupChanged</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-lineplotstate" id="toc-function-lineplotstate" class="nav-link" data-scroll-target="#function-lineplotstate">function LinePlotState</a></li>
+  <li><a href="#function-lineplotstate-1" id="toc-function-lineplotstate-1" class="nav-link" data-scroll-target="#function-lineplotstate-1">function ~LinePlotState</a></li>
+  <li><a href="#function-gettypename" id="toc-function-gettypename" class="nav-link" data-scroll-target="#function-gettypename">function getTypeName</a></li>
+  <li><a href="#function-getdisplayname" id="toc-function-getdisplayname" class="nav-link" data-scroll-target="#function-getdisplayname">function getDisplayName</a></li>
+  <li><a href="#function-setdisplayname" id="toc-function-setdisplayname" class="nav-link" data-scroll-target="#function-setdisplayname">function setDisplayName</a></li>
+  <li><a href="#function-getalignmenteventkey" id="toc-function-getalignmenteventkey" class="nav-link" data-scroll-target="#function-getalignmenteventkey">function getAlignmentEventKey</a></li>
+  <li><a href="#function-setalignmenteventkey" id="toc-function-setalignmenteventkey" class="nav-link" data-scroll-target="#function-setalignmenteventkey">function setAlignmentEventKey</a></li>
+  <li><a href="#function-getintervalalignmenttype" id="toc-function-getintervalalignmenttype" class="nav-link" data-scroll-target="#function-getintervalalignmenttype">function getIntervalAlignmentType</a></li>
+  <li><a href="#function-setintervalalignmenttype" id="toc-function-setintervalalignmenttype" class="nav-link" data-scroll-target="#function-setintervalalignmenttype">function setIntervalAlignmentType</a></li>
+  <li><a href="#function-getoffset" id="toc-function-getoffset" class="nav-link" data-scroll-target="#function-getoffset">function getOffset</a></li>
+  <li><a href="#function-setoffset" id="toc-function-setoffset" class="nav-link" data-scroll-target="#function-setoffset">function setOffset</a></li>
+  <li><a href="#function-getwindowsize" id="toc-function-getwindowsize" class="nav-link" data-scroll-target="#function-getwindowsize">function getWindowSize</a></li>
+  <li><a href="#function-setwindowsize" id="toc-function-setwindowsize" class="nav-link" data-scroll-target="#function-setwindowsize">function setWindowSize</a></li>
+  <li><a href="#function-alignmentstate" id="toc-function-alignmentstate" class="nav-link" data-scroll-target="#function-alignmentstate">function alignmentState</a></li>
+  <li><a href="#function-relativetimeaxisstate" id="toc-function-relativetimeaxisstate" class="nav-link" data-scroll-target="#function-relativetimeaxisstate">function relativeTimeAxisState</a></li>
+  <li><a href="#function-verticalaxisstate" id="toc-function-verticalaxisstate" class="nav-link" data-scroll-target="#function-verticalaxisstate">function verticalAxisState</a></li>
+  <li><a href="#function-addplotseries" id="toc-function-addplotseries" class="nav-link" data-scroll-target="#function-addplotseries">function addPlotSeries</a></li>
+  <li><a href="#function-removeplotseries" id="toc-function-removeplotseries" class="nav-link" data-scroll-target="#function-removeplotseries">function removePlotSeries</a></li>
+  <li><a href="#function-getplotseriesnames" id="toc-function-getplotseriesnames" class="nav-link" data-scroll-target="#function-getplotseriesnames">function getPlotSeriesNames</a></li>
+  <li><a href="#function-getplotseriesoptions" id="toc-function-getplotseriesoptions" class="nav-link" data-scroll-target="#function-getplotseriesoptions">function getPlotSeriesOptions</a></li>
+  <li><a href="#function-updateplotseriesoptions" id="toc-function-updateplotseriesoptions" class="nav-link" data-scroll-target="#function-updateplotseriesoptions">function updatePlotSeriesOptions</a></li>
+  <li><a href="#function-linestylestateforseries" id="toc-function-linestylestateforseries" class="nav-link" data-scroll-target="#function-linestylestateforseries">function lineStyleStateForSeries</a></li>
+  <li><a href="#function-viewstate" id="toc-function-viewstate" class="nav-link" data-scroll-target="#function-viewstate">function viewState</a></li>
+  <li><a href="#function-setxzoom" id="toc-function-setxzoom" class="nav-link" data-scroll-target="#function-setxzoom">function setXZoom</a></li>
+  <li><a href="#function-setyzoom" id="toc-function-setyzoom" class="nav-link" data-scroll-target="#function-setyzoom">function setYZoom</a></li>
+  <li><a href="#function-setpan" id="toc-function-setpan" class="nav-link" data-scroll-target="#function-setpan">function setPan</a></li>
+  <li><a href="#function-setxbounds" id="toc-function-setxbounds" class="nav-link" data-scroll-target="#function-setxbounds">function setXBounds</a></li>
+  <li><a href="#function-setybounds" id="toc-function-setybounds" class="nav-link" data-scroll-target="#function-setybounds">function setYBounds</a></li>
+  <li><a href="#function-colorbygroup" id="toc-function-colorbygroup" class="nav-link" data-scroll-target="#function-colorbygroup">function colorByGroup</a></li>
+  <li><a href="#function-setcolorbygroup" id="toc-function-setcolorbygroup" class="nav-link" data-scroll-target="#function-setcolorbygroup">function setColorByGroup</a></li>
+  <li><a href="#function-tojson" id="toc-function-tojson" class="nav-link" data-scroll-target="#function-tojson">function toJson</a></li>
+  <li><a href="#function-fromjson" id="toc-function-fromjson" class="nav-link" data-scroll-target="#function-fromjson">function fromJson</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">LinePlotState</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="lineplotstate" class="level1">
+<h1>LinePlotState</h1>
+<p>State class for <a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a>. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;LinePlotState.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>, QObject</p>
+<section id="public-signals" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-alignmenteventkeychanged">alignmentEventKeyChanged</a></strong>(QString const &amp; key)<br>Emitted when alignment event key changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-intervalalignmenttypechanged">intervalAlignmentTypeChanged</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Emitted when interval alignment type changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-offsetchanged">offsetChanged</a></strong>(double offset)<br>Emitted when offset changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-windowsizechanged">windowSizeChanged</a></strong>(double window_size)<br>Emitted when window size changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-plotseriesadded">plotSeriesAdded</a></strong>(QString const &amp; series_name)<br>Emitted when a plot series is added.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-plotseriesremoved">plotSeriesRemoved</a></strong>(QString const &amp; series_name)<br>Emitted when a plot series is removed.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-plotseriesoptionschanged">plotSeriesOptionsChanged</a></strong>(QString const &amp; series_name)<br>Emitted when plot series options are updated.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-seriesstylechanged">seriesStyleChanged</a></strong>(QString const &amp; series_name)<br>Emitted when a series’ line style changes (via <a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a>)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-viewstatechanged">viewStateChanged</a></strong>()<br>Emitted when view state changes (zoom, pan, or bounds)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#signal-colorbygroupchanged">colorByGroupChanged</a></strong>()<br>Emitted when color_by_group changes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-lineplotstate">LinePlotState</a></strong>(QObject * parent =nullptr)<br>Construct a new <a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-~lineplotstate">~LinePlotState</a></strong>() override =default</td>
+</tr>
+<tr class="odd">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-gettypename">getTypeName</a></strong>() const override<br>Get the type name for this state.</td>
+</tr>
+<tr class="even">
+<td>virtual QString</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getdisplayname">getDisplayName</a></strong>() const override<br>Get the display name for UI.</td>
+</tr>
+<tr class="odd">
+<td>virtual void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setdisplayname">setDisplayName</a></strong>(QString const &amp; name) override<br>Set the display name.</td>
+</tr>
+<tr class="even">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getalignmenteventkey">getAlignmentEventKey</a></strong>() const<br>Get the alignment event key.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setalignmenteventkey">setAlignmentEventKey</a></strong>(QString const &amp; key)<br>Set the alignment event key.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a></td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getintervalalignmenttype">getIntervalAlignmentType</a></strong>() const<br>Get the interval alignment type.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setintervalalignmenttype">setIntervalAlignmentType</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Set the interval alignment type.</td>
+</tr>
+<tr class="even">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getoffset">getOffset</a></strong>() const<br>Get the offset value.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setoffset">setOffset</a></strong>(double offset)<br>Set the offset value.</td>
+</tr>
+<tr class="even">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getwindowsize">getWindowSize</a></strong>() const<br>Get the window size.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setwindowsize">setWindowSize</a></strong>(double window_size)<br>Set the window size.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-alignmentstate">alignmentState</a></strong>()<br>Get the alignment state object.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classRelativeTimeAxisState.html">RelativeTimeAxisState</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-relativetimeaxisstate">relativeTimeAxisState</a></strong>()<br>Get the relative time axis state object.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classVerticalAxisState.html">VerticalAxisState</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-verticalaxisstate">verticalAxisState</a></strong>()<br>Get the vertical axis state object.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-addplotseries">addPlotSeries</a></strong>(QString const &amp; series_name, QString const &amp; series_key)<br>Add a series to the plot.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-removeplotseries">removePlotSeries</a></strong>(QString const &amp; series_name)<br>Remove a series from the plot.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; QString &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getplotseriesnames">getPlotSeriesNames</a></strong>() const<br>Get all plot series names.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structLinePlotOptions.html">LinePlotOptions</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-getplotseriesoptions">getPlotSeriesOptions</a></strong>(QString const &amp; series_name) const<br>Get options for a specific plot series.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-updateplotseriesoptions">updatePlotSeriesOptions</a></strong>(QString const &amp; series_name, <a href="../../api_generated/Classes/structLinePlotOptions.html">LinePlotOptions</a> const &amp; options)<br>Update options for a specific plot series.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-linestylestateforseries">lineStyleStateForSeries</a></strong>(QString const &amp; series_name)<br>Get the <a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a> for a specific series.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-viewstate">viewState</a></strong>() const<br>Get the current view state.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setxzoom">setXZoom</a></strong>(double zoom)<br>Set X-axis zoom. Only emits <a href="">viewStateChanged()</a>.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setyzoom">setYZoom</a></strong>(double zoom)<br>Set Y-axis zoom. Only emits <a href="">viewStateChanged()</a>.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setpan">setPan</a></strong>(double x_pan, double y_pan)<br>Set pan offsets. Only emits <a href="">viewStateChanged()</a>.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setxbounds">setXBounds</a></strong>(double x_min, double x_max)<br>Set X data bounds. Emits <a href="">viewStateChanged()</a> AND <a href="">stateChanged()</a>.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setybounds">setYBounds</a></strong>(double y_min, double y_max)<br>Set Y data bounds. Emits <a href="">viewStateChanged()</a> AND <a href="">stateChanged()</a>.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-colorbygroup">colorByGroup</a></strong>() const<br>Whether lines are colored by group assignment.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-setcolorbygroup">setColorByGroup</a></strong>(bool enabled)<br>Enable/disable coloring lines by group assignment.</td>
+</tr>
+<tr class="odd">
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-tojson">toJson</a></strong>() const override<br>Serialize state to JSON.</td>
+</tr>
+<tr class="even">
+<td>virtual bool</td>
+<td><strong><a href="../../api_generated/Classes/classLinePlotState.html#function-fromjson">fromJson</a></strong>(std::string const &amp; json) override<br>Restore state from JSON.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Signals inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-statechanged">stateChanged</a></strong>()<br>Emitted when any state property changes.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-displaynamechanged">displayNameChanged</a></strong>(QString const &amp; newName)<br>Emitted when display name changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#signal-dirtychanged">dirtyChanged</a></strong>(bool isDirty)<br>Emitted when dirty state changes.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-editorstate">EditorState</a></strong>(QObject * parent =nullptr)<br>Construct a new <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-~editorstate">~EditorState</a></strong>() override =default<br>Virtual destructor.</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-getinstanceid">getInstanceId</a></strong>() const<br>Get unique instance ID.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-isdirty">isDirty</a></strong>() const<br>Check if state has unsaved changes.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markclean">markClean</a></strong>()<br>Mark state as clean (after save)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Protected Functions inherited from <a href="../../api_generated/Classes/classEditorState.html">EditorState</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-markdirty">markDirty</a></strong>()<br>Mark state as modified.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-setinstanceid">setInstanceId</a></strong>(QString const &amp; id)<br>Set instance ID (for deserialization)</td>
+</tr>
+<tr class="odd">
+<td>QString</td>
+<td><strong><a href="../../api_generated/Classes/classEditorState.html#function-generateinstanceid">generateInstanceId</a></strong>()<br>Generate a new unique instance ID.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LinePlotState<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>State class for <a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a>.</p>
+<p><a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a> is the Qt wrapper around <a href="../../api_generated/Classes/structLinePlotStateData.html">LinePlotStateData</a> that provides typed accessors and Qt signals for all state properties.</p>
+<p><a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a> uses composition with <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> to provide alignment functionality via the shared <a href="../../api_generated/Classes/classPlotAlignmentWidget.html">PlotAlignmentWidget</a> component.</p>
+</section>
+<section id="public-signals-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
+<section id="signal-alignmenteventkeychanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-alignmenteventkeychanged">signal alignmentEventKeyChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> alignmentEventKeyChanged<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when alignment event key changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> New alignment event key</li>
+</ul>
+</section>
+<section id="signal-intervalalignmenttypechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-intervalalignmenttypechanged">signal intervalAlignmentTypeChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> intervalAlignmentTypeChanged<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when interval alignment type changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>type</strong> New interval alignment type</li>
+</ul>
+</section>
+<section id="signal-offsetchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-offsetchanged">signal offsetChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> offsetChanged<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> offset</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when offset changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>offset</strong> New offset value</li>
+</ul>
+</section>
+<section id="signal-windowsizechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-windowsizechanged">signal windowSizeChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> windowSizeChanged<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when window size changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>window_size</strong> New window size value</li>
+</ul>
+</section>
+<section id="signal-plotseriesadded" class="level3">
+<h3 class="anchored" data-anchor-id="signal-plotseriesadded">signal plotSeriesAdded</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> plotSeriesAdded<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when a plot series is added.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name of the added series</li>
+</ul>
+</section>
+<section id="signal-plotseriesremoved" class="level3">
+<h3 class="anchored" data-anchor-id="signal-plotseriesremoved">signal plotSeriesRemoved</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> plotSeriesRemoved<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when a plot series is removed.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name of the removed series</li>
+</ul>
+</section>
+<section id="signal-plotseriesoptionschanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-plotseriesoptionschanged">signal plotSeriesOptionsChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> plotSeriesOptionsChanged<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when plot series options are updated.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name of the updated series</li>
+</ul>
+</section>
+<section id="signal-seriesstylechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-seriesstylechanged">signal seriesStyleChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> seriesStyleChanged<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when a series’ line style changes (via <a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a>)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name of the series whose style changed</li>
+</ul>
+</section>
+<section id="signal-viewstatechanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-viewstatechanged">signal viewStateChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> viewStateChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when view state changes (zoom, pan, or bounds)</p>
+</section>
+<section id="signal-colorbygroupchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-colorbygroupchanged">signal colorByGroupChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> colorByGroupChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when color_by_group changes.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-lineplotstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-lineplotstate">function LinePlotState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> LinePlotState<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a new <a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>parent</strong> Parent QObject (typically nullptr, managed by WorkspaceManager)</li>
+</ul>
+</section>
+<section id="function-lineplotstate-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-lineplotstate-1">function ~LinePlotState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>LinePlotState<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gettypename" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettypename">function getTypeName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="ex">QString</span> getTypeName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the type name for this state.</p>
+<p><strong>Return</strong>: “LinePlot”</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-gettypename">EditorState::getTypeName</a></p>
+</section>
+<section id="function-getdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdisplayname">function getDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="ex">QString</span> getDisplayName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the display name for UI.</p>
+<p><strong>Return</strong>: User-visible name (default: “Line Plot”)</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-getdisplayname">EditorState::getDisplayName</a></p>
+</section>
+<section id="function-setdisplayname" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdisplayname">function setDisplayName</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">void</span> setDisplayName<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the display name.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> New display name</li>
+</ul>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-setdisplayname">EditorState::setDisplayName</a></p>
+</section>
+<section id="function-getalignmenteventkey" class="level3">
+<h3 class="anchored" data-anchor-id="function-getalignmenteventkey">function getAlignmentEventKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> getAlignmentEventKey<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the alignment event key.</p>
+<p><strong>Return</strong>: Key of the selected event/interval series</p>
+</section>
+<section id="function-setalignmenteventkey" class="level3">
+<h3 class="anchored" data-anchor-id="function-setalignmenteventkey">function setAlignmentEventKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setAlignmentEventKey<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the alignment event key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>key</strong> Key of the event/interval series to use for alignment</li>
+</ul>
+</section>
+<section id="function-getintervalalignmenttype" class="level3">
+<h3 class="anchored" data-anchor-id="function-getintervalalignmenttype">function getIntervalAlignmentType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>IntervalAlignmentType getIntervalAlignmentType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the interval alignment type.</p>
+<p><strong>Return</strong>: Whether to use beginning or end of intervals</p>
+</section>
+<section id="function-setintervalalignmenttype" class="level3">
+<h3 class="anchored" data-anchor-id="function-setintervalalignmenttype">function setIntervalAlignmentType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setIntervalAlignmentType<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the interval alignment type.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>type</strong> Whether to use beginning or end of intervals</li>
+</ul>
+</section>
+<section id="function-getoffset" class="level3">
+<h3 class="anchored" data-anchor-id="function-getoffset">function getOffset</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> getOffset<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the offset value.</p>
+<p><strong>Return</strong>: Offset in time units</p>
+</section>
+<section id="function-setoffset" class="level3">
+<h3 class="anchored" data-anchor-id="function-setoffset">function setOffset</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setOffset<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> offset</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the offset value.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>offset</strong> Offset in time units to apply to alignment events</li>
+</ul>
+</section>
+<section id="function-getwindowsize" class="level3">
+<h3 class="anchored" data-anchor-id="function-getwindowsize">function getWindowSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> getWindowSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the window size.</p>
+<p><strong>Return</strong>: Window size in time units</p>
+</section>
+<section id="function-setwindowsize" class="level3">
+<h3 class="anchored" data-anchor-id="function-setwindowsize">function setWindowSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setWindowSize<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the window size.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>window_size</strong> Window size in time units to gather around alignment event</li>
+</ul>
+</section>
+<section id="function-alignmentstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-alignmentstate">function alignmentState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PlotAlignmentState <span class="op">*</span> alignmentState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the alignment state object.</p>
+<p><strong>Return</strong>: Pointer to the alignment state (for use with <a href="../../api_generated/Classes/classPlotAlignmentWidget.html">PlotAlignmentWidget</a>)</p>
+</section>
+<section id="function-relativetimeaxisstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-relativetimeaxisstate">function relativeTimeAxisState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RelativeTimeAxisState <span class="op">*</span> relativeTimeAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the relative time axis state object.</p>
+<p><strong>Return</strong>: Pointer to the relative time axis state</p>
+</section>
+<section id="function-verticalaxisstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-verticalaxisstate">function verticalAxisState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> VerticalAxisState <span class="op">*</span> verticalAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the vertical axis state object.</p>
+<p><strong>Return</strong>: Pointer to the vertical axis state</p>
+</section>
+<section id="function-addplotseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-addplotseries">function addPlotSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addPlotSeries<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_key</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a series to the plot.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name/key for the series (used as identifier)</li>
+<li><strong>series_key</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key of the <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></li>
+</ul>
+</section>
+<section id="function-removeplotseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-removeplotseries">function removePlotSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> removePlotSeries<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove a series from the plot.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name/key of the series to remove</li>
+</ul>
+</section>
+<section id="function-getplotseriesnames" class="level3">
+<h3 class="anchored" data-anchor-id="function-getplotseriesnames">function getPlotSeriesNames</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="ex">QString</span> <span class="op">&gt;</span> getPlotSeriesNames<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all plot series names.</p>
+<p><strong>Return</strong>: List of series names currently in the plot</p>
+</section>
+<section id="function-getplotseriesoptions" class="level3">
+<h3 class="anchored" data-anchor-id="function-getplotseriesoptions">function getPlotSeriesOptions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> LinePlotOptions <span class="op">&gt;</span> getPlotSeriesOptions<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get options for a specific plot series.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name/key of the series</li>
+</ul>
+<p><strong>Return</strong>: Options struct, or std::nullopt if series not found</p>
+</section>
+<section id="function-updateplotseriesoptions" class="level3">
+<h3 class="anchored" data-anchor-id="function-updateplotseriesoptions">function updatePlotSeriesOptions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updatePlotSeriesOptions<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    LinePlotOptions <span class="at">const</span> <span class="op">&amp;</span> options</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update options for a specific plot series.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name/key of the series</li>
+<li><strong>options</strong> New options</li>
+</ul>
+</section>
+<section id="function-linestylestateforseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-linestylestateforseries">function lineStyleStateForSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>LineStyleState <span class="op">*</span> lineStyleStateForSeries<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_name</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the <a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a> for a specific series.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_name</strong> Name/key of the series</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classLineStyleState.html">LineStyleState</a> pointer, or nullptr if series not found</p>
+<p>The returned state is owned by this <a href="../../api_generated/Classes/classLinePlotState.html">LinePlotState</a> and shares lifetime with the series. Use with <a href="../../api_generated/Classes/classLineStyleControls.html#function-setlinestylestate">LineStyleControls::setLineStyleState()</a>.</p>
+</section>
+<section id="function-viewstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-viewstate">function viewState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>ViewStateData <span class="at">const</span> <span class="op">&amp;</span> viewState<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the current view state.</p>
+</section>
+<section id="function-setxzoom" class="level3">
+<h3 class="anchored" data-anchor-id="function-setxzoom">function setXZoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setXZoom<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> zoom</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set X-axis zoom. Only emits <a href="">viewStateChanged()</a>.</p>
+</section>
+<section id="function-setyzoom" class="level3">
+<h3 class="anchored" data-anchor-id="function-setyzoom">function setYZoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setYZoom<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> zoom</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set Y-axis zoom. Only emits <a href="">viewStateChanged()</a>.</p>
+</section>
+<section id="function-setpan" class="level3">
+<h3 class="anchored" data-anchor-id="function-setpan">function setPan</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPan<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x_pan<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y_pan</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set pan offsets. Only emits <a href="">viewStateChanged()</a>.</p>
+</section>
+<section id="function-setxbounds" class="level3">
+<h3 class="anchored" data-anchor-id="function-setxbounds">function setXBounds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setXBounds<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x_min<span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x_max</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set X data bounds. Emits <a href="">viewStateChanged()</a> AND <a href="">stateChanged()</a>.</p>
+</section>
+<section id="function-setybounds" class="level3">
+<h3 class="anchored" data-anchor-id="function-setybounds">function setYBounds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setYBounds<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y_min<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y_max</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set Y data bounds. Emits <a href="">viewStateChanged()</a> AND <a href="">stateChanged()</a>.</p>
+</section>
+<section id="function-colorbygroup" class="level3">
+<h3 class="anchored" data-anchor-id="function-colorbygroup">function colorByGroup</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> colorByGroup<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether lines are colored by group assignment.</p>
+</section>
+<section id="function-setcolorbygroup" class="level3">
+<h3 class="anchored" data-anchor-id="function-setcolorbygroup">function setColorByGroup</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setColorByGroup<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable/disable coloring lines by group assignment.</p>
+</section>
+<section id="function-tojson" class="level3">
+<h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Serialize state to JSON.</p>
+<p><strong>Return</strong>: JSON string representation</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-tojson">EditorState::toJson</a></p>
+</section>
+<section id="function-fromjson" class="level3">
+<h3 class="anchored" data-anchor-id="function-fromjson">function fromJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> fromJson<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Restore state from JSON.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>json</strong> JSON string to parse</li>
+</ul>
+<p><strong>Return</strong>: true if parsing succeeded</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classEditorState.html#function-fromjson">EditorState::fromJson</a></p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:22 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

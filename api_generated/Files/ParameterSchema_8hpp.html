@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/ParameterSchema/ParameterSchema.hpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcparameterschemaparameterschema.hpp" id="toc-srcparameterschemaparameterschema.hpp" class="nav-link active" data-scroll-target="#srcparameterschemaparameterschema.hpp">src/ParameterSchema/ParameterSchema.hpp</a>
+  <ul class="collapse">
+  <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-snakecasetodisplay" id="toc-function-snakecasetodisplay" class="nav-link" data-scroll-target="#function-snakecasetodisplay">function snakeCaseToDisplay</a></li>
+  <li><a href="#function-parseunderlyingtype" id="toc-function-parseunderlyingtype" class="nav-link" data-scroll-target="#function-parseunderlyingtype">function parseUnderlyingType</a></li>
+  <li><a href="#function-isoptionaltype" id="toc-function-isoptionaltype" class="nav-link" data-scroll-target="#function-isoptionaltype">function isOptionalType</a></li>
+  <li><a href="#function-isvectortype" id="toc-function-isvectortype" class="nav-link" data-scroll-target="#function-isvectortype">function isVectorType</a></li>
+  <li><a href="#function-hasvalidator" id="toc-function-hasvalidator" class="nav-link" data-scroll-target="#function-hasvalidator">function hasValidator</a></li>
+  <li><a href="#function-extractconstraints" id="toc-function-extractconstraints" class="nav-link" data-scroll-target="#function-extractconstraints">function extractConstraints</a></li>
+  <li><a href="#function-extractparameterschema" id="toc-function-extractparameterschema" class="nav-link" data-scroll-target="#function-extractparameterschema">function extractParameterSchema</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/ParameterSchema/ParameterSchema.hpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcparameterschemaparameterschema.hpp" class="level1">
+<h1>src/ParameterSchema/ParameterSchema.hpp</h1>
+<p>Compile-time parameter schema extraction for reflect-cpp structs. <a href="#detailed-description">More…</a></p>
+<section id="namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespacedetail.html">detail</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structVariantAlternative.html">VariantAlternative</a></strong> <br>Describes one alternative in a tagged-union variant field.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html">ParameterFieldDescriptor</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a></strong> <br>Runtime schema describing all fields in a parameter struct.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a></strong> <br>Trait struct for providing custom UI hints for a parameter type.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structConstraintInfo.html">ConstraintInfo</a></strong> <br>Constraint information extracted from a type string.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1unwrap__optional.html">detail::unwrap_optional</a></strong> <br>Unwrap std::optional<t> to T; identity for non-optional types.</t></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1unwrap__optional_3_01std_1_1optional_3_01T_01_4_01_4.html">detail::unwrap_optional&lt; std::optional&lt; T &gt; &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1is__std__vector.html">detail::is_std_vector</a></strong> <br>Detect std::vector<t> at compile time.</t></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1is__std__vector_3_01std_1_1vector_3_01T_00_01A_01_4_01_4.html">detail::is_std_vector&lt; std::vector&lt; T, A &gt; &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1vector__element.html">detail::vector_element</a></strong> <br>Extract the element type from std::vector<t></t></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1vector__element_3_01std_1_1vector_3_01T_00_01A_01_4_01_4.html">detail::vector_element&lt; std::vector&lt; T, A &gt; &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1is__tagged__union.html">detail::is_tagged_union</a></strong> <br>Detect rfl::TaggedUnion&lt;_discriminator, Ts…&gt; via SFINAE.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1is__tagged__union_3_01T_00_01std_1_1void__t_3_01typename_01T_1_1VariantType_00_034a98dcbaac423a8b38239329e625767.html">detail::is_tagged_union&lt; T, std::void_t&lt; typename T::VariantType, decltype(T::discrimininator_)&gt; &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1first__tagged__union__alt.html">detail::first_tagged_union_alt</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdetail_1_1first__tagged__union__alt_3_01rfl_1_1TaggedUnion_3_01Disc_00_01First_00_01Rest_8_8_8_01_4_01_4.html">detail::first_tagged_union_alt&lt; rfl::TaggedUnion&lt; Disc, First, Rest… &gt; &gt;</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-snakecasetodisplay">snakeCaseToDisplay</a></strong>(std::string const &amp; snake)<br>Convert snake_case field name to “Title Case” for display.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-parseunderlyingtype">parseUnderlyingType</a></strong>(std::string const &amp; type_str)</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-isoptionaltype">isOptionalType</a></strong>(std::string const &amp; type_str)<br>Check if a type string represents an optional field.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-isvectortype">isVectorType</a></strong>(std::string const &amp; type_str)<br>Check if a type string represents a std::vector field.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-hasvalidator">hasValidator</a></strong>(std::string const &amp; type_str)<br>Check if a type string contains an rfl::Validator.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structConstraintInfo.html">ConstraintInfo</a></td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractconstraints">extractConstraints</a></strong>(std::string const &amp; type_str)<br>Extract validator constraint information from a type string.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename Params &gt; <br><a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a></td>
+<td><strong><a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema</a></strong>()<br>Extract a <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> from a reflect-cpp parameter struct.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<p>Compile-time parameter schema extraction for reflect-cpp structs.</p>
+<p>Provides <a href="../../api_generated/Classes/structParameterFieldDescriptor.html">ParameterFieldDescriptor</a>, <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a>, <a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema<t>()</t></a>, and ParameterUIHints<t> for use by TransformsV2 and the Command Architecture. No Qt dependency; depends only on reflect-cpp and the standard library.</t></p>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-snakecasetodisplay" class="level3">
+<h3 class="anchored" data-anchor-id="function-snakecasetodisplay">function snakeCaseToDisplay</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string snakeCaseToDisplay<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> snake</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert snake_case field name to “Title Case” for display.</p>
+</section>
+<section id="function-parseunderlyingtype" class="level3">
+<h3 class="anchored" data-anchor-id="function-parseunderlyingtype">function parseUnderlyingType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string parseUnderlyingType<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Parse a reflect-cpp type string to determine the underlying type name e.g., “std::optional&lt;rfl::Validator&lt;float, …&gt;&gt;” → “float”</p>
+</section>
+<section id="function-isoptionaltype" class="level3">
+<h3 class="anchored" data-anchor-id="function-isoptionaltype">function isOptionalType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isOptionalType<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a type string represents an optional field.</p>
+</section>
+<section id="function-isvectortype" class="level3">
+<h3 class="anchored" data-anchor-id="function-isvectortype">function isVectorType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isVectorType<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a type string represents a std::vector field.</p>
+</section>
+<section id="function-hasvalidator" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasvalidator">function hasValidator</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasValidator<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a type string contains an rfl::Validator.</p>
+</section>
+<section id="function-extractconstraints" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractconstraints">function extractConstraints</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ConstraintInfo extractConstraints<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract validator constraint information from a type string.</p>
+</section>
+<section id="function-extractparameterschema" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractparameterschema">function extractParameterSchema</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ParameterSchema extractParameterSchema<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract a <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> from a reflect-cpp parameter struct.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>Params</strong> The parameter struct type (must be reflectable by reflect-cpp)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> describing all fields in the struct</p>
+<p>Uses rfl::fields<t>() to enumerate fields and parse type information from the type strings. Applies ParameterUIHints<t> if a specialization exists.</t></t></p>
+<p>This is typically called once per parameter type at registration time.</p>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrameIndexReflector.hpp"</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;type_traits&gt;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">// ParameterFieldDescriptor — Runtime schema for a single parameter field</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Forward declarations to break circular dependency:</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">// VariantAlternative → ParameterSchema → ParameterFieldDescriptor → VariantAlternative</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterSchema<span class="op">;</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> VariantAlternative <span class="op">{</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string tag<span class="op">;</span>                        </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ParameterSchema<span class="op">&gt;</span> schema<span class="op">;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    VariantAlternative<span class="op">();</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>VariantAlternative<span class="op">();</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    VariantAlternative<span class="op">(</span>VariantAlternative <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">);</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    VariantAlternative <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>VariantAlternative <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">);</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    VariantAlternative<span class="op">(</span>VariantAlternative <span class="op">&amp;&amp;</span> other<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    VariantAlternative <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span>VariantAlternative <span class="op">&amp;&amp;</span> other<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterFieldDescriptor <span class="op">{</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span>         </span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string type_name<span class="op">;</span>    </span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string raw_type_name<span class="op">;</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name<span class="op">;</span> </span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Value range (from rfl::Validator constraints or manual UI hints)</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> min_value<span class="op">;</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> max_value<span class="op">;</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_exclusive_min <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_exclusive_max <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For enum-like string fields (e.g., {"positive", "negative", "absolute"})</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> allowed_values<span class="op">;</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default value as JSON string for type-erased storage</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> default_value_json<span class="op">;</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// UI hints</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string tooltip<span class="op">;</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string group<span class="op">;</span>       </span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_advanced <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> display_order <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_optional <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_bound <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>   </span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Vector support (for std::vector&lt;T&gt; fields)</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_vector <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>         </span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="dt">vector_element_type</span><span class="op">;</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dynamic combo support (for fields populated at runtime, e.g. DataManager keys)</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> dynamic_combo <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>        </span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> include_none_sentinel <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Variant support (populated only when type_name == "variant")</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_variant <span class="op">=</span> <span class="kw">false</span><span class="op">;</span>                             </span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string variant_discriminator<span class="op">;</span>                   </span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>VariantAlternative<span class="op">&gt;</span> variant_alternatives<span class="op">;</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a><span class="co">// ParameterSchema — Complete schema for a parameter struct</span></span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterSchema <span class="op">{</span></span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string params_type_name<span class="op">;</span></span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ParameterFieldDescriptor<span class="op">&gt;</span> fields<span class="op">;</span></span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>    ParameterFieldDescriptor <span class="op">*</span> field<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">&amp;</span> f<span class="op">:</span> fields<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>f<span class="op">.</span>name <span class="op">==</span> name<span class="op">)</span> <span class="cf">return</span> <span class="op">&amp;</span>f<span class="op">;</span></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> ParameterFieldDescriptor <span class="at">const</span> <span class="op">*</span> field<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> f<span class="op">:</span> fields<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>f<span class="op">.</span>name <span class="op">==</span> name<span class="op">)</span> <span class="cf">return</span> <span class="op">&amp;</span>f<span class="op">;</span></span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a><span class="co">// ParameterUIHints — Optional override trait for richer UI</span></span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Params<span class="op">&gt;</span></span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints <span class="op">{</span></span>
+<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="dt">void</span> annotate<span class="op">(</span>ParameterSchema <span class="op">&amp;</span> <span class="co">/*schema*/</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Default: no annotations</span></span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper Functions (declared here, defined in ParameterSchema.cpp)</span></span>
+<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string snakeCaseToDisplay<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> snake<span class="op">);</span></span>
+<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string parseUnderlyingType<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str<span class="op">);</span></span>
+<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isOptionalType<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str<span class="op">);</span></span>
+<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isVectorType<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str<span class="op">);</span></span>
+<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-123"><a href="#cb8-123" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasValidator<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str<span class="op">);</span></span>
+<span id="cb8-124"><a href="#cb8-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ConstraintInfo <span class="op">{</span></span>
+<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> min_value<span class="op">;</span></span>
+<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> max_value<span class="op">;</span></span>
+<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_exclusive_min <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_exclusive_max <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>ConstraintInfo extractConstraints<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> type_str<span class="op">);</span></span>
+<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile-Time Helpers</span></span>
+<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> detail <span class="op">{</span></span>
+<span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-140"><a href="#cb8-140" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-141"><a href="#cb8-141" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> unwrap_optional <span class="op">{</span></span>
+<span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> T<span class="op">;</span></span>
+<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> unwrap_optional<span class="op">&lt;</span><span class="bu">std::</span>optional<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> T<span class="op">;</span></span>
+<span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-149"><a href="#cb8-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-150"><a href="#cb8-150" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="dt">unwrap_optional_t</span> <span class="op">=</span> <span class="kw">typename</span> unwrap_optional<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span>
+<span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-153"><a href="#cb8-153" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-154"><a href="#cb8-154" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> is_std_vector <span class="op">:</span> <span class="bu">std::</span>false_type <span class="op">{};</span></span>
+<span id="cb8-155"><a href="#cb8-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> A<span class="op">&gt;</span></span>
+<span id="cb8-157"><a href="#cb8-157" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> is_std_vector<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">,</span> A<span class="op">&gt;&gt;</span> <span class="op">:</span> <span class="bu">std::</span>true_type <span class="op">{};</span></span>
+<span id="cb8-158"><a href="#cb8-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-159"><a href="#cb8-159" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-160"><a href="#cb8-160" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_std_vector_v <span class="op">=</span> is_std_vector<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span>
+<span id="cb8-161"><a href="#cb8-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-162"><a href="#cb8-162" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-163"><a href="#cb8-163" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> vector_element <span class="op">{};</span></span>
+<span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> A<span class="op">&gt;</span></span>
+<span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> vector_element<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">,</span> A<span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> T<span class="op">;</span></span>
+<span id="cb8-168"><a href="#cb8-168" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-171"><a href="#cb8-171" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="dt">vector_element_t</span> <span class="op">=</span> <span class="kw">typename</span> vector_element<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span>
+<span id="cb8-172"><a href="#cb8-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> <span class="op">=</span> <span class="dt">void</span><span class="op">&gt;</span></span>
+<span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> is_tagged_union <span class="op">:</span> <span class="bu">std::</span>false_type <span class="op">{};</span></span>
+<span id="cb8-175"><a href="#cb8-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-176"><a href="#cb8-176" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-177"><a href="#cb8-177" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> is_tagged_union<span class="op">&lt;</span>T<span class="op">,</span> <span class="bu">std::</span>void_t<span class="op">&lt;</span></span>
+<span id="cb8-178"><a href="#cb8-178" aria-hidden="true" tabindex="-1"></a>                                  <span class="kw">typename</span> T<span class="op">::</span>VariantType<span class="op">,</span></span>
+<span id="cb8-179"><a href="#cb8-179" aria-hidden="true" tabindex="-1"></a>                                  <span class="kw">decltype</span><span class="op">(</span>T<span class="op">::</span><span class="va">discrimininator_</span><span class="op">)&gt;&gt;</span> <span class="op">:</span> <span class="bu">std::</span>true_type <span class="op">{};</span></span>
+<span id="cb8-180"><a href="#cb8-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-181"><a href="#cb8-181" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-182"><a href="#cb8-182" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_tagged_union_v <span class="op">=</span> is_tagged_union<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span>
+<span id="cb8-183"><a href="#cb8-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-184"><a href="#cb8-184" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-185"><a href="#cb8-185" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> first_tagged_union_alt <span class="op">{};</span></span>
+<span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">auto</span> Disc<span class="op">,</span> <span class="kw">typename</span> First<span class="op">,</span> <span class="kw">typename</span><span class="op">...</span> Rest<span class="op">&gt;</span></span>
+<span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> first_tagged_union_alt<span class="op">&lt;</span>rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span>Disc<span class="op">,</span> First<span class="op">,</span> Rest<span class="op">...&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> First<span class="op">;</span></span>
+<span id="cb8-190"><a href="#cb8-190" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-192"><a href="#cb8-192" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Params<span class="op">&gt;</span></span>
+<span id="cb8-193"><a href="#cb8-193" aria-hidden="true" tabindex="-1"></a>Params getDefaultInstance<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-194"><a href="#cb8-194" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>is_tagged_union_v<span class="op">&lt;</span>Params<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-195"><a href="#cb8-195" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> FirstAlt <span class="op">=</span> <span class="kw">typename</span> first_tagged_union_alt<span class="op">&lt;</span>Params<span class="op">&gt;::</span>type<span class="op">;</span></span>
+<span id="cb8-196"><a href="#cb8-196" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Params<span class="op">{</span>FirstAlt<span class="op">{}};</span></span>
+<span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Params<span class="op">{};</span></span>
+<span id="cb8-199"><a href="#cb8-199" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-200"><a href="#cb8-200" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-201"><a href="#cb8-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-202"><a href="#cb8-202" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace detail</span></span>
+<span id="cb8-203"><a href="#cb8-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-204"><a href="#cb8-204" aria-hidden="true" tabindex="-1"></a><span class="co">// Forward declaration for recursive use in detail::makeVariantAlternative</span></span>
+<span id="cb8-205"><a href="#cb8-205" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Params<span class="op">&gt;</span></span>
+<span id="cb8-206"><a href="#cb8-206" aria-hidden="true" tabindex="-1"></a>ParameterSchema extractParameterSchema<span class="op">();</span></span>
+<span id="cb8-207"><a href="#cb8-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-208"><a href="#cb8-208" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> detail <span class="op">{</span></span>
+<span id="cb8-209"><a href="#cb8-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-210"><a href="#cb8-210" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> TaggedUnionType<span class="op">,</span> <span class="kw">typename</span> AltType<span class="op">&gt;</span></span>
+<span id="cb8-211"><a href="#cb8-211" aria-hidden="true" tabindex="-1"></a>VariantAlternative makeVariantAlternative<span class="op">(</span><span class="bu">std::</span>string_view disc_str<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a>    VariantAlternative alt<span class="op">;</span></span>
+<span id="cb8-213"><a href="#cb8-213" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract tag name: serialize a TaggedUnion holding a default-constructed AltType</span></span>
+<span id="cb8-214"><a href="#cb8-214" aria-hidden="true" tabindex="-1"></a>    TaggedUnionType tu<span class="op">{</span>AltType<span class="op">{}};</span></span>
+<span id="cb8-215"><a href="#cb8-215" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> json_str <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>tu<span class="op">);</span></span>
+<span id="cb8-216"><a href="#cb8-216" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> parsed <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json_str<span class="op">);</span></span>
+<span id="cb8-217"><a href="#cb8-217" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>parsed<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-218"><a href="#cb8-218" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> obj <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">::</span>Object<span class="op">&gt;(&amp;</span>parsed<span class="op">.</span>value<span class="op">().</span>get<span class="op">());</span></span>
+<span id="cb8-219"><a href="#cb8-219" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>obj<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-220"><a href="#cb8-220" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> disc_val <span class="op">=</span> obj<span class="op">-&gt;</span>get<span class="op">(</span><span class="bu">std::</span>string<span class="op">(</span>disc_str<span class="op">));</span></span>
+<span id="cb8-221"><a href="#cb8-221" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>disc_val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-222"><a href="#cb8-222" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> s <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;(&amp;</span>disc_val<span class="op">.</span>value<span class="op">().</span>get<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-223"><a href="#cb8-223" aria-hidden="true" tabindex="-1"></a>                    alt<span class="op">.</span>tag <span class="op">=</span> <span class="op">*</span>s<span class="op">;</span></span>
+<span id="cb8-224"><a href="#cb8-224" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb8-225"><a href="#cb8-225" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-226"><a href="#cb8-226" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-227"><a href="#cb8-227" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-228"><a href="#cb8-228" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recursively extract sub-schema for the alternative struct</span></span>
+<span id="cb8-229"><a href="#cb8-229" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>alt<span class="op">.</span>schema <span class="op">=</span> extractParameterSchema<span class="op">&lt;</span>AltType<span class="op">&gt;();</span></span>
+<span id="cb8-230"><a href="#cb8-230" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> alt<span class="op">;</span></span>
+<span id="cb8-231"><a href="#cb8-231" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-233"><a href="#cb8-233" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>rfl<span class="op">::</span>internal<span class="op">::</span>StringLiteral _disc<span class="op">,</span> <span class="kw">typename</span><span class="op">...</span> Ts<span class="op">&gt;</span></span>
+<span id="cb8-234"><a href="#cb8-234" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> processTaggedUnion<span class="op">(</span></span>
+<span id="cb8-235"><a href="#cb8-235" aria-hidden="true" tabindex="-1"></a>        rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span>_disc<span class="op">,</span> Ts<span class="op">...&gt;</span> <span class="at">const</span> <span class="op">*</span> <span class="co">/*type_tag*/</span><span class="op">,</span></span>
+<span id="cb8-236"><a href="#cb8-236" aria-hidden="true" tabindex="-1"></a>        ParameterFieldDescriptor <span class="op">&amp;</span> desc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-237"><a href="#cb8-237" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> TU <span class="op">=</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span>_disc<span class="op">,</span> Ts<span class="op">...&gt;;</span></span>
+<span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="kw">auto</span> disc_sv <span class="op">=</span> _disc<span class="op">.</span>string_view<span class="op">();</span></span>
+<span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a>    desc<span class="op">.</span>is_variant <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb8-240"><a href="#cb8-240" aria-hidden="true" tabindex="-1"></a>    desc<span class="op">.</span>type_name <span class="op">=</span> <span class="st">"variant"</span><span class="op">;</span></span>
+<span id="cb8-241"><a href="#cb8-241" aria-hidden="true" tabindex="-1"></a>    desc<span class="op">.</span>variant_discriminator <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span>disc_sv<span class="op">);</span></span>
+<span id="cb8-242"><a href="#cb8-242" aria-hidden="true" tabindex="-1"></a>    desc<span class="op">.</span>variant_alternatives<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb8-243"><a href="#cb8-243" aria-hidden="true" tabindex="-1"></a>    desc<span class="op">.</span>allowed_values<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb8-244"><a href="#cb8-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-245"><a href="#cb8-245" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fold expression: process each alternative type</span></span>
+<span id="cb8-246"><a href="#cb8-246" aria-hidden="true" tabindex="-1"></a>    <span class="op">(([&amp;]</span> <span class="op">{</span></span>
+<span id="cb8-247"><a href="#cb8-247" aria-hidden="true" tabindex="-1"></a>         <span class="kw">auto</span> alt <span class="op">=</span> makeVariantAlternative<span class="op">&lt;</span>TU<span class="op">,</span> Ts<span class="op">&gt;(</span>disc_sv<span class="op">);</span></span>
+<span id="cb8-248"><a href="#cb8-248" aria-hidden="true" tabindex="-1"></a>         desc<span class="op">.</span>allowed_values<span class="op">.</span>push_back<span class="op">(</span>alt<span class="op">.</span>tag<span class="op">);</span></span>
+<span id="cb8-249"><a href="#cb8-249" aria-hidden="true" tabindex="-1"></a>         desc<span class="op">.</span>variant_alternatives<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>alt<span class="op">));</span></span>
+<span id="cb8-250"><a href="#cb8-250" aria-hidden="true" tabindex="-1"></a>     <span class="op">}()),</span></span>
+<span id="cb8-251"><a href="#cb8-251" aria-hidden="true" tabindex="-1"></a>     <span class="op">...);</span></span>
+<span id="cb8-252"><a href="#cb8-252" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-253"><a href="#cb8-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-254"><a href="#cb8-254" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace detail</span></span>
+<span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-257"><a href="#cb8-257" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile-Time Schema Extraction</span></span>
+<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-259"><a href="#cb8-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-260"><a href="#cb8-260" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Params<span class="op">&gt;</span></span>
+<span id="cb8-261"><a href="#cb8-261" aria-hidden="true" tabindex="-1"></a>ParameterSchema extractParameterSchema<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-262"><a href="#cb8-262" aria-hidden="true" tabindex="-1"></a>    ParameterSchema schema<span class="op">;</span></span>
+<span id="cb8-263"><a href="#cb8-263" aria-hidden="true" tabindex="-1"></a>    schema<span class="op">.</span>params_type_name <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>Params<span class="op">).</span>name<span class="op">();</span></span>
+<span id="cb8-264"><a href="#cb8-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-265"><a href="#cb8-265" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> meta_fields <span class="op">=</span> rfl<span class="op">::</span>fields<span class="op">&lt;</span>Params<span class="op">&gt;();</span></span>
+<span id="cb8-266"><a href="#cb8-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-267"><a href="#cb8-267" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default-construct a Params instance and serialize to JSON to extract defaults.</span></span>
+<span id="cb8-268"><a href="#cb8-268" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TaggedUnion has no default constructor; use first alternative.</span></span>
+<span id="cb8-269"><a href="#cb8-269" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> defaults_instance <span class="op">=</span> detail::getDefaultInstance<span class="op">&lt;</span>Params<span class="op">&gt;();</span></span>
+<span id="cb8-270"><a href="#cb8-270" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> defaults_json <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>defaults_instance<span class="op">);</span></span>
+<span id="cb8-271"><a href="#cb8-271" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> defaults_parsed <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>defaults_json<span class="op">);</span></span>
+<span id="cb8-272"><a href="#cb8-272" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Generic<span class="op">::</span>Object <span class="at">const</span> <span class="op">*</span> defaults_obj <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-273"><a href="#cb8-273" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>defaults_parsed<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-274"><a href="#cb8-274" aria-hidden="true" tabindex="-1"></a>        defaults_obj <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">::</span>Object<span class="op">&gt;(&amp;</span>defaults_parsed<span class="op">.</span>value<span class="op">().</span>get<span class="op">());</span></span>
+<span id="cb8-275"><a href="#cb8-275" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-276"><a href="#cb8-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-277"><a href="#cb8-277" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> order <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-278"><a href="#cb8-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> mf<span class="op">:</span> meta_fields<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-279"><a href="#cb8-279" aria-hidden="true" tabindex="-1"></a>        ParameterFieldDescriptor desc<span class="op">;</span></span>
+<span id="cb8-280"><a href="#cb8-280" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>name <span class="op">=</span> mf<span class="op">.</span>name<span class="op">();</span></span>
+<span id="cb8-281"><a href="#cb8-281" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>raw_type_name <span class="op">=</span> mf<span class="op">.</span>type<span class="op">();</span></span>
+<span id="cb8-282"><a href="#cb8-282" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>type_name <span class="op">=</span> parseUnderlyingType<span class="op">(</span>mf<span class="op">.</span>type<span class="op">());</span></span>
+<span id="cb8-283"><a href="#cb8-283" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>display_name <span class="op">=</span> snakeCaseToDisplay<span class="op">(</span>mf<span class="op">.</span>name<span class="op">());</span></span>
+<span id="cb8-284"><a href="#cb8-284" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>is_optional <span class="op">=</span> isOptionalType<span class="op">(</span>mf<span class="op">.</span>type<span class="op">());</span></span>
+<span id="cb8-285"><a href="#cb8-285" aria-hidden="true" tabindex="-1"></a>        desc<span class="op">.</span>display_order <span class="op">=</span> order<span class="op">++;</span></span>
+<span id="cb8-286"><a href="#cb8-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-287"><a href="#cb8-287" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extract validator constraints if present</span></span>
+<span id="cb8-288"><a href="#cb8-288" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>hasValidator<span class="op">(</span>mf<span class="op">.</span>type<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-289"><a href="#cb8-289" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> constraints <span class="op">=</span> extractConstraints<span class="op">(</span>mf<span class="op">.</span>type<span class="op">());</span></span>
+<span id="cb8-290"><a href="#cb8-290" aria-hidden="true" tabindex="-1"></a>            desc<span class="op">.</span>min_value <span class="op">=</span> constraints<span class="op">.</span>min_value<span class="op">;</span></span>
+<span id="cb8-291"><a href="#cb8-291" aria-hidden="true" tabindex="-1"></a>            desc<span class="op">.</span>max_value <span class="op">=</span> constraints<span class="op">.</span>max_value<span class="op">;</span></span>
+<span id="cb8-292"><a href="#cb8-292" aria-hidden="true" tabindex="-1"></a>            desc<span class="op">.</span>is_exclusive_min <span class="op">=</span> constraints<span class="op">.</span>is_exclusive_min<span class="op">;</span></span>
+<span id="cb8-293"><a href="#cb8-293" aria-hidden="true" tabindex="-1"></a>            desc<span class="op">.</span>is_exclusive_max <span class="op">=</span> constraints<span class="op">.</span>is_exclusive_max<span class="op">;</span></span>
+<span id="cb8-294"><a href="#cb8-294" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-295"><a href="#cb8-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-296"><a href="#cb8-296" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extract default value from the default-constructed instance</span></span>
+<span id="cb8-297"><a href="#cb8-297" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>defaults_obj<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-298"><a href="#cb8-298" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> field_val <span class="op">=</span> defaults_obj<span class="op">-&gt;</span>get<span class="op">(</span>desc<span class="op">.</span>name<span class="op">);</span></span>
+<span id="cb8-299"><a href="#cb8-299" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>field_val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-300"><a href="#cb8-300" aria-hidden="true" tabindex="-1"></a>                desc<span class="op">.</span>default_value_json <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>field_val<span class="op">.</span>value<span class="op">());</span></span>
+<span id="cb8-301"><a href="#cb8-301" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-302"><a href="#cb8-302" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-303"><a href="#cb8-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-304"><a href="#cb8-304" aria-hidden="true" tabindex="-1"></a>        schema<span class="op">.</span>fields<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>desc<span class="op">));</span></span>
+<span id="cb8-305"><a href="#cb8-305" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-306"><a href="#cb8-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-307"><a href="#cb8-307" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enum detection pass: rfl::fields() only provides type strings, but we</span></span>
+<span id="cb8-308"><a href="#cb8-308" aria-hidden="true" tabindex="-1"></a>    <span class="co">// need actual C++ types to use std::is_enum_v and rfl::get_enumerator_array.</span></span>
+<span id="cb8-309"><a href="#cb8-309" aria-hidden="true" tabindex="-1"></a>    <span class="co">// rfl::to_view() gives typed references to each field.</span></span>
+<span id="cb8-310"><a href="#cb8-310" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> view <span class="op">=</span> rfl<span class="op">::</span>to_view<span class="op">(</span>defaults_instance<span class="op">);</span></span>
+<span id="cb8-311"><a href="#cb8-311" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> field_idx <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-312"><a href="#cb8-312" aria-hidden="true" tabindex="-1"></a>    view<span class="op">.</span>apply<span class="op">([&amp;](</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> field<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-313"><a href="#cb8-313" aria-hidden="true" tabindex="-1"></a>        <span class="co">// rfl::to_view returns pointer fields, so field.value() is T*</span></span>
+<span id="cb8-314"><a href="#cb8-314" aria-hidden="true" tabindex="-1"></a>        <span class="co">// defaults_instance is const, so pointers are const T* — strip cv.</span></span>
+<span id="cb8-315"><a href="#cb8-315" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> PtrType <span class="op">=</span> <span class="bu">std::</span>remove_cvref_t<span class="op">&lt;</span><span class="kw">decltype</span><span class="op">(</span>field<span class="op">.</span>value<span class="op">())&gt;;</span></span>
+<span id="cb8-316"><a href="#cb8-316" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> RawFieldType <span class="op">=</span> <span class="bu">std::</span>remove_cv_t<span class="op">&lt;</span><span class="bu">std::</span>remove_pointer_t<span class="op">&lt;</span>PtrType<span class="op">&gt;&gt;;</span></span>
+<span id="cb8-317"><a href="#cb8-317" aria-hidden="true" tabindex="-1"></a>        <span class="kw">using</span> InnerType <span class="op">=</span> detail::unwrap_optional_t<span class="op">&lt;</span>RawFieldType<span class="op">&gt;;</span></span>
+<span id="cb8-318"><a href="#cb8-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-319"><a href="#cb8-319" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>detail::is_tagged_union_v<span class="op">&lt;</span>InnerType<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-320"><a href="#cb8-320" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>field_idx <span class="op">&lt;</span> schema<span class="op">.</span>fields<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-321"><a href="#cb8-321" aria-hidden="true" tabindex="-1"></a>                detail::processTaggedUnion<span class="op">(</span></span>
+<span id="cb8-322"><a href="#cb8-322" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">static_cast</span><span class="op">&lt;</span>InnerType <span class="at">const</span> <span class="op">*&gt;(</span><span class="kw">nullptr</span><span class="op">),</span></span>
+<span id="cb8-323"><a href="#cb8-323" aria-hidden="true" tabindex="-1"></a>                        schema<span class="op">.</span>fields<span class="op">[</span>field_idx<span class="op">]);</span></span>
+<span id="cb8-324"><a href="#cb8-324" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-325"><a href="#cb8-325" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>detail::is_std_vector_v<span class="op">&lt;</span>InnerType<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-326"><a href="#cb8-326" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>field_idx <span class="op">&lt;</span> schema<span class="op">.</span>fields<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-327"><a href="#cb8-327" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="op">&amp;</span> fd <span class="op">=</span> schema<span class="op">.</span>fields<span class="op">[</span>field_idx<span class="op">];</span></span>
+<span id="cb8-328"><a href="#cb8-328" aria-hidden="true" tabindex="-1"></a>                fd<span class="op">.</span>is_vector <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb8-329"><a href="#cb8-329" aria-hidden="true" tabindex="-1"></a>                <span class="co">// vector_element_type is the element's base type name.</span></span>
+<span id="cb8-330"><a href="#cb8-330" aria-hidden="true" tabindex="-1"></a>                <span class="co">// parseUnderlyingType already returned "vector&lt;...&gt;" for type_name.</span></span>
+<span id="cb8-331"><a href="#cb8-331" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Extract just the element part.</span></span>
+<span id="cb8-332"><a href="#cb8-332" aria-hidden="true" tabindex="-1"></a>                <span class="kw">using</span> ElemType <span class="op">=</span> detail::vector_element_t<span class="op">&lt;</span>InnerType<span class="op">&gt;;</span></span>
+<span id="cb8-333"><a href="#cb8-333" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>ElemType<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-334"><a href="#cb8-334" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"float"</span><span class="op">;</span></span>
+<span id="cb8-335"><a href="#cb8-335" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>ElemType<span class="op">,</span> <span class="dt">double</span><span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-336"><a href="#cb8-336" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"double"</span><span class="op">;</span></span>
+<span id="cb8-337"><a href="#cb8-337" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>ElemType<span class="op">,</span> <span class="dt">int</span><span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-338"><a href="#cb8-338" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"int"</span><span class="op">;</span></span>
+<span id="cb8-339"><a href="#cb8-339" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>ElemType<span class="op">,</span> <span class="dt">bool</span><span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-340"><a href="#cb8-340" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"bool"</span><span class="op">;</span></span>
+<span id="cb8-341"><a href="#cb8-341" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>ElemType<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-342"><a href="#cb8-342" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"std::string"</span><span class="op">;</span></span>
+<span id="cb8-343"><a href="#cb8-343" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_integral_v<span class="op">&lt;</span>ElemType<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-344"><a href="#cb8-344" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"int"</span><span class="op">;</span></span>
+<span id="cb8-345"><a href="#cb8-345" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_floating_point_v<span class="op">&lt;</span>ElemType<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-346"><a href="#cb8-346" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"float"</span><span class="op">;</span></span>
+<span id="cb8-347"><a href="#cb8-347" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-348"><a href="#cb8-348" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span><span class="dt">vector_element_type</span> <span class="op">=</span> <span class="st">"unknown"</span><span class="op">;</span></span>
+<span id="cb8-349"><a href="#cb8-349" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb8-350"><a href="#cb8-350" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-351"><a href="#cb8-351" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_enum_v<span class="op">&lt;</span>InnerType<span class="op">&gt;)</span> <span class="op">{</span></span>
+<span id="cb8-352"><a href="#cb8-352" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>field_idx <span class="op">&lt;</span> schema<span class="op">.</span>fields<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-353"><a href="#cb8-353" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="op">&amp;</span> fd <span class="op">=</span> schema<span class="op">.</span>fields<span class="op">[</span>field_idx<span class="op">];</span></span>
+<span id="cb8-354"><a href="#cb8-354" aria-hidden="true" tabindex="-1"></a>                fd<span class="op">.</span>type_name <span class="op">=</span> <span class="st">"enum"</span><span class="op">;</span></span>
+<span id="cb8-355"><a href="#cb8-355" aria-hidden="true" tabindex="-1"></a>                fd<span class="op">.</span>allowed_values<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb8-356"><a href="#cb8-356" aria-hidden="true" tabindex="-1"></a>                <span class="kw">constexpr</span> <span class="kw">auto</span> enumerators <span class="op">=</span> rfl<span class="op">::</span>get_enumerator_array<span class="op">&lt;</span>InnerType<span class="op">&gt;();</span></span>
+<span id="cb8-357"><a href="#cb8-357" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>name<span class="op">,</span> val<span class="op">]:</span> enumerators<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-358"><a href="#cb8-358" aria-hidden="true" tabindex="-1"></a>                    fd<span class="op">.</span>allowed_values<span class="op">.</span>emplace_back<span class="op">(</span><span class="bu">std::</span>string<span class="op">(</span>name<span class="op">));</span></span>
+<span id="cb8-359"><a href="#cb8-359" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb8-360"><a href="#cb8-360" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-361"><a href="#cb8-361" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-362"><a href="#cb8-362" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span>field_idx<span class="op">;</span></span>
+<span id="cb8-363"><a href="#cb8-363" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb8-364"><a href="#cb8-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-365"><a href="#cb8-365" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply optional UI hints from specializations</span></span>
+<span id="cb8-366"><a href="#cb8-366" aria-hidden="true" tabindex="-1"></a>    ParameterUIHints<span class="op">&lt;</span>Params<span class="op">&gt;::</span>annotate<span class="op">(</span>schema<span class="op">);</span></span>
+<span id="cb8-367"><a href="#cb8-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-368"><a href="#cb8-368" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> schema<span class="op">;</span></span>
+<span id="cb8-369"><a href="#cb8-369" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-370"><a href="#cb8-370" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-371"><a href="#cb8-371" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:25 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

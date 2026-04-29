@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>AnalogTimeSeries – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#analogtimeseries" id="toc-analogtimeseries" class="nav-link active" data-scroll-target="#analogtimeseries">AnalogTimeSeries</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-analogtimeseries" id="toc-function-analogtimeseries" class="nav-link" data-scroll-target="#function-analogtimeseries">function AnalogTimeSeries</a></li>
+  <li><a href="#function-analogtimeseries-1" id="toc-function-analogtimeseries-1" class="nav-link" data-scroll-target="#function-analogtimeseries-1">function AnalogTimeSeries</a></li>
+  <li><a href="#function-analogtimeseries-2" id="toc-function-analogtimeseries-2" class="nav-link" data-scroll-target="#function-analogtimeseries-2">function AnalogTimeSeries</a></li>
+  <li><a href="#function-analogtimeseries-3" id="toc-function-analogtimeseries-3" class="nav-link" data-scroll-target="#function-analogtimeseries-3">function AnalogTimeSeries</a></li>
+  <li><a href="#function-analogtimeseries-4" id="toc-function-analogtimeseries-4" class="nav-link" data-scroll-target="#function-analogtimeseries-4">function AnalogTimeSeries</a></li>
+  <li><a href="#function-getnumsamples" id="toc-function-getnumsamples" class="nav-link" data-scroll-target="#function-getnumsamples">function getNumSamples</a></li>
+  <li><a href="#function-getanalogtimeseries" id="toc-function-getanalogtimeseries" class="nav-link" data-scroll-target="#function-getanalogtimeseries">function getAnalogTimeSeries</a></li>
+  <li><a href="#function-getdataintimeframeindexrange" id="toc-function-getdataintimeframeindexrange" class="nav-link" data-scroll-target="#function-getdataintimeframeindexrange">function getDataInTimeFrameIndexRange</a></li>
+  <li><a href="#function-getdataintimeframeindexrange-1" id="toc-function-getdataintimeframeindexrange-1" class="nav-link" data-scroll-target="#function-getdataintimeframeindexrange-1">function getDataInTimeFrameIndexRange</a></li>
+  <li><a href="#function-view" id="toc-function-view" class="nav-link" data-scroll-target="#function-view">function view</a></li>
+  <li><a href="#function-viewvalues" id="toc-function-viewvalues" class="nav-link" data-scroll-target="#function-viewvalues">function viewValues</a></li>
+  <li><a href="#function-viewtimevaluerange" id="toc-function-viewtimevaluerange" class="nav-link" data-scroll-target="#function-viewtimevaluerange">function viewTimeValueRange</a></li>
+  <li><a href="#function-gettimevaluerangeintimeframeindexrange" id="toc-function-gettimevaluerangeintimeframeindexrange" class="nav-link" data-scroll-target="#function-gettimevaluerangeintimeframeindexrange">function getTimeValueRangeInTimeFrameIndexRange</a></li>
+  <li><a href="#function-gettimevaluerangeintimeframeindexrange-1" id="toc-function-gettimevaluerangeintimeframeindexrange-1" class="nav-link" data-scroll-target="#function-gettimevaluerangeintimeframeindexrange-1">function getTimeValueRangeInTimeFrameIndexRange</a></li>
+  <li><a href="#function-gettimevaluespanintimeframeindexrange" id="toc-function-gettimevaluespanintimeframeindexrange" class="nav-link" data-scroll-target="#function-gettimevaluespanintimeframeindexrange">function getTimeValueSpanInTimeFrameIndexRange</a></li>
+  <li><a href="#function-gettimevaluespanintimeframeindexrange-1" id="toc-function-gettimevaluespanintimeframeindexrange-1" class="nav-link" data-scroll-target="#function-gettimevaluespanintimeframeindexrange-1">function getTimeValueSpanInTimeFrameIndexRange</a></li>
+  <li><a href="#function-getallsamples" id="toc-function-getallsamples" class="nav-link" data-scroll-target="#function-getallsamples">function getAllSamples</a></li>
+  <li><a href="#function-gettimeseries" id="toc-function-gettimeseries" class="nav-link" data-scroll-target="#function-gettimeseries">function getTimeSeries</a></li>
+  <li><a href="#function-gettimestorage" id="toc-function-gettimestorage" class="nav-link" data-scroll-target="#function-gettimestorage">function getTimeStorage</a></li>
+  <li><a href="#function-settimeframe" id="toc-function-settimeframe" class="nav-link" data-scroll-target="#function-settimeframe">function setTimeFrame</a></li>
+  <li><a href="#function-gettimeframe" id="toc-function-gettimeframe" class="nav-link" data-scroll-target="#function-gettimeframe">function getTimeFrame</a></li>
+  <li><a href="#function-elements" id="toc-function-elements" class="nav-link" data-scroll-target="#function-elements">function elements</a></li>
+  <li><a href="#function-elementsview" id="toc-function-elementsview" class="nav-link" data-scroll-target="#function-elementsview">function elementsView</a></li>
+  <li><a href="#function-getattime" id="toc-function-getattime" class="nav-link" data-scroll-target="#function-getattime">function getAtTime</a></li>
+  <li><a href="#function-materialize" id="toc-function-materialize" class="nav-link" data-scroll-target="#function-materialize">function materialize</a></li>
+  <li><a href="#function-creatememorymapped" id="toc-function-creatememorymapped" class="nav-link" data-scroll-target="#function-creatememorymapped">function createMemoryMapped</a></li>
+  <li><a href="#function-createfromview" id="toc-function-createfromview" class="nav-link" data-scroll-target="#function-createfromview">function createFromView</a></li>
+  <li><a href="#function-createview" id="toc-function-createview" class="nav-link" data-scroll-target="#function-createview">function createView</a></li>
+  <li><a href="#function-createfromstorage" id="toc-function-createfromstorage" class="nav-link" data-scroll-target="#function-createfromstorage">function createFromStorage</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">AnalogTimeSeries</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="analogtimeseries" class="level1">
+<h1>AnalogTimeSeries</h1>
+<p>The <a href="">AnalogTimeSeries</a> class. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;Analog_Time_Series.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1DataTraits.html">DataTraits</a></strong> <br>Type traits for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries_1_1TimeIndexRange.html">TimeIndexRange</a></strong> <br>Time index range abstraction that handles both dense and sparse storage.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a></strong> <br>Data structure representing a single time-value point.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValueSpanPair.html">TimeValueSpanPair</a></strong> <br>Paired span and time iterator for zero-copy time-value access.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries</a></strong>()<br>Default constructor.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries</a></strong>(std::vector&lt; float &gt; analog_vector, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; time_vector)<br>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a vector of floats and a vector of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries</a></strong>(std::map&lt; int, float &gt; analog_map)<br>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a map of int to float.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries</a></strong>(std::vector&lt; float &gt; analog_vector, size_t num_samples)<br>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a vector of floats and a number of samples.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;std::ranges::input_range R&gt; <br></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries</a></strong>(R &amp;&amp; time_value_pairs)</td>
+</tr>
+<tr class="even">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getnumsamples">getNumSamples</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>std::span&lt; float const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getanalogtimeseries">getAnalogTimeSeries</a></strong>() const<br>Get a span over the analog data values.</td>
+</tr>
+<tr class="even">
+<td>std::span&lt; float const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getdataintimeframeindexrange">getDataInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time) const<br>Get a span (view) of data values within a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range.</td>
+</tr>
+<tr class="odd">
+<td>std::span&lt; float const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getdataintimeframeindexrange">getDataInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * source_timeFrame) const<br>Get a span (view) of data values within a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range, with timeframe conversion.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-view">view</a></strong>() const<br>Get a std::ranges compatible view of all samples as <a href="">TimeValuePoint</a>.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-viewvalues">viewValues</a></strong>() const<br>Get a std::ranges compatible view of just the values (no time info).</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-viewtimevaluerange">viewTimeValueRange</a></strong>(<a href="../../api_generated/Classes/classDataArrayIndex.html">DataArrayIndex</a> start_index, <a href="../../api_generated/Classes/classDataArrayIndex.html">DataArrayIndex</a> end_index) const<br>Get time-value pairs in a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range as a view.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluerangeintimeframeindexrange">getTimeValueRangeInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time) const<br>Get time-value pairs as a range for convenient iteration.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluerangeintimeframeindexrange">getTimeValueRangeInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeFrame) const<br>Get time-value pairs as a range with timeframe conversion.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValueSpanPair.html">TimeValueSpanPair</a></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluespanintimeframeindexrange">getTimeValueSpanInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time) const<br>Get time-value pairs as span and time iterator for zero-copy access.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValueSpanPair.html">TimeValueSpanPair</a></td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluespanintimeframeindexrange">getTimeValueSpanInTimeFrameIndexRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * source_timeFrame) const<br>Get time-value pairs with timeframe conversion.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimeseries">getTimeSeries</a></strong>() const<br>Get the time indices as a vector.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimestorage">getTimeStorage</a></strong>() const<br>Get a const reference to the time index storage.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-settimeframe">setTimeFrame</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame)<br>Set the time frame.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimeframe">getTimeFrame</a></strong>() const<br>Get the time frame.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-elements">elements</a></strong>() const<br>Get a view of (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, float) pairs.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-elementsview">elementsView</a></strong>() const<br>Get a view of <a href="">TimeValuePoint</a> objects (concept-compliant)</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const<br>Get value at specific time.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-materialize">materialize</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-creatememorymapped">createMemoryMapped</a></strong>(<a href="../../api_generated/Classes/structMmapStorageConfig.html">MmapStorageConfig</a> config, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; time_vector)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;std::ranges::random_access_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-createfromview">createFromView</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; time_storage)<br>Create <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a lazy view.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-createview">createView</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &gt; const &amp; source, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time)</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-createfromstorage">createFromStorage</a></strong>(<a href="../../api_generated/Classes/classAnalogDataStorageWrapper.html">AnalogDataStorageWrapper</a> storage, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a> &gt; time_storage)<br>Create an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a custom storage backend.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Types inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; void()&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a></strong> <br>Type alias for observer callback functions.</td>
+</tr>
+<tr class="even">
+<td>using int</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></strong> <br>Type alias for callback identifiers.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback)<br>Register a new observer callback.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-notifyobservers">notifyObservers</a></strong>()<br>Notify all registered observers.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-removeobserver">removeObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a> id)<br>Remove a previously registered observer.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AnalogTimeSeries<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <a href="">AnalogTimeSeries</a> class.</p>
+<p>Analog time series is used for storing continuous data The data may be sampled at irregular intervals as long as the time vector is provided</p>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-analogtimeseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtimeseries">function AnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>AnalogTimeSeries<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Default constructor.</p>
+<p>This constructor creates an empty <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> with no data</p>
+</section>
+<section id="function-analogtimeseries-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtimeseries-1">function AnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> AnalogTimeSeries<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> analog_vector<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> time_vector</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a vector of floats and a vector of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>analog_vector</strong> Vector of floats</li>
+<li><strong>time_vector</strong> Vector of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values</li>
+</ul>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples)</float></a> for a constructor that takes a vector of floats that are consecutive samples</li>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries(std::map&lt;int, float&gt; analog_map)</a> for a constructor that takes a map of int to float</li>
+</ul>
+<p>Use this constructor when the data is sampled at irregular intervals</p>
+</section>
+<section id="function-analogtimeseries-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtimeseries-2">function AnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> AnalogTimeSeries<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> <span class="dt">float</span> <span class="op">&gt;</span> analog_map</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a map of int to float.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>analog_map</strong> Map of int to float</li>
+</ul>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries(std::vector<float> analog_vector, std::vector<timeframeindex> time_vector)</timeframeindex></float></a> for a constructor that takes a vector of floats and a vector of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values</li>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples)</float></a> for a constructor that takes a vector of floats that are consecutive samples</li>
+</ul>
+<p>The key in the map is assumed to the be <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> for each sample</p>
+</section>
+<section id="function-analogtimeseries-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtimeseries-3">function AnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> AnalogTimeSeries<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> analog_vector<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_samples</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Constructor for <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a vector of floats and a number of samples.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>analog_vector</strong> Vector of floats</li>
+<li><strong>num_samples</strong> Number of samples</li>
+</ul>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-analogtimeseries">AnalogTimeSeries(std::vector<float> analog_vector, std::vector<timeframeindex> time_vector)</timeframeindex></float></a> for constructors that support irregular sampling</p>
+<p>Use this constructor when the data is sampled at regular intervals increasing by 1</p>
+</section>
+<section id="function-analogtimeseries-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtimeseries-4">function AnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">explicit</span> AnalogTimeSeries<span class="op">(</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> time_value_pairs</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getnumsamples" class="level3">
+<h3 class="anchored" data-anchor-id="function-getnumsamples">function getNumSamples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> getNumSamples<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getanalogtimeseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-getanalogtimeseries">function getAnalogTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> getAnalogTimeSeries<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a span over the analog data values.</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimeseries">getTimeSeries()</a> for accessing the corresponding time indices</li>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples()</a> for time-value pair iteration that works with any storage</li>
+</ul>
+<p><strong>Return</strong>: std::span<float const=""> view over the analog data values, or empty span if not contiguous</float></p>
+<p><strong>Note</strong>: For contiguous storage (vector), this provides zero-copy access. For non-contiguous storage, use <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples()</a> iterator instead.</p>
+<p>Returns a span providing a view over the analog time series data values. This method provides efficient read-only access to contiguous data without copying. For non-contiguous storage (e.g., memory-mapped with stride), returns empty span.</p>
+</section>
+<section id="function-getdataintimeframeindexrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdataintimeframeindexrange">function getDataInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> getDataInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a span (view) of data values within a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start time (inclusive boundary)</li>
+<li><strong>end_time</strong> The end time (inclusive boundary)</li>
+</ul>
+<p><strong>See</strong>: findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic</p>
+<p><strong>Return</strong>: std::span<const float=""> view over the data in the specified range</const></p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>Returns an empty span if no data points fall within the specified range</li>
+<li>The span is valid as long as the <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> object exists and is not modified</li>
+</ul>
+<p>This function returns a std::span over the data array for all points where <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;= start_time and <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &lt;= end_time. The span provides a zero-copy view into the underlying data.</p>
+<p>If the exact start_time or end_time don’t exist in the series, it finds the closest available times:</p>
+<ul>
+<li>For start: finds the smallest <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;= start_time</li>
+<li>For end: finds the largest <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &lt;= end_time</li>
+</ul>
+</section>
+<section id="function-getdataintimeframeindexrange-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdataintimeframeindexrange-1">function getDataInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> getDataInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">*</span> source_timeFrame</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a span (view) of data values within a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range, with timeframe conversion.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start time (inclusive boundary)</li>
+<li><strong>end_time</strong> The end time (inclusive boundary)</li>
+<li><strong>source_timeFrame</strong> The timeframe that the start and end times are expressed in</li>
+</ul>
+<p><strong>See</strong>: findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic</p>
+<p><strong>Return</strong>: std::span<const float=""> view over the data in the specified range</const></p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>Returns an empty span if no data points fall within the specified range</li>
+<li>The span is valid as long as the <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> object exists and is not modified</li>
+</ul>
+<p>This function returns a std::span over the data array for all points where <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;= start_time and <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &lt;= end_time. The span provides a zero-copy view into the underlying data.</p>
+<p>If the exact start_time or end_time don’t exist in the series, it finds the closest available times:</p>
+<ul>
+<li>For start: finds the smallest <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;= start_time</li>
+<li>For end: finds the largest <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &lt;= end_time</li>
+</ul>
+</section>
+<section id="function-view" class="level3">
+<h3 class="anchored" data-anchor-id="function-view">function view</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> view<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a std::ranges compatible view of all samples as <a href="">TimeValuePoint</a>.</p>
+<p>Returns a random-access view that synthesizes <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a> objects on demand. Uses cached pointers for fast-path iteration when storage is contiguous.</p>
+</section>
+<section id="function-viewvalues" class="level3">
+<h3 class="anchored" data-anchor-id="function-viewvalues">function viewValues</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewValues<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a std::ranges compatible view of just the values (no time info).</p>
+<p>Returns a random-access view of float values only, without time frame indices.</p>
+</section>
+<section id="function-viewtimevaluerange" class="level3">
+<h3 class="anchored" data-anchor-id="function-viewtimevaluerange">function viewTimeValueRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewTimeValueRange<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    DataArrayIndex start_index<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    DataArrayIndex end_index</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time-value pairs in a <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range as a view.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_index</strong> Starting <a href="../../api_generated/Classes/classDataArrayIndex.html">DataArrayIndex</a></li>
+<li><strong>end_index</strong> Ending <a href="../../api_generated/Classes/classDataArrayIndex.html">DataArrayIndex</a> (exclusive)</li>
+</ul>
+<p>Returns a view over the time-value pairs within the specified range. Uses internal index lookup to find the range boundaries.</p>
+</section>
+<section id="function-gettimevaluerangeintimeframeindexrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimevaluerangeintimeframeindexrange">function getTimeValueRangeInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getTimeValueRangeInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time-value pairs as a range for convenient iteration.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> (inclusive boundary)</li>
+<li><strong>end_time</strong> The end <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> (inclusive boundary)</li>
+</ul>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluespanintimeframeindexrange">getTimeValueSpanInTimeFrameIndexRange()</a> for zero-copy alternative</p>
+<p><strong>Return</strong>: Range view that supports range-based for loops</p>
+<p><strong>Note</strong>: Uses the same boundary logic as <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getdataintimeframeindexrange">getDataInTimeFrameIndexRange()</a></p>
+<p>Returns a range view that can be used with range-based for loops to iterate over time-value pairs within the specified <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> range. This is the high-level, convenient interface.</p>
+</section>
+<section id="function-gettimevaluerangeintimeframeindexrange-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimevaluerangeintimeframeindexrange-1">function getTimeValueRangeInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getTimeValueRangeInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeFrame</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time-value pairs as a range with timeframe conversion.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in source timeframe coordinates</li>
+<li><strong>end_time</strong> The end <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in source timeframe coordinates</li>
+<li><strong>source_timeFrame</strong> The timeframe that start_time and end_time are expressed in</li>
+</ul>
+<p><strong>Return</strong>: Range view that supports range-based for loops</p>
+<p><strong>Note</strong>: If source_timeFrame equals the analog series’ timeframe, or if either is null, falls back to the non-converting version</p>
+<p>Similar to getTimeValueRangeInTimeFrameIndexRange, but accepts a source timeframe to convert the start and end time indices from the source coordinate system to the analog time series coordinate system.</p>
+</section>
+<section id="function-gettimevaluespanintimeframeindexrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimevaluespanintimeframeindexrange">function getTimeValueSpanInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time-value pairs as span and time iterator for zero-copy access.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> (inclusive boundary)</li>
+<li><strong>end_time</strong> The end <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> (inclusive boundary)</li>
+</ul>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimevaluerangeintimeframeindexrange">getTimeValueRangeInTimeFrameIndexRange()</a> for convenient range-based alternative</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValueSpanPair.html">TimeValueSpanPair</a> with zero-copy data access</p>
+<p><strong>Note</strong>: Uses the same boundary logic as <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getdataintimeframeindexrange">getDataInTimeFrameIndexRange()</a></p>
+<p>Returns a structure containing a zero-copy span over the data values and a time iterator for the corresponding <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values. This is the performance-optimized interface.</p>
+</section>
+<section id="function-gettimevaluespanintimeframeindexrange-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimevaluespanintimeframeindexrange-1">function getTimeValueSpanInTimeFrameIndexRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">*</span> source_timeFrame</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get time-value pairs with timeframe conversion.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> The start <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in source timeframe coordinates</li>
+<li><strong>end_time</strong> The end <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> in source timeframe coordinates</li>
+<li><strong>source_timeFrame</strong> The timeframe that start_time and end_time are expressed in</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValueSpanPair.html">TimeValueSpanPair</a> with zero-copy data access</p>
+<p><strong>Note</strong>: If source_timeFrame equals the analog series’ timeframe, or if either is null, falls back to the non-converting version</p>
+<p>Similar to getTimeValueSpanInTimeFrameIndexRange, but accepts a source timeframe to convert the start and end time indices from the source coordinate system to the analog time series coordinate system.</p>
+</section>
+<section id="function-getallsamples" class="level3">
+<h3 class="anchored" data-anchor-id="function-getallsamples">function getAllSamples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getAllSamples<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gettimeseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeseries">function getTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> getTimeSeries<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time indices as a vector.</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getanalogtimeseries">getAnalogTimeSeries()</a> for accessing the corresponding data values</li>
+<li>getDataInRange() for accessing time-value pairs within a specific range</li>
+<li>getTimeAtIndex() for single index lookups</li>
+</ul>
+<p><strong>Return</strong>: std::vector<size_t> containing the time indices</size_t></p>
+<p><strong>Note</strong>: For dense storage, this method has O(n) time complexity as it generates the vector. Consider using getTimeAtIndex() for single lookups or iterating with <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getnumsamples">getNumSamples()</a>. For sparse storage, this returns a copy of the internal vector.</p>
+<p>Returns a vector containing the time indices corresponding to each analog data sample. For dense time storage, this generates the indices on-demand. For sparse time storage, this returns a copy of the stored indices.</p>
+</section>
+<section id="function-gettimestorage" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimestorage">function getTimeStorage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getTimeStorage<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a const reference to the time index storage.</p>
+<p><strong>Return</strong>: const shared_ptr to <a href="../../api_generated/Classes/classTimeIndexStorage.html">TimeIndexStorage</a></p>
+<p>This allows efficient access to the underlying time mapping without copying.</p>
+</section>
+<section id="function-settimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-settimeframe">function setTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setTimeFrame<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the time frame.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_frame</strong> The time frame to set</li>
+</ul>
+</section>
+<section id="function-gettimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeframe">function getTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time frame.</p>
+<p><strong>Return</strong>: std::shared_ptr<timeframe> The time frame</timeframe></p>
+</section>
+<section id="function-elements" class="level3">
+<h3 class="anchored" data-anchor-id="function-elements">function elements</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> elements<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a view of (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, float) pairs.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-elementsview">elementsView()</a> for concept-compliant iteration with <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a></p>
+<p><strong>Return</strong>: A lazy range view of (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, float) pairs</p>
+<p>Enables iterating over the time series as a sequence of (time, value) pairs. Compatible with <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a>.</p>
+<p>Returns <code>std::pair&lt;[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md), float&gt;</code> for backward compatibility with existing code that uses <code>.first</code>, <code>.second</code>, and structured bindings.</p>
+</section>
+<section id="function-elementsview" class="level3">
+<h3 class="anchored" data-anchor-id="function-elementsview">function elementsView</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> elementsView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a view of <a href="">TimeValuePoint</a> objects (concept-compliant)</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a></li>
+<li><a href="../../api_generated/Files/TimeSeriesConcepts_8hpp.html#file-timeseriesconcepts.hpp">TimeSeriesConcepts.hpp</a> for concept definitions</li>
+</ul>
+<p><strong>Return</strong>: A lazy range view of <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a> objects</p>
+<p>Enables iterating over the time series as a sequence of <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a> objects. Each element satisfies the TimeSeriesElement and ValueElement<float> concepts, enabling use with generic time series algorithms.</float></p>
+<p>Use this method when you need concept-compliant elements for generic algorithms. Use <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-elements">elements()</a> when you need backward-compatible pair iteration.</p>
+</section>
+<section id="function-getattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-getattime">function getAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> getAtTime<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get value at specific time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to get value for</li>
+</ul>
+<p><strong>Return</strong>: Optional float value if time exists</p>
+</section>
+<section id="function-materialize" class="level3">
+<h3 class="anchored" data-anchor-id="function-materialize">function materialize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-creatememorymapped" class="level3">
+<h3 class="anchored" data-anchor-id="function-creatememorymapped">function createMemoryMapped</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> createMemoryMapped<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    MmapStorageConfig config<span class="op">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> time_vector</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createfromview" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromview">function createFromView</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::random_access_range ViewType<span class="op">&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> time_storage</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a lazy view.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>view</strong> Random-access range view yielding (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, float) pairs or <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a></li>
+<li><strong>time_storage</strong> Shared time index storage (reuse from base series for efficiency)</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if view size doesn’t match time storage size</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ViewType</strong> Random-access range type</li>
+</ul>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-materialize">materialize()</a> to convert lazy storage to vector storage</li>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-view">view()</a> to get a <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-view">view</a> over an existing <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></li>
+</ul>
+<p><strong>Return</strong>: std::shared_ptr<analogtimeseries> Lazy analog time series</analogtimeseries></p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>The view must remain valid for the lifetime of the returned <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>. Capture by value in lambdas or ensure base series outlives the lazy series.</li>
+<li>For materialized (eager) storage, call .<a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-materialize">materialize()</a> on the result</li>
+</ul>
+<p>Creates an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> that computes values on-demand from a ranges view. The view must be a random-access range that yields elements compatible with (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, float) pairs or <a href="../../api_generated/Classes/structAnalogTimeSeries_1_1TimeValuePoint.html">TimeValuePoint</a>. No intermediate data is materialized - values are computed when accessed.</p>
+<p>This enables efficient transform pipelines without intermediate allocations:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Z-score normalization without materializing intermediate results</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> base_series <span class="op">=</span> <span class="op">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> mean <span class="op">=;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> std <span class="op">=</span> <span class="op">;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> normalized_view <span class="op">=</span> base_series<span class="op">-&gt;</span>view<span class="op">()</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="bu">std::</span>views::transform<span class="op">([</span>mean<span class="op">,</span> std<span class="op">](</span><span class="kw">auto</span> tv<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> z_score <span class="op">=</span> <span class="op">(</span>tv<span class="op">.</span>value<span class="op">()</span> <span class="op">-</span> mean<span class="op">)</span> <span class="op">/</span> std<span class="op">;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> AnalogTimeSeries<span class="op">::</span>TimeValuePoint<span class="op">{</span>tv<span class="op">.</span>time_frame_index<span class="op">,</span> z_score<span class="op">};</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> normalized_series <span class="op">=</span> AnalogTimeSeries<span class="op">::</span>createFromView<span class="op">(</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>    normalized_view<span class="op">,</span> </span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    base_series<span class="op">-&gt;</span>getTimeStorage<span class="op">()</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Access computes z-score on-demand</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> value <span class="op">=</span> normalized_series<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">)).</span>value<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createview" class="level3">
+<h3 class="anchored" data-anchor-id="function-createview">function createView</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createfromstorage" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromstorage">function createFromStorage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> createFromStorage<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    AnalogDataStorageWrapper storage<span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeIndexStorage <span class="op">&gt;</span> time_storage</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> from a custom storage backend.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>storage</strong> Type-erased analog data storage wrapper</li>
+<li><strong>time_storage</strong> Shared time index storage</li>
+</ul>
+<p><strong>Return</strong>: std::shared_ptr<analogtimeseries> with the given storage backend</analogtimeseries></p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>time_storage != nullptr</li>
+<li>storage.size() == time_storage-&gt;size()</li>
+</ul>
+<p>General-purpose factory that accepts a type-erased storage wrapper and shared time index storage. Used by zero-copy backends (e.g., <a href="../../api_generated/Classes/classTensorColumnAnalogStorage.html">TensorColumnAnalogStorage</a>) that construct the wrapper externally and pass it in.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

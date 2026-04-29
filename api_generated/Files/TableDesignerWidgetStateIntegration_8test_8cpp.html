@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidgetStateIntegration.test.cpp – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#srcwhiskertoolboxtabledesignerwidgettabledesignerwidgetstateintegration.test.cpp" id="toc-srcwhiskertoolboxtabledesignerwidgettabledesignerwidgetstateintegration.test.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxtabledesignerwidgettabledesignerwidgetstateintegration.test.cpp">src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidgetStateIntegration.test.cpp</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-test_case" id="toc-function-test_case" class="nav-link" data-scroll-target="#function-test_case">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-1" id="toc-function-test_case-1" class="nav-link" data-scroll-target="#function-test_case-1">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-2" id="toc-function-test_case-2" class="nav-link" data-scroll-target="#function-test_case-2">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-3" id="toc-function-test_case-3" class="nav-link" data-scroll-target="#function-test_case-3">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-4" id="toc-function-test_case-4" class="nav-link" data-scroll-target="#function-test_case-4">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-5" id="toc-function-test_case-5" class="nav-link" data-scroll-target="#function-test_case-5">function TEST_CASE</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidgetStateIntegration.test.cpp</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="srcwhiskertoolboxtabledesignerwidgettabledesignerwidgetstateintegration.test.cpp" class="level1">
+<h1>src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidgetStateIntegration.test.cpp</h1>
+<p>Tests for bidirectional state binding between <a href="../../api_generated/Classes/classTableDesignerWidget.html">TableDesignerWidget</a> and <a href="../../api_generated/Classes/classTableDesignerState.html">TableDesignerState</a>. <a href="#detailed-description">More…</a></p>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - Basic Setup” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - UI to State propagation” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - State to UI propagation” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - Serialization Round Trip” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - Computer States” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/TableDesignerWidgetStateIntegration_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“TableDesignerWidget State Integration - <a href="../../api_generated/Files/Observer__Data_8hpp.html#enumvalue-no">No</a> Infinite Loops” , “” [TableDesignerWidget][StateIntegration])</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<p>Tests for bidirectional state binding between <a href="../../api_generated/Classes/classTableDesignerWidget.html">TableDesignerWidget</a> and <a href="../../api_generated/Classes/classTableDesignerState.html">TableDesignerState</a>.</p>
+<p>These tests verify that:</p>
+<ol type="1">
+<li>UI changes propagate to the state (UI → State)</li>
+<li>State changes (e.g., from JSON restore) update the UI (State → UI)</li>
+<li>No infinite loops occur during synchronization</li>
+<li>State serialization round-trips correctly with widget</li>
+</ol>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-test_case" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - Basic Setup"</span> <span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-1">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - UI to State propagation"</span> <span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-2">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - State to UI propagation"</span> <span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-3">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - Serialization Round Trip"</span> <span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-4">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - Computer States"</span> <span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-5">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TableDesignerWidget State Integration - No Infinite Loops"</span> <span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>TableDesignerWidget<span class="op">][</span>StateIntegration<span class="op">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TableDesignerWidget.hpp"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TableDesignerState.hpp"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TableDesignerStateData.hpp"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/matchers/catch_matchers_string.hpp&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QApplication&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QComboBox&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QPushButton&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QRadioButton&gt;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QSignalSpy&gt;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QSpinBox&gt;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to create QApplication for widget testing</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TestApp <span class="op">{</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    TestApp<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span><span class="ex">QApplication::instance</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">static</span> <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">static</span> <span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> argv<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span><span class="st">"test"</span><span class="op">};</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>            app <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span><span class="ex">QApplication</span><span class="op">&gt;(</span>argc<span class="op">,</span> <span class="kw">const_cast</span><span class="op">&lt;</span><span class="dt">char</span> <span class="op">**&gt;(</span>argv<span class="op">));</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span><span class="ex">QApplication</span><span class="op">&gt;</span> app<span class="op">;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to find child widgets by object name</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>T <span class="op">*</span> findChild<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> parent<span class="op">-&gt;</span>findChild<span class="op">&lt;</span>T <span class="op">*&gt;(</span>name<span class="op">);</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - Basic Setup"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Widget starts without state"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>widget<span class="op">.</span>getState<span class="op">()</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State can be set"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>        widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>widget<span class="op">.</span>getState<span class="op">()</span> <span class="op">==</span> state<span class="op">);</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Setting null state is rejected"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>        widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>        widget<span class="op">.</span>setState<span class="op">(</span><span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>widget<span class="op">.</span>getState<span class="op">()</span> <span class="op">==</span> state<span class="op">);</span>  <span class="co">// Should still have original state</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - UI to State propagation"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>    widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Group mode toggle updates state"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>TableDesignerState<span class="op">::</span>groupSettingsChanged<span class="op">);</span></span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Find the group mode toggle button</span></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> toggle <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QPushButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"group_mode_toggle_btn"</span><span class="op">);</span></span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>toggle <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Default should be enabled (checked)</span></span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>groupModeEnabled<span class="op">()</span> <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Toggle off</span></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>        toggle<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>        <span class="co">// State should be updated</span></span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>groupModeEnabled<span class="op">()</span> <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>spy<span class="op">.</span>count<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Capture range spinbox updates state"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>TableDesignerState<span class="op">::</span>rowSettingsChanged<span class="op">);</span></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> spinbox <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QSpinBox</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"capture_range_spinbox"</span><span class="op">);</span></span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spinbox <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>        spinbox<span class="op">-&gt;</span>setValue<span class="op">(</span><span class="dv">15000</span><span class="op">);</span></span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>captureRange<span class="op">()</span> <span class="op">==</span> <span class="dv">15000</span><span class="op">);</span></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>spy<span class="op">.</span>count<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Interval mode radio buttons update state"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>TableDesignerState<span class="op">::</span>rowSettingsChanged<span class="op">);</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> beginning_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_beginning_radio"</span><span class="op">);</span></span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> end_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_end_radio"</span><span class="op">);</span></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> itself_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_itself_radio"</span><span class="op">);</span></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>beginning_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>end_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>itself_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Select "End" mode</span></span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>        end_radio<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>intervalMode<span class="op">()</span> <span class="op">==</span> IntervalRowMode<span class="op">::</span>End<span class="op">);</span></span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Select "Itself" mode</span></span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>        spy<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>        itself_radio<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>intervalMode<span class="op">()</span> <span class="op">==</span> IntervalRowMode<span class="op">::</span>Itself<span class="op">);</span></span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Select "Beginning" mode</span></span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>        spy<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>        beginning_radio<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>intervalMode<span class="op">()</span> <span class="op">==</span> IntervalRowMode<span class="op">::</span>Beginning<span class="op">);</span></span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - State to UI propagation"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>    widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State group mode change updates UI"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> toggle <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QPushButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"group_mode_toggle_btn"</span><span class="op">);</span></span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>toggle <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Programmatically change state</span></span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setGroupModeEnabled<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>        <span class="co">// UI should reflect the change</span></span>
+<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>toggle<span class="op">-&gt;</span>isChecked<span class="op">()</span> <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State capture range change updates UI"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> spinbox <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QSpinBox</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"capture_range_spinbox"</span><span class="op">);</span></span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spinbox <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Programmatically change state</span></span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setCaptureRange<span class="op">(</span><span class="dv">20000</span><span class="op">);</span></span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Note: Direct state changes won't auto-update UI unless we call syncUIFromState</span></span>
+<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The signal connections are for when state is changed externally</span></span>
+<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State interval mode change updates UI"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> beginning_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_beginning_radio"</span><span class="op">);</span></span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> end_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_end_radio"</span><span class="op">);</span></span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> itself_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_itself_radio"</span><span class="op">);</span></span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>beginning_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>end_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>itself_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Programmatically change state - this should trigger the signal handler</span></span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a>        <span class="co">// which will update the UI if not in _updating_from_state mode</span></span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - Serialization Round Trip"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a>    widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State survives JSON round-trip"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set up some state via UI</span></span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> toggle <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QPushButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"group_mode_toggle_btn"</span><span class="op">);</span></span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> spinbox <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QSpinBox</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"capture_range_spinbox"</span><span class="op">);</span></span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> end_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"interval_end_radio"</span><span class="op">);</span></span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>toggle <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>spinbox <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>end_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>        toggle<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a>        spinbox<span class="op">-&gt;</span>setValue<span class="op">(</span><span class="dv">12500</span><span class="op">);</span></span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>        end_radio<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Serialize</span></span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string json <span class="op">=</span> state<span class="op">-&gt;</span>toJson<span class="op">();</span></span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(!</span>json<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create new state and widget</span></span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> new_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>fromJson<span class="op">(</span>json<span class="op">));</span></span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify state was restored</span></span>
+<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>groupModeEnabled<span class="op">()</span> <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>captureRange<span class="op">()</span> <span class="op">==</span> <span class="dv">12500</span><span class="op">);</span></span>
+<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>intervalMode<span class="op">()</span> <span class="op">==</span> IntervalRowMode<span class="op">::</span>End<span class="op">);</span></span>
+<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create new widget with restored state</span></span>
+<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a>        TableDesignerWidget new_widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a>        new_widget<span class="op">.</span>setState<span class="op">(</span>new_state<span class="op">);</span></span>
+<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify UI reflects restored state</span></span>
+<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> new_toggle <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QPushButton</span><span class="op">&gt;(&amp;</span>new_widget<span class="op">,</span> <span class="st">"group_mode_toggle_btn"</span><span class="op">);</span></span>
+<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> new_spinbox <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QSpinBox</span><span class="op">&gt;(&amp;</span>new_widget<span class="op">,</span> <span class="st">"capture_range_spinbox"</span><span class="op">);</span></span>
+<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> new_end_radio <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QRadioButton</span><span class="op">&gt;(&amp;</span>new_widget<span class="op">,</span> <span class="st">"interval_end_radio"</span><span class="op">);</span></span>
+<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>new_toggle <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>new_spinbox <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>new_end_radio <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_toggle<span class="op">-&gt;</span>isChecked<span class="op">()</span> <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_spinbox<span class="op">-&gt;</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">12500</span><span class="op">);</span></span>
+<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_end_radio<span class="op">-&gt;</span>isChecked<span class="op">()</span> <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - Computer States"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a>    widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Computer state is preserved in state object"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Manually set a computer state in the state object</span></span>
+<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>        ComputerStateEntry entry<span class="op">;</span></span>
+<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a>        entry<span class="op">.</span>enabled <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a>        entry<span class="op">.</span>column_name <span class="op">=</span> <span class="st">"CustomName"</span><span class="op">;</span></span>
+<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setComputerState<span class="op">(</span><span class="st">"analog:signal||Mean"</span><span class="op">,</span> entry<span class="op">);</span></span>
+<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>isComputerEnabled<span class="op">(</span><span class="st">"analog:signal||Mean"</span><span class="op">)</span> <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>state<span class="op">-&gt;</span>computerColumnName<span class="op">(</span><span class="st">"analog:signal||Mean"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"CustomName"</span><span class="op">);</span></span>
+<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Computer states survive serialization"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a>        ComputerStateEntry entry<span class="op">;</span></span>
+<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a>        entry<span class="op">.</span>enabled <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a>        entry<span class="op">.</span>column_name <span class="op">=</span> <span class="st">"MyColumn"</span><span class="op">;</span></span>
+<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setComputerState<span class="op">(</span><span class="st">"events:spikes||Count"</span><span class="op">,</span> entry<span class="op">);</span></span>
+<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string json <span class="op">=</span> state<span class="op">-&gt;</span>toJson<span class="op">();</span></span>
+<span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> new_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>fromJson<span class="op">(</span>json<span class="op">));</span></span>
+<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>isComputerEnabled<span class="op">(</span><span class="st">"events:spikes||Count"</span><span class="op">)</span> <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>new_state<span class="op">-&gt;</span>computerColumnName<span class="op">(</span><span class="st">"events:spikes||Count"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"MyColumn"</span><span class="op">);</span></span>
+<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"TableDesignerWidget State Integration - No Infinite Loops"</span><span class="op">,</span> <span class="st">"[TableDesignerWidget][StateIntegration]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a>    TestApp test_app<span class="op">;</span></span>
+<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TableDesignerState<span class="op">&gt;();</span></span>
+<span id="cb7-269"><a href="#cb7-269" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-270"><a href="#cb7-270" aria-hidden="true" tabindex="-1"></a>    TableDesignerWidget widget<span class="op">(</span>data_manager<span class="op">);</span></span>
+<span id="cb7-271"><a href="#cb7-271" aria-hidden="true" tabindex="-1"></a>    widget<span class="op">.</span>setState<span class="op">(</span>state<span class="op">);</span></span>
+<span id="cb7-272"><a href="#cb7-272" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-273"><a href="#cb7-273" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"UI change does not cause infinite loop"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-274"><a href="#cb7-274" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>TableDesignerState<span class="op">::</span>groupSettingsChanged<span class="op">);</span></span>
+<span id="cb7-275"><a href="#cb7-275" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-276"><a href="#cb7-276" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> toggle <span class="op">=</span> findChild<span class="op">&lt;</span><span class="ex">QPushButton</span><span class="op">&gt;(&amp;</span>widget<span class="op">,</span> <span class="st">"group_mode_toggle_btn"</span><span class="op">);</span></span>
+<span id="cb7-277"><a href="#cb7-277" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>toggle <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb7-278"><a href="#cb7-278" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-279"><a href="#cb7-279" aria-hidden="true" tabindex="-1"></a>        <span class="co">// This should not cause infinite recursion</span></span>
+<span id="cb7-280"><a href="#cb7-280" aria-hidden="true" tabindex="-1"></a>        toggle<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-281"><a href="#cb7-281" aria-hidden="true" tabindex="-1"></a>        toggle<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb7-282"><a href="#cb7-282" aria-hidden="true" tabindex="-1"></a>        toggle<span class="op">-&gt;</span>setChecked<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb7-283"><a href="#cb7-283" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-284"><a href="#cb7-284" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Should have 3 signals (or less if same-value filtering)</span></span>
+<span id="cb7-285"><a href="#cb7-285" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>spy<span class="op">.</span>count<span class="op">()</span> <span class="op">&lt;=</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb7-286"><a href="#cb7-286" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-288"><a href="#cb7-288" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"State change does not cause infinite loop"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-289"><a href="#cb7-289" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>TableDesignerState<span class="op">::</span>rowSettingsChanged<span class="op">);</span></span>
+<span id="cb7-290"><a href="#cb7-290" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-291"><a href="#cb7-291" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Rapidly change state - should not cause infinite recursion</span></span>
+<span id="cb7-292"><a href="#cb7-292" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-293"><a href="#cb7-293" aria-hidden="true" tabindex="-1"></a>            state<span class="op">-&gt;</span>setCaptureRange<span class="op">(</span><span class="dv">10000</span> <span class="op">+</span> i <span class="op">*</span> <span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb7-294"><a href="#cb7-294" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-295"><a href="#cb7-295" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-296"><a href="#cb7-296" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Should have 10 signals (one per unique change)</span></span>
+<span id="cb7-297"><a href="#cb7-297" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>spy<span class="op">.</span>count<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb7-298"><a href="#cb7-298" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-299"><a href="#cb7-299" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

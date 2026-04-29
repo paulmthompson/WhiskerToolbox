@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Scatter Plot Widget Roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#scatterplotwidget-development-roadmap" id="toc-scatterplotwidget-development-roadmap" class="nav-link active" data-scroll-target="#scatterplotwidget-development-roadmap">ScatterPlotWidget Development Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#phase-7-external-feature-coloring-widget-integration" id="toc-phase-7-external-feature-coloring-widget-integration" class="nav-link" data-scroll-target="#phase-7-external-feature-coloring-widget-integration">Phase 7: External Feature Coloring (Widget Integration)</a>
+  <ul class="collapse">
+  <li><a href="#completed-infrastructure" id="toc-completed-infrastructure" class="nav-link" data-scroll-target="#completed-infrastructure">Completed Infrastructure</a></li>
+  <li><a href="#rendering-pipeline" id="toc-rendering-pipeline" class="nav-link" data-scroll-target="#rendering-pipeline">Rendering Pipeline</a></li>
+  <li><a href="#remaining-implementation-steps" id="toc-remaining-implementation-steps" class="nav-link" data-scroll-target="#remaining-implementation-steps">Remaining Implementation Steps</a></li>
+  <li><a href="#design-decisions" id="toc-design-decisions" class="nav-link" data-scroll-target="#design-decisions">Design Decisions</a></li>
+  </ul></li>
+  <li><a href="#other-remaining-work" id="toc-other-remaining-work" class="nav-link" data-scroll-target="#other-remaining-work">Other Remaining Work</a></li>
+  <li><a href="#phase-8-svg-export-complete" id="toc-phase-8-svg-export-complete" class="nav-link" data-scroll-target="#phase-8-svg-export-complete">Phase 8: SVG Export — <strong>Complete</strong></a>
+  <ul class="collapse">
+  <li><a href="#architecture-assessment" id="toc-architecture-assessment" class="nav-link" data-scroll-target="#architecture-assessment">Architecture Assessment</a></li>
+  <li><a href="#step-8.1-add-background_color-to-scatterplotstatedata-complete" id="toc-step-8.1-add-background_color-to-scatterplotstatedata-complete" class="nav-link" data-scroll-target="#step-8.1-add-background_color-to-scatterplotstatedata-complete">Step 8.1: Add <code>background_color</code> to <code>ScatterPlotStateData</code> — <strong>Complete</strong></a></li>
+  <li><a href="#step-8.2-add-exporttosvg-to-scatterplotopenglwidget-complete" id="toc-step-8.2-add-exporttosvg-to-scatterplotopenglwidget-complete" class="nav-link" data-scroll-target="#step-8.2-add-exporttosvg-to-scatterplotopenglwidget-complete">Step 8.2: Add <code>exportToSVG()</code> to <code>ScatterPlotOpenGLWidget</code> — <strong>Complete</strong></a></li>
+  <li><a href="#step-8.3-add-exportsvgrequested-signal-to-scatterplotpropertieswidget-complete" id="toc-step-8.3-add-exportsvgrequested-signal-to-scatterplotpropertieswidget-complete" class="nav-link" data-scroll-target="#step-8.3-add-exportsvgrequested-signal-to-scatterplotpropertieswidget-complete">Step 8.3: Add <code>exportSVGRequested</code> signal to <code>ScatterPlotPropertiesWidget</code> — <strong>Complete</strong></a></li>
+  <li><a href="#step-8.4-add-handleexportsvg-to-scatterplotwidget-complete" id="toc-step-8.4-add-handleexportsvg-to-scatterplotwidget-complete" class="nav-link" data-scroll-target="#step-8.4-add-handleexportsvg-to-scatterplotwidget-complete">Step 8.4: Add <code>handleExportSVG()</code> to <code>ScatterPlotWidget</code> — <strong>Complete</strong></a></li>
+  <li><a href="#step-8.5-wire-signals-in-scatterplotwidgetregistration-complete" id="toc-step-8.5-wire-signals-in-scatterplotwidgetregistration-complete" class="nav-link" data-scroll-target="#step-8.5-wire-signals-in-scatterplotwidgetregistration-complete">Step 8.5: Wire signals in <code>ScatterPlotWidgetRegistration</code> — <strong>Complete</strong></a></li>
+  <li><a href="#step-8.6-manual-validation-complete" id="toc-step-8.6-manual-validation-complete" class="nav-link" data-scroll-target="#step-8.6-manual-validation-complete">Step 8.6: Manual validation — <strong>Complete</strong></a></li>
+  <li><a href="#design-notes" id="toc-design-notes" class="nav-link" data-scroll-target="#design-notes">Design Notes</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Scatter Plot Widget Roadmap</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="scatterplotwidget-development-roadmap" class="level1">
+<h1>ScatterPlotWidget Development Roadmap</h1>
+<p>This document tracks remaining development tasks for the Scatter Plot Widget. For documentation of completed features and current architecture, see the <a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html">main developer documentation</a>.</p>
+<p><strong>Not yet implemented</strong>: Stale key handling (Phase 6.3).</p>
+<hr>
+<section id="phase-7-external-feature-coloring-widget-integration" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-external-feature-coloring-widget-integration">Phase 7: External Feature Coloring (Widget Integration)</h2>
+<p><strong>Status</strong>: Complete. All widget integration steps finished.</p>
+<p><strong>Goal</strong>: Color scatter points by an external data source (e.g., velocity colored by acceleration, points colored by whether they fall inside a DigitalIntervalSeries interval).</p>
+<section id="completed-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="completed-infrastructure">Completed Infrastructure</h3>
+<p>The shared <code>CorePlotting/FeatureColor/</code> library is fully implemented and tested (24 test cases, 74 assertions). See the <a href="../../../../developer/coreplotting/feature_color.html">FeatureColor module docs</a> for the full API reference. Key components:</p>
+<ul>
+<li><code>FeatureColorSourceDescriptor</code> — serializable pointer to a DataManager key + optional column</li>
+<li><code>resolveFeatureColors()</code> — per-point float lookup via ATS, TensorData (TFI hash join / ordinal positional), or DIS containment</li>
+<li><code>checkFeatureColorCompatibility()</code> — validates key existence, column existence, row-type compatibility</li>
+<li><code>applyFeatureColorsToScene()</code> — mutates <code>RenderableGlyphBatch::colors[]</code> via <code>ContinuousMapping</code> (colormap) or <code>ThresholdMapping</code> (binary)</li>
+<li><code>computeEffectiveColorRange()</code> — Auto/Manual/Symmetric vmin/vmax from resolved values</li>
+<li><code>PlotSourceRowType</code> — shared enum (replaces the earlier <code>ScatterSourceRowType</code>)</li>
+</ul>
+</section>
+<section id="rendering-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="rendering-pipeline">Rendering Pipeline</h3>
+<p>Feature coloring is a <strong>post-<code>buildScatterPoints()</code> color override</strong> inserted before group colors:</p>
+<pre><code>buildScatterPoints()          → ScatterPointData with time_indices
+    → addGlyphs()             → uniform color from GlyphStyleData
+    → applyFeatureColorsToScene()  → per-point color override (NEW)
+    → applyGroupColorsToScene()    → group colors override feature colors
+    → uploadScene()</code></pre>
+<p>No changes needed to <code>SceneBuilder</code>, <code>GlyphRenderer</code>, or shaders. Color priority (highest wins): navigate highlight &gt; selected &gt; group &gt; <strong>feature</strong> &gt; default glyph style.</p>
+</section>
+<section id="remaining-implementation-steps" class="level3">
+<h3 class="anchored" data-anchor-id="remaining-implementation-steps">Remaining Implementation Steps</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 27%">
+<col style="width: 25%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Component</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>7.1</strong></td>
+<td><code>ScatterColorConfigData</code></td>
+<td><code>ScatterPlotWidget/Core/</code></td>
+<td>✅ Done</td>
+</tr>
+<tr class="even">
+<td><strong>7.2</strong></td>
+<td>Properties panel UI</td>
+<td><code>ScatterPlotWidget/UI/</code></td>
+<td>✅ Done</td>
+</tr>
+<tr class="odd">
+<td><strong>7.3</strong></td>
+<td>Rendering integration</td>
+<td><code>ScatterPlotWidget/Rendering/</code></td>
+<td>✅ Done</td>
+</tr>
+<tr class="even">
+<td><strong>7.4</strong></td>
+<td>Tooltip extension</td>
+<td><code>ScatterPlotWidget/Rendering/</code></td>
+<td>✅ Done</td>
+</tr>
+<tr class="odd">
+<td><strong>7.5</strong></td>
+<td>Unit tests</td>
+<td><code>tests/ScatterPlotWidget/</code></td>
+<td>✅ Done</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<section id="scattercolorconfigdata" class="level4">
+<h4 class="anchored" data-anchor-id="scattercolorconfigdata">7.1 <code>ScatterColorConfigData</code></h4>
+<p>Create <code>ScatterPlotWidget/Core/ScatterColorConfig.hpp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ScatterColorConfigData <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string color_mode <span class="op">=</span> <span class="st">"fixed"</span><span class="op">;</span>              <span class="co">///&lt; "fixed" or "by_feature"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>FeatureColorSourceDescriptor<span class="op">&gt;</span> color_source<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string mapping_mode <span class="op">=</span> <span class="st">"continuous"</span><span class="op">;</span>        <span class="co">///&lt; "continuous" or "threshold"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Continuous mode</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string colormap_preset <span class="op">=</span> <span class="st">"viridis"</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    ColorRangeConfig color_range<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Threshold mode</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> threshold <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string above_color <span class="op">=</span> <span class="st">"#FF4444"</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string below_color <span class="op">=</span> <span class="st">"#3388FF"</span><span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> above_alpha <span class="op">=</span> <span class="fl">0.9</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> below_alpha <span class="op">=</span> <span class="fl">0.9</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add <code>ScatterColorConfigData color_config</code> to <code>ScatterPlotStateData</code>.</p>
+<p>Add to <code>ScatterPlotState</code>: <code>colorConfigChanged()</code> signal, <code>colorConfig()</code> getter, <code>setColorConfig()</code> setter. Connect the signal to <code>_scene_dirty = true</code> in <code>ScatterPlotOpenGLWidget::setState()</code>.</p>
+</section>
+<section id="properties-panel-point-coloring-section" class="level4">
+<h4 class="anchored" data-anchor-id="properties-panel-point-coloring-section">7.2 Properties Panel: “Point Coloring” Section</h4>
+<p>Add a collapsible <code>Section</code> to <code>ScatterPlotPropertiesWidget</code> between “Glyph Options” and “Selection Mode”:</p>
+<pre><code>┌─ Point Coloring ─────────────────────────────┐
+│  Color Mode:  [ Fixed ▾ ]                    │  ← "Fixed" / "By Feature"
+│                                               │
+│  ── (visible only when "By Feature") ──       │
+│  Data Key:    [ velocity ▾ ]                  │  ← DM keys (ATS, TensorData, DIS)
+│  Column:      [ col_0 ▾ ]                     │  ← TensorData only; hidden for ATS/DIS
+│  Status:      ✓ Compatible (ATS→ATS join)     │  ← checkFeatureColorCompatibility() result
+│                                               │
+│  Mapping:     [ Continuous ▾ ]                │  ← "Continuous" / "Threshold"
+│                                               │
+│  ── Continuous mode ─────────────────────     │
+│  [ColormapControls widget]                    │  ← Reuse existing ColormapControls
+│                                               │
+│  ── Threshold mode ──────────────────────     │
+│  Threshold:   [ 0.500    ]                    │
+│  Above color: [■ #FF4444 ]                    │  ← QColorDialog
+│  Below color: [■ #3388FF ]                    │  ← QColorDialog
+└───────────────────────────────────────────────┘</code></pre>
+<p><strong>Behaviors</strong>:</p>
+<ul>
+<li>Data Key combo lists all DM keys of type ATS, TensorData, or DIS</li>
+<li>Column combo shown only for TensorData keys; hidden otherwise</li>
+<li>Selecting a <code>DigitalIntervalSeries</code> key auto-switches to Threshold mode (threshold=0.5)</li>
+<li>Compatibility label updates dynamically on key/column change</li>
+</ul>
+</section>
+<section id="rendering-integration" class="level4">
+<h4 class="anchored" data-anchor-id="rendering-integration">7.3 Rendering Integration</h4>
+<p>In <code>ScatterPlotOpenGLWidget::rebuildScene()</code>, after <code>builder.build()</code> and before <code>applyGroupColorsToScene()</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cc <span class="op">=</span> _state<span class="op">-&gt;</span>colorConfig<span class="op">();</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>cc<span class="op">.</span>color_mode <span class="op">==</span> <span class="st">"by_feature"</span> <span class="op">&amp;&amp;</span> cc<span class="op">.</span>color_source<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> feature_values <span class="op">=</span> resolveFeatureColors<span class="op">(</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>_data_manager<span class="op">,</span> <span class="op">*</span>cc<span class="op">.</span>color_source<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        _scatter_data<span class="op">.</span>time_indices<span class="op">,</span> _scatter_data<span class="op">.</span>time_frame<span class="op">);</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    FeatureColorMapping mapping<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>cc<span class="op">.</span>mapping_mode <span class="op">==</span> <span class="st">"threshold"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        mapping <span class="op">=</span> ThresholdMapping<span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>cc<span class="op">.</span>threshold<span class="op">),</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            hexColorToVec4<span class="op">(</span>cc<span class="op">.</span>above_color<span class="op">,</span> cc<span class="op">.</span>above_alpha<span class="op">),</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            hexColorToVec4<span class="op">(</span>cc<span class="op">.</span>below_color<span class="op">,</span> cc<span class="op">.</span>below_alpha<span class="op">)};</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> range <span class="op">=</span> computeEffectiveColorRange<span class="op">(</span>feature_values<span class="op">,</span> cc<span class="op">.</span>color_range<span class="op">);</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>range<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> preset <span class="op">=</span> colormapPresetFromString<span class="op">(</span>cc<span class="op">.</span>colormap_preset<span class="op">);</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>            mapping <span class="op">=</span> ContinuousMapping<span class="op">{</span>preset<span class="op">,</span> range<span class="op">-&gt;</span>first<span class="op">,</span> range<span class="op">-&gt;</span>second<span class="op">};</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    applyFeatureColorsToScene<span class="op">(*</span>_scene<span class="op">,</span> feature_values<span class="op">,</span> mapping<span class="op">,</span> point_count<span class="op">);</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>applyGroupColorsToScene<span class="op">();</span>  <span class="co">// Group colors override feature colors</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cache <code>feature_values</code> as a member for tooltip access (step 7.4).</p>
+</section>
+<section id="tooltip-extension" class="level4">
+<h4 class="anchored" data-anchor-id="tooltip-extension">7.4 Tooltip Extension</h4>
+<p>When feature coloring is active, append the feature value to the hover tooltip:</p>
+<pre><code>X: 1.234  Y: 5.678
+TFI: 42
+Color: 0.891 (velocity)           ← continuous mode</code></pre>
+<pre><code>X: 1.234  Y: 5.678
+TFI: 42
+Color: 25.3 (velocity) [above]    ← threshold mode</code></pre>
+<p>Extend the <code>PlotTooltipManager</code> text provider to query the cached <code>feature_values</code> vector.</p>
+<hr>
+</section>
+</section>
+<section id="design-decisions" class="level3">
+<h3 class="anchored" data-anchor-id="design-decisions">Design Decisions</h3>
+<ol type="1">
+<li><p><strong>Post-build color override</strong>: Feature colors mutate <code>RenderableGlyphBatch::colors[]</code> after <code>addGlyphs()</code>, matching the existing <code>applyGroupColorsToScene()</code> pattern. No <code>SceneBuilder</code> or <code>GlyphRenderer</code> changes needed.</p></li>
+<li><p><strong>Threshold mode as generalized binary coloring</strong>: A single threshold mapping handles DIS (0/1 at threshold=0.5), binary classifier output, and continuous cutoffs (e.g., “velocity &gt; 20”). It is a peer of continuous colormap mode, not a special case.</p></li>
+<li><p><strong>Shared <code>CorePlotting/FeatureColor/</code> library</strong>: Resolution and rendering logic is shared with <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget</a> (Phase 5) and <a href="../../../../developer/ui/Plots/LinePlotWidget/roadmap.html">LinePlotWidget</a> (Phase 3). Each widget provides its own <code>time_indices</code> and integrates the color config into its <code>EditorState</code>.</p></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="other-remaining-work" class="level2">
+<h2 class="anchored" data-anchor-id="other-remaining-work">Other Remaining Work</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Phase 6.3</strong></td>
+<td>Stale key handling for color source (clear <code>color_source</code> when DM key is deleted)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="phase-8-svg-export-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-8-svg-export-complete">Phase 8: SVG Export — <strong>Complete</strong></h2>
+<p><strong>Status</strong>: <strong>Complete.</strong> End-to-end export (state background color, <code>exportToSVG()</code>, properties button, <code>handleExportSVG()</code>, registration wiring) is implemented; manual validation in the running app has been performed. Uses <code>PlottingSVG</code> (same stack as <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> and <a href="../../DataViewer_Widget/index.qmd">DataViewer_Widget</a>).</p>
+<p><strong>Goal</strong>: Export the current scatter plot view to SVG for publication-quality figures.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 48%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Description</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>8.1</td>
+<td><code>background_color</code> in state + OpenGL clear from state</td>
+<td><strong>Done</strong></td>
+</tr>
+<tr class="even">
+<td>8.2</td>
+<td><code>exportToSVG()</code> on <code>ScatterPlotOpenGLWidget</code></td>
+<td><strong>Done</strong></td>
+</tr>
+<tr class="odd">
+<td>8.3</td>
+<td>Export button + <code>exportSVGRequested</code> in properties</td>
+<td><strong>Done</strong></td>
+</tr>
+<tr class="even">
+<td>8.4</td>
+<td><code>handleExportSVG()</code> on <code>ScatterPlotWidget</code></td>
+<td><strong>Done</strong></td>
+</tr>
+<tr class="odd">
+<td>8.5</td>
+<td>Wire signals in <code>ScatterPlotWidgetRegistration</code></td>
+<td><strong>Done</strong></td>
+</tr>
+<tr class="even">
+<td>8.6</td>
+<td>Manual validation</td>
+<td><strong>Done</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verified:</strong> Project build; scatter plot <code>ctest</code> targets; interactive export exercised in the app (<strong>8.6</strong> checklist below).</p>
+<section id="architecture-assessment" class="level3">
+<h3 class="anchored" data-anchor-id="architecture-assessment">Architecture Assessment</h3>
+<p>The ScatterPlotWidget rendering pipeline is <strong>the most compatible</strong> of all remaining widgets:</p>
+<ul>
+<li>It already caches a <code>RenderableScene</code> as <code>_scene</code> (<code>std::unique_ptr&lt;CorePlotting::RenderableScene&gt;</code>)</li>
+<li>The scene contains <code>RenderableGlyphBatch</code> entries (circles, squares, crosses for scatter points) and optionally a <code>RenderablePolyLineBatch</code> (reference line). Both are fully supported by <code>SVGGlyphRenderer</code> and <code>SVGPolyLineRenderer</code>.</li>
+<li>Feature colors and group colors are pre-applied to <code>RenderableGlyphBatch::colors[]</code> during <code>rebuildScene()</code>, so the SVG renderer sees the final per-point colors with no additional work.</li>
+</ul>
+<p><strong>Background color</strong>: <code>ScatterPlotStateData</code> includes <code>background_color</code> (default <code>#1A1A1A</code>, serializable). <code>ScatterPlotOpenGLWidget</code> uses <code>updateBackgroundColor()</code> (<code>CoreUtilities::hexToRGB</code>) in <code>initializeGL()</code> and <code>paintGL()</code>, and listens for <code>backgroundColorChanged()</code>. A properties-panel color control (like EventPlot) is optional and not required for SVG export.</p>
+</section>
+<section id="step-8.1-add-background_color-to-scatterplotstatedata-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.1-add-background_color-to-scatterplotstatedata-complete">Step 8.1: Add <code>background_color</code> to <code>ScatterPlotStateData</code> — <strong>Complete</strong></h3>
+<p><strong>Implemented in:</strong></p>
+<ul>
+<li><code>src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.hpp</code> — on <code>ScatterPlotStateData</code>: <code>std::string background_color = "#1A1A1A"</code>; on <code>ScatterPlotState</code>: <code>getBackgroundColor()</code> / <code>setBackgroundColor()</code> and <code>backgroundColorChanged(QString)</code> signal</li>
+<li><code>src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.cpp</code> — setter implementation</li>
+<li><code>src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp</code> — <code>updateBackgroundColor()</code>, called from <code>initializeGL()</code> and <code>paintGL()</code>; connection to <code>backgroundColorChanged</code> in <code>setState()</code></li>
+</ul>
+<p><strong>Verify:</strong> Project build; scatter plot tests pass.</p>
+</section>
+<section id="step-8.2-add-exporttosvg-to-scatterplotopenglwidget-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.2-add-exporttosvg-to-scatterplotopenglwidget-complete">Step 8.2: Add <code>exportToSVG()</code> to <code>ScatterPlotOpenGLWidget</code> — <strong>Complete</strong></h3>
+<p>Follows the <a href="../../PlottingSVG/roadmap.md">EventPlotOpenGLWidget pattern</a>. The scatter plot caches <code>_scene</code> as <code>std::unique_ptr&lt;RenderableScene&gt;</code>; live view/projection matrices are copied onto the scene before export (the OpenGL path passes matrices into <code>SceneRenderer::render()</code>, so the CPU scene would otherwise keep identity defaults).</p>
+<p><strong>Declaration:</strong> <code>[[nodiscard]] QString exportToSVG();</code> (non-<code>const</code> — mutates scene matrices for export).</p>
+<p><strong>Implementation (reference):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QString</span> ScatterPlotOpenGLWidget<span class="op">::</span>exportToSVG<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_scene<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_scene<span class="op">-&gt;</span>glyph_batches<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> _scene<span class="op">-&gt;</span>poly_line_batches<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">-&gt;</span>rectangle_batches<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    _scene<span class="op">-&gt;</span>view_matrix <span class="op">=</span> _view_matrix<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    _scene<span class="op">-&gt;</span>projection_matrix <span class="op">=</span> _projection_matrix<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    PlottingSVG<span class="op">::</span>SVGSceneRenderer renderer<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setScene<span class="op">(*</span>_scene<span class="op">);</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setCanvasSize<span class="op">(</span>_widget_width<span class="op">,</span> _widget_height<span class="op">);</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        renderer<span class="op">.</span>setBackgroundColor<span class="op">(</span>_state<span class="op">-&gt;</span>getBackgroundColor<span class="op">().</span>toStdString<span class="op">());</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>renderer<span class="op">.</span>render<span class="op">());</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Implemented in:</strong> - <code>Rendering/ScatterPlotOpenGLWidget.hpp</code> / <code>.cpp</code> — <code>exportToSVG()</code>, <code>#include &lt;QString&gt;</code>, <code>PlottingSVG/SVGSceneRenderer.hpp</code> - <code>CMakeLists.txt</code> — <code>target_link_libraries(ScatterPlotWidget PRIVATE PlottingSVG)</code></p>
+<p><strong>Verify:</strong> Project build; scatter plot tests pass.</p>
+</section>
+<section id="step-8.3-add-exportsvgrequested-signal-to-scatterplotpropertieswidget-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.3-add-exportsvgrequested-signal-to-scatterplotpropertieswidget-complete">Step 8.3: Add <code>exportSVGRequested</code> signal to <code>ScatterPlotPropertiesWidget</code> — <strong>Complete</strong></h3>
+<p>Collapsible <strong>Export</strong> section with <strong>Export SVG…</strong> button (<code>QSizePolicy::Expanding</code> width), inserted before the bottom spacer; <code>clicked</code> connected to <code>exportSVGRequested()</code>.</p>
+<p><strong>Implemented in:</strong> <code>UI/ScatterPlotPropertiesWidget.hpp</code> (signal + <code>_createExportUI()</code>), <code>UI/ScatterPlotPropertiesWidget.cpp</code>.</p>
+<p><strong>Verify:</strong> Project build; button visible in properties; scatter plot tests pass.</p>
+</section>
+<section id="step-8.4-add-handleexportsvg-to-scatterplotwidget-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.4-add-handleexportsvg-to-scatterplotwidget-complete">Step 8.4: Add <code>handleExportSVG()</code> to <code>ScatterPlotWidget</code> — <strong>Complete</strong></h3>
+<p>Same pattern as <a href="../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp">EventPlotWidget::handleExportSVG()</a>: <code>AppFileDialog::getSaveFileName</code> (id <code>export_scatter_plot_svg</code>), <code>_opengl_widget-&gt;exportToSVG()</code>, <code>QMessageBox</code> on empty scene / I/O failure / success.</p>
+<p><strong>Implemented in:</strong> - <code>UI/ScatterPlotWidget.hpp</code> — <code>public slots: void handleExportSVG();</code> - <code>UI/ScatterPlotWidget.cpp</code> — implementation; includes <code>StateManagement/AppFileDialog.hpp</code>, <code>QFile</code>, <code>QMessageBox</code>, <code>QTextStream</code> - <code>CMakeLists.txt</code> — <code>target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::StateManagement)</code></p>
+<p><strong>Verify:</strong> Project build; scatter plot tests pass.</p>
+</section>
+<section id="step-8.5-wire-signals-in-scatterplotwidgetregistration-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.5-wire-signals-in-scatterplotwidgetregistration-complete">Step 8.5: Wire signals in <code>ScatterPlotWidgetRegistration</code> — <strong>Complete</strong></h3>
+<p>In <code>create_editor_custom</code>, after <code>props-&gt;setPlotWidget(view)</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QObject::connect</span><span class="op">(</span>props<span class="op">,</span> <span class="op">&amp;</span>ScatterPlotPropertiesWidget<span class="op">::</span>exportSVGRequested<span class="op">,</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                 view<span class="op">,</span> <span class="op">&amp;</span>ScatterPlotWidget<span class="op">::</span>handleExportSVG<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Implemented in:</strong> <code>ScatterPlotWidgetRegistration.cpp</code>. Also removed an unused <code>registry</code> capture from the <code>create_view</code> lambda (was triggering <code>-Wunused-lambda-capture</code>).</p>
+<p><strong>Verify:</strong> Project build; scatter plot tests pass; in the app, <strong>Export SVG…</strong> opens the save dialog and produces SVG when the plot has geometry.</p>
+</section>
+<section id="step-8.6-manual-validation-complete" class="level3">
+<h3 class="anchored" data-anchor-id="step-8.6-manual-validation-complete">Step 8.6: Manual validation — <strong>Complete</strong></h3>
+<p>Checklist used for sign-off (spot-check as needed for regressions):</p>
+<ol type="1">
+<li>Load a dataset with scatter-compatible data (e.g., TensorData or paired AnalogTimeSeries)</li>
+<li>Open a ScatterPlotWidget, configure X/Y data sources</li>
+<li>Test with:
+<ul>
+<li>Default uniform glyph coloring (circles)</li>
+<li>Feature coloring (continuous colormap mode)</li>
+<li>Feature coloring (threshold mode)</li>
+<li>Group coloring (color-by-group)</li>
+<li>Reference line enabled</li>
+<li>Point selection (polygon selection or single-click)</li>
+</ul></li>
+<li>Click “Export SVG” in the properties panel</li>
+<li>Open the resulting SVG in a web browser and/or Inkscape</li>
+<li>Verify:
+<ul>
+<li>Glyph positions match on-screen points</li>
+<li>Per-point colors (feature/group) are correct</li>
+<li>Selected points have highlight color</li>
+<li>Reference line rendered as <code>&lt;polyline&gt;</code> (if enabled)</li>
+<li>Background color is correct</li>
+<li>Zoom/pan state is reflected</li>
+</ul></li>
+</ol>
+</section>
+<section id="design-notes" class="level3">
+<h3 class="anchored" data-anchor-id="design-notes">Design Notes</h3>
+<ul>
+<li><strong>No PlottingSVG extensions needed</strong>: <code>RenderableGlyphBatch</code> (circles, squares, crosses, ticks) and <code>RenderablePolyLineBatch</code> (reference line) are both fully supported.</li>
+<li><strong>Selection highlights included</strong>: Selected and navigated-highlight glyphs are separate <code>GlyphBatch</code> entries in the scene with their own colors/sizes, so they export automatically.</li>
+<li><strong>Polygon selection overlay NOT exported</strong>: The <code>PolygonInteractionController</code> preview is rendered via <code>PreviewRenderer</code> (not part of the <code>RenderableScene</code>), so the in-progress polygon outline will not appear in the SVG. This is desirable — the polygon is transient interaction state, not a data visualization element.</li>
+</ul>
+<hr>
+</section>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html">ScatterPlotWidget Documentation</a> — Full architecture and feature documentation</li>
+<li><a href="../../../../developer/coreplotting/feature_color.html">FeatureColor Module Docs</a> — Shared library API reference</li>
+<li><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> — Shared architecture, axis types, DataManager integration</li>
+<li><a href="../../../../developer/ui/Plots/LinePlotWidget/roadmap.html">LinePlotWidget Roadmap</a> — Feature coloring (Phase 3)</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlotWidget Roadmap</a> — Feature coloring/sorting (Phase 5)</li>
+<li><a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">HeatmapWidget Roadmap</a> — Colormap infrastructure (Phase 2)</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

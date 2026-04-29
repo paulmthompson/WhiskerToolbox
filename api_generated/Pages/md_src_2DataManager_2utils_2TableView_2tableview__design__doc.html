@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>tableview_design_doc – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tableview_design_doc" id="toc-tableview_design_doc" class="nav-link active" data-scroll-target="#tableview_design_doc">tableview_design_doc</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">tableview_design_doc</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="tableview_design_doc" class="level1">
+<h1>tableview_design_doc</h1>
+<p>Design Document: The <a href="../../api_generated/Classes/classTableView.html">TableView</a> System Version: 1.0 Date: July 9, 2025 Author: Gemini</p>
+<ol type="1">
+<li>Introduction &amp; Goals This document outlines the design for a flexible and high-performance <a href="../../api_generated/Classes/classTableView.html">TableView</a> system for data analysis in C++. The primary goal is to provide a unified, expressive interface for creating tabular views of heterogeneous, time-series data (e.g., AnalogData, <a href="../../api_generated/Classes/classPointData.html">PointData</a>, Intervals) for tasks such as serialization (CSV), plotting, and input to machine learning libraries.</li>
+</ol>
+<p>The design prioritizes the following key principles:</p>
+<p>Efficiency: Avoids unnecessary computation and memory allocation through lazy, batch-oriented evaluation. Expensive operations like time-to-index conversion are performed once and cached.</p>
+<p>Flexibility: Allows columns to be defined from raw data, lagged/leaded data, complex reductions (e.g., mean over an interval), or transformations of other columns.</p>
+<p>Extensibility: New data types and computations can be integrated without modifying the core <a href="../../api_generated/Classes/classTableView.html">TableView</a> logic by adding new adapters and computer strategies.</p>
+<p>Decoupling: The definition of a table is separate from its computation. The underlying raw data storage is not duplicated.</p>
+<p>Usability: A fluent Builder pattern provides a clean and readable API for constructing complex table definitions.</p>
+<ol type="1">
+<li>Core Architectural Concepts The system is built on a combination of established design patterns to achieve its goals.</li>
+</ol>
+<p>Adapter Pattern: Complex or non-contiguous data structures (like <a href="../../api_generated/Classes/classPointData.html">PointData</a>) are wrapped in adapters that expose them through a unified <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> interface, presenting them as simple, contiguous series of values.</p>
+<p>Strategy Pattern: The logic for how a column is computed is encapsulated in <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> objects. This allows us to have different strategies for direct access, interval reductions, or functional transformations.</p>
+<p>Builder Pattern: A <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> provides a step-by-step, fluent API for constructing a <a href="../../api_generated/Classes/classTableView.html">TableView</a> object, simplifying the setup of complex configurations.</p>
+<p>Lazy Evaluation &amp; Caching: A <a href="../../api_generated/Classes/classColumn.html">Column</a>’s data is not computed until it is first requested. Once computed, the result is cached (materialized) as a contiguous vector for all subsequent accesses. Intermediate computational steps, like converting row timestamps to data indices (<a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a>), are also cached and shared between columns.</p>
+<ol type="1">
+<li>Key Components &amp; Class Definitions This section details the primary classes that form the <a href="../../api_generated/Classes/classTableView.html">TableView</a> ecosystem.</li>
+</ol>
+<p>3.1. <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> (The Unified Data Interface) This abstract base class is the cornerstone of the system’s flexibility. It provides a common interface for any data that can be treated as a simple array of doubles.</p>
+<p>// Interface for any data source that can be viewed as an analog signal. class <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> { public: virtual ~IAnalogSource() = default;</p>
+<p>// Gets the ID of the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> the data belongs to. virtual int getTimeFrameId() const = 0;</p>
+<p>// Gets the total number of samples in the source. virtual size_t size() const = 0;</p>
+<p>// Provides a view over the data. // This may trigger a one-time lazy materialization for non-contiguous sources. virtual std::span<const double=""> getDataSpan() = 0; };</const></p>
+<p>Implementations: AnalogData (physical), PointComponentAdapter (virtual), TensorSliceAdapter (virtual), etc.</p>
+<p>3.2. <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> (The Source Factory) The <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> acts as a facade and a factory. It manages the lifecycle of raw data objects and is responsible for creating and caching <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> adapters.</p>
+<p>class <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> { public: // Unified access point for all data sources. // Name can be “LFP” for physical data or “Spikes.x” for a virtual source. std::shared_ptr<ianalogsource> getAnalogSource(const std::string&amp; name);</ianalogsource></p>
+<p>// … methods to load/manage raw AnalogData, <a href="../../api_generated/Classes/classPointData.html">PointData</a>, etc. … private: // Caches for raw data std::map&lt;std::string, std::shared_ptr<analogdata>&gt; m_analogData; std::map&lt;std::string, std::shared_ptr<pointdata>&gt; m_pointData;</pointdata></analogdata></p>
+<p>// Cache for adapter objects to ensure reuse and correct lifetime. mutable std::map&lt;std::string, std::shared_ptr<ianalogsource>&gt; m_dataSourceCache; };</ianalogsource></p>
+<p>3.3. <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> (Row Definition) This interface defines what constitutes a “row” in the table.</p>
+<p>// Defines the source and number of rows for the table. class <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> { public: virtual ~IRowSelector() = default; virtual size_t getRowCount() const = 0; // … other methods to access row-defining data (e.g., getTimestamps()) };</p>
+<p>// Example Implementations: class <a href="../../api_generated/Classes/classIndexSelector.html">IndexSelector</a> : public <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> { /* uses std::vector<size_t> <em>/ }; class <a href="../../api_generated/Classes/classTimestampSelector.html">TimestampSelector</a> : public <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> { /</em> uses std::vector<double> <em>/ }; class <a href="../../api_generated/Classes/classIntervalSelector.html">IntervalSelector</a> : public <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> { /</em> uses std::vector<interval> */ };</interval></double></size_t></p>
+<p>3.4. <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> (Shared Intermediate Computation) A simple data object that holds the result of an expensive intermediate calculation, typically the mapping of row definitions to specific data array indices.</p>
+<p>// Holds a cached, reusable access pattern for a specific data source. class <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> { public: // Example: For interval reductions, this would hold start/end index pairs. const std::vector&lt;std::pair&lt;size_t, size_t&gt;&gt;&amp; getIndexPairs() const;</p>
+<p>// Example: For direct access, this would hold single indices. const std::vector<size_t>&amp; getIndices() const; };</size_t></p>
+<p>3.5. <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> (<a href="../../api_generated/Classes/classColumn.html">Column</a> Computation Strategy) This interface defines the strategy for computing all values in a column in a single batch operation.</p>
+<p>class <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> { public: virtual ~IColumnComputer() = default;</p>
+<p>// The core batch computation method. virtual std::vector<double> compute(const ExecutionPlan&amp; plan) const = 0;</double></p>
+<p>// Declares dependencies on other columns (for transformed columns). virtual std::vector<std::string> getDependencies() const { return {}; }</std::string></p>
+<p>// Declares the required data source. virtual std::string getSourceDependency() const = 0; };</p>
+<p>Implementations: DirectAccessComputer, <a href="../../api_generated/Classes/classIntervalReductionComputer.html">IntervalReductionComputer</a>, TransformComputer.</p>
+<p>3.6. <a href="../../api_generated/Classes/classColumn.html">Column</a> &amp; <a href="../../api_generated/Classes/classTableView.html">TableView</a> (The Core Objects) The <a href="../../api_generated/Classes/classTableView.html">TableView</a> orchestrates the process, while the <a href="../../api_generated/Classes/classColumn.html">Column</a> holds the state for a single column.</p>
+<p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a>; // Forward declaration</p>
+<p>class <a href="../../api_generated/Classes/classColumn.html">Column</a> { public: // Gets a span over the column’s data. Triggers computation if not materialized. std::span<const double=""> getSpan(TableView* table); private: friend class <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a>; std::string m_name; std::unique_ptr<icolumncomputer> m_computer; std::variant&lt;std::monostate, std::vector<double>&gt; m_cache; };</double></icolumncomputer></const></p>
+<p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a> { public: size_t getRowCount() const; size_t getColumnCount() const; std::span<const double=""> getColumnSpan(const std::string&amp; name);</const></p>
+<p>private: friend class <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a>; friend class <a href="../../api_generated/Classes/classColumn.html">Column</a>; // Allows <a href="../../api_generated/Classes/classColumn.html">Column</a> to access the plan cache</p>
+<p>// Gets or creates the <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> for a given data source requirement. const <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a>&amp; getExecutionPlanFor(const std::string&amp; sourceName);</p>
+<p>std::unique_ptr<irowselector> m_rowSelector; std::vector&lt;std::shared_ptr<column>&gt; m_columns; std::map&lt;std::string, size_t&gt; m_colNameToIndex;</column></irowselector></p>
+<p>// Caches ExecutionPlans, keyed by a unique source identifier. std::map&lt;std::string, ExecutionPlan&gt; m_planCache; };</p>
+<ol type="1">
+<li>Workflow &amp; Usage Example 4.1. Workflow: Lazy Computation A user requests data from a column for the first time via tableView.getColumnSpan(“MyColumn”).</li>
+</ol>
+<p>The <a href="../../api_generated/Classes/classTableView.html">TableView</a> finds the corresponding <a href="../../api_generated/Classes/classColumn.html">Column</a> object and sees its cache is empty.</p>
+<p>The <a href="../../api_generated/Classes/classTableView.html">TableView</a> inspects the column’s <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> to determine its dependencies (e.g., “I need AnalogData source ‘LFP’”).</p>
+<p>It checks its m_planCache for a pre-computed <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> for the ‘LFP’ source based on the table’s RowSelector.</p>
+<p>If the plan is not found: The <a href="../../api_generated/Classes/classTableView.html">TableView</a> generates it by converting the row definitions (e.g., timestamps) to indices in the ‘LFP’ array. The new plan is stored in m_planCache.</p>
+<p>The cached (or newly created) <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> is passed to the column’s <a href="../../api_generated/Classes/classIColumnComputer.html#function-compute">IColumnComputer::compute()</a> method.</p>
+<p>The computer performs its batch operation (e.g., calculating the mean for every interval) and returns a std::vector<double>.</double></p>
+<p>This vector is moved into the <a href="../../api_generated/Classes/classColumn.html">Column</a>’s internal cache, materializing it.</p>
+<p>A std::span over the newly materialized data is returned to the user.</p>
+<p>All subsequent calls to getColumnSpan(“MyColumn”) will find the cached data and immediately return a span.</p>
+<p>4.2. Usage Example (Client Code) This demonstrates how a user would construct and use a <a href="../../api_generated/Classes/classTableView.html">TableView</a>.</p>
+<p>void example_usage(DataManager&amp; dataManager, const std::vector<interval>&amp; spikeBursts) { // 1. Create a builder and define the rows. <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> builder; builder.setRowSource(std::make_unique<intervalselector>(spikeBursts));</intervalselector></interval></p>
+<p>// 2. Get unified source handles from the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>. auto source_lfp = dataManager.getAnalogSource(“LFP”); // Physical source auto source_spikes_x = dataManager.getAnalogSource(“Spikes.x”); // Virtual source</p>
+<p>// 3. Define columns with different computation strategies. builder.addColumn(“LFP_Mean”, std::make_unique<intervalreductioncomputer>(source_lfp, Reduction::Mean));</intervalreductioncomputer></p>
+<p>builder.addColumn(“SpikeX_StdDev”, std::make_unique<intervalreductioncomputer>(source_spikes_x, Reduction::StdDev));</intervalreductioncomputer></p>
+<p>// Example of a transformed column. // This computer would take “LFP_Mean” as a dependency. builder.addColumn(“LFP_Mean_Sq”, std::make_unique<transformcomputer>(<a href="double v"></a> { return v * v; }, “LFP_Mean”));</transformcomputer></p>
+<p>// 4. Build the final, lazy table object. <a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
+<p>// 5. Use the table. Computation is triggered here. std::cout &lt;&lt; “Table has” &lt;&lt; table.getRowCount() &lt;&lt; ” rows.” &lt;&lt; std::endl;</p>
+<p>// Get the LFP_Mean column (this triggers its computation). std::span<const double=""> lfp_means = table.getColumnSpan(“LFP_Mean”);</const></p>
+<p>// Get the SpikeX_StdDev column (this triggers its computation, but reuses the <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a>). std::span<const double=""> spike_x_stds = table.getColumnSpan(“SpikeX_StdDev”);</const></p>
+<p>// Pass to a machine learning library (e.g., Armadillo) // arma::vec arma_lfp_means(lfp_means.data(), lfp_means.size()); }</p>
+<ol type="1">
+<li>Future Considerations Error Handling: Implement robust error handling for cases like missing data sources, failed transformations, or mismatched TimeFrames.</li>
+</ol>
+<p>Multi-threading: The computation of independent columns is highly parallelizable. The <a href="../../api_generated/Classes/classTableView.html">TableView</a> could be extended with a materializeAll() method that computes multiple columns in parallel.</p>
+<p>Heterogeneous <a href="../../api_generated/Classes/classColumn.html">Column</a> Types: While this design focuses on double, the <a href="../../api_generated/Classes/classColumn.html">Column</a>’s cache (std::variant) and <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> could be templated to support other types like int, std::string, etc.</p>
+<p>Write-back: The current design is read-only. A mechanism for writing data from a <a href="../../api_generated/Classes/classTableView.html">TableView</a> back to a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> source could be considered.</p>
+<p>A2. Proposed Design Changes A2.1. Heterogeneous Columns via Type Erasure To support multiple data types, we will introduce templates and a non-templated base class to erase the type information at the <a href="../../api_generated/Classes/classTableView.html">TableView</a> level.</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classIColumn.html">IColumn</a> (New Base Interface): A non-templated base interface that <a href="../../api_generated/Classes/classTableView.html">TableView</a> will use to manage all columns polymorphically.</li>
+</ol>
+<p>class <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> { public: virtual ~IColumn() = default; virtual const std::string&amp; getName() const = 0; virtual const std::type_info&amp; getType() const = 0; // A method to trigger computation without exposing the type. virtual void materialize(TableView* table) = 0; };</p>
+<ol type="1">
+<li>Column<t> (Templated Class): The original <a href="../../api_generated/Classes/classColumn.html">Column</a> class will be converted to a template and will inherit from <a href="../../api_generated/Classes/classIColumn.html">IColumn</a>.</t></li>
+</ol>
+<p>template<typename t=""> class <a href="../../api_generated/Classes/classColumn.html">Column</a> : public <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> { public: // Returns a span for contiguous types, or a direct reference for complex types. const std::vector<t>&amp; getValues(TableView* table);</t></typename></p>
+<p>// <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> overrides const std::string&amp; getName() const override { return m_name; } const std::type_info&amp; getType() const override { return typeid(T); } void materialize(TableView* table) override;</p>
+<p>private: std::string m_name; std::unique_ptr&lt;IColumnComputer<t>&gt; m_computer; std::variant&lt;std::monostate, std::vector<t>&gt; m_cache; };</t></t></p>
+<ol type="1">
+<li>IColumnComputer<t> (Templated Interface): The computer interface must also be templated to return vectors of the correct type.</t></li>
+</ol>
+<p>template<typename t=""> class <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> { public: virtual ~IColumnComputer() = default; virtual std::vector<t> compute(const ExecutionPlan&amp; plan) const = 0; // … other methods remain the same };</t></typename></p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classTableView.html">TableView</a> Modifications: The <a href="../../api_generated/Classes/classTableView.html">TableView</a> will now hold std::vector&lt;std::shared_ptr<icolumn>&gt;. The getColumnSpan method will be replaced with a templated getColumnValues method that performs a dynamic_cast to retrieve the correctly typed column.</icolumn></li>
+</ol>
+<p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a> { public: template<typename t=""> const std::vector<t>&amp; getColumnValues(const std::string&amp; name); private: std::vector&lt;std::shared_ptr<icolumn>&gt; m_columns; // … rest of <a href="../../api_generated/Classes/classTableView.html">TableView</a> };</icolumn></t></typename></p>
+<p>template<typename t=""> const std::vector<t>&amp; <a href="../../api_generated/Classes/classTableView.html#function-getcolumnvalues">TableView::getColumnValues(const std::string&amp; name)</a> { // 1. Find the <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> pointer by name. // 2. dynamic_cast the IColumn* to a Column<t>*. // 3. If cast succeeds, call getValues() on the typed column. // 4. If cast fails, throw an exception for type mismatch. }</t></t></typename></p>
+<p>A2.2. Event-Based Data Source and Computer To handle <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>, we introduce a new data source interface and a corresponding computer.</p>
+<ol type="1">
+<li>IEventSource (New Data Source Interface): An interface for data that consists of a sorted list of timestamps or indices.</li>
+</ol>
+<p>class IEventSource { public: virtual ~IEventSource() = default; virtual int getTimeFrameId() const = 0; // Returns a span over the sorted event indices/timestamps. virtual std::span<const timeframeindex=""> getEvents() const = 0; };</const></p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> (New Data Type): A concrete class holding event data and implementing the IEventSource interface.</li>
+<li><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> Extension: The <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> will be extended with a getEventSource(const std::string&amp; name) method.</li>
+<li>EventInIntervalComputer<t> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): A new, versatile computer that works with an IEventSource. It can be configured to perform different operations.</t></li>
+</ol>
+<p>enum class EventOperation { Presence, Count, Gather };</p>
+<p>template<typename t=""> class <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer</a> : public IColumnComputer<t> { public: <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer(std::shared_ptr<ieventsource> source, EventOperation op)</ieventsource></a>;</t></typename></p>
+<p>std::vector<t> compute(const ExecutionPlan&amp; plan) const override { // Get event list from the IEventSource auto all_events = m_source-&gt;getEvents(); // Get interval index pairs from the <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> auto intervals = plan.getIndexPairs();</t></p>
+<p>std::vector<t> results; // For each interval, perform an efficient search (e.g., binary search) // on the event list to find events within the interval’s bounds. // Based on m_operation, push back a bool, int, or vector<timeframeindex> // into the results vector. This requires template specialization for the logic.</timeframeindex></t></p>
+<p>return results; } private: std::shared_ptr<ieventsource> m_source; EventOperation m_operation; };</ieventsource></p>
+<p>The implementation of compute will use if constexpr or template specialization to handle the different return types (bool, int, std::vector<timeframeindex>) required by the EventOperation.</timeframeindex></p>
+<p>A3. Updated Usage Example void new_usage_example(DataManager&amp; dataManager, const std::vector<interval>&amp; intervals) { <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> builder; builder.setRowSource(std::make_unique<intervalselector>(intervals));</intervalselector></interval></p>
+<p>auto event_source = dataManager.getEventSource(“MyEvents”);</p>
+<p>// Add columns with different types and computers. builder.addColumn<bool>(“EventPresence”, std::make_unique&lt;EventInIntervalComputer<bool>&gt;(event_source, EventOperation::Presence));</bool></bool></p>
+<p>builder.addColumn<int>(“EventCount”, std::make_unique&lt;EventInIntervalComputer<int>&gt;(event_source, EventOperation::Count));</int></int></p>
+<p>builder.addColumn&lt;std::vector<timeframeindex>&gt;(“GatheredEvents”, std::make_unique&lt;EventInIntervalComputer&lt;std::vector<timeframeindex>&gt;&gt;(event_source, EventOperation::Gather));</timeframeindex></timeframeindex></p>
+<p><a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
+<p>// Retrieve data with type-safe accessors. const auto&amp; counts = table.getColumnValues<int>(“EventCount”); const auto&amp; gathered = table.getColumnValues&lt;std::vector<timeframeindex>&gt;(“GatheredEvents”);</timeframeindex></int></p>
+<p>std::cout &lt;&lt; “Count for first interval:” &lt;&lt; counts[0] &lt;&lt; std::endl; }</p>
+<p>This addendum makes the <a href="../../api_generated/Classes/classTableView.html">TableView</a> system significantly more powerful, allowing it to truly manage heterogeneous data while maintaining its core principles of lazy evaluation and efficiency.</p>
+<p>Addendum 2: Support for Gathering Analog Data Slices Date: July 15, 2025</p>
+<p>This addendum addresses the requirement to create columns where each cell contains a window of an analog time series, corresponding to a row’s interval.</p>
+<p>A4. Problem Statement A common analysis task is to collect snippets of a continuous signal (e.g., LFP or EEG) around specific events or within defined intervals. The desired output is a column where each cell is a std::vector<float> or std::vector<double>. The existing architecture, as modified by Addendum 1, supports the storage of such a column (Column&lt;std::vector<double>&gt;). What is missing is the specific “computer” strategy to perform this gathering operation.</double></double></float></p>
+<p>A5. Proposed Design Changes No changes are needed for the core architecture (<a href="../../api_generated/Classes/classIColumn.html">IColumn</a>, <a href="../../api_generated/Classes/classTableView.html">TableView</a>, etc.). We only need to define a new, specialized <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a>.</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer</a> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): This new computer strategy is responsible for iterating through an <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> of interval index pairs and, for each pair, copying the corresponding slice of data from an <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> into a new vector.</li>
+</ol>
+<p>// This computer’s output type is a vector of vectors. // The inner vector can be float or double. template<typename t="double">&gt; class <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer</a> : public IColumnComputer&lt;std::vector<t>&gt; { public: <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer(std::shared_ptr<ianalogsource> source)</ianalogsource></a> : m_source(std::move(source)) {}</t></typename></p>
+<p>// The core computation method. std::vector&lt;std::vector<t>&gt; compute(const ComputeContext&amp; context) const override { // Get a view over the entire raw data source once. std::span<const double=""> raw_data = m_source-&gt;getDataSpan();</const></t></p>
+<p>// Get the list of [start, end] index pairs from the shared plan. const auto&amp; index_pairs = context.getPlan().getIndexPairs();</p>
+<p>// This is our final result: a vector of vectors. std::vector&lt;std::vector<t>&gt; results; results.reserve(index_pairs.size());</t></p>
+<p>for (const auto&amp; pair : index_pairs) { size_t start_index = pair.first; size_t count = pair.second - pair.first;</p>
+<p>// Create a view of the slice from the raw data. auto slice_view = raw_data.subspan(start_index, count);</p>
+<p>// Copy the data from the slice view into a new vector of type T. // This constructs the vector for the cell. results.emplace_back(slice_view.begin(), slice_view.end()); }</p>
+<p>return results; }</p>
+<p>private: std::shared_ptr<ianalogsource> m_source; };</ianalogsource></p>
+<p>A6. Updated Usage Example This example shows how to create a column of LFP snippets.</p>
+<p>void waveform_gathering_example(DataManager&amp; dataManager, const std::vector<interval>&amp; intervals) { <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> builder; builder.setRowSource(std::make_unique<intervalselector>(intervals));</intervalselector></interval></p>
+<p>// Get the source for the LFP data. auto lfp_source = dataManager.getAnalogSource(“LFP”);</p>
+<p>// Add a column to gather the LFP data within each interval. // The column’s type will be std::vector<double>. builder.addColumn&lt;std::vector<double>&gt;(“LFP_Snippets”, std::make_unique&lt;AnalogSliceGathererComputer<double>&gt;(lfp_source));</double></double></double></p>
+<p><a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
+<p>// Retrieve the materialized column data. // <code>lfp_waveforms</code> is a const reference to a std::vector&lt;std::vector<double>&gt;. const auto&amp; lfp_waveforms = table.getColumnValues&lt;std::vector<double>&gt;(“LFP_Snippets”);</double></double></p>
+<p>// We can now work with the gathered data. if (!lfp_waveforms.empty()) { std::cout &lt;&lt; “First LFP snippet has” &lt;&lt; lfp_waveforms[0].size() &lt;&lt; ” samples.” &lt;&lt; std::endl; } }</p>
+<p>Addendum 3: Support for Statistical Standardization Date: July 15, 2025</p>
+<p>This addendum addresses the requirement to create a column by standardizing another numerical column (Z-scoring).</p>
+<p>A7. Problem Statement A frequent need in statistical analysis is to normalize data by centering it on its mean and scaling it by its standard deviation. This operation requires a full-column transformation: the statistics (mean, stddev) must be computed for the entire source column before the element-wise transformation can be applied.</p>
+<p>A8. Proposed Design Changes The revised <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> interface using ComputeContext is perfectly suited for this task. We only need to add a new “computer” strategy.</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classStandardizeComputer.html">StandardizeComputer</a> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): This computer takes a single column name as a dependency. Its compute method uses the ComputeContext to fetch the materialized data of its dependency, calculates the necessary statistics, and then performs the transformation.</li>
+</ol>
+<p>// This computer takes a numerical column and produces a double column. template<typename t=""> class <a href="../../api_generated/Classes/classStandardizeComputer.html">StandardizeComputer</a> : public <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer<double></double></a> { public: <a href="../../api_generated/Classes/classStandardizeComputer.html">StandardizeComputer(std::string dependency_col_name)</a> : m_dependency(std::move(dependency_col_name)) {}</typename></p>
+<p>std::vector<std::string> getDependencies() const override { return {m_dependency}; }</std::string></p>
+<p>std::vector<double> compute(const ComputeContext&amp; context) const override { // 1. Get the materialized data of the dependency column. const auto&amp; source_values = context.getDependencyValues<t>(m_dependency);</t></double></p>
+<p>if (source_values.empty()) { return {}; }</p>
+<p>// 2. Calculate mean and standard deviation. double sum = std::accumulate(source_values.begin(), source_values.end(), 0.0); double mean = sum / source_values.size();</p>
+<p>double sq_sum = std::inner_product(source_values.begin(), source_values.end(), source_values.begin(), 0.0); double stddev = std::sqrt(sq_sum / source_values.size() - mean * mean);</p>
+<p>// Handle case of zero standard deviation to avoid division by zero. if (stddev &lt; 1e-9) { return std::vector<double>(source_values.size(), 0.0); }</double></p>
+<p>// 3. Apply the standardization formula to each element. std::vector<double> results; results.reserve(source_values.size()); for (const auto&amp; val : source_values) { results.push_back((val - mean) / stddev); }</double></p>
+<p>return results; }</p>
+<p>private: std::string m_dependency; };</p>
+<p>A9. Updated Usage Example This example shows how to create a standardized version of the “LFP_Mean” column.</p>
+<p>void standardize_example(DataManager&amp; dataManager, const std::vector<interval>&amp; intervals) { <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> builder; builder.setRowSource(std::make_unique<intervalselector>(intervals));</intervalselector></interval></p>
+<p>auto lfp_source = dataManager.getAnalogSource(“LFP”);</p>
+<p>// 1. Add the base column we want to standardize. builder.addColumn<double>(“LFP_Mean”, std::make_unique&lt;IntervalReductionComputer<double>&gt;(lfp_source, Reduction::Mean));</double></double></p>
+<p>// 2. Add the transformed column that depends on “LFP_Mean”. builder.addColumn<double>(“LFP_Mean_ZScore”, std::make_unique&lt;StandardizeComputer<double>&gt;(“LFP_Mean”));</double></double></p>
+<p><a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
+<p>// Retrieve the standardized data. // This will first trigger the computation of “LFP_Mean”, then use those // results to compute “LFP_Mean_ZScore”. const auto&amp; z_scores = table.getColumnValues<double>(“LFP_Mean_ZScore”);</double></p>
+<p>if (!z_scores.empty()) { std::cout &lt;&lt; “First Z-scored value:” &lt;&lt; z_scores[0] &lt;&lt; std::endl; } }</p>
+<p>Addendum 4: Support for Reverse Lookup (Trace-back to Source) Date: July 15, 2025</p>
+<p>This addendum addresses the critical requirement for interactive plotting: tracing a data point in a <a href="../../api_generated/Classes/classTableView.html">TableView</a> row back to its original source definition (e.g., the specific timestamp or interval).</p>
+<p>A10. Problem Statement The <a href="../../api_generated/Classes/classTableView.html">TableView</a> contains all the information necessary for a reverse lookup, but it is not exposed through a clean, type-safe public API. Client code, such as a plotting library, should not need to know the internal details of the <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> or perform dynamic_cast operations to get the source of a given row.</p>
+<p>A11. Proposed Design Changes We will introduce a <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> variant type and a new public method on <a href="../../api_generated/Classes/classTableView.html">TableView</a> to provide this functionality in a clean, encapsulated way.</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> (New Type Definition): A std::variant that can hold any of the possible source types that can define a row. This makes it easily extensible.</li>
+</ol>
+<p>// Assuming Interval and <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> are defined elsewhere using <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> = std::variant&lt; std::monostate, // For cases where there’s no descriptor size_t, // For <a href="../../api_generated/Classes/classIndexSelector.html">IndexSelector</a> double, // For <a href="../../api_generated/Classes/classTimestampSelector.html">TimestampSelector</a> Interval // For <a href="../../api_generated/Classes/classIntervalSelector.html">IntervalSelector</a> &gt;;</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> Extension: The <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> interface will be extended with a virtual method to retrieve a descriptor for a specific row.</li>
+</ol>
+<p>class <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> { public: // … existing methods … virtual <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> getDescriptor(size_t row_index) const = 0; };</p>
+<p>// Example implementation in <a href="../../api_generated/Classes/classIntervalSelector.html">IntervalSelector</a>: <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a><a href="../../api_generated/Classes/classIntervalSelector.html#function-getdescriptor">IntervalSelector::getDescriptor(size_t row_index) const</a>{ if (row_index &lt; m_intervals.size()) { return m_intervals[row_index]; } return std::monostate{}; }</p>
+<ol type="1">
+<li><a href="../../api_generated/Classes/classTableView.html">TableView</a> API Extension: A new public method is added to <a href="../../api_generated/Classes/classTableView.html">TableView</a> to provide the main access point for this feature.</li>
+</ol>
+<p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a> { public: // … existing methods …</p>
+<p>// Gets a descriptor containing the source information for a given row index. <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> getRowDescriptor(size_t row_index) const; };</p>
+<p>// Implementation: <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a><a href="../../api_generated/Classes/classTableView.html#function-getrowdescriptor">TableView::getRowDescriptor(size_t row_index) const</a>{ if (m_rowSelector) { return m_rowSelector-&gt;getDescriptor(row_index); } return std::monostate{}; }</p>
+<p>A12. Updated Usage Example (Tooltip Scenario) This example shows how a plotting library would use the new API to create a tooltip.</p>
+<p>// This function would be called by the plotting library on mouse hover. void <a href="../../api_generated/Files/ReverseLookupExample_8cpp.html#function-on-plot-hover">on_plot_hover(const TableView&amp; table, size_t hovered_row_index)</a> { // 1. Get the generic descriptor for the hovered row. <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> desc = table.getRowDescriptor(hovered_row_index);</p>
+<p>// 2. Use std::visit with a lambda to process the descriptor type-safely. std::string tooltip_text = std::visit(<a href="auto&amp;&amp; arg"></a> -&gt; std::string { using T = std::decay_t&lt;decltype(arg)&gt;; if constexpr (std::is_same_v&lt;T, size_t&gt;) { return “Source Index:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, double&gt;) { return “Source Timestamp:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, Interval&gt;) { return “Source Interval: [” + std::to_string(arg.start) + ”, ” + std::to_string(arg.end) + ”]”; } else { return “Source: N/A”; } }, desc);</p>
+<p>// 3. Display the generated tooltip text to the user. show_tooltip(tooltip_text); }</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

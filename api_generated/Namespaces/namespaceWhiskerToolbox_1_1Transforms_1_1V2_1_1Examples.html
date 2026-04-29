@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>WhiskerToolbox::Transforms::V2::Examples – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#whiskertoolboxtransformsv2examples" id="toc-whiskertoolboxtransformsv2examples" class="nav-link active" data-scroll-target="#whiskertoolboxtransformsv2examples">WhiskerToolbox::Transforms::V2::Examples</a>
+  <ul class="collapse">
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#enum-lineanglemethod" id="toc-enum-lineanglemethod" class="nav-link" data-scroll-target="#enum-lineanglemethod">enum LineAngleMethod</a></li>
+  <li><a href="#enum-linecurvaturemethod" id="toc-enum-linecurvaturemethod" class="nav-link" data-scroll-target="#enum-linecurvaturemethod">enum LineCurvatureMethod</a></li>
+  <li><a href="#enum-linepointextractionmethod" id="toc-enum-linepointextractionmethod" class="nav-link" data-scroll-target="#enum-linepointextractionmethod">enum LinePointExtractionMethod</a></li>
+  <li><a href="#enum-lineresamplemethod" id="toc-enum-lineresamplemethod" class="nav-link" data-scroll-target="#enum-lineresamplemethod">enum LineResampleMethod</a></li>
+  <li><a href="#enum-linesubsegmentmethod" id="toc-enum-linesubsegmentmethod" class="nav-link" data-scroll-target="#enum-linesubsegmentmethod">enum LineSubsegmentMethod</a></li>
+  <li><a href="#enum-sincwindowtype" id="toc-enum-sincwindowtype" class="nav-link" data-scroll-target="#enum-sincwindowtype">enum SincWindowType</a></li>
+  <li><a href="#enum-boundarymode" id="toc-enum-boundarymode" class="nav-link" data-scroll-target="#enum-boundarymode">enum BoundaryMode</a></li>
+  <li><a href="#enum-carmethod" id="toc-enum-carmethod" class="nav-link" data-scroll-target="#enum-carmethod">enum CARMethod</a></li>
+  <li><a href="#enum-deltaboundarypolicy" id="toc-enum-deltaboundarypolicy" class="nav-link" data-scroll-target="#enum-deltaboundarypolicy">enum DeltaBoundaryPolicy</a></li>
+  <li><a href="#enum-boundarypolicy" id="toc-enum-boundarypolicy" class="nav-link" data-scroll-target="#enum-boundarypolicy">enum BoundaryPolicy</a></li>
+  </ul></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-analogeventthreshold" id="toc-function-analogeventthreshold" class="nav-link" data-scroll-target="#function-analogeventthreshold">function analogEventThreshold</a></li>
+  <li><a href="#function-analoghilbertphase" id="toc-function-analoghilbertphase" class="nav-link" data-scroll-target="#function-analoghilbertphase">function analogHilbertPhase</a></li>
+  <li><a href="#function-analogtotensor" id="toc-function-analogtotensor" class="nav-link" data-scroll-target="#function-analogtotensor">function analogToTensor</a></li>
+  <li><a href="#function-calculatelineangle" id="toc-function-calculatelineangle" class="nav-link" data-scroll-target="#function-calculatelineangle">function calculateLineAngle</a></li>
+  <li><a href="#function-calculatelineanglewithcontext" id="toc-function-calculatelineanglewithcontext" class="nav-link" data-scroll-target="#function-calculatelineanglewithcontext">function calculateLineAngleWithContext</a></li>
+  <li><a href="#function-fliplinebase" id="toc-function-fliplinebase" class="nav-link" data-scroll-target="#function-fliplinebase">function flipLineBase</a></li>
+  <li><a href="#function-fliplinebasewithcontext" id="toc-function-fliplinebasewithcontext" class="nav-link" data-scroll-target="#function-fliplinebasewithcontext">function flipLineBaseWithContext</a></li>
+  <li><a href="#function-cliplineatreference" id="toc-function-cliplineatreference" class="nav-link" data-scroll-target="#function-cliplineatreference">function clipLineAtReference</a></li>
+  <li><a href="#function-cliplineatreferencewithcontext" id="toc-function-cliplineatreferencewithcontext" class="nav-link" data-scroll-target="#function-cliplineatreferencewithcontext">function clipLineAtReferenceWithContext</a></li>
+  <li><a href="#function-calculatelinecurvature" id="toc-function-calculatelinecurvature" class="nav-link" data-scroll-target="#function-calculatelinecurvature">function calculateLineCurvature</a></li>
+  <li><a href="#function-calculatelinecurvaturewithcontext" id="toc-function-calculatelinecurvaturewithcontext" class="nav-link" data-scroll-target="#function-calculatelinecurvaturewithcontext">function calculateLineCurvatureWithContext</a></li>
+  <li><a href="#function-calculatelinelength" id="toc-function-calculatelinelength" class="nav-link" data-scroll-target="#function-calculatelinelength">function calculateLineLength</a></li>
+  <li><a href="#function-calculatelinelengthwithcontext" id="toc-function-calculatelinelengthwithcontext" class="nav-link" data-scroll-target="#function-calculatelinelengthwithcontext">function calculateLineLengthWithContext</a></li>
+  <li><a href="#function-pointtolinesegmentdistance2" id="toc-function-pointtolinesegmentdistance2" class="nav-link" data-scroll-target="#function-pointtolinesegmentdistance2">function pointToLineSegmentDistance2</a></li>
+  <li><a href="#function-pointtolinemindistance2" id="toc-function-pointtolinemindistance2" class="nav-link" data-scroll-target="#function-pointtolinemindistance2">function pointToLineMinDistance2</a></li>
+  <li><a href="#function-calculatelineminpointdistance" id="toc-function-calculatelineminpointdistance" class="nav-link" data-scroll-target="#function-calculatelineminpointdistance">function calculateLineMinPointDistance</a></li>
+  <li><a href="#function-calculatelineminpointdistancewithcontext" id="toc-function-calculatelineminpointdistancewithcontext" class="nav-link" data-scroll-target="#function-calculatelineminpointdistancewithcontext">function calculateLineMinPointDistanceWithContext</a></li>
+  <li><a href="#function-extractlinepoint" id="toc-function-extractlinepoint" class="nav-link" data-scroll-target="#function-extractlinepoint">function extractLinePoint</a></li>
+  <li><a href="#function-extractlinepointwithcontext" id="toc-function-extractlinepointwithcontext" class="nav-link" data-scroll-target="#function-extractlinepointwithcontext">function extractLinePointWithContext</a></li>
+  <li><a href="#function-resampleline" id="toc-function-resampleline" class="nav-link" data-scroll-target="#function-resampleline">function resampleLine</a></li>
+  <li><a href="#function-resamplelinewithcontext" id="toc-function-resamplelinewithcontext" class="nav-link" data-scroll-target="#function-resamplelinewithcontext">function resampleLineWithContext</a></li>
+  <li><a href="#function-extractlinesubsegment" id="toc-function-extractlinesubsegment" class="nav-link" data-scroll-target="#function-extractlinesubsegment">function extractLineSubsegment</a></li>
+  <li><a href="#function-extractlinesubsegmentwithcontext" id="toc-function-extractlinesubsegmentwithcontext" class="nav-link" data-scroll-target="#function-extractlinesubsegmentwithcontext">function extractLineSubsegmentWithContext</a></li>
+  <li><a href="#function-calculatemaskarea" id="toc-function-calculatemaskarea" class="nav-link" data-scroll-target="#function-calculatemaskarea">function calculateMaskArea</a></li>
+  <li><a href="#function-calculatemaskareawithcontext" id="toc-function-calculatemaskareawithcontext" class="nav-link" data-scroll-target="#function-calculatemaskareawithcontext">function calculateMaskAreaWithContext</a></li>
+  <li><a href="#function-calculatemaskcentroid" id="toc-function-calculatemaskcentroid" class="nav-link" data-scroll-target="#function-calculatemaskcentroid">function calculateMaskCentroid</a></li>
+  <li><a href="#function-calculatemaskcentroidwithcontext" id="toc-function-calculatemaskcentroidwithcontext" class="nav-link" data-scroll-target="#function-calculatemaskcentroidwithcontext">function calculateMaskCentroidWithContext</a></li>
+  <li><a href="#function-sincinterpolation" id="toc-function-sincinterpolation" class="nav-link" data-scroll-target="#function-sincinterpolation">function sincInterpolation</a></li>
+  <li><a href="#function-sumreduction" id="toc-function-sumreduction" class="nav-link" data-scroll-target="#function-sumreduction">function sumReduction</a></li>
+  <li><a href="#function-sumreductionwithcontext" id="toc-function-sumreductionwithcontext" class="nav-link" data-scroll-target="#function-sumreductionwithcontext">function sumReductionWithContext</a></li>
+  <li><a href="#function-tensorcar" id="toc-function-tensorcar" class="nav-link" data-scroll-target="#function-tensorcar">function tensorCAR</a></li>
+  <li><a href="#function-tensorcentraldifference" id="toc-function-tensorcentraldifference" class="nav-link" data-scroll-target="#function-tensorcentraldifference">function tensorCentralDifference</a></li>
+  <li><a href="#function-tensorica" id="toc-function-tensorica" class="nav-link" data-scroll-target="#function-tensorica">function tensorICA</a></li>
+  <li><a href="#function-tensorpca" id="toc-function-tensorpca" class="nav-link" data-scroll-target="#function-tensorpca">function tensorPCA</a></li>
+  <li><a href="#function-tensorrobustpca" id="toc-function-tensorrobustpca" class="nav-link" data-scroll-target="#function-tensorrobustpca">function tensorRobustPCA</a></li>
+  <li><a href="#function-tensortemporalneighbors" id="toc-function-tensortemporalneighbors" class="nav-link" data-scroll-target="#function-tensortemporalneighbors">function tensorTemporalNeighbors</a></li>
+  <li><a href="#function-tensortoanalog" id="toc-function-tensortoanalog" class="nav-link" data-scroll-target="#function-tensortoanalog">function tensorToAnalog</a></li>
+  <li><a href="#function-tensortsne" id="toc-function-tensortsne" class="nav-link" data-scroll-target="#function-tensortsne">function tensorTSNE</a></li>
+  <li><a href="#function-tensorwhitening" id="toc-function-tensorwhitening" class="nav-link" data-scroll-target="#function-tensorwhitening">function tensorWhitening</a></li>
+  <li><a href="#function-loadparametersfortransform" id="toc-function-loadparametersfortransform" class="nav-link" data-scroll-target="#function-loadparametersfortransform">function loadParametersForTransform</a></li>
+  <li><a href="#function-loadparametersfromjson" id="toc-function-loadparametersfromjson" class="nav-link" data-scroll-target="#function-loadparametersfromjson">function loadParametersFromJson</a></li>
+  <li><a href="#function-loadparametersfromfile" id="toc-function-loadparametersfromfile" class="nav-link" data-scroll-target="#function-loadparametersfromfile">function loadParametersFromFile</a></li>
+  <li><a href="#function-saveparameterstojson" id="toc-function-saveparameterstojson" class="nav-link" data-scroll-target="#function-saveparameterstojson">function saveParametersToJson</a></li>
+  <li><a href="#function-saveparameterstofile" id="toc-function-saveparameterstofile" class="nav-link" data-scroll-target="#function-saveparameterstofile">function saveParametersToFile</a></li>
+  <li><a href="#function-createpipelinestepfromregistry" id="toc-function-createpipelinestepfromregistry" class="nav-link" data-scroll-target="#function-createpipelinestepfromregistry">function createPipelineStepFromRegistry</a></li>
+  <li><a href="#function-loadstepfromdescriptor" id="toc-function-loadstepfromdescriptor" class="nav-link" data-scroll-target="#function-loadstepfromdescriptor">function loadStepFromDescriptor</a></li>
+  <li><a href="#function-loadprereductionfromdescriptor" id="toc-function-loadprereductionfromdescriptor" class="nav-link" data-scroll-target="#function-loadprereductionfromdescriptor">function loadPreReductionFromDescriptor</a></li>
+  <li><a href="#function-loadrangereductionfromdescriptor" id="toc-function-loadrangereductionfromdescriptor" class="nav-link" data-scroll-target="#function-loadrangereductionfromdescriptor">function loadRangeReductionFromDescriptor</a></li>
+  <li><a href="#function-loadpipelinefromjson" id="toc-function-loadpipelinefromjson" class="nav-link" data-scroll-target="#function-loadpipelinefromjson">function loadPipelineFromJson</a></li>
+  <li><a href="#function-savepipelinetojson" id="toc-function-savepipelinetojson" class="nav-link" data-scroll-target="#function-savepipelinetojson">function savePipelineToJson</a></li>
+  <li><a href="#function-getpipelinestepfactoryregistry" id="toc-function-getpipelinestepfactoryregistry" class="nav-link" data-scroll-target="#function-getpipelinestepfactoryregistry">function getPipelineStepFactoryRegistry</a></li>
+  <li><a href="#function-registerpipelinestepfactoryfor" id="toc-function-registerpipelinestepfactoryfor" class="nav-link" data-scroll-target="#function-registerpipelinestepfactoryfor">function registerPipelineStepFactoryFor</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">WhiskerToolbox::Transforms::V2::Examples</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="whiskertoolboxtransformsv2examples" class="level1">
+<h1>WhiskerToolbox::Transforms::V2::Examples</h1>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogEventThresholdParams.html">WhiskerToolbox::Transforms::V2::Examples::AnalogEventThresholdParams</a></strong> <br>Parameters for analog event threshold detection.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html">WhiskerToolbox::Transforms::V2::Examples::AnalogHilbertPhaseParams</a></strong> <br>Parameters for Hilbert phase/amplitude extraction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogToTensorParams.html">WhiskerToolbox::Transforms::V2::Examples::AnalogToTensorParams</a></strong> <br>Parameters for AnalogToTensor transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineAngleParams.html">WhiskerToolbox::Transforms::V2::Examples::LineAngleParams</a></strong> <br>Parameters for line angle calculation.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineBaseFlipParams.html">WhiskerToolbox::Transforms::V2::Examples::LineBaseFlipParams</a></strong> <br>Parameters for line base flip transform.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineClipParams.html">WhiskerToolbox::Transforms::V2::Examples::LineClipParams</a></strong> <br>Parameters for line clipping by reference line.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineCurvatureParams.html">WhiskerToolbox::Transforms::V2::Examples::LineCurvatureParams</a></strong> <br>Parameters for line curvature calculation.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineLengthParams.html">WhiskerToolbox::Transforms::V2::Examples::LineLengthParams</a></strong> <br>Parameters for line length calculation.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineMinPointDistParams.html">WhiskerToolbox::Transforms::V2::Examples::LineMinPointDistParams</a></strong> <br>Parameters for line-to-point distance calculation.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LinePointExtractionParams.html">WhiskerToolbox::Transforms::V2::Examples::LinePointExtractionParams</a></strong> <br>Parameters for line point extraction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineResampleParams.html">WhiskerToolbox::Transforms::V2::Examples::LineResampleParams</a></strong> <br>Parameters for line resampling transform.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineSubsegmentParams.html">WhiskerToolbox::Transforms::V2::Examples::LineSubsegmentParams</a></strong> <br>Parameters for line subsegment extraction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskAreaParams.html">WhiskerToolbox::Transforms::V2::Examples::MaskAreaParams</a></strong> <br>Parameters for mask area calculation.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskCentroidParams.html">WhiskerToolbox::Transforms::V2::Examples::MaskCentroidParams</a></strong> <br>Parameters for mask centroid calculation.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor</a></strong> <br>Complete pipeline descriptor.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineMetadata.html">WhiskerToolbox::Transforms::V2::Examples::PipelineMetadata</a></strong> <br>Metadata for a pipeline.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor</a></strong> <br>Descriptor for a single pipeline step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PreReductionStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor</a></strong> <br>Descriptor for a pre-execution reduction step.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RangeReductionStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::RangeReductionStepDescriptor</a></strong> <br>Descriptor for a terminal range reduction step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RegisterPipelineStepFactory.html">WhiskerToolbox::Transforms::V2::Examples::RegisterPipelineStepFactory</a></strong> <br>Auto-register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SincInterpolationParams.html">WhiskerToolbox::Transforms::V2::Examples::SincInterpolationParams</a></strong> <br>Parameters for sinc interpolation upsampling.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SumReductionParams.html">WhiskerToolbox::Transforms::V2::Examples::SumReductionParams</a></strong> <br>Parameters for sum reduction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorCARParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorCARParams</a></strong> <br>Parameters for Common Average Reference transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorCentralDifferenceParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorCentralDifferenceParams</a></strong> <br>Parameters for central-difference feature augmentation (reflect-cpp compatible)</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorICAParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorICAParams</a></strong> <br>Parameters for ICA container transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorPCAParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorPCAParams</a></strong> <br>Parameters for PCA container transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorRobustPCAParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorRobustPCAParams</a></strong> <br>Parameters for Robust PCA container transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorTemporalNeighborParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorTemporalNeighborParams</a></strong> <br>Parameters for temporal neighbor feature augmentation (reflect-cpp compatible)</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorToAnalogParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorToAnalogParams</a></strong> <br>Parameters for TensorToAnalog transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorTSNEParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorTSNEParams</a></strong> <br>Parameters for t-SNE container transform (reflect-cpp compatible)</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorWhiteningParams.html">WhiskerToolbox::Transforms::V2::Examples::TensorWhiteningParams</a></strong> <br>Parameters for robust ZCA whitening of multi-channel tensors.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types" class="level2">
+<h2 class="anchored" data-anchor-id="types">Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-lineanglemethod">LineAngleMethod</a></strong> { DirectPoints, PolynomialFit}<br>Angle calculation method.</td>
+</tr>
+<tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-linecurvaturemethod">LineCurvatureMethod</a></strong> { PolynomialFit}<br>Curvature calculation method.</td>
+</tr>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-linepointextractionmethod">LinePointExtractionMethod</a></strong> { Direct, Parametric}<br><a href="../../api_generated/Classes/structPoint.html">Point</a> extraction method.</td>
+</tr>
+<tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-lineresamplemethod">LineResampleMethod</a></strong> { FixedSpacing, DouglasPeucker}<br><a href="../../api_generated/Classes/structLine.html">Line</a> simplification algorithm selection.</td>
+</tr>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-linesubsegmentmethod">LineSubsegmentMethod</a></strong> { Direct, Parametric}<br>Subsegment extraction method.</td>
+</tr>
+<tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-sincwindowtype">SincWindowType</a></strong> { Lanczos, Hann, Blackman}<br>Window function type for the sinc kernel.</td>
+</tr>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-boundarymode">BoundaryMode</a></strong> { SymmetricExtension, ZeroPad}<br>Boundary handling mode for edge samples.</td>
+</tr>
+<tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-carmethod">CARMethod</a></strong> { Mean, Median}<br>Method used to compute the cross-channel reference signal.</td>
+</tr>
+<tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-deltaboundarypolicy">DeltaBoundaryPolicy</a></strong> { NaN, Drop, Clamp, Zero}<br>Policy for handling boundary rows where t-1 or t+1 is out-of-range.</td>
+</tr>
+<tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-boundarypolicy">BoundaryPolicy</a></strong> { NaN, Drop, Clamp, Zero}<br>Policy for handling boundary rows where a neighbor offset is out-of-range.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-analogeventthreshold">analogEventThreshold</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogEventThresholdParams.html">AnalogEventThresholdParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Detect threshold crossing events in an analog time series.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-analoghilbertphase">analogHilbertPhase</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html">AnalogHilbertPhaseParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Calculate instantaneous phase or amplitude using Hilbert transform.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-analogtotensor">analogToTensor</a></strong>(std::vector&lt; std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &gt; &gt; const &amp; channels, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogToTensorParams.html">AnalogToTensorParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Pack multiple <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> channels into a single 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelineangle">calculateLineAngle</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineAngleParams.html">LineAngleParams</a> const &amp; params)<br>Calculate the angle at a specified position along a line.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelineanglewithcontext">calculateLineAngleWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineAngleParams.html">LineAngleParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-fliplinebase">flipLineBase</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineBaseFlipParams.html">LineBaseFlipParams</a> const &amp; params)<br>Flip a line’s base if it’s farther from the reference point than the end.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-fliplinebasewithcontext">flipLineBaseWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineBaseFlipParams.html">LineBaseFlipParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-cliplineatreference">clipLineAtReference</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; reference_line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineClipParams.html">LineClipParams</a> const &amp; params)<br>Clip a line at its intersection with a reference line.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-cliplineatreferencewithcontext">clipLineAtReferenceWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; reference_line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineClipParams.html">LineClipParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelinecurvature">calculateLineCurvature</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineCurvatureParams.html">LineCurvatureParams</a> const &amp; params)<br>Calculate the curvature at a specified position along a line.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelinecurvaturewithcontext">calculateLineCurvatureWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineCurvatureParams.html">LineCurvatureParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelinelength">calculateLineLength</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineLengthParams.html">LineLengthParams</a> const &amp; params)<br>Calculate the total arc length of a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelinelengthwithcontext">calculateLineLengthWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineLengthParams.html">LineLengthParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting and cancellation.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-pointtolinesegmentdistance2">pointToLineSegmentDistance2</a></strong>(<a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; point, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; line_start, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; line_end)<br>Calculate squared distance from point to line segment.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-pointtolinemindistance2">pointToLineMinDistance2</a></strong>(<a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; point, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line)<br>Calculate minimum squared distance from point to entire line.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelineminpointdistance">calculateLineMinPointDistance</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; point, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineMinPointDistParams.html">LineMinPointDistParams</a> const &amp; params)<br>Calculate distance from a single point to a line.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatelineminpointdistancewithcontext">calculateLineMinPointDistanceWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; const &amp; point, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineMinPointDistParams.html">LineMinPointDistParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-extractlinepoint">extractLinePoint</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LinePointExtractionParams.html">LinePointExtractionParams</a> const &amp; params)<br>Extract a point at a specified position along a line.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-extractlinepointwithcontext">extractLinePointWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LinePointExtractionParams.html">LinePointExtractionParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-resampleline">resampleLine</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineResampleParams.html">LineResampleParams</a> const &amp; params)<br>Resample or simplify a line based on the selected algorithm.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-resamplelinewithcontext">resampleLineWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineResampleParams.html">LineResampleParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-extractlinesubsegment">extractLineSubsegment</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineSubsegmentParams.html">LineSubsegmentParams</a> const &amp; params)<br>Extract a subsegment from a line between specified fractional positions.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-extractlinesubsegmentwithcontext">extractLineSubsegmentWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1LineSubsegmentParams.html">LineSubsegmentParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatemaskarea">calculateMaskArea</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskAreaParams.html">MaskAreaParams</a> const &amp; params)<br>Calculate area of a single mask.</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatemaskareawithcontext">calculateMaskAreaWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskAreaParams.html">MaskAreaParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Calculate area with context support.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatemaskcentroid">calculateMaskCentroid</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskCentroidParams.html">MaskCentroidParams</a> const &amp; params)<br>Calculate the centroid (center of mass) of a single mask.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatemaskcentroidwithcontext">calculateMaskCentroidWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskCentroidParams.html">MaskCentroidParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Calculate the centroid with context support for progress/cancellation.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-sincinterpolation">sincInterpolation</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SincInterpolationParams.html">SincInterpolationParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply band-limited sinc interpolation to upsample an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-sumreduction">sumReduction</a></strong>(std::span&lt; float const &gt; values, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SumReductionParams.html">SumReductionParams</a> const &amp; params)<br>Sum all floats at a given time point into a single float.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-sumreductionwithcontext">sumReductionWithContext</a></strong>(std::span&lt; float const &gt; values, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SumReductionParams.html">SumReductionParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Context-aware version with progress reporting.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorcar">tensorCAR</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorCARParams.html">TensorCARParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply Common Average Reference to a multi-channel <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorcentraldifference">tensorCentralDifference</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorCentralDifferenceParams.html">TensorCentralDifferenceParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Append central-difference columns to a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorica">tensorICA</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorICAParams.html">TensorICAParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply ICA (RADICAL) to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorpca">tensorPCA</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorPCAParams.html">TensorPCAParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorrobustpca">tensorRobustPCA</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorRobustPCAParams.html">TensorRobustPCAParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply Robust PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensortemporalneighbors">tensorTemporalNeighbors</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorTemporalNeighborParams.html">TensorTemporalNeighborParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Augment a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with neighbor feature columns.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensortoanalog">tensorToAnalog</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorToAnalogParams.html">TensorToAnalogParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Extract columns from a 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> as independent <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensortsne">tensorTSNE</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorTSNEParams.html">TensorTSNEParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply t-SNE dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-tensorwhitening">tensorWhitening</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1TensorWhiteningParams.html">TensorWhiteningParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply robust ZCA whitening to the included channels of a 2D tensor.</td>
+</tr>
+<tr class="even">
+<td>std::any</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadparametersfortransform">loadParametersForTransform</a></strong>(std::string const &amp; transform_name, std::string const &amp; json_str)</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename ParamsT &gt; <br>rfl::Result&lt; ParamsT &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadparametersfromjson">loadParametersFromJson</a></strong>(std::string const &amp; json_str)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename ParamsT &gt; <br>rfl::Result&lt; ParamsT &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadparametersfromfile">loadParametersFromFile</a></strong>(std::string const &amp; file_path)<br>Load parameters from JSON file.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename ParamsT &gt; <br>std::string</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-saveparameterstojson">saveParametersToJson</a></strong>(ParamsT const &amp; params)<br>Save parameters to JSON string.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename ParamsT &gt; <br>bool</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-saveparameterstofile">saveParametersToFile</a></strong>(ParamsT const &amp; params, std::string const &amp; file_path, bool pretty_print =true)<br>Save parameters to JSON file.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-createpipelinestepfromregistry">createPipelineStepFromRegistry</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> const &amp; registry, std::string const &amp; transform_name, std::any const &amp; params_any)<br>Create <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadstepfromdescriptor">loadStepFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">PipelineStepDescriptor</a> const &amp; descriptor)<br>Load a single pipeline step from JSON descriptor.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">ReductionStep</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadprereductionfromdescriptor">loadPreReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PreReductionStepDescriptor.html">PreReductionStepDescriptor</a> const &amp; descriptor)<br>Load a pre-reduction from JSON descriptor.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; std::pair&lt; std::string, std::any &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadrangereductionfromdescriptor">loadRangeReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RangeReductionStepDescriptor.html">RangeReductionStepDescriptor</a> const &amp; descriptor)<br>Load a range reduction from JSON descriptor.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromjson">loadPipelineFromJson</a></strong>(std::string const &amp; json_str)<br>Load a complete pipeline from JSON string.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromfile">loadPipelineFromFile</a></strong>(std::string const &amp; filepath)<br>Load pipeline from JSON file.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-savepipelinetojson">savePipelineToJson</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> const &amp; descriptor)<br>Save pipeline descriptor to JSON string.</td>
+</tr>
+<tr class="even">
+<td>std::unordered_map&lt; std::type_index, std::function&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a>(std::string const &amp;, std::any const &amp;)&gt; &gt; &amp;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-getpipelinestepfactoryregistry">getPipelineStepFactoryRegistry</a></strong>()<br>Registry of <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory functions.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename Params &gt; <br>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-registerpipelinestepfactoryfor">registerPipelineStepFactoryFor</a></strong>()<br>Helper to register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="enum-lineanglemethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-lineanglemethod">enum LineAngleMethod</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DirectPoints</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>PolynomialFit</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Angle calculation method.</p>
+</section>
+<section id="enum-linecurvaturemethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-linecurvaturemethod">enum LineCurvatureMethod</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PolynomialFit</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Curvature calculation method.</p>
+</section>
+<section id="enum-linepointextractionmethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-linepointextractionmethod">enum LinePointExtractionMethod</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Direct</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Parametric</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a href="../../api_generated/Classes/structPoint.html">Point</a> extraction method.</p>
+</section>
+<section id="enum-lineresamplemethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-lineresamplemethod">enum LineResampleMethod</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>FixedSpacing</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>DouglasPeucker</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a href="../../api_generated/Classes/structLine.html">Line</a> simplification algorithm selection.</p>
+</section>
+<section id="enum-linesubsegmentmethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-linesubsegmentmethod">enum LineSubsegmentMethod</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Direct</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Parametric</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Subsegment extraction method.</p>
+</section>
+<section id="enum-sincwindowtype" class="level3">
+<h3 class="anchored" data-anchor-id="enum-sincwindowtype">enum SincWindowType</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lanczos</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Hann</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Blackman</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Window function type for the sinc kernel.</p>
+</section>
+<section id="enum-boundarymode" class="level3">
+<h3 class="anchored" data-anchor-id="enum-boundarymode">enum BoundaryMode</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SymmetricExtension</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>ZeroPad</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Boundary handling mode for edge samples.</p>
+</section>
+<section id="enum-carmethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-carmethod">enum CARMethod</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td></td>
+<td>Arithmetic mean across channels.</td>
+</tr>
+<tr class="even">
+<td>Median</td>
+<td></td>
+<td>Median across channels (default; more robust to outliers)</td>
+</tr>
+</tbody>
+</table>
+<p>Method used to compute the cross-channel reference signal.</p>
+</section>
+<section id="enum-deltaboundarypolicy" class="level3">
+<h3 class="anchored" data-anchor-id="enum-deltaboundarypolicy">enum DeltaBoundaryPolicy</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NaN</td>
+<td></td>
+<td>Fill missing delta with NaN (default)</td>
+</tr>
+<tr class="even">
+<td>Drop</td>
+<td></td>
+<td>Drop boundary rows from the output.</td>
+</tr>
+<tr class="odd">
+<td>Clamp</td>
+<td></td>
+<td>Clamp to the first/last row when computing the difference.</td>
+</tr>
+<tr class="even">
+<td>Zero</td>
+<td></td>
+<td>Fill missing delta with zero.</td>
+</tr>
+</tbody>
+</table>
+<p>Policy for handling boundary rows where t-1 or t+1 is out-of-range.</p>
+</section>
+<section id="enum-boundarypolicy" class="level3">
+<h3 class="anchored" data-anchor-id="enum-boundarypolicy">enum BoundaryPolicy</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NaN</td>
+<td></td>
+<td>Fill missing neighbor features with NaN (default)</td>
+</tr>
+<tr class="even">
+<td>Drop</td>
+<td></td>
+<td>Drop rows where any offset is out-of-range.</td>
+</tr>
+<tr class="odd">
+<td>Clamp</td>
+<td></td>
+<td>Clamp to the first/last row.</td>
+</tr>
+<tr class="even">
+<td>Zero</td>
+<td></td>
+<td>Fill missing neighbor features with zero.</td>
+</tr>
+</tbody>
+</table>
+<p>Policy for handling boundary rows where a neighbor offset is out-of-range.</p>
+</section>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-analogeventthreshold" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogeventthreshold">function analogEventThreshold</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> analogEventThreshold<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    AnalogEventThresholdParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Detect threshold crossing events in an analog time series.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> Input analog time series</li>
+<li><strong>params</strong> Threshold parameters (value, direction, lockout)</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to digital event series containing event times</p>
+<p>This is a container-level transform because it has temporal dependencies: the lockout period requires looking at previous samples to determine if an event should be reported.</p>
+<p>Container signature: <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> → <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a></p>
+<p>Algorithm:</p>
+<ol type="1">
+<li>Iterate through time series samples</li>
+<li>Check if value crosses threshold (based on direction)</li>
+<li>If crossed and outside lockout period from last event, record event</li>
+<li>Report progress and check for cancellation</li>
+</ol>
+</section>
+<section id="function-analoghilbertphase" class="level3">
+<h3 class="anchored" data-anchor-id="function-analoghilbertphase">function analogHilbertPhase</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> analogHilbertPhase<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    AnalogHilbertPhaseParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate instantaneous phase or amplitude using Hilbert transform.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> Input analog time series</li>
+<li><strong>params</strong> Hilbert transform parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to analog time series containing phase (radians) or amplitude</p>
+<p>This is a container-level transform because it operates on the entire time series and handles discontinuities, chunked processing, and FFT-based computation that requires global context.</p>
+<p>Container signature: <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></p>
+<p>Algorithm:</p>
+<ol type="1">
+<li>Detect discontinuities and split into chunks</li>
+<li>For each chunk: a. Optionally apply bandpass filter b. Compute FFT c.&nbsp;Create analytic signal by zeroing negative frequencies d.&nbsp;Compute inverse FFT e. Extract phase (atan2) or amplitude (magnitude)</li>
+<li>Stitch chunks back together</li>
+<li>Report progress and check for cancellation</li>
+</ol>
+</section>
+<section id="function-analogtotensor" class="level3">
+<h3 class="anchored" data-anchor-id="function-analogtotensor">function analogToTensor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> analogToTensor<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> channels<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    AnalogToTensorParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pack multiple <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> channels into a single 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>channels</strong> Non-empty vector of channels to pack</li>
+<li><strong>params</strong> Parameters (channel_keys used as column names if sizes match)</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation/logging</li>
+</ul>
+<p><strong>Return</strong>: 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (time × channels), or nullptr on validation failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>channels must not be empty</li>
+<li>All channels must have identical sample counts</li>
+<li>All channels must share the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> (pointer identity)</li>
+</ul>
+<p>All channels must share the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> (by pointer identity) and have the same sample count. Uses viewValues() for mmap-safe iteration.</p>
+</section>
+<section id="function-calculatelineangle" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelineangle">function calculateLineAngle</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineAngle<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    LineAngleParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate the angle at a specified position along a line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to calculate angle from</li>
+<li><strong>params</strong> Parameters controlling the calculation (call validate() first for batch)</li>
+</ul>
+<p><strong>Return</strong>: float Angle in degrees (-180 to 180)</p>
+<p><strong>Precondition</strong>: When method is PolynomialFit, params.getPolynomialOrder() &gt;= 0 (enforcement: none)</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns the angle in degrees at the specified position along the line.</p>
+<p>The angle is measured relative to the reference vector (default: positive x-axis). Positive angles are counter-clockwise from the reference.</p>
+<p>Two calculation methods are supported:</p>
+<ul>
+<li>DirectPoints: Calculate angle from tangent vector between adjacent points</li>
+<li>PolynomialFit: Fit a polynomial to the line and calculate angle from derivative</li>
+</ul>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> (one angle per timestamp)</li>
+</ul>
+<p>For batch processing, call params.validate() once before processing to pre-compute normalized reference vectors and clamped positions.</p>
+</section>
+<section id="function-calculatelineanglewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelineanglewithcontext">function calculateLineAngleWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineAngleWithContext<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    LineAngleParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-fliplinebase" class="level3">
+<h3 class="anchored" data-anchor-id="function-fliplinebase">function flipLineBase</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Line2D flipLineBase<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    LineBaseFlipParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Flip a line’s base if it’s farther from the reference point than the end.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to potentially flip</li>
+<li><strong>params</strong> Parameters containing the reference point</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> The line, possibly with reversed point order</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> (possibly reversed).</p>
+<p>The transform compares the distance from both endpoints (base = first point, end = last point) to the reference point. If the base is farther from the reference than the end, the line is reversed so the closer endpoint becomes the new base.</p>
+<p>Use cases:</p>
+<ul>
+<li>Ensuring consistent whisker orientation (base always near face)</li>
+<li>Normalizing line direction based on a landmark point</li>
+</ul>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one line per timestamp, possibly flipped)</li>
+</ul>
+<p>Edge cases:</p>
+<ul>
+<li>Empty lines: Returned unchanged</li>
+<li>Single-point lines: Returned unchanged (cannot determine orientation)</li>
+<li>Equal distances: <a href="../../api_generated/Classes/structLine.html">Line</a> is NOT flipped (keeps original orientation)</li>
+</ul>
+</section>
+<section id="function-fliplinebasewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-fliplinebasewithcontext">function flipLineBaseWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Line2D flipLineBaseWithContext<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    LineBaseFlipParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-cliplineatreference" class="level3">
+<h3 class="anchored" data-anchor-id="function-cliplineatreference">function clipLineAtReference</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Line2D clipLineAtReference<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> reference_line<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    LineClipParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clip a line at its intersection with a reference line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to clip</li>
+<li><strong>reference_line</strong> The reference line to clip against</li>
+<li><strong>params</strong> Parameters controlling the clipping</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> The clipped line (or original if no intersection)</p>
+<p>This is a <strong>binary</strong> element-level transform that takes a line and a reference line as <strong>separate inputs</strong>, then returns the clipped line.</p>
+<p>The <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">V2</a> system supports this natively via BinaryElementTransform and tuple inputs. Uses 1:1 matching - each <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> is paired with one reference <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> at the same time.</p>
+</section>
+<section id="function-cliplineatreferencewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-cliplineatreferencewithcontext">function clipLineAtReferenceWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Line2D clipLineAtReferenceWithContext<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> reference_line<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    LineClipParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-calculatelinecurvature" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelinecurvature">function calculateLineCurvature</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineCurvature<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    LineCurvatureParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate the curvature at a specified position along a line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to calculate curvature from</li>
+<li><strong>params</strong> Parameters controlling the calculation (call validate() first for batch)</li>
+</ul>
+<p><strong>Return</strong>: float Curvature value, or NaN if calculation fails</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns the curvature value at the specified position along the line.</p>
+<p>Curvature is calculated using the formula: k = |x’<em>y’’ - y’</em>x’‘| / (x’^2 + y’<sup>2)</sup>(3/2)</p>
+<p>where x’, y’ are first derivatives and x’‘, y’’ are second derivatives of a parametric polynomial fit to the line.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> (one curvature value per timestamp)</li>
+</ul>
+<p>For batch processing, call params.validate() once before processing to pre-compute clamped parameters.</p>
+</section>
+<section id="function-calculatelinecurvaturewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelinecurvaturewithcontext">function calculateLineCurvatureWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineCurvatureWithContext<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    LineCurvatureParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-calculatelinelength" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelinelength">function calculateLineLength</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineLength<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    LineLengthParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate the total arc length of a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to measure</li>
+<li><strong>params</strong> Parameters (currently unused)</li>
+</ul>
+<p><strong>Return</strong>: Total arc length as a float</p>
+<p>Computes the sum of Euclidean distances between consecutive points. Returns 0 for lines with fewer than 2 points.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> (one length per timestamp per line)</li>
+</ul>
+</section>
+<section id="function-calculatelinelengthwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelinelengthwithcontext">function calculateLineLengthWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineLengthWithContext<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    LineLengthParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting and cancellation.</p>
+</section>
+<section id="function-pointtolinesegmentdistance2" class="level3">
+<h3 class="anchored" data-anchor-id="function-pointtolinesegmentdistance2">function pointToLineSegmentDistance2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> pointToLineSegmentDistance2<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> line_start<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> line_end</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate squared distance from point to line segment.</p>
+<p>Returns the squared Euclidean distance from a point to the closest point on a line segment.</p>
+</section>
+<section id="function-pointtolinemindistance2" class="level3">
+<h3 class="anchored" data-anchor-id="function-pointtolinemindistance2">function pointToLineMinDistance2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> pointToLineMinDistance2<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate minimum squared distance from point to entire line.</p>
+</section>
+<section id="function-calculatelineminpointdistance" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelineminpointdistance">function calculateLineMinPointDistance</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineMinPointDistance<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    LineMinPointDistParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate distance from a single point to a line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to measure distance from</li>
+<li><strong>point</strong> The point to measure distance to</li>
+<li><strong>params</strong> Parameters controlling the calculation</li>
+</ul>
+<p><strong>Return</strong>: float Distance (or squared distance if configured)</p>
+<p>This is a <strong>binary</strong> element-level transform that takes a line and a single point as <strong>separate inputs</strong>, then returns the distance from the point to the line.</p>
+<p>The <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">V2</a> system supports this natively via BinaryElementTransform and tuple inputs. Uses 1:1 matching - each <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> is paired with one <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a> at the same index.</p>
+</section>
+<section id="function-calculatelineminpointdistancewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatelineminpointdistancewithcontext">function calculateLineMinPointDistanceWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateLineMinPointDistanceWithContext<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    LineMinPointDistParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-extractlinepoint" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractlinepoint">function extractLinePoint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> extractLinePoint<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    LinePointExtractionParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract a point at a specified position along a line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to extract a point from</li>
+<li><strong>params</strong> Parameters controlling the extraction (call validate() first for batch)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> The extracted point coordinates</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns a <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> at the specified fractional position along the line.</p>
+<p>Two extraction methods are supported:</p>
+<ul>
+<li>Direct: Use distance-based interpolation along the line</li>
+<li>Parametric: Fit a polynomial and evaluate at the specified position</li>
+</ul>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classPointData.html">PointData</a> (one point per timestamp per line)</li>
+</ul>
+<p>For batch processing, call params.validate() once before processing to pre-compute clamped parameter values.</p>
+</section>
+<section id="function-extractlinepointwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractlinepointwithcontext">function extractLinePointWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> extractLinePointWithContext<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    LinePointExtractionParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-resampleline" class="level3">
+<h3 class="anchored" data-anchor-id="function-resampleline">function resampleLine</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>Line2D resampleLine<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    LineResampleParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Resample or simplify a line based on the selected algorithm.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to resample/simplify</li>
+<li><strong>params</strong> Parameters specifying algorithm and settings</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> The resampled/simplified line</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns a resampled/simplified <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>.</p>
+<p>Algorithm descriptions:</p>
+<p><strong>FixedSpacing</strong>: Iterates through the polyline, placing new points at target_spacing intervals. Interpolates between original points as needed. Preserves first and last points.</p>
+<p><strong>DouglasPeucker</strong>: Recursively simplifies a polyline by removing points that are within epsilon distance of the line segment between two endpoints. Preserves overall shape while reducing point count.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one resampled line per input line)</li>
+</ul>
+<p>Edge cases:</p>
+<ul>
+<li>Empty lines: Returned unchanged (empty)</li>
+<li>Single-point lines: Returned unchanged (cannot resample)</li>
+<li>Two-point lines: Returned unchanged (minimal representation)</li>
+</ul>
+</section>
+<section id="function-resamplelinewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-resamplelinewithcontext">function resampleLineWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Line2D resampleLineWithContext<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    LineResampleParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-extractlinesubsegment" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractlinesubsegment">function extractLineSubsegment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>Line2D extractLineSubsegment<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    LineSubsegmentParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract a subsegment from a line between specified fractional positions.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> The line to extract subsegment from</li>
+<li><strong>params</strong> Parameters controlling the extraction</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> The extracted subsegment</p>
+<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> containing the extracted subsegment.</p>
+<p>Two extraction methods are supported:</p>
+<ul>
+<li>Direct: Extracts points directly from the original line at the specified positions. With preserve_original_spacing=true, keeps original points within the range. With preserve_original_spacing=false, interpolates start/end points.</li>
+<li>Parametric: Fits a parametric polynomial to the line and generates a new set of uniformly-spaced points along the subsegment.</li>
+</ul>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one subsegment per input line)</li>
+</ul>
+<p>Edge cases:</p>
+<ul>
+<li>Empty lines: Returned unchanged (empty)</li>
+<li>Single-point lines: Returned unchanged (single point)</li>
+<li>Invalid range (start &gt;= end): Returns empty line</li>
+<li>Insufficient points for polynomial: Falls back to Direct method</li>
+</ul>
+</section>
+<section id="function-extractlinesubsegmentwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractlinesubsegmentwithcontext">function extractLineSubsegmentWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>Line2D extractLineSubsegmentWithContext<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    LineSubsegmentParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-calculatemaskarea" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatemaskarea">function calculateMaskArea</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateMaskArea<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    MaskAreaParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate area of a single mask.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask</li>
+<li><strong>params</strong> Parameters (currently unused)</li>
+</ul>
+<p><strong>Return</strong>: Area as number of pixels in the mask</p>
+<p>This is the element-level transform: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> → float</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classMaskData.html">MaskData</a> (ragged) → <a href="../../api_generated/Classes/classRaggedAnalogTimeSeries.html">RaggedAnalogTimeSeries</a></li>
+<li>SingleMaskData (hypothetical) → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></li>
+</ul>
+<p>The raggedness comes from the container structure, not the element output type.</p>
+</section>
+<section id="function-calculatemaskareawithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatemaskareawithcontext">function calculateMaskAreaWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculateMaskAreaWithContext<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    MaskAreaParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate area with context support.</p>
+<p>Demonstrates progress reporting and cancellation checking.</p>
+</section>
+<section id="function-calculatemaskcentroid" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatemaskcentroid">function calculateMaskCentroid</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> calculateMaskCentroid<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    MaskCentroidParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate the centroid (center of mass) of a single mask.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask containing pixel coordinates</li>
+<li><strong>params</strong> Parameters (currently unused but available for future extensions)</li>
+</ul>
+<p><strong>Return</strong>: Centroid as <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> with (x, y) coordinates</p>
+<p><strong>Note</strong>: For empty masks, returns <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a>(0.0f, 0.0f)</p>
+<p>This is the element-level transform: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> → <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a></p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classMaskData.html">MaskData</a> (ragged) → <a href="../../api_generated/Classes/classPointData.html">PointData</a></li>
+</ul>
+<p>The centroid is calculated as the arithmetic mean of all pixel coordinates, assuming uniform density across the mask.</p>
+</section>
+<section id="function-calculatemaskcentroidwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculatemaskcentroidwithcontext">function calculateMaskCentroidWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> calculateMaskCentroidWithContext<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    MaskCentroidParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Calculate the centroid with context support for progress/cancellation.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask</li>
+<li><strong>params</strong> Parameters</li>
+<li><strong>ctx</strong> Compute context for progress reporting and cancellation</li>
+</ul>
+<p><strong>Return</strong>: Centroid as <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a></p>
+<p>Demonstrates progress reporting and cancellation checking for long-running operations on large masks.</p>
+</section>
+<section id="function-sincinterpolation" class="level3">
+<h3 class="anchored" data-anchor-id="function-sincinterpolation">function sincInterpolation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> sincInterpolation<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    SincInterpolationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply band-limited sinc interpolation to upsample an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> Input analog time series with N samples</li>
+<li><strong>params</strong> Interpolation parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Shared pointer to a new <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> with (N-1)*factor+1 samples, or nullptr if input is empty or params are invalid</p>
+<p><strong>Precondition</strong>: params.upsampling_factor &gt;= 1</p>
+<p>For each output sample position m in [0, M-1] where M = (N-1)*factor + 1:</p>
+<ol type="1">
+<li>Compute fractional input position: x = m / factor</li>
+<li>For each input sample n in [floor(x) - K, floor(x) + K]: accumulate sinc(x - n) * window(x - n) * input[n]</li>
+<li>Output sample = weighted sum</li>
+</ol>
+<p>Where K = kernel_half_width and sinc(t) = sin(pi<em>t) / (pi</em>t), sinc(0) = 1.</p>
+</section>
+<section id="function-sumreduction" class="level3">
+<h3 class="anchored" data-anchor-id="function-sumreduction">function sumReduction</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReduction<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sum all floats at a given time point into a single float.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>values</strong> All float values at a single time point</li>
+<li><strong>params</strong> Parameters (currently unused)</li>
+</ul>
+<p><strong>Return</strong>: Vector containing single summed value</p>
+<p>This is a time-grouped transform: Range<float> → Range<float> It takes all floats at one time and produces one summed float.</float></float></p>
+<p>Example:</p>
+<ul>
+<li>Input at time T: [10.0, 5.0, 3.0]</li>
+<li>Output at time T: [18.0]</li>
+</ul>
+<p>Use case: Reducing <a href="../../api_generated/Classes/classRaggedAnalogTimeSeries.html">RaggedAnalogTimeSeries</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a></p>
+</section>
+<section id="function-sumreductionwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-sumreductionwithcontext">function sumReductionWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReductionWithContext<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Context-aware version with progress reporting.</p>
+</section>
+<section id="function-tensorcar" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorcar">function tensorCAR</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCAR<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    TensorCARParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply Common Average Reference to a multi-channel <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (time × channels)</li>
+<li><strong>params</strong> CAR parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation/logging</li>
+</ul>
+<p><strong>Return</strong>: CAR-referenced <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with the same shape as input, or nullptr on failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>input.ndim() == 2</li>
+<li>input.numRows() &gt;= 1</li>
+<li>input.numColumns() &gt;= 1</li>
+<li>exclude_channels does not exclude all channels</li>
+</ul>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>For each time point t, computes a reference value r(t) as the mean or median across all non-excluded channels. The reference is then subtracted from every channel at every time point: result[t, c] = input[t, c] - r(t)</p>
+<p>The input must be 2D with shape (time × channels). The <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, Interval, or Ordinal) and <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> are preserved intact.</p>
+</section>
+<section id="function-tensorcentraldifference" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorcentraldifference">function tensorCentralDifference</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCentralDifference<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    TensorCentralDifferenceParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Append central-difference columns to a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></li>
+<li><strong>params</strong> Central-difference parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Augmented <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on validation failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>input.ndim() == 2</li>
+<li>input.rowType() == <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-timeframeindex">RowType::TimeFrameIndex</a></li>
+</ul>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D with <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-timeframeindex">RowType::TimeFrameIndex</a>. For each original column a new column is appended containing the central difference: delta_c[t] = (value_c[t+1] - value_c[t-1]) / 2</p>
+<p>Output column layout (include_original=true): [original cols] [delta_col0] [delta_col1] …</p>
+<p>Delta columns are named “{original_col}_delta” (e.g.&nbsp;“feat1_delta”).</p>
+</section>
+<section id="function-tensorica" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorica">function tensorICA</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorICA<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TensorICAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply ICA (RADICAL) to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (observations × features)</li>
+<li><strong>params</strong> ICA parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Transformed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on failure</p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>ICA does not reduce dimensionality — the output has the same number of features as the input. Each output column is an independent component.</li>
+<li>RADICAL scales quadratically in the number of dimensions. Consider reducing dimensionality with PCA first for high-dimensional data.</li>
+</ul>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D. The output has the same number of columns as the input, with columns named “IC1”, “IC2”, etc. The input’s <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> is preserved: if the input has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows, the output also has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows with the same time indices.</p>
+</section>
+<section id="function-tensorpca" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorpca">function tensorPCA</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorPCA<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    TensorPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (observations × features)</li>
+<li><strong>params</strong> PCA parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Reduced <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on failure</p>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D. The output has <code>n_components</code> columns named “PC1”, “PC2”, etc. The input’s <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> is preserved: if the input has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows, the output also has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows with the same time indices.</p>
+</section>
+<section id="function-tensorrobustpca" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorrobustpca">function tensorRobustPCA</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorRobustPCA<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    TensorRobustPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply Robust PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (observations x features)</li>
+<li><strong>params</strong> Robust PCA parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Reduced <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on failure</p>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> -&gt; <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D. The output has <code>n_components</code> columns named “RPCA1”, “RPCA2”, etc. The input’s <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> is preserved: if the input has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows, the output also has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows with the same time indices.</p>
+</section>
+<section id="function-tensortemporalneighbors" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensortemporalneighbors">function tensorTemporalNeighbors</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTemporalNeighbors<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    TensorTemporalNeighborParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Augment a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with neighbor feature columns.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></li>
+<li><strong>params</strong> <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Temporal.html">Temporal</a> neighbor parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Augmented <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on validation failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>input.ndim() == 2</li>
+<li>input.rowType() == <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-timeframeindex">RowType::TimeFrameIndex</a></li>
+</ul>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D with <a href="../../api_generated/Files/RowDescriptor_8hpp.html#enumvalue-timeframeindex">RowType::TimeFrameIndex</a>. Offsets are generated from the lag_range/lag_step and lead_range/lead_step parameters. For each offset, the features from the neighbor row at position (current_row + offset) in sorted time order are appended as new columns.</p>
+<p>Output column layout: [original cols (if include_original)] [offset_1 cols] [offset_2 cols] … Shifted columns are named “{original_col}_lag{offset}” (e.g.&nbsp;“feat1_lag-1”).</p>
+</section>
+<section id="function-tensortoanalog" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensortoanalog">function tensorToAnalog</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorToAnalog<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    TensorToAnalogParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract columns from a 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> as independent <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to extract columns from</li>
+<li><strong>params</strong> Parameters (columns to extract, output prefix)</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation/logging</li>
+</ul>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> (one per selected column), empty on failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>input must be 2D</li>
+<li>All column indices in params.columns must be in [0, input.numColumns())</li>
+</ul>
+<p>Each selected column is copied into a new owning <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>. Time indices and <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> are preserved from the source <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> when the tensor has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows.</p>
+</section>
+<section id="function-tensortsne" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensortsne">function tensorTSNE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTSNE<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    TensorTSNEParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply t-SNE dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (observations × features)</li>
+<li><strong>params</strong> t-SNE parameters</li>
+<li><strong>ctx</strong> Compute context for progress/cancellation</li>
+</ul>
+<p><strong>Return</strong>: Reduced <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>, or nullptr on failure</p>
+<p>Container signature: <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<p>The input must be 2D. The output has <code>n_components</code> columns named “tSNE1”, “tSNE2”, etc. The input’s <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> is preserved: if the input has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows, the output also has <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> rows with the same time indices.</p>
+</section>
+<section id="function-tensorwhitening" class="level3">
+<h3 class="anchored" data-anchor-id="function-tensorwhitening">function tensorWhitening</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorWhitening<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    TensorWhiteningParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply robust ZCA whitening to the included channels of a 2D tensor.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with shape (time, channel)</li>
+<li><strong>params</strong> Whitening parameters</li>
+<li><strong>ctx</strong> Compute context for progress, logging, and cancellation</li>
+</ul>
+<p><strong>Return</strong>: Whitened <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> on success, or nullptr on validation/backend failure</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>input.ndim() == 2</li>
+<li>input.numRows() &gt;= 2</li>
+<li>input.numColumns() &gt;= 1</li>
+<li>epsilon &gt; 0</li>
+<li>exclude_channels does not exclude all channels</li>
+</ul>
+<p>The input is interpreted as time x channels. Included channels are median- centered, optionally filtered by a MAD-based clean-sample mask for covariance estimation, whitened with a ZCA matrix, and optionally rescaled in amplitude. Excluded channels are passed through unchanged.</p>
+<p>The transform always uses the LibTorch compute/storage path so the result is LibTorch-backed on both CPU and GPU builds.</p>
+</section>
+<section id="function-loadparametersfortransform" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadparametersfortransform">function loadParametersForTransform</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any loadParametersForTransform<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-loadparametersfromjson" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadparametersfromjson">function loadParametersFromJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromJson<span class="op">(</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-loadparametersfromfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadparametersfromfile">function loadParametersFromFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromFile<span class="op">(</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load parameters from JSON file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>file_path</strong> Path to JSON file</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ParamsT</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: Result containing parameters or error</p>
+</section>
+<section id="function-saveparameterstojson" class="level3">
+<h3 class="anchored" data-anchor-id="function-saveparameterstojson">function saveParametersToJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string saveParametersToJson<span class="op">(</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save parameters to JSON string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>params</strong> Parameters to save</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ParamsT</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: JSON string representation</p>
+</section>
+<section id="function-saveparameterstofile" class="level3">
+<h3 class="anchored" data-anchor-id="function-saveparameterstofile">function saveParametersToFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> saveParametersToFile<span class="op">(</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pretty_print <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save parameters to JSON file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>params</strong> Parameters to save</li>
+<li><strong>file_path</strong> Path to output file</li>
+<li><strong>pretty_print</strong> Whether to pretty-print the JSON (default: true)</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ParamsT</strong> Parameter type</li>
+</ul>
+<p><strong>Return</strong>: true if saved successfully</p>
+</section>
+<section id="function-createpipelinestepfromregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-createpipelinestepfromregistry">function createPipelineStepFromRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>PipelineStep createPipelineStepFromRegistry<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="at">const</span> <span class="op">&amp;</span> registry<span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>registry</strong> Element registry (for metadata lookup)</li>
+<li><strong>transform_name</strong> Transform name</li>
+<li><strong>params_any</strong> Type-erased parameters</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> with correctly typed parameters</p>
+<p>Looks up the appropriate factory based on parameter type from metadata.</p>
+</section>
+<section id="function-loadstepfromdescriptor" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadstepfromdescriptor">function loadStepFromDescriptor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> PipelineStep <span class="op">&gt;</span> loadStepFromDescriptor<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    PipelineStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a single pipeline step from JSON descriptor.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>descriptor</strong> Step descriptor from JSON</li>
+</ul>
+<p><strong>Return</strong>: rfl::Result<pipelinestep> Success or error message</pipelinestep></p>
+<p>This function:</p>
+<ol type="1">
+<li>Validates that transform_name exists in the registry</li>
+<li>Loads parameters using the registry’s automatic deserializer</li>
+<li>Creates a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry</li>
+</ol>
+</section>
+<section id="function-loadprereductionfromdescriptor" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadprereductionfromdescriptor">function loadPreReductionFromDescriptor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ReductionStep <span class="op">&gt;</span> loadPreReductionFromDescriptor<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    PreReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a pre-reduction from JSON descriptor.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>descriptor</strong> Pre-reduction step descriptor from JSON</li>
+</ul>
+<p><strong>Return</strong>: rfl::Result<reductionstep> Success or error message</reductionstep></p>
+<p>This function:</p>
+<ol type="1">
+<li>Validates that reduction_name exists in <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionRegistry.html">RangeReductionRegistry</a></li>
+<li>Loads parameters using the registry’s automatic deserializer</li>
+<li>Returns a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">ReductionStep</a> ready to be added to the pipeline</li>
+</ol>
+</section>
+<section id="function-loadrangereductionfromdescriptor" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadrangereductionfromdescriptor">function loadRangeReductionFromDescriptor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>any <span class="op">&gt;</span> <span class="op">&gt;</span> loadRangeReductionFromDescriptor<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    RangeReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a range reduction from JSON descriptor.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>descriptor</strong> Range reduction descriptor from JSON</li>
+</ul>
+<p><strong>Return</strong>: rfl::Result containing (name, params_any) pair or error message</p>
+<p>This function:</p>
+<ol type="1">
+<li>Validates that reduction_name exists in <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionRegistry.html">RangeReductionRegistry</a></li>
+<li>Loads parameters using the registry’s automatic deserializer</li>
+<li>Returns metadata needed to configure the pipeline’s range reduction</li>
+</ol>
+</section>
+<section id="function-loadpipelinefromjson" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadpipelinefromjson">function loadPipelineFromJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> TransformPipeline <span class="op">&gt;</span> loadPipelineFromJson<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a complete pipeline from JSON string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>json_str</strong> JSON string containing pipeline descriptor</li>
+</ul>
+<p><strong>Return</strong>: rfl::Result<transformpipeline> Loaded pipeline or error</transformpipeline></p>
+<p>This function parses the JSON, validates all steps, and creates a <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> with properly typed parameters.</p>
+<p>Example usage: ```cpp</p>
+<p>auto pipeline_result = loadPipelineFromJson(json_str); if (pipeline_result) { auto pipeline = pipeline_result.value(); // Use pipeline… } else { std::cerr &lt;&lt; “Error:” &lt;&lt; pipeline_result.error()-&gt;what() &lt;&lt; std::endl; }</p>
+<pre><code>
+
+### function loadPipelineFromFile
+
+```cpp
+rfl::Result&lt; TransformPipeline &gt; loadPipelineFromFile(
+    std::string const &amp; filepath
+)</code></pre>
+<p>Load pipeline from JSON file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Path to JSON file</li>
+</ul>
+<p><strong>Return</strong>: rfl::Result<transformpipeline> Loaded pipeline or error</transformpipeline></p>
+</section>
+<section id="function-savepipelinetojson" class="level3">
+<h3 class="anchored" data-anchor-id="function-savepipelinetojson">function savePipelineToJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string savePipelineToJson<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    PipelineDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save pipeline descriptor to JSON string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>descriptor</strong> Pipeline descriptor to save</li>
+</ul>
+<p><strong>Return</strong>: std::string JSON representation</p>
+<p>Note: This saves the descriptor, not the executable pipeline. Parameter values are preserved but executor functions are not serialized.</p>
+</section>
+<section id="function-getpipelinestepfactoryregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-getpipelinestepfactoryregistry">function getPipelineStepFactoryRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>type_index<span class="op">,</span> <span class="bu">std::</span>function<span class="op">&lt;</span> PipelineStep<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;,</span> <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="op">&gt;</span> <span class="op">&amp;</span> getPipelineStepFactoryRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry of <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory functions.</p>
+<p>Maps type_index -&gt; factory function that creates <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> from std::any. Factories are registered automatically via static initialization when parameter types are used with <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterTransform.html">RegisterTransform</a>.</p>
+</section>
+<section id="function-registerpipelinestepfactoryfor" class="level3">
+<h3 class="anchored" data-anchor-id="function-registerpipelinestepfactoryfor">function registerPipelineStepFactoryFor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerPipelineStepFactoryFor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Helper to register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</p>
+<p>Call this once for each parameter type to register its factory. Template automatically deduces the parameter type.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

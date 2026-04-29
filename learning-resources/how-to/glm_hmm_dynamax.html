@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Input-Output HMM for Whisker Contact Detection Using dynamax – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../learning-resources/index.html" aria-current="page"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../labeling/keypoint.html">How-to Guides</a></li><li class="breadcrumb-item"><a href="../../learning-resources/how-to/glm_hmm_dynamax.html">GLM-HMM Contact Detection (dynamax)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Learning Resources</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Tutorials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../examples/keypoint_labeling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keypoint Labeling</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/tutorials/hmm_behavioral_epochs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">HMM Behavioral Epoch Prediction</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Concepts</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../concepts/timeframe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeFrame</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">How-to Guides</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../labeling/keypoint.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Label Creation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../labeling/mask.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Creation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../examples/video_import.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Video Import</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../examples/image_stack_import.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Stack Import</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../examples/tabular_binary_events.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Load Tabular Binary Events</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/how-to/triage_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Triage Line Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/how-to/label_video_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Label Video Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/how-to/exporting_aoti_encoder.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Export an AOTI Encoder Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/how-to/glm_hmm_ssm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GLM-HMM Contact Detection (ssm)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../learning-resources/how-to/glm_hmm_dynamax.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">GLM-HMM Contact Detection (dynamax)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#sec-step0" id="toc-sec-step0" class="nav-link" data-scroll-target="#sec-step0">Step 0: Environment Setup</a></li>
+  <li><a href="#data-contract" id="toc-data-contract" class="nav-link" data-scroll-target="#data-contract">Data Contract</a></li>
+  <li><a href="#pipeline" id="toc-pipeline" class="nav-link" data-scroll-target="#pipeline">Pipeline</a></li>
+  <li><a href="#sec-step1" id="toc-sec-step1" class="nav-link" data-scroll-target="#sec-step1">Step 1: Extract Data from DataManager</a></li>
+  <li><a href="#sec-step2" id="toc-sec-step2" class="nav-link" data-scroll-target="#sec-step2">Step 2: Build Binary Labels from Intervals</a></li>
+  <li><a href="#sec-step3" id="toc-sec-step3" class="nav-link" data-scroll-target="#sec-step3">Step 3: Create the Input-Output HMM</a>
+  <ul class="collapse">
+  <li><a href="#choosing-the-number-of-states" id="toc-choosing-the-number-of-states" class="nav-link" data-scroll-target="#choosing-the-number-of-states">Choosing the number of states</a></li>
+  <li><a href="#tuning-the-m-step" id="toc-tuning-the-m-step" class="nav-link" data-scroll-target="#tuning-the-m-step">Tuning the M-step</a></li>
+  </ul></li>
+  <li><a href="#sec-step4" id="toc-sec-step4" class="nav-link" data-scroll-target="#sec-step4">Step 4: Fit the Model with EM</a>
+  <ul class="collapse">
+  <li><a href="#multiple-initialisations" id="toc-multiple-initialisations" class="nav-link" data-scroll-target="#multiple-initialisations">Multiple initialisations</a></li>
+  <li><a href="#alternative-sgd-fitting" id="toc-alternative-sgd-fitting" class="nav-link" data-scroll-target="#alternative-sgd-fitting">Alternative: SGD fitting</a></li>
+  <li><a href="#print-convergence" id="toc-print-convergence" class="nav-link" data-scroll-target="#print-convergence">Print convergence</a></li>
+  </ul></li>
+  <li><a href="#sec-step5" id="toc-sec-step5" class="nav-link" data-scroll-target="#sec-step5">Step 5: Inspect the Fitted Model</a>
+  <ul class="collapse">
+  <li><a href="#viterbi-decoding-most-likely-state-sequence" id="toc-viterbi-decoding-most-likely-state-sequence" class="nav-link" data-scroll-target="#viterbi-decoding-most-likely-state-sequence">Viterbi decoding (most likely state sequence)</a></li>
+  <li><a href="#inspect-learned-transition-weights" id="toc-inspect-learned-transition-weights" class="nav-link" data-scroll-target="#inspect-learned-transition-weights">Inspect learned transition weights</a></li>
+  <li><a href="#evaluate-mean-transition-matrix-on-training-data" id="toc-evaluate-mean-transition-matrix-on-training-data" class="nav-link" data-scroll-target="#evaluate-mean-transition-matrix-on-training-data">Evaluate mean transition matrix on training data</a></li>
+  <li><a href="#inspect-per-state-glm-weights" id="toc-inspect-per-state-glm-weights" class="nav-link" data-scroll-target="#inspect-per-state-glm-weights">Inspect per-state GLM weights</a></li>
+  </ul></li>
+  <li><a href="#sec-step6" id="toc-sec-step6" class="nav-link" data-scroll-target="#sec-step6">Step 6: Apply Model to Training Data</a>
+  <ul class="collapse">
+  <li><a href="#apply-to-training-blocks" id="toc-apply-to-training-blocks" class="nav-link" data-scroll-target="#apply-to-training-blocks">Apply to training blocks</a></li>
+  </ul></li>
+  <li><a href="#sec-step7" id="toc-sec-step7" class="nav-link" data-scroll-target="#sec-step7">Step 7: Predict on Full Session</a></li>
+  <li><a href="#sec-cv" id="toc-sec-cv" class="nav-link" data-scroll-target="#sec-cv">Cross-Validation</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
+  <li><a href="#comparison-with-ssm" id="toc-comparison-with-ssm" class="nav-link" data-scroll-target="#comparison-with-ssm">Comparison with ssm</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../labeling/keypoint.html">How-to Guides</a></li><li class="breadcrumb-item"><a href="../../learning-resources/how-to/glm_hmm_dynamax.html">GLM-HMM Contact Detection (dynamax)</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Input-Output HMM for Whisker Contact Detection Using dynamax</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This guide walks through fitting an <strong>Input-Output HMM (IOHMM)</strong> to classify whisker contact frames using deep-learning encoder features and the <a href="https://github.com/probml/dynamax">dynamax</a> library (JAX-based).</p>
+<p>A <strong>standard HMM</strong> models contact/no-contact as hidden states with a <strong>fixed</strong> transition matrix. At high frame rates this struggles because (1) the transition matrix is overwhelmingly self-transitioning, (2) the transition dynamics cannot adapt to the behavioral context — e.g., whether the animal is actively whisking or quiescent.</p>
+<p>A standard <strong>GLM-HMM</strong> (Ashwood et al., 2022) improves emissions by making them input-dependent, but it still uses a <strong>fixed transition matrix</strong>. This means the probability of switching between behavioral regimes is constant regardless of what the animal is doing — which is the core limitation.</p>
+<p>An <strong>Input-Output HMM</strong> solves this by making <strong>both</strong> transitions and emissions depend on the input features:</p>
+<p><strong>Input-driven transitions (IOHMM):</strong> <span class="math display">\[
+P(z_t = j \mid z_{t-1} = i,\; \mathbf{u}_t) =
+\text{softmax}(\mathbf{V}_i \mathbf{u}_t + \mathbf{c}_i)_j
+\]</span></p>
+<p><strong>Input-driven emissions (GLM):</strong> <span class="math display">\[
+P(y_t = \text{contact} \mid z_t = k,\; \mathbf{u}_t) =
+\text{softmax}(\mathbf{W}_k \mathbf{u}_t + \mathbf{b}_k)
+\]</span></p>
+<p>Each state <span class="math inline">\(k\)</span> has its own transition weights <span class="math inline">\(\mathbf{V}_k\)</span> and emission weights <span class="math inline">\(\mathbf{W}_k\)</span>, so both <strong>when</strong> the model transitions between states and <strong>how</strong> each state maps features to contact labels are learned from data.</p>
+<p><strong>Why input-dependent transitions matter:</strong> When the animal starts whisking vigorously, the input-dependent transition model can increase the probability of switching to a “contact-prone” state. When it stops whisking, transitions toward a “quiet” state become more likely. This context-sensitivity is impossible with a fixed transition matrix.</p>
+<p><strong>Why dynamax?</strong> The <code>ssm</code> library does not install on Python 3.12 (required for neuralyzer). <code>dynamax</code> is the JAX-based successor from the same group (probml). While dynamax provides <code>CategoricalRegressionHMM</code> (input-dependent emissions with fixed transitions), we build a custom IOHMM by subclassing its modular <code>HMMTransitions</code> component — following the <a href="https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/custom_hmm.ipynb">custom HMM pattern</a>.</p>
+</section>
+<section id="prerequisites" class="level2">
+<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Requirement</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>WhiskerToolbox</td>
+<td>Built with Python bindings enabled</td>
+</tr>
+<tr class="even">
+<td>Python</td>
+<td>3.12 (required for neuralyzer compatibility)</td>
+</tr>
+<tr class="odd">
+<td>dynamax</td>
+<td><code>pip install dynamax</code></td>
+</tr>
+<tr class="even">
+<td>JAX</td>
+<td><strong>Pin to 0.4.30</strong> — see Step 0</td>
+</tr>
+<tr class="odd">
+<td>IPython</td>
+<td><code>pip install ipython</code> (required by <code>fastprogress</code> progress bars)</td>
+</tr>
+<tr class="even">
+<td>numpy</td>
+<td>Standard scientific Python stack</td>
+</tr>
+<tr class="odd">
+<td>Encoder features</td>
+<td>Extracted via Deep Learning widget → stored as <code>TensorData</code></td>
+</tr>
+<tr class="even">
+<td>Labeled intervals</td>
+<td>Contact labels created via <a href="../../learning-resources/how-to/label_video_intervals.html">Label Video Intervals</a></td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>dynamax uses JAX under the hood. If you encounter GPU memory issues, force CPU mode by setting <code>JAX_PLATFORMS=cpu</code> <strong>before</strong> importing JAX:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"JAX_PLATFORMS"</span>] <span class="op">=</span> <span class="st">"cpu"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="sec-step0" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step0">Step 0: Environment Setup</h2>
+<p>Create a dedicated conda environment with Python 3.12, then install the dependencies in the correct order. This step only needs to be done once.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Why the version pins?</strong> dynamax has <strong>no version constraints</strong> on its core dependencies (<code>tensorflow_probability</code>, <code>jax</code>, <code>numpy</code> are all unpinned). Running <code>pip install dynamax</code> pulls the latest of everything, but the latest releases are mutually incompatible:</p>
+<ul>
+<li><strong>JAX 0.5+</strong> removes <code>jax.interpreters.xla.pytype_aval_mappings</code> (used by TFP).</li>
+<li><strong>NumPy 2.0+</strong> renames <code>np.reshape(newshape=...)</code> to <code>shape=</code> (used by TFP).</li>
+</ul>
+<p>The pins below are a <a href="https://github.com/probml/dynamax/issues">known-working combination</a> for dynamax.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create the environment (Python 3.12 is required for neuralyzer)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> dynamax python=3.12 <span class="at">-y</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate dynamax</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Install dynamax</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install dynamax</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Pin dependencies to a known-working combination</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install jax==0.4.30 jaxlib==0.4.30 numpy==1.26.4 scipy==1.13.0 tensorflow-probability==0.24.0</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Install IPython — required by fastprogress (a dynamax transitive dep)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#    for progress-bar display during EM fitting.</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install ipython</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>GPU users:</strong> Replace step 3 with <code>pip install "jax[cuda12]==0.4.30" jaxlib==0.4.30 ...</code> to use an NVIDIA GPU.</p>
+</div>
+</div>
+<p>Verify the environment is set up correctly:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.hidden_markov_model <span class="im">import</span> CategoricalRegressionHMM  <span class="co"># for reference</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.hidden_markov_model.models.abstractions <span class="im">import</span> HMM, HMMTransitions</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax, numpy <span class="im">as</span> np</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"JAX </span><span class="sc">{</span>jax<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">, NumPy </span><span class="sc">{</span>np<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span>)  <span class="co"># 0.4.30, 1.26.4</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Environment OK"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="data-contract" class="level2">
+<h2 class="anchored" data-anchor-id="data-contract">Data Contract</h2>
+<p>Both training and prediction rely on three objects in a single <code>DataManager</code> session:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>features</code></td>
+<td><code>TensorData</code> (2D)</td>
+<td>Shape <span class="math inline">\([T, D]\)</span> — encoder features per frame</td>
+</tr>
+<tr class="even">
+<td><code>train</code></td>
+<td><code>DigitalIntervalSeries</code></td>
+<td>Training block intervals (in video time coordinates)</td>
+</tr>
+<tr class="odd">
+<td><code>contact</code></td>
+<td><code>DigitalIntervalSeries</code></td>
+<td>Contact intervals (in video time coordinates)</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Time base mismatch:</strong> Intervals use <strong>TimeFrameIndex</strong> values (e.g., 37000) but the feature array is indexed by <strong>row</strong> (e.g., row 0). Each TensorData row has an associated TimeFrameIndex; we use <code>findRowGreaterOrEqual()</code> and <code>findRowLessOrEqual()</code> to convert interval boundaries to row indices. This follows the same pattern as the C++ MLCore classification pipeline.</p>
+</div>
+</div>
+<p><strong>Output:</strong> A new <code>DigitalIntervalSeries</code> written back to <code>DataManager</code> with predicted contact intervals from the GLM-HMM.</p>
+</section>
+<section id="pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="pipeline">Pipeline</h2>
+<pre><code>Encoder Features (TensorData)       Contact Labels (DigitalIntervalSeries)
+        │                                         │
+        │  inputs u_t ∈ ℝ^D                       │  observations y_t ∈ {0,1}
+        ▼                                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │            IOHMM (custom dynamax model)           │
+  │                                                   │
+  │  Input-driven transitions (IOHMM):                │
+  │  P(z_t|z_{t-1}=i, u_t) = softmax(V_i u_t + c_i) │
+  │                                                   │
+  │  Input-driven emissions (GLM):                    │
+  │  P(y_t|z_t=k, u_t) = softmax(W_k u_t + b_k)     │
+  │                                                   │
+  │  Training: EM on labeled blocks                   │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │  Labeled data:   smoother (conditions on labels)  │
+  │  Unlabeled data: forward propagation via          │
+  │                  input-driven transitions          │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+           DigitalIntervalSeries (predicted contact)</code></pre>
+</section>
+<section id="sec-step1" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step1">Step 1: Extract Data from DataManager</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Encoder features: shape (T, D) ---</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>features_td <span class="op">=</span> dm.getData(<span class="st">"features"</span>)          <span class="co"># TensorData</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>X_all <span class="op">=</span> np.array(features_td.values, copy<span class="op">=</span><span class="va">True</span>)  <span class="co"># writable copy</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>T_total, D <span class="op">=</span> X_all.shape</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Feature matrix: </span><span class="sc">{</span>T_total<span class="sc">}</span><span class="ss"> frames × </span><span class="sc">{</span>D<span class="sc">}</span><span class="ss"> dimensions"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Row type: </span><span class="sc">{</span>features_td<span class="sc">.</span>rowType()<span class="sc">}</span><span class="ss">"</span>)  <span class="co"># should be 'TimeFrameIndex'</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Row ↔ TimeFrameIndex conversion helpers ---</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Each TensorData row has an associated TimeFrameIndex (a plain int in Python).</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># We use the TensorData row-index API (same pattern as MLCore's ClassificationPipeline).</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>row_time_indices <span class="op">=</span> features_td.rowTimeIndices()  <span class="co"># list of int, one per row</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Row 0 → TimeFrameIndex </span><span class="sc">{</span><span class="bu">int</span>(row_time_indices[<span class="dv">0</span>])<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Row </span><span class="sc">{</span>T_total<span class="op">-</span><span class="dv">1</span><span class="sc">}</span><span class="ss"> → TimeFrameIndex </span><span class="sc">{</span><span class="bu">int</span>(row_time_indices[<span class="op">-</span><span class="dv">1</span>])<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> time_to_row(time_val):</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Convert a TimeFrameIndex value to a feature-array row index (inclusive start)."""</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    row <span class="op">=</span> features_td.findRowGreaterOrEqual(<span class="bu">int</span>(time_val))</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> row <span class="cf">if</span> row <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="cf">else</span> T_total  <span class="co"># past end</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> time_to_row_end(time_val):</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Convert a TimeFrameIndex to the exclusive-end row index for an interval."""</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    row <span class="op">=</span> features_td.findRowLessOrEqual(<span class="bu">int</span>(time_val) <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (row <span class="op">+</span> <span class="dv">1</span>) <span class="cf">if</span> row <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="cf">else</span> <span class="dv">0</span>  <span class="co"># before start</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> row_to_time(row_idx):</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Convert a feature-array row index back to a TimeFrameIndex value."""</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">int</span>(row_time_indices[row_idx])</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Training block intervals ---</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>train_intervals <span class="op">=</span> dm.getData(<span class="st">"train"</span>).toList()</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training blocks: </span><span class="sc">{</span><span class="bu">len</span>(train_intervals)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> iv <span class="kw">in</span> train_intervals:</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    r_s <span class="op">=</span> time_to_row(iv.start)</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    r_e <span class="op">=</span> time_to_row_end(iv.end)</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  TimeFrameIndex [</span><span class="sc">{</span>iv<span class="sc">.</span>start<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>iv<span class="sc">.</span>end<span class="sc">}</span><span class="ss">) → rows [</span><span class="sc">{</span>r_s<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>r_e<span class="sc">}</span><span class="ss">)  (</span><span class="sc">{</span>r_e <span class="op">-</span> r_s<span class="sc">}</span><span class="ss"> frames)"</span>)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Contact intervals ---</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>contact_intervals <span class="op">=</span> dm.getData(<span class="st">"contact"</span>).toList()</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Contact intervals: </span><span class="sc">{</span><span class="bu">len</span>(contact_intervals)<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-step2" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step2">Step 2: Build Binary Labels from Intervals</h2>
+<p>We need a frame-level binary label <span class="math inline">\(y_t \in \{0, 1\}\)</span> for each training block. dynamax expects a <strong>batch dimension</strong>: emissions shape is <code>(num_batches, T, ...)</code> and inputs shape is <code>(num_batches, T, D)</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> intervals_to_binary(total_frames, intervals):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Convert contact intervals to a binary array in feature-row space.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">    Each interval's start/end is converted from TimeFrameIndex values to</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">    feature-array row indices using the TensorData row-index API.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> np.zeros(total_frames, dtype<span class="op">=</span>np.int32)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> iv <span class="kw">in</span> intervals:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        r_s <span class="op">=</span> time_to_row(iv.start)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        r_e <span class="op">=</span> time_to_row_end(iv.end)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        labels[r_s:r_e] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> labels</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Build per-frame binary contact labels over the entire session (in row space)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>y_all <span class="op">=</span> intervals_to_binary(T_total, contact_intervals)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total contact frames (row space): </span><span class="sc">{</span>y_all<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss"> / </span><span class="sc">{</span>T_total<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardise features (important for logistic regression convergence)</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>X_mean <span class="op">=</span> X_all.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>X_std <span class="op">=</span> X_all.std(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> <span class="fl">1e-8</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>X_all_normed <span class="op">=</span> (X_all <span class="op">-</span> X_mean) <span class="op">/</span> X_std</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Split into per-block arrays (converting TimeFrameIndex → row indices)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>X_blocks <span class="op">=</span> []  <span class="co"># list of (T_block, D) arrays — inputs</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>y_blocks <span class="op">=</span> []  <span class="co"># list of (T_block,) arrays — integer class labels</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> iv <span class="kw">in</span> train_intervals:</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> time_to_row(iv.start)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> time_to_row_end(iv.end)</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> e <span class="op">&gt;</span> s, (</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Empty block after conversion: TimeFrameIndex [</span><span class="sc">{</span>iv<span class="sc">.</span>start<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>iv<span class="sc">.</span>end<span class="sc">}</span><span class="ss">) → rows [</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">). "</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Feature rows span TimeFrameIndex [</span><span class="sc">{</span><span class="bu">int</span>(row_time_indices[<span class="dv">0</span>])<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span><span class="bu">int</span>(row_time_indices[<span class="op">-</span><span class="dv">1</span>])<span class="sc">}</span><span class="ss">]. "</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Check that the training interval overlaps the feature range."</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    X_blocks.append(X_all_normed[s:e])</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    y_blocks.append(y_all[s:e])</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Prepared </span><span class="sc">{</span><span class="bu">len</span>(X_blocks)<span class="sc">}</span><span class="ss"> training blocks"</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, (xb, yb) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(X_blocks, y_blocks)):</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    n_contact <span class="op">=</span> <span class="bu">int</span>(yb.<span class="bu">sum</span>())</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    pct <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> n_contact <span class="op">/</span> <span class="bu">len</span>(yb) <span class="cf">if</span> <span class="bu">len</span>(yb) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  Block </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">len</span>(yb)<span class="sc">}</span><span class="ss"> frames, </span><span class="sc">{</span>n_contact<span class="sc">}</span><span class="ss"> contact (</span><span class="sc">{</span>pct<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Padding for batched EM</strong>: dynamax’s <code>fit_em</code> requires all sequences in a batch to have the same length. If your training blocks differ in length, either:</p>
+<ol type="1">
+<li>Pad shorter blocks (shown below), or</li>
+<li>Fit on each block separately with <code>fit_sgd</code>.</li>
+</ol>
+<p>We show the padding approach here.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pad_sequences(arrays, pad_value<span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Pad a list of variable-length arrays to the same length along axis 0."""</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    max_len <span class="op">=</span> <span class="bu">max</span>(a.shape[<span class="dv">0</span>] <span class="cf">for</span> a <span class="kw">in</span> arrays)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    padded <span class="op">=</span> []</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> a <span class="kw">in</span> arrays:</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        pad_width <span class="op">=</span> [(<span class="dv">0</span>, max_len <span class="op">-</span> a.shape[<span class="dv">0</span>])] <span class="op">+</span> [(<span class="dv">0</span>, <span class="dv">0</span>)] <span class="op">*</span> (a.ndim <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        padded.append(np.pad(a, pad_width, constant_values<span class="op">=</span>pad_value))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.stack(padded)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Pad and convert to JAX arrays</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>batch_emissions <span class="op">=</span> jnp.array(pad_sequences(y_blocks, pad_value<span class="op">=</span><span class="dv">0</span>))   <span class="co"># (B, T_max)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>batch_inputs <span class="op">=</span> jnp.array(pad_sequences(X_blocks, pad_value<span class="op">=</span><span class="fl">0.0</span>))    <span class="co"># (B, T_max, D)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Batched emissions shape: </span><span class="sc">{</span>batch_emissions<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Batched inputs shape:    </span><span class="sc">{</span>batch_inputs<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-step3" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step3">Step 3: Create the Input-Output HMM</h2>
+<p>dynamax does not include an IOHMM out of the box, but its modular architecture makes it straightforward to build one. We create a custom <code>InputDrivenHMMTransitions</code> class (following the <a href="https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/custom_hmm.ipynb">custom HMM pattern</a>) and combine it with the existing <code>CategoricalRegressionHMMEmissions</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>How dynamax handles input-dependent transitions internally:</strong> The base <code>HMMTransitions</code> class already supports inputs in its API — the <code>_compute_transition_matrices()</code> method vmaps over time steps when inputs are provided, producing a <code>(T-1, K, K)</code> tensor of time-varying transition matrices. The gradient-based M-step also passes inputs through. We just need to implement <code>distribution()</code> so it actually <em>uses</em> the inputs.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.random <span class="im">as</span> jr</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability.substrates.jax.distributions <span class="im">as</span> tfd</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> NamedTuple, Optional, Tuple, Union</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jaxtyping <span class="im">import</span> Float, Array</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.parameters <span class="im">import</span> ParameterProperties</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.hidden_markov_model.models.abstractions <span class="im">import</span> (</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    HMM, HMMTransitions, HMMParameterSet, HMMPropertySet</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.hidden_markov_model.models.initial <span class="im">import</span> (</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    StandardHMMInitialState, ParamsStandardHMMInitialState</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.hidden_markov_model.models.categorical_glm_hmm <span class="im">import</span> (</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    CategoricalRegressionHMMEmissions, ParamsCategoricalRegressionHMMEmissions</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dynamax.types <span class="im">import</span> IntScalar, Scalar</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Input-Driven Transition Parameters ──────────────────────────────</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ParamsInputDrivenTransitions(NamedTuple):</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Parameters for input-driven transitions.</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="co">    weights[i, j, :] are the feature weights for transitioning</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="co">    from state i to state j.</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    weights: Union[Float[Array, <span class="st">"num_states num_states input_dim"</span>],</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>                   ParameterProperties]</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    biases: Union[Float[Array, <span class="st">"num_states num_states"</span>],</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>                  ParameterProperties]</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Input-Driven Transition Model ───────────────────────────────────</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> InputDrivenHMMTransitions(HMMTransitions):</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">r"""Transitions whose probabilities depend on external inputs.</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="co">    $$P(z_t = j </span><span class="er">\</span><span class="co">mid z_{t-1} = i, </span><span class="er">\</span><span class="co">mathbf{u}_t) =</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="co">      </span><span class="ch">\t</span><span class="co">ext{softmax}(</span><span class="er">\</span><span class="co">mathbf{V}_i </span><span class="er">\</span><span class="co">mathbf{u}_t + </span><span class="er">\</span><span class="co">mathbf{c}_i)_j$$</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="co">    where $</span><span class="er">\</span><span class="co">mathbf{V}_i </span><span class="er">\</span><span class="co">in </span><span class="er">\</span><span class="co">mathbb{R}^{K </span><span class="ch">\t</span><span class="co">imes M}$ and</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="co">    $</span><span class="er">\</span><span class="co">mathbf{c}_i </span><span class="er">\</span><span class="co">in </span><span class="er">\</span><span class="co">mathbb{R}^K$.</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="co">    The base class `_compute_transition_matrices` and gradient-based</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="co">    `m_step` handle all the heavy lifting — we only implement</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="co">    `distribution`, `initialize`, and `log_prior`.</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_states, input_dim,</span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>                 m_step_optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-2</span>),</span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>                 m_step_num_iters<span class="op">=</span><span class="dv">50</span>):</span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(m_step_optimizer<span class="op">=</span>m_step_optimizer,</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>                         m_step_num_iters<span class="op">=</span>m_step_num_iters)</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.num_states <span class="op">=</span> num_states</span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.input_dim <span class="op">=</span> input_dim</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> distribution(<span class="va">self</span>, params, state, inputs<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> params.weights[state] <span class="op">@</span> inputs <span class="op">+</span> params.biases[state]</span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tfd.Categorical(logits<span class="op">=</span>logits)</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> initialize(<span class="va">self</span>, key<span class="op">=</span><span class="va">None</span>, method<span class="op">=</span><span class="st">"prior"</span>,</span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>                   transition_weights<span class="op">=</span><span class="va">None</span>, transition_biases<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> key <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"key must be provided"</span>)</span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>        key1, key2 <span class="op">=</span> jr.split(key)</span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> transition_weights <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Small random weights — features start with weak influence</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>            transition_weights <span class="op">=</span> <span class="fl">0.01</span> <span class="op">*</span> jr.normal(</span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>                key1, (<span class="va">self</span>.num_states, <span class="va">self</span>.num_states, <span class="va">self</span>.input_dim))</span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> transition_biases <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Sticky initialisation: self-transitions are initially preferred</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>            transition_biases <span class="op">=</span> <span class="fl">2.0</span> <span class="op">*</span> jnp.eye(<span class="va">self</span>.num_states)</span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>        params <span class="op">=</span> ParamsInputDrivenTransitions(</span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>            weights<span class="op">=</span>transition_weights, biases<span class="op">=</span>transition_biases)</span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>        props <span class="op">=</span> ParamsInputDrivenTransitions(</span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>            weights<span class="op">=</span>ParameterProperties(),</span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>            biases<span class="op">=</span>ParameterProperties())</span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> params, props</span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> collect_suff_stats(<span class="va">self</span>, params, posterior, inputs<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Override: pass full inputs to M-step. The base class slices</span></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>        <span class="co"># inputs[1:] here, but _compute_transition_matrices also slices</span></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>        <span class="co"># inputs[1:] internally — causing a double-slice shape mismatch.</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> posterior.trans_probs, inputs</span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> log_prior(<span class="va">self</span>, params):</span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Gaussian prior on weights (L2 regularisation)."""</span></span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> jnp.<span class="bu">sum</span>(params.weights <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Full IOHMM Parameter Set ───────────────────────────────────────</span></span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ParamsIOHMM(NamedTuple):</span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>    initial: ParamsStandardHMMInitialState</span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a>    transitions: ParamsInputDrivenTransitions</span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a>    emissions: ParamsCategoricalRegressionHMMEmissions</span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Input-Output HMM ───────────────────────────────────────────────</span></span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> InputDrivenCategoricalRegressionHMM(HMM):</span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a>    <span class="co">r"""HMM with input-driven transitions AND input-driven emissions.</span></span>
+<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a><span class="co">    **Transitions (IOHMM):**</span></span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a><span class="co">    $$P(z_t = j </span><span class="er">\</span><span class="co">mid z_{t-1} = i, </span><span class="er">\</span><span class="co">mathbf{u}_t) =</span></span>
+<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a><span class="co">      </span><span class="ch">\t</span><span class="co">ext{softmax}(</span><span class="er">\</span><span class="co">mathbf{V}_i </span><span class="er">\</span><span class="co">mathbf{u}_t + </span><span class="er">\</span><span class="co">mathbf{c}_i)_j$$</span></span>
+<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a><span class="co">    **Emissions (Categorical GLM):**</span></span>
+<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a><span class="co">    $$P(y_t </span><span class="er">\</span><span class="co">mid z_t = k, </span><span class="er">\</span><span class="co">mathbf{u}_t) =</span></span>
+<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a><span class="co">      </span><span class="ch">\t</span><span class="co">ext{Cat}(</span><span class="ch">\t</span><span class="co">ext{softmax}(</span><span class="er">\</span><span class="co">mathbf{W}_k </span><span class="er">\</span><span class="co">mathbf{u}_t + </span><span class="er">\</span><span class="co">mathbf{b}_k))$$</span></span>
+<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a><span class="co">    Unlike `CategoricalRegressionHMM`, the transitions are **not** a fixed</span></span>
+<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a><span class="co">    matrix — they depend on the input features at each time step.</span></span>
+<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_states, num_classes, input_dim,</span>
+<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a>                 initial_probs_concentration<span class="op">=</span><span class="fl">1.1</span>,</span>
+<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a>                 transition_m_step_optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-2</span>),</span>
+<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a>                 transition_m_step_num_iters<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb8-123"><a href="#cb8-123" aria-hidden="true" tabindex="-1"></a>                 emission_m_step_optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-2</span>),</span>
+<span id="cb8-124"><a href="#cb8-124" aria-hidden="true" tabindex="-1"></a>                 emission_m_step_num_iters<span class="op">=</span><span class="dv">50</span>):</span>
+<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.input_dim <span class="op">=</span> input_dim</span>
+<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a>        initial_component <span class="op">=</span> StandardHMMInitialState(</span>
+<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a>            num_states,</span>
+<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a>            initial_probs_concentration<span class="op">=</span>initial_probs_concentration)</span>
+<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a>        transition_component <span class="op">=</span> InputDrivenHMMTransitions(</span>
+<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>            num_states, input_dim,</span>
+<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a>            m_step_optimizer<span class="op">=</span>transition_m_step_optimizer,</span>
+<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a>            m_step_num_iters<span class="op">=</span>transition_m_step_num_iters)</span>
+<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a>        emission_component <span class="op">=</span> CategoricalRegressionHMMEmissions(</span>
+<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a>            num_states, num_classes, input_dim,</span>
+<span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a>            m_step_optimizer<span class="op">=</span>emission_m_step_optimizer,</span>
+<span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a>            m_step_num_iters<span class="op">=</span>emission_m_step_num_iters)</span>
+<span id="cb8-140"><a href="#cb8-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-141"><a href="#cb8-141" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(num_states, initial_component,</span>
+<span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a>                         transition_component, emission_component)</span>
+<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
+<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> inputs_shape(<span class="va">self</span>):</span>
+<span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="va">self</span>.input_dim,)</span>
+<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> initialize(<span class="va">self</span>, key<span class="op">=</span>jr.PRNGKey(<span class="dv">0</span>), method<span class="op">=</span><span class="st">"prior"</span>,</span>
+<span id="cb8-149"><a href="#cb8-149" aria-hidden="true" tabindex="-1"></a>                   initial_probs<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb8-150"><a href="#cb8-150" aria-hidden="true" tabindex="-1"></a>                   transition_weights<span class="op">=</span><span class="va">None</span>, transition_biases<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a>                   emission_weights<span class="op">=</span><span class="va">None</span>, emission_biases<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a>        key1, key2, key3 <span class="op">=</span> jr.split(key, <span class="dv">3</span>)</span>
+<span id="cb8-153"><a href="#cb8-153" aria-hidden="true" tabindex="-1"></a>        params, props <span class="op">=</span> <span class="bu">dict</span>(), <span class="bu">dict</span>()</span>
+<span id="cb8-154"><a href="#cb8-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-155"><a href="#cb8-155" aria-hidden="true" tabindex="-1"></a>        params[<span class="st">"initial"</span>], props[<span class="st">"initial"</span>] <span class="op">=</span> <span class="op">\</span></span>
+<span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.initial_component.initialize(</span>
+<span id="cb8-157"><a href="#cb8-157" aria-hidden="true" tabindex="-1"></a>                key1, method<span class="op">=</span>method, initial_probs<span class="op">=</span>initial_probs)</span>
+<span id="cb8-158"><a href="#cb8-158" aria-hidden="true" tabindex="-1"></a>        params[<span class="st">"transitions"</span>], props[<span class="st">"transitions"</span>] <span class="op">=</span> <span class="op">\</span></span>
+<span id="cb8-159"><a href="#cb8-159" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.transition_component.initialize(</span>
+<span id="cb8-160"><a href="#cb8-160" aria-hidden="true" tabindex="-1"></a>                key2, method<span class="op">=</span>method,</span>
+<span id="cb8-161"><a href="#cb8-161" aria-hidden="true" tabindex="-1"></a>                transition_weights<span class="op">=</span>transition_weights,</span>
+<span id="cb8-162"><a href="#cb8-162" aria-hidden="true" tabindex="-1"></a>                transition_biases<span class="op">=</span>transition_biases)</span>
+<span id="cb8-163"><a href="#cb8-163" aria-hidden="true" tabindex="-1"></a>        params[<span class="st">"emissions"</span>], props[<span class="st">"emissions"</span>] <span class="op">=</span> <span class="op">\</span></span>
+<span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.emission_component.initialize(</span>
+<span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a>                key<span class="op">=</span>key3, method<span class="op">=</span>method,</span>
+<span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a>                emission_weights<span class="op">=</span>emission_weights,</span>
+<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a>                emission_biases<span class="op">=</span>emission_biases)</span>
+<span id="cb8-168"><a href="#cb8-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ParamsIOHMM(<span class="op">**</span>params), ParamsIOHMM(<span class="op">**</span>props)</span>
+<span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-171"><a href="#cb8-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-172"><a href="#cb8-172" aria-hidden="true" tabindex="-1"></a>num_states <span class="op">=</span> <span class="dv">3</span>     <span class="co"># K: number of hidden behavioral states</span></span>
+<span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a>num_classes <span class="op">=</span> <span class="dv">2</span>    <span class="co"># binary outcome: contact / no-contact</span></span>
+<span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a>input_dim <span class="op">=</span> D      <span class="co"># encoder feature dimensionality</span></span>
+<span id="cb8-175"><a href="#cb8-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-176"><a href="#cb8-176" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> InputDrivenCategoricalRegressionHMM(</span>
+<span id="cb8-177"><a href="#cb8-177" aria-hidden="true" tabindex="-1"></a>    num_states<span class="op">=</span>num_states,</span>
+<span id="cb8-178"><a href="#cb8-178" aria-hidden="true" tabindex="-1"></a>    num_classes<span class="op">=</span>num_classes,</span>
+<span id="cb8-179"><a href="#cb8-179" aria-hidden="true" tabindex="-1"></a>    input_dim<span class="op">=</span>input_dim,</span>
+<span id="cb8-180"><a href="#cb8-180" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-181"><a href="#cb8-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-182"><a href="#cb8-182" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize parameters</span></span>
+<span id="cb8-183"><a href="#cb8-183" aria-hidden="true" tabindex="-1"></a>params, props <span class="op">=</span> model.initialize(key<span class="op">=</span>jr.PRNGKey(<span class="dv">0</span>))</span>
+<span id="cb8-184"><a href="#cb8-184" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"IOHMM: </span><span class="sc">{</span>num_states<span class="sc">}</span><span class="ss"> states, </span><span class="sc">{</span>input_dim<span class="sc">}</span><span class="ss">-dim inputs, </span><span class="sc">{</span>num_classes<span class="sc">}</span><span class="ss"> categories"</span>)</span>
+<span id="cb8-185"><a href="#cb8-185" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Transition weights shape: </span><span class="sc">{</span>params<span class="sc">.</span>transitions<span class="sc">.</span>weights<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Transition biases shape:  </span><span class="sc">{</span>params<span class="sc">.</span>transitions<span class="sc">.</span>biases<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Emission weights shape:   </span><span class="sc">{</span>params<span class="sc">.</span>emissions<span class="sc">.</span>weights<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Emission biases shape:    </span><span class="sc">{</span>params<span class="sc">.</span>emissions<span class="sc">.</span>biases<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="choosing-the-number-of-states" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-the-number-of-states">Choosing the number of states</h3>
+<ul>
+<li><strong>K=2</strong> is the minimum: one state for “contact-responsive” frames and one for “non-responsive”.</li>
+<li><strong>K=3</strong> is recommended: adds a transition/ambiguous state that absorbs boundary uncertainty.</li>
+<li>Higher K may overfit; use cross-validation (see <a href="#sec-cv">Cross-Validation</a>) to select.</li>
+</ul>
+</section>
+<section id="tuning-the-m-step" class="level3">
+<h3 class="anchored" data-anchor-id="tuning-the-m-step">Tuning the M-step</h3>
+<p>The transition and emission components each use gradient descent for their M-step. You can tune the optimizer and number of iterations independently:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model_tuned <span class="op">=</span> InputDrivenCategoricalRegressionHMM(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    num_states<span class="op">=</span>num_states,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    num_classes<span class="op">=</span>num_classes,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    input_dim<span class="op">=</span>input_dim,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    transition_m_step_optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-3</span>),  <span class="co"># slower LR for transitions</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    transition_m_step_num_iters<span class="op">=</span><span class="dv">100</span>,                <span class="co"># more iterations</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    emission_m_step_optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-2</span>),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    emission_m_step_num_iters<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-step4" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step4">Step 4: Fit the Model with EM</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>num_iters <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>params, log_probs <span class="op">=</span> model.fit_em(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    params,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    props,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    emissions<span class="op">=</span>batch_emissions,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    inputs<span class="op">=</span>batch_inputs,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    num_iters<span class="op">=</span>num_iters,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Final log-probability: </span><span class="sc">{</span>log_probs[<span class="op">-</span><span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="multiple-initialisations" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-initialisations">Multiple initialisations</h3>
+<p>EM finds a local optimum. Run several random initialisations and keep the best:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>best_lp <span class="op">=</span> <span class="op">-</span>jnp.inf</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>best_params <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    cand_params, cand_props <span class="op">=</span> model.initialize(key<span class="op">=</span>jr.PRNGKey(seed))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    cand_params, lps <span class="op">=</span> model.fit_em(</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        cand_params, cand_props,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        emissions<span class="op">=</span>batch_emissions,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        inputs<span class="op">=</span>batch_inputs,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        num_iters<span class="op">=</span>num_iters,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lps[<span class="op">-</span><span class="dv">1</span>] <span class="op">&gt;</span> best_lp:</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        best_lp <span class="op">=</span> lps[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        best_params <span class="op">=</span> cand_params</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> best_params</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best log-probability across initialisations: </span><span class="sc">{</span>best_lp<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="alternative-sgd-fitting" class="level3">
+<h3 class="anchored" data-anchor-id="alternative-sgd-fitting">Alternative: SGD fitting</h3>
+<p>If EM is slow or you want mini-batch training, use SGD instead:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>params_sgd, losses <span class="op">=</span> model.fit_sgd(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    params,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    props,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    emissions<span class="op">=</span>batch_emissions,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    inputs<span class="op">=</span>batch_inputs,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    optimizer<span class="op">=</span>optax.adam(<span class="fl">1e-3</span>),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    num_epochs<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="print-convergence" class="level3">
+<h3 class="anchored" data-anchor-id="print-convergence">Print convergence</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>lps <span class="op">=</span> np.array(log_probs)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Log-probability: </span><span class="sc">{</span>lps[<span class="dv">0</span>]<span class="sc">:.2f}</span><span class="ss"> → </span><span class="sc">{</span>lps[<span class="op">-</span><span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss"> over </span><span class="sc">{</span><span class="bu">len</span>(lps)<span class="sc">}</span><span class="ss"> iterations"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(lps) <span class="op">&gt;</span> <span class="dv">5</span> <span class="kw">and</span> <span class="bu">abs</span>(lps[<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> lps[<span class="op">-</span><span class="dv">5</span>]) <span class="op">&lt;</span> <span class="fl">0.1</span>:</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"  ✓ Converged (last 5 iterations changed &lt; 0.1)"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"  ⚠ May not have converged — consider increasing num_iters"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-step5" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step5">Step 5: Inspect the Fitted Model</h2>
+<section id="viterbi-decoding-most-likely-state-sequence" class="level3">
+<h3 class="anchored" data-anchor-id="viterbi-decoding-most-likely-state-sequence">Viterbi decoding (most likely state sequence)</h3>
+<p>Decode each training block using its unpadded data:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, (yb, xb) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(y_blocks, X_blocks)):</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    emissions_i <span class="op">=</span> jnp.array(yb)      <span class="co"># (T_block,)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    inputs_i <span class="op">=</span> jnp.array(xb)         <span class="co"># (T_block, D)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    states <span class="op">=</span> model.most_likely_states(params, emissions_i, inputs<span class="op">=</span>inputs_i)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    states_np <span class="op">=</span> np.array(states)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    unique, counts <span class="op">=</span> np.unique(states_np, return_counts<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Block </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">: states = </span><span class="sc">{</span><span class="bu">dict</span>(<span class="bu">zip</span>(unique, counts))<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="inspect-learned-transition-weights" class="level3">
+<h3 class="anchored" data-anchor-id="inspect-learned-transition-weights">Inspect learned transition weights</h3>
+<p>Unlike a standard HMM, the IOHMM has no single transition matrix — transitions are <strong>recomputed at every time step</strong> from the features. To understand the learned dynamics, inspect the transition weight norms and biases:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>trans_W <span class="op">=</span> np.array(params.transitions.weights)   <span class="co"># (K, K, D)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>trans_b <span class="op">=</span> np.array(params.transitions.biases)     <span class="co"># (K, K)</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Transition biases (act as baseline log-odds for each transition):"</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.around(trans_b, decimals<span class="op">=</span><span class="dv">3</span>))</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_states):</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(num_states):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> trans_W[i, j, :]</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"  State </span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">→</span><span class="sc">{</span>j<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">: ||w|| = </span><span class="sc">{</span>np<span class="sc">.</span>linalg<span class="sc">.</span>norm(w)<span class="sc">:.3f}</span><span class="ss">, "</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>              <span class="ss">f"bias = </span><span class="sc">{</span>trans_b[i,j]<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="evaluate-mean-transition-matrix-on-training-data" class="level3">
+<h3 class="anchored" data-anchor-id="evaluate-mean-transition-matrix-on-training-data">Evaluate mean transition matrix on training data</h3>
+<p>To get an intuitive summary, compute the average transition matrix over the training features:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mean_transition_matrix(params, X_normed):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Average the input-dependent transition matrix over all frames."""</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> np.array(params.transitions.weights)   <span class="co"># (K, K, D)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.array(params.transitions.biases)     <span class="co"># (K, K)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    logits <span class="op">=</span> np.einsum(<span class="st">"ijd,td-&gt;tij"</span>, W, X_normed) <span class="op">+</span> b[<span class="va">None</span>, :, :]  <span class="co"># (T, K, K)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    exp_logits <span class="op">=</span> np.exp(logits <span class="op">-</span> logits.<span class="bu">max</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    trans_mats <span class="op">=</span> exp_logits <span class="op">/</span> exp_logits.<span class="bu">sum</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trans_mats.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>avg_A <span class="op">=</span> mean_transition_matrix(params, X_all_normed)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Mean transition matrix (averaged over all features):"</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.around(avg_A, decimals<span class="op">=</span><span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="inspect-per-state-glm-weights" class="level3">
+<h3 class="anchored" data-anchor-id="inspect-per-state-glm-weights">Inspect per-state GLM weights</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> np.array(params.emissions.weights)   <span class="co"># (K, C, D)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>biases <span class="op">=</span> np.array(params.emissions.biases)     <span class="co"># (K, C)</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(num_states):</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># For binary classification, the "contact" class weight is weights[k, 1, :]</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    w <span class="op">=</span> weights[k, <span class="dv">1</span>, :] <span class="op">-</span> weights[k, <span class="dv">0</span>, :]   <span class="co"># contrast: contact vs no-contact</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"State </span><span class="sc">{</span>k<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">: ||Δw|| = </span><span class="sc">{</span>np<span class="sc">.</span>linalg<span class="sc">.</span>norm(w)<span class="sc">:.3f}</span><span class="ss">, "</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>          <span class="ss">f"top-5 features = </span><span class="sc">{</span>np<span class="sc">.</span>argsort(np.<span class="bu">abs</span>(w))[<span class="op">-</span><span class="dv">5</span>:][::<span class="op">-</span><span class="dv">1</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-step6" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step6">Step 6: Apply Model to Training Data</h2>
+<p>We compute per-frame contact probability on the training region and write the results back to <code>DataManager</code> as two objects:</p>
+<ul>
+<li><strong><code>AnalogTimeSeries</code></strong> — continuous P(contact) for each frame (viewable in DataViewer)</li>
+<li><strong><code>DigitalIntervalSeries</code></strong> — thresholded contact intervals (viewable in DataViewer)</li>
+</ul>
+<p>This lets you visually compare the model’s output against the ground-truth <code>contact</code> intervals directly in WhiskerToolbox.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> whisker_toolbox <span class="im">as</span> wt</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> emission_probs(params, X_normed):</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Compute P(y=c | z=k, u_t) for all frames, states, and classes.</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">    -------</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">    probs_all : np.ndarray, shape (T, K, C)</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> np.array(params.emissions.weights)   <span class="co"># (K, C, D)</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.array(params.emissions.biases)    <span class="co"># (K, C)</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    logits <span class="op">=</span> np.einsum(<span class="st">"kcd,td-&gt;tkc"</span>, W, X_normed) <span class="op">+</span> b[<span class="va">None</span>, :, :]  <span class="co"># (T, K, C)</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    exp_logits <span class="op">=</span> np.exp(logits <span class="op">-</span> logits.<span class="bu">max</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> exp_logits <span class="op">/</span> exp_logits.<span class="bu">sum</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transition_matrix_at(params, u_t):</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Compute the K×K transition matrix for a single input vector.</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co">    -------</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="co">    A_t : np.ndarray, shape (K, K) — row i is P(z_next | z_prev=i, u_t)</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> np.array(params.transitions.weights)  <span class="co"># (K, K, D)</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.array(params.transitions.biases)   <span class="co"># (K, K)</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    logits <span class="op">=</span> np.einsum(<span class="st">"ijd,d-&gt;ij"</span>, W, u_t) <span class="op">+</span> b  <span class="co"># (K, K)</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    exp_logits <span class="op">=</span> np.exp(logits <span class="op">-</span> logits.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> exp_logits <span class="op">/</span> exp_logits.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict_contact_labeled(model, params, y_block, X_block):</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Evaluate P(contact) on data where labels are available.</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="co">    Uses the smoother to get posterior state probabilities</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="co">    P(z_t | y_{1:T}, u_{1:T}), then marginalises:</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="co">    P(y_t=1) = sum_k P(y_t=1 | z_t=k, u_t) * P(z_t=k | all data).</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="co">    This conditions on the observed labels to infer the hidden state.</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>    posterior <span class="op">=</span> model.smoother(params, jnp.array(y_block), inputs<span class="op">=</span>jnp.array(X_block))</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>    state_probs <span class="op">=</span> np.array(posterior.smoothed_probs)               <span class="co"># (T, K)</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>    p_contact <span class="op">=</span> emission_probs(params, X_block)[:, :, <span class="dv">1</span>]           <span class="co"># (T, K)</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.<span class="bu">sum</span>(p_contact <span class="op">*</span> state_probs, axis<span class="op">=</span><span class="dv">1</span>)                 <span class="co"># (T,)</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict_contact_unlabeled(params, X_normed):</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Predict P(contact) on data without labels using input-driven transitions.</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="co">    Forward-propagates the state belief using the input-dependent transition</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="co">    model. At each frame:</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co">      1. Marginalise over states to get P(y_t=1).</span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a><span class="co">      2. Propagate state belief to the next frame via the input-dependent</span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="co">         transition matrix A(u_{t+1}).</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="co">    No pseudo-observations or autoregressive feedback is needed because the</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a><span class="co">    input-driven transitions naturally track the behavioral context through</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a><span class="co">    the features. With a fixed transition matrix, the state belief would</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a><span class="co">    collapse to the stationary distribution; with input-dependent transitions,</span></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a><span class="co">    it adapts at every time step.</span></span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>    K <span class="op">=</span> <span class="bu">len</span>(np.array(params.initial.probs))</span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> X_normed.shape[<span class="dv">0</span>]</span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>    pi0 <span class="op">=</span> np.array(params.initial.probs)</span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>    probs_all <span class="op">=</span> emission_probs(params, X_normed)  <span class="co"># (T, K, C)</span></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>    alpha <span class="op">=</span> pi0.copy()</span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    contact_prob <span class="op">=</span> np.zeros(T)</span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(T):</span>
+<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">/=</span> alpha.<span class="bu">sum</span>()</span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>        contact_prob[t] <span class="op">=</span> np.dot(probs_all[t, :, <span class="dv">1</span>], alpha)</span>
+<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> t <span class="op">+</span> <span class="dv">1</span> <span class="op">&lt;</span> T:</span>
+<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>            A_t <span class="op">=</span> transition_matrix_at(params, X_normed[t <span class="op">+</span> <span class="dv">1</span>])</span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>            alpha <span class="op">=</span> alpha <span class="op">@</span> A_t</span>
+<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contact_prob</span>
+<span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-83"><a href="#cb18-83" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prob_to_intervals(contact_prob, threshold<span class="op">=</span><span class="fl">0.5</span>):</span>
+<span id="cb18-84"><a href="#cb18-84" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Threshold a probability array into contiguous (start_row, end_row) pairs."""</span></span>
+<span id="cb18-85"><a href="#cb18-85" aria-hidden="true" tabindex="-1"></a>    binary <span class="op">=</span> (contact_prob <span class="op">&gt;=</span> threshold).astype(<span class="bu">int</span>)</span>
+<span id="cb18-86"><a href="#cb18-86" aria-hidden="true" tabindex="-1"></a>    intervals <span class="op">=</span> []</span>
+<span id="cb18-87"><a href="#cb18-87" aria-hidden="true" tabindex="-1"></a>    in_iv <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb18-88"><a href="#cb18-88" aria-hidden="true" tabindex="-1"></a>    start <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb18-89"><a href="#cb18-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(binary)):</span>
+<span id="cb18-90"><a href="#cb18-90" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> binary[t] <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> <span class="kw">not</span> in_iv:</span>
+<span id="cb18-91"><a href="#cb18-91" aria-hidden="true" tabindex="-1"></a>            start <span class="op">=</span> t<span class="op">;</span> in_iv <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb18-92"><a href="#cb18-92" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> binary[t] <span class="op">==</span> <span class="dv">0</span> <span class="kw">and</span> in_iv:</span>
+<span id="cb18-93"><a href="#cb18-93" aria-hidden="true" tabindex="-1"></a>            intervals.append((start, t))<span class="op">;</span> in_iv <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb18-94"><a href="#cb18-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> in_iv:</span>
+<span id="cb18-95"><a href="#cb18-95" aria-hidden="true" tabindex="-1"></a>        intervals.append((start, <span class="bu">len</span>(binary)))</span>
+<span id="cb18-96"><a href="#cb18-96" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intervals</span>
+<span id="cb18-97"><a href="#cb18-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-98"><a href="#cb18-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-99"><a href="#cb18-99" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict_full_session(model, params, X_all_normed, y_all, train_intervals,</span>
+<span id="cb18-100"><a href="#cb18-100" aria-hidden="true" tabindex="-1"></a>                         time_to_row, time_to_row_end):</span>
+<span id="cb18-101"><a href="#cb18-101" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Predict P(contact) for the full session (hybrid approach).</span></span>
+<span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">    The timeline is split into labeled segments (covered by training</span></span>
+<span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">    intervals) and unlabeled gaps between them:</span></span>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">    - **Labeled segments** use the smoother conditioned on actual labels,</span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">      giving high-quality state inference.</span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">    - **Unlabeled gaps** use forward propagation with input-dependent</span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">      transitions — no pseudo-observations needed because the features</span></span>
+<span id="cb18-110"><a href="#cb18-110" aria-hidden="true" tabindex="-1"></a><span class="co">      drive the state evolution directly.</span></span>
+<span id="cb18-111"><a href="#cb18-111" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-112"><a href="#cb18-112" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> X_all_normed.shape[<span class="dv">0</span>]</span>
+<span id="cb18-113"><a href="#cb18-113" aria-hidden="true" tabindex="-1"></a>    contact_prob <span class="op">=</span> np.zeros(T)</span>
+<span id="cb18-114"><a href="#cb18-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-115"><a href="#cb18-115" aria-hidden="true" tabindex="-1"></a>    pi0 <span class="op">=</span> np.array(params.initial.probs)</span>
+<span id="cb18-116"><a href="#cb18-116" aria-hidden="true" tabindex="-1"></a>    probs_all <span class="op">=</span> emission_probs(params, X_all_normed)  <span class="co"># (T, K, C)</span></span>
+<span id="cb18-117"><a href="#cb18-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-118"><a href="#cb18-118" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Convert intervals to sorted row ranges</span></span>
+<span id="cb18-119"><a href="#cb18-119" aria-hidden="true" tabindex="-1"></a>    labeled_ranges <span class="op">=</span> []</span>
+<span id="cb18-120"><a href="#cb18-120" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> iv <span class="kw">in</span> train_intervals:</span>
+<span id="cb18-121"><a href="#cb18-121" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> time_to_row(iv.start)</span>
+<span id="cb18-122"><a href="#cb18-122" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> time_to_row_end(iv.end)</span>
+<span id="cb18-123"><a href="#cb18-123" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> e <span class="op">&gt;</span> s:</span>
+<span id="cb18-124"><a href="#cb18-124" aria-hidden="true" tabindex="-1"></a>            labeled_ranges.append((s, e))</span>
+<span id="cb18-125"><a href="#cb18-125" aria-hidden="true" tabindex="-1"></a>    labeled_ranges.sort()</span>
+<span id="cb18-126"><a href="#cb18-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-127"><a href="#cb18-127" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fill_unlabeled(start, end, alpha_init):</span>
+<span id="cb18-128"><a href="#cb18-128" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Forward propagation for an unlabeled gap."""</span></span>
+<span id="cb18-129"><a href="#cb18-129" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> alpha_init.copy()</span>
+<span id="cb18-130"><a href="#cb18-130" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(start, end):</span>
+<span id="cb18-131"><a href="#cb18-131" aria-hidden="true" tabindex="-1"></a>            alpha <span class="op">/=</span> alpha.<span class="bu">sum</span>()</span>
+<span id="cb18-132"><a href="#cb18-132" aria-hidden="true" tabindex="-1"></a>            contact_prob[t] <span class="op">=</span> np.dot(probs_all[t, :, <span class="dv">1</span>], alpha)</span>
+<span id="cb18-133"><a href="#cb18-133" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> t <span class="op">+</span> <span class="dv">1</span> <span class="op">&lt;</span> end:</span>
+<span id="cb18-134"><a href="#cb18-134" aria-hidden="true" tabindex="-1"></a>                A_t <span class="op">=</span> transition_matrix_at(params, X_all_normed[t <span class="op">+</span> <span class="dv">1</span>])</span>
+<span id="cb18-135"><a href="#cb18-135" aria-hidden="true" tabindex="-1"></a>                alpha <span class="op">=</span> alpha <span class="op">@</span> A_t</span>
+<span id="cb18-136"><a href="#cb18-136" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> alpha</span>
+<span id="cb18-137"><a href="#cb18-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-138"><a href="#cb18-138" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fill_labeled(start, end):</span>
+<span id="cb18-139"><a href="#cb18-139" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Smoother-based prediction for a labeled segment."""</span></span>
+<span id="cb18-140"><a href="#cb18-140" aria-hidden="true" tabindex="-1"></a>        posterior <span class="op">=</span> model.smoother(</span>
+<span id="cb18-141"><a href="#cb18-141" aria-hidden="true" tabindex="-1"></a>            params, jnp.array(y_all[start:end]),</span>
+<span id="cb18-142"><a href="#cb18-142" aria-hidden="true" tabindex="-1"></a>            inputs<span class="op">=</span>jnp.array(X_all_normed[start:end]),</span>
+<span id="cb18-143"><a href="#cb18-143" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb18-144"><a href="#cb18-144" aria-hidden="true" tabindex="-1"></a>        state_probs <span class="op">=</span> np.array(posterior.smoothed_probs)  <span class="co"># (T_block, K)</span></span>
+<span id="cb18-145"><a href="#cb18-145" aria-hidden="true" tabindex="-1"></a>        p_contact <span class="op">=</span> probs_all[start:end, :, <span class="dv">1</span>]            <span class="co"># (T_block, K)</span></span>
+<span id="cb18-146"><a href="#cb18-146" aria-hidden="true" tabindex="-1"></a>        contact_prob[start:end] <span class="op">=</span> np.<span class="bu">sum</span>(p_contact <span class="op">*</span> state_probs, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb18-147"><a href="#cb18-147" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state_probs[<span class="op">-</span><span class="dv">1</span>]  <span class="co"># terminal state distribution</span></span>
+<span id="cb18-148"><a href="#cb18-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-149"><a href="#cb18-149" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Process the timeline in order: gap → labeled → gap → labeled → ...</span></span>
+<span id="cb18-150"><a href="#cb18-150" aria-hidden="true" tabindex="-1"></a>    alpha <span class="op">=</span> pi0.copy()</span>
+<span id="cb18-151"><a href="#cb18-151" aria-hidden="true" tabindex="-1"></a>    cursor <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb18-152"><a href="#cb18-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-153"><a href="#cb18-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (s, e) <span class="kw">in</span> labeled_ranges:</span>
+<span id="cb18-154"><a href="#cb18-154" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cursor <span class="op">&lt;</span> s:</span>
+<span id="cb18-155"><a href="#cb18-155" aria-hidden="true" tabindex="-1"></a>            alpha <span class="op">=</span> fill_unlabeled(cursor, s, alpha)</span>
+<span id="cb18-156"><a href="#cb18-156" aria-hidden="true" tabindex="-1"></a>        terminal_state <span class="op">=</span> fill_labeled(s, e)</span>
+<span id="cb18-157"><a href="#cb18-157" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> e <span class="op">&lt;</span> T:</span>
+<span id="cb18-158"><a href="#cb18-158" aria-hidden="true" tabindex="-1"></a>            A_next <span class="op">=</span> transition_matrix_at(params, X_all_normed[e])</span>
+<span id="cb18-159"><a href="#cb18-159" aria-hidden="true" tabindex="-1"></a>            alpha <span class="op">=</span> terminal_state <span class="op">@</span> A_next</span>
+<span id="cb18-160"><a href="#cb18-160" aria-hidden="true" tabindex="-1"></a>        cursor <span class="op">=</span> e</span>
+<span id="cb18-161"><a href="#cb18-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-162"><a href="#cb18-162" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Trailing unlabeled segment</span></span>
+<span id="cb18-163"><a href="#cb18-163" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cursor <span class="op">&lt;</span> T:</span>
+<span id="cb18-164"><a href="#cb18-164" aria-hidden="true" tabindex="-1"></a>        fill_unlabeled(cursor, T, alpha)</span>
+<span id="cb18-165"><a href="#cb18-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-166"><a href="#cb18-166" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contact_prob</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="apply-to-training-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="apply-to-training-blocks">Apply to training blocks</h3>
+<p>On training data we have labels, so we use the <strong>smoother</strong> to condition the state inference on the actual observations — matching how a standard HMM evaluates its training fit.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate contact probability on training blocks (using labels)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> iv <span class="kw">in</span> train_intervals:</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> time_to_row(iv.start)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> time_to_row_end(iv.end)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    X_block <span class="op">=</span> X_all_normed[s:e]</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    y_block <span class="op">=</span> y_all[s:e]</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    contact_prob <span class="op">=</span> predict_contact_labeled(model, params, y_block, X_block)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># --- AnalogTimeSeries: P(contact) per frame ---</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    times <span class="op">=</span> [row_time_indices[r] <span class="cf">for</span> r <span class="kw">in</span> <span class="bu">range</span>(s, e)]</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    prob_analog <span class="op">=</span> wt.AnalogTimeSeries(contact_prob.tolist(), times)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    time_key <span class="op">=</span> dm.getTimeKey(<span class="st">"features"</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    dm.setData(<span class="st">"glm_hmm_prob"</span>, prob_analog, time_key)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Wrote 'glm_hmm_prob': </span><span class="sc">{</span><span class="bu">len</span>(contact_prob)<span class="sc">}</span><span class="ss"> frames, "</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>          <span class="ss">f"mean P(contact) = </span><span class="sc">{</span>contact_prob<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># --- DigitalIntervalSeries: thresholded predictions ---</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    threshold <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    pred_intervals_rows <span class="op">=</span> prob_to_intervals(contact_prob, threshold)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> wt.DigitalIntervalSeries()</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s_row, e_row <span class="kw">in</span> pred_intervals_rows:</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        s_time <span class="op">=</span> <span class="bu">int</span>(row_time_indices[s <span class="op">+</span> s_row])</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>        e_time <span class="op">=</span> <span class="bu">int</span>(row_time_indices[s <span class="op">+</span> <span class="bu">min</span>(e_row, e <span class="op">-</span> s) <span class="op">-</span> <span class="dv">1</span>])</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>        result.addInterval(s_time, e_time)</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    dm.setData(<span class="st">"glm_hmm_contact"</span>, result, time_key)</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Wrote 'glm_hmm_contact': </span><span class="sc">{</span><span class="bu">len</span>(pred_intervals_rows)<span class="sc">}</span><span class="ss"> intervals "</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>          <span class="ss">f"(threshold=</span><span class="sc">{</span>threshold<span class="sc">}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Visualise in WhiskerToolbox:</strong> Open the <strong>DataViewer</strong> widget and add:</p>
+<ul>
+<li><code>glm_hmm_prob</code> as an analog channel — shows the continuous P(contact) curve</li>
+<li><code>glm_hmm_contact</code> as a digital channel — shows predicted contact intervals</li>
+<li><code>contact</code> as a digital channel — shows ground-truth contact intervals</li>
+</ul>
+<p>Overlaying these lets you see where the model agrees/disagrees with your labels.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-step7" class="level2">
+<h2 class="anchored" data-anchor-id="sec-step7">Step 7: Predict on Full Session</h2>
+<p>The full session is a mix of labeled training regions and unlabeled gaps. With a standard HMM (fixed transitions), the state belief would collapse to the stationary distribution in unlabeled regions, making predictions meaningless. With the IOHMM, the input-dependent transitions naturally track the behavioral context through the features, so forward propagation alone produces informative predictions.</p>
+<p><code>predict_full_session</code> uses a <strong>hybrid</strong> strategy:</p>
+<ol type="1">
+<li><strong>Labeled segments</strong> (training intervals) → smoother conditioned on actual labels, identical to Step 6.</li>
+<li><strong>Unlabeled gaps</strong> → forward propagation with input-dependent transitions, initialised from the terminal state distribution of the preceding labeled block. No pseudo-observations needed.</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict on the full session (hybrid: smoother on labeled, forward on gaps)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>contact_prob_all <span class="op">=</span> predict_full_session(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    model, params, X_all_normed, y_all, train_intervals,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    time_to_row, time_to_row_end,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Write full-session probability ---</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>all_times <span class="op">=</span> [<span class="bu">int</span>(t) <span class="cf">for</span> t <span class="kw">in</span> row_time_indices]</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>prob_analog_all <span class="op">=</span> wt.AnalogTimeSeries(contact_prob_all.tolist(), all_times)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>time_key <span class="op">=</span> dm.getTimeKey(<span class="st">"features"</span>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>dm.setData(<span class="st">"glm_hmm_prob"</span>, prob_analog_all, time_key)</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Updated 'glm_hmm_prob': </span><span class="sc">{</span>T_total<span class="sc">}</span><span class="ss"> frames (full session)"</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Write full-session thresholded intervals ---</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>threshold <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>pred_intervals_rows <span class="op">=</span> prob_to_intervals(contact_prob_all, threshold)</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>result_all <span class="op">=</span> wt.DigitalIntervalSeries()</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s_row, e_row <span class="kw">in</span> pred_intervals_rows:</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    s_time <span class="op">=</span> <span class="bu">int</span>(row_time_indices[s_row])</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    e_time <span class="op">=</span> <span class="bu">int</span>(row_time_indices[<span class="bu">min</span>(e_row, T_total) <span class="op">-</span> <span class="dv">1</span>])</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    result_all.addInterval(s_time, e_time)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>dm.setData(<span class="st">"glm_hmm_contact"</span>, result_all, time_key)</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Updated 'glm_hmm_contact': </span><span class="sc">{</span><span class="bu">len</span>(pred_intervals_rows)<span class="sc">}</span><span class="ss"> intervals (full session)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-cv" class="level2">
+<h2 class="anchored" data-anchor-id="sec-cv">Cross-Validation</h2>
+<p>To select <span class="math inline">\(K\)</span> and evaluate prediction quality, hold out one training block at a time:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> f1_score</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> cross_validate(K, X_blocks, y_blocks, input_dim, n_init<span class="op">=</span><span class="dv">5</span>, n_iters<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Leave-one-block-out cross-validation for IOHMM."""</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    cv_model <span class="op">=</span> InputDrivenCategoricalRegressionHMM(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        num_states<span class="op">=</span>K,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        num_classes<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        input_dim<span class="op">=</span>input_dim,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    f1_scores <span class="op">=</span> []</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> held_out <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(X_blocks)):</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        X_train <span class="op">=</span> [X_blocks[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(X_blocks)) <span class="cf">if</span> i <span class="op">!=</span> held_out]</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        y_train <span class="op">=</span> [y_blocks[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(y_blocks)) <span class="cf">if</span> i <span class="op">!=</span> held_out]</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Pad training sequences</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        train_emissions <span class="op">=</span> jnp.array(pad_sequences(y_train, pad_value<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        train_inputs <span class="op">=</span> jnp.array(pad_sequences(X_train, pad_value<span class="op">=</span><span class="fl">0.0</span>))</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>        best_lp <span class="op">=</span> <span class="op">-</span>jnp.inf</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>        best_p <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> seed <span class="kw">in</span> <span class="bu">range</span>(n_init):</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>            p, pr <span class="op">=</span> cv_model.initialize(key<span class="op">=</span>jr.PRNGKey(seed <span class="op">*</span> <span class="dv">100</span> <span class="op">+</span> held_out))</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>            p, lps <span class="op">=</span> cv_model.fit_em(</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>                p, pr,</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>                emissions<span class="op">=</span>train_emissions,</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>                inputs<span class="op">=</span>train_inputs,</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>                num_iters<span class="op">=</span>n_iters,</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> lps[<span class="op">-</span><span class="dv">1</span>] <span class="op">&gt;</span> best_lp:</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>                best_lp <span class="op">=</span> lps[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>                best_p <span class="op">=</span> p</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Predict on held-out block (use unlabeled predictor for honest eval)</span></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>        prob <span class="op">=</span> predict_contact_unlabeled(best_p, X_blocks[held_out])</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>        y_pred <span class="op">=</span> (prob <span class="op">&gt;=</span> <span class="fl">0.5</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>        y_true <span class="op">=</span> y_blocks[held_out]</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>        f1_scores.append(f1_score(y_true, y_pred))</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.mean(f1_scores), np.std(f1_scores)</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> K <span class="kw">in</span> [<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>]:</span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>    mean_f1, std_f1 <span class="op">=</span> cross_validate(K, X_blocks, y_blocks, D)</span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"K=</span><span class="sc">{</span>K<span class="sc">}</span><span class="ss">: F1 = </span><span class="sc">{</span>mean_f1<span class="sc">:.3f}</span><span class="ss"> ± </span><span class="sc">{</span>std_f1<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>EM converges but states are degenerate (one state used 99%)</td>
+<td>Bad initialisation</td>
+<td>Run more random initialisations (<code>n_init ≥ 10</code>)</td>
+</tr>
+<tr class="even">
+<td>NaN in log-probability</td>
+<td>Numerical overflow in logistic regression</td>
+<td>Standardise features: <code>X = (X - X.mean(0)) / X.std(0)</code></td>
+</tr>
+<tr class="odd">
+<td>Fit is very slow</td>
+<td>Gradient M-step for transitions + emissions</td>
+<td>Reduce D via PCA; or decrease <code>m_step_num_iters</code></td>
+</tr>
+<tr class="even">
+<td><code>fit_em</code> fails with shape error</td>
+<td>Training blocks have different lengths</td>
+<td>Pad sequences to equal length (see Step 2)</td>
+</tr>
+<tr class="odd">
+<td>Poor F1 on held-out blocks</td>
+<td>Too few/many states, or insufficient data</td>
+<td>Try different K; increase bias initialisation for stickiness</td>
+</tr>
+<tr class="even">
+<td>JAX out-of-memory on GPU</td>
+<td>Large feature dimension × many frames</td>
+<td>Set <code>JAX_PLATFORMS=cpu</code></td>
+</tr>
+<tr class="odd">
+<td>Empty block: rows [0,0)</td>
+<td>Training intervals don’t overlap feature range</td>
+<td>Check <code>features_td.rowTimeIndices()</code> — intervals must fall within feature TimeFrameIndex range</td>
+</tr>
+<tr class="even">
+<td>Transition weights all near zero</td>
+<td>Under-fitting transitions</td>
+<td>Increase <code>transition_m_step_num_iters</code>; check feature normalisation</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="comparison-with-ssm" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-with-ssm">Comparison with ssm</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>ssm</th>
+<th>dynamax (this tutorial)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Python version</td>
+<td>≤ 3.10</td>
+<td>3.10+ (including 3.12)</td>
+</tr>
+<tr class="even">
+<td>Backend</td>
+<td>NumPy/Autograd</td>
+<td>JAX</td>
+</tr>
+<tr class="odd">
+<td>Model class</td>
+<td><code>ssm.HMM(..., observations="input_driven_obs")</code></td>
+<td><code>InputDrivenCategoricalRegressionHMM</code> (custom)</td>
+</tr>
+<tr class="even">
+<td>Transition model</td>
+<td>Fixed or input-driven (built-in)</td>
+<td>Custom <code>InputDrivenHMMTransitions</code></td>
+</tr>
+<tr class="odd">
+<td>Parameter style</td>
+<td>Mutable model object</td>
+<td>Immutable <code>(params, props)</code> tuples</td>
+</tr>
+<tr class="even">
+<td>Fitting</td>
+<td><code>model.fit(y, inputs=X, method="em")</code></td>
+<td><code>model.fit_em(params, props, emissions, inputs)</code></td>
+</tr>
+<tr class="odd">
+<td>Viterbi</td>
+<td><code>model.most_likely_states(y, input=x)</code></td>
+<td><code>model.most_likely_states(params, y, inputs=x)</code></td>
+</tr>
+<tr class="even">
+<td>Smoothing</td>
+<td><code>model.expected_states(data=y, input=x)</code></td>
+<td><code>model.smoother(params, y, inputs=x)</code></td>
+</tr>
+<tr class="odd">
+<td>JIT compilation</td>
+<td>No</td>
+<td>Yes (automatic via JAX)</td>
+</tr>
+<tr class="even">
+<td>GPU support</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ul>
+<li>Ashwood, Z. C. et al.&nbsp;(2022). Mice alternate between discrete strategies during perceptual decision-making. <em>Nature Neuroscience</em>, 25, 201–212.</li>
+<li><a href="https://probml.github.io/dynamax/">dynamax documentation</a></li>
+<li><a href="https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/casino_hmm_inference.ipynb">dynamax HMM inference notebook</a></li>
+<li><a href="../../../docs/developer/MLCore/GLM_HMM_Roadmap.html">GLM-HMM Roadmap</a> (internal)</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

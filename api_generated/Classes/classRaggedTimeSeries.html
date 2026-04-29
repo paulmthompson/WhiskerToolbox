@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>RaggedTimeSeries – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#raggedtimeseries" id="toc-raggedtimeseries" class="nav-link active" data-scroll-target="#raggedtimeseries">RaggedTimeSeries</a>
+  <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
+  <li><a href="#public-types" id="toc-public-types" class="nav-link" data-scroll-target="#public-types">Public Types</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#protected-functions" id="toc-protected-functions" class="nav-link" data-scroll-target="#protected-functions">Protected Functions</a></li>
+  <li><a href="#protected-attributes" id="toc-protected-attributes" class="nav-link" data-scroll-target="#protected-attributes">Protected Attributes</a></li>
+  <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-types-documentation" id="toc-public-types-documentation" class="nav-link" data-scroll-target="#public-types-documentation">Public Types Documentation</a>
+  <ul class="collapse">
+  <li><a href="#using-datamodifier" id="toc-using-datamodifier" class="nav-link" data-scroll-target="#using-datamodifier">using DataModifier</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-raggedtimeseries" id="toc-function-raggedtimeseries" class="nav-link" data-scroll-target="#function-raggedtimeseries">function RaggedTimeSeries</a></li>
+  <li><a href="#function-raggedtimeseries-1" id="toc-function-raggedtimeseries-1" class="nav-link" data-scroll-target="#function-raggedtimeseries-1">function ~RaggedTimeSeries</a></li>
+  <li><a href="#function-raggedtimeseries-2" id="toc-function-raggedtimeseries-2" class="nav-link" data-scroll-target="#function-raggedtimeseries-2">function RaggedTimeSeries</a></li>
+  <li><a href="#function-operator" id="toc-function-operator" class="nav-link" data-scroll-target="#function-operator">function operator=</a></li>
+  <li><a href="#function-raggedtimeseries-3" id="toc-function-raggedtimeseries-3" class="nav-link" data-scroll-target="#function-raggedtimeseries-3">function RaggedTimeSeries</a></li>
+  <li><a href="#function-operator-1" id="toc-function-operator-1" class="nav-link" data-scroll-target="#function-operator-1">function operator=</a></li>
+  <li><a href="#function-raggedtimeseries-4" id="toc-function-raggedtimeseries-4" class="nav-link" data-scroll-target="#function-raggedtimeseries-4">function RaggedTimeSeries</a></li>
+  <li><a href="#function-createfilteredcopy" id="toc-function-createfilteredcopy" class="nav-link" data-scroll-target="#function-createfilteredcopy">function createFilteredCopy</a></li>
+  <li><a href="#function-createtimerangecopy" id="toc-function-createtimerangecopy" class="nav-link" data-scroll-target="#function-createtimerangecopy">function createTimeRangeCopy</a></li>
+  <li><a href="#function-settimeframe" id="toc-function-settimeframe" class="nav-link" data-scroll-target="#function-settimeframe">function setTimeFrame</a></li>
+  <li><a href="#function-gettimeframe" id="toc-function-gettimeframe" class="nav-link" data-scroll-target="#function-gettimeframe">function getTimeFrame</a></li>
+  <li><a href="#function-getimagesize" id="toc-function-getimagesize" class="nav-link" data-scroll-target="#function-getimagesize">function getImageSize</a></li>
+  <li><a href="#function-setimagesize" id="toc-function-setimagesize" class="nav-link" data-scroll-target="#function-setimagesize">function setImageSize</a></li>
+  <li><a href="#function-setidentitycontext" id="toc-function-setidentitycontext" class="nav-link" data-scroll-target="#function-setidentitycontext">function setIdentityContext</a></li>
+  <li><a href="#function-rebuildallentityids" id="toc-function-rebuildallentityids" class="nav-link" data-scroll-target="#function-rebuildallentityids">function rebuildAllEntityIds</a></li>
+  <li><a href="#function-addentryattime" id="toc-function-addentryattime" class="nav-link" data-scroll-target="#function-addentryattime">function addEntryAtTime</a></li>
+  <li><a href="#function-copybyentityids" id="toc-function-copybyentityids" class="nav-link" data-scroll-target="#function-copybyentityids">function copyByEntityIds</a></li>
+  <li><a href="#function-movebyentityids" id="toc-function-movebyentityids" class="nav-link" data-scroll-target="#function-movebyentityids">function moveByEntityIds</a></li>
+  <li><a href="#function-getdatabyentityid" id="toc-function-getdatabyentityid" class="nav-link" data-scroll-target="#function-getdatabyentityid">function getDataByEntityId</a></li>
+  <li><a href="#function-gettimebyentityid" id="toc-function-gettimebyentityid" class="nav-link" data-scroll-target="#function-gettimebyentityid">function getTimeByEntityId</a></li>
+  <li><a href="#function-getdatabyentityids" id="toc-function-getdatabyentityids" class="nav-link" data-scroll-target="#function-getdatabyentityids">function getDataByEntityIds</a></li>
+  <li><a href="#function-getdatabyentityids-1" id="toc-function-getdatabyentityids-1" class="nav-link" data-scroll-target="#function-getdatabyentityids-1">function getDataByEntityIds</a></li>
+  <li><a href="#function-getmutabledata" id="toc-function-getmutabledata" class="nav-link" data-scroll-target="#function-getmutabledata">function getMutableData</a></li>
+  <li><a href="#function-clearbyentityid" id="toc-function-clearbyentityid" class="nav-link" data-scroll-target="#function-clearbyentityid">function clearByEntityId</a></li>
+  <li><a href="#function-clearbyentityids" id="toc-function-clearbyentityids" class="nav-link" data-scroll-target="#function-clearbyentityids">function clearByEntityIds</a></li>
+  <li><a href="#function-clearattime" id="toc-function-clearattime" class="nav-link" data-scroll-target="#function-clearattime">function clearAtTime</a></li>
+  <li><a href="#function-addattime" id="toc-function-addattime" class="nav-link" data-scroll-target="#function-addattime">function addAtTime</a></li>
+  <li><a href="#function-addattime-1" id="toc-function-addattime-1" class="nav-link" data-scroll-target="#function-addattime-1">function addAtTime</a></li>
+  <li><a href="#function-addattime-2" id="toc-function-addattime-2" class="nav-link" data-scroll-target="#function-addattime-2">function addAtTime</a></li>
+  <li><a href="#function-addattime-3" id="toc-function-addattime-3" class="nav-link" data-scroll-target="#function-addattime-3">function addAtTime</a></li>
+  <li><a href="#function-emplaceattime" id="toc-function-emplaceattime" class="nav-link" data-scroll-target="#function-emplaceattime">function emplaceAtTime</a></li>
+  <li><a href="#function-addattime-4" id="toc-function-addattime-4" class="nav-link" data-scroll-target="#function-addattime-4">function addAtTime</a></li>
+  <li><a href="#function-addattime-5" id="toc-function-addattime-5" class="nav-link" data-scroll-target="#function-addattime-5">function addAtTime</a></li>
+  <li><a href="#function-gettimecount" id="toc-function-gettimecount" class="nav-link" data-scroll-target="#function-gettimecount">function getTimeCount</a></li>
+  <li><a href="#function-getmaxentriesatanytime" id="toc-function-getmaxentriesatanytime" class="nav-link" data-scroll-target="#function-getmaxentriesatanytime">function getMaxEntriesAtAnyTime</a></li>
+  <li><a href="#function-gettotalentrycount" id="toc-function-gettotalentrycount" class="nav-link" data-scroll-target="#function-gettotalentrycount">function getTotalEntryCount</a></li>
+  <li><a href="#function-gettimeswithdata" id="toc-function-gettimeswithdata" class="nav-link" data-scroll-target="#function-gettimeswithdata">function getTimesWithData</a></li>
+  <li><a href="#function-getattime" id="toc-function-getattime" class="nav-link" data-scroll-target="#function-getattime">function getAtTime</a></li>
+  <li><a href="#function-getattime-1" id="toc-function-getattime-1" class="nav-link" data-scroll-target="#function-getattime-1">function getAtTime</a></li>
+  <li><a href="#function-getattime-2" id="toc-function-getattime-2" class="nav-link" data-scroll-target="#function-getattime-2">function getAtTime</a></li>
+  <li><a href="#function-getentityidsattime" id="toc-function-getentityidsattime" class="nav-link" data-scroll-target="#function-getentityidsattime">function getEntityIdsAtTime</a></li>
+  <li><a href="#function-getentityidsattime-1" id="toc-function-getentityidsattime-1" class="nav-link" data-scroll-target="#function-getentityidsattime-1">function getEntityIdsAtTime</a></li>
+  <li><a href="#function-getelementsinrange" id="toc-function-getelementsinrange" class="nav-link" data-scroll-target="#function-getelementsinrange">function getElementsInRange</a></li>
+  <li><a href="#function-getelementsinrange-1" id="toc-function-getelementsinrange-1" class="nav-link" data-scroll-target="#function-getelementsinrange-1">function getElementsInRange</a></li>
+  <li><a href="#function-elements" id="toc-function-elements" class="nav-link" data-scroll-target="#function-elements">function elements</a></li>
+  <li><a href="#function-elementsview" id="toc-function-elementsview" class="nav-link" data-scroll-target="#function-elementsview">function elementsView</a></li>
+  <li><a href="#function-view" id="toc-function-view" class="nav-link" data-scroll-target="#function-view">function view</a></li>
+  <li><a href="#function-getstoragecache" id="toc-function-getstoragecache" class="nav-link" data-scroll-target="#function-getstoragecache">function getStorageCache</a></li>
+  <li><a href="#function-isstoragecontiguous" id="toc-function-isstoragecontiguous" class="nav-link" data-scroll-target="#function-isstoragecontiguous">function isStorageContiguous</a></li>
+  <li><a href="#function-getstoragetype" id="toc-function-getstoragetype" class="nav-link" data-scroll-target="#function-getstoragetype">function getStorageType</a></li>
+  <li><a href="#function-islazy" id="toc-function-islazy" class="nav-link" data-scroll-target="#function-islazy">function isLazy</a></li>
+  <li><a href="#function-materialize" id="toc-function-materialize" class="nav-link" data-scroll-target="#function-materialize">function materialize</a></li>
+  <li><a href="#function-createfromview" id="toc-function-createfromview" class="nav-link" data-scroll-target="#function-createfromview">function createFromView</a></li>
+  <li><a href="#function-createfromviewwithnewids" id="toc-function-createfromviewwithnewids" class="nav-link" data-scroll-target="#function-createfromviewwithnewids">function createFromViewWithNewIds</a></li>
+  </ul></li>
+  <li><a href="#protected-functions-documentation" id="toc-protected-functions-documentation" class="nav-link" data-scroll-target="#protected-functions-documentation">Protected Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-getentitykind" id="toc-function-getentitykind" class="nav-link" data-scroll-target="#function-getentitykind">function getEntityKind</a></li>
+  <li><a href="#function-_clearattime" id="toc-function-_clearattime" class="nav-link" data-scroll-target="#function-_clearattime">function _clearAtTime</a></li>
+  <li><a href="#function-_updatestoragecache" id="toc-function-_updatestoragecache" class="nav-link" data-scroll-target="#function-_updatestoragecache">function _updateStorageCache</a></li>
+  <li><a href="#function-_invalidatestoragecache" id="toc-function-_invalidatestoragecache" class="nav-link" data-scroll-target="#function-_invalidatestoragecache">function _invalidateStorageCache</a></li>
+  </ul></li>
+  <li><a href="#protected-attributes-documentation" id="toc-protected-attributes-documentation" class="nav-link" data-scroll-target="#protected-attributes-documentation">Protected Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-_storage" id="toc-variable-_storage" class="nav-link" data-scroll-target="#variable-_storage">variable _storage</a></li>
+  <li><a href="#variable-_cached_storage" id="toc-variable-_cached_storage" class="nav-link" data-scroll-target="#variable-_cached_storage">variable _cached_storage</a></li>
+  <li><a href="#variable-_image_size" id="toc-variable-_image_size" class="nav-link" data-scroll-target="#variable-_image_size">variable _image_size</a></li>
+  <li><a href="#variable-_time_frame" id="toc-variable-_time_frame" class="nav-link" data-scroll-target="#variable-_time_frame">variable _time_frame</a></li>
+  <li><a href="#variable-_identity_data_key" id="toc-variable-_identity_data_key" class="nav-link" data-scroll-target="#variable-_identity_data_key">variable _identity_data_key</a></li>
+  <li><a href="#variable-_identity_registry" id="toc-variable-_identity_registry" class="nav-link" data-scroll-target="#variable-_identity_registry">variable _identity_registry</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">RaggedTimeSeries</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="raggedtimeseries" class="level1">
+<h1>RaggedTimeSeries</h1>
+<p>Base template class for ragged time series data structures. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;RaggedTimeSeries.hpp&gt;</code></p>
+<p>Inherits from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structRaggedTimeSeries_1_1RaggedElement.html">RaggedElement</a></strong> <br>Element type for flattened iteration over ragged time series.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-types" class="level2">
+<h2 class="anchored" data-anchor-id="public-types">Public Types</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using <a href="../../api_generated/Classes/classModificationHandle.html">ModificationHandle</a>&lt; TData &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#using-datamodifier">DataModifier</a></strong> <br>Type alias for modification handle.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-raggedtimeseries">RaggedTimeSeries</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td>virtual</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-~raggedtimeseries">~RaggedTimeSeries</a></strong>() =default</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-raggedtimeseries">RaggedTimeSeries</a></strong>(<a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> &amp;&amp; ) =default</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> &amp;&amp; ) =default</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-raggedtimeseries">RaggedTimeSeries</a></strong>(<a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> const &amp; ) =delete</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> const &amp; ) =delete</td>
+</tr>
+<tr class="odd">
+<td>template &lt;std::ranges::input_range R&gt; <br></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-raggedtimeseries">RaggedTimeSeries</a></strong>(R &amp;&amp; time_data_pairs)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfilteredcopy">createFilteredCopy</a></strong>(std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids) const<br>Create a filtered copy containing only entries with specified EntityIds.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createtimerangecopy">createTimeRangeCopy</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time) const<br>Create a filtered copy containing only entries in a time range.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-settimeframe">setTimeFrame</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame)<br>Set the time frame for this data structure.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimeframe">getTimeFrame</a></strong>() const<br>Get the current time frame.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structImageSize.html">ImageSize</a></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getimagesize">getImageSize</a></strong>() const<br>Get the image size associated with this data.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-setimagesize">setImageSize</a></strong>(<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; image_size)<br>Set the image size for this data.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-setidentitycontext">setIdentityContext</a></strong>(std::string const &amp; data_key, <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> * registry)<br>Set identity context for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> maintenance.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-rebuildallentityids">rebuildAllEntityIds</a></strong>()<br>Rebuild EntityIds for all entries using the current identity context.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addentryattime">addEntryAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData const &amp; data, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a data entry at a specific time with a specific entity ID.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename DerivedTarget &gt; <br>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-copybyentityids">copyByEntityIds</a></strong>(DerivedTarget &amp; target, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Copy entries with specific EntityIds to another <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename DerivedTarget &gt; <br>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-movebyentityids">moveByEntityIds</a></strong>(DerivedTarget &amp; target, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Move entries with specific EntityIds to another <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; std::reference_wrapper&lt; TData const &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityid">getDataByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id) const<br>Find the data associated with a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimebyentityid">getTimeByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id) const<br>Find the time frame index for a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds</a></strong>(std::span&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> const &gt; entity_ids) const<br>Get all data that match the given EntityIds as a lazy view.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids) const<br>Get all data that match the given EntityIds (vector overload).</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html#using-datamodifier">DataModifier</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getmutabledata">getMutableData</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Get a mutable handle to data by <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearbyentityid">clearByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear data by its <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
+</tr>
+<tr class="odd">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearbyentityids">clearByEntityIds</a></strong>(std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear multiple data entries by their EntityIds in a single pass.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearattime">clearAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear all data at a specific time with timeframe conversion.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by copying).</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by copying).</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by moving).</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by moving).</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename… TDataArgs&gt; <br>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-emplaceattime">emplaceAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TDataArgs &amp;&amp;… args)<br>Construct a data entry in-place at a specific time.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, std::vector&lt; TData &gt; const &amp; data_to_add, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a batch of data at a specific time by copying them.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, std::vector&lt; TData &gt; &amp;&amp; data_to_add, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a batch of data at a specific time by moving them.</td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimecount">getTimeCount</a></strong>() const<br>Get the number of distinct time frames with data.</td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getmaxentriesatanytime">getMaxEntriesAtAnyTime</a></strong>() const<br>Get the maximum number of entries at any single time frame.</td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettotalentrycount">getTotalEntryCount</a></strong>() const<br>Get the total number of entries across all time frames.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimeswithdata">getTimesWithData</a></strong>() const<br>Get all times with data.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame) const</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentityidsattime">getEntityIdsAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentityidsattime">getEntityIdsAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getelementsinrange">getElementsInRange</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval) const<br>Get data entries with their associated times as a zero-copy range within a TimeFrameInterval.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getelementsinrange">getElementsInRange</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const<br>Get a filtered view of elements within a TimeFrameInterval with timeframe conversion.</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elements">elements</a></strong>() const<br>A flattened view of (Time, <a href="../../api_generated/Classes/structDataEntry.html">DataEntry</a>) pairs.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elementsview">elementsView</a></strong>() const<br>A flattened view of <a href="">RaggedElement</a> objects (concept-compliant).</td>
+</tr>
+<tr class="odd">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data</a></strong>() const<br>A flattened view of (Time, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData) tuples.</td>
+</tr>
+<tr class="even">
+<td>auto</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-view">view</a></strong>() const<br>Create a view of this time series. This works for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> and any derived class (like <a href="">PointData</a>).</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structRaggedStorageCache.html">RaggedStorageCache</a>&lt; TData &gt; const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getstoragecache">getStorageCache</a></strong>() const<br>Get the storage cache for fast-path iteration.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-isstoragecontiguous">isStorageContiguous</a></strong>() const<br>Check if storage is currently using the owning backend.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Files/RaggedStorage_8hpp.html#enum-raggedstoragetype">RaggedStorageType</a></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getstoragetype">getStorageType</a></strong>() const<br>Get the underlying storage type.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-islazy">isLazy</a></strong>() const<br>Check if storage uses lazy evaluation.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize</a></strong>() const</td>
+</tr>
+<tr class="even">
+<td>template &lt;std::ranges::random_access_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromview">createFromView</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> image_size =<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a>)<br>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;std::ranges::input_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromviewwithnewids">createFromViewWithNewIds</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::string const &amp; data_key, <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> * registry, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> image_size =<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a>)<br>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view with new EntityIds.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="protected-functions" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions">Protected Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>constexpr <a href="../../api_generated/Files/EntityTypes_8hpp.html#enum-entitykind">EntityKind</a></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentitykind">getEntityKind</a></strong>()<br>Get the EntityKind for this data type.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function--clearattime">_clearAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear all data at a specific time (internal helper)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function--updatestoragecache">_updateStorageCache</a></strong>() const<br>Update the cached storage pointers.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function--invalidatestoragecache">_invalidateStorageCache</a></strong>() const<br>Invalidate the storage cache.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="protected-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="protected-attributes">Protected Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classRaggedStorageWrapper.html">RaggedStorageWrapper</a>&lt; TData &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--storage">_storage</a></strong></td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structRaggedStorageCache.html">RaggedStorageCache</a>&lt; TData &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--cached-storage">_cached_storage</a></strong></td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structImageSize.html">ImageSize</a></td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--image-size">_image_size</a></strong> <br><a href="../../api_generated/Classes/structImage.html">Image</a> size metadata.</td>
+</tr>
+<tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--time-frame">_time_frame</a></strong> <br>Associated time frame for temporal indexing.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--identity-data-key">_identity_data_key</a></strong> <br>Data key for <a href="">EntityRegistry</a> lookups.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#variable--identity-registry">_identity_registry</a></strong> <br>Pointer to <a href="">EntityRegistry</a> for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additional-inherited-members" class="level2">
+<h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Types inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>using std::function&lt; void()&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a></strong> <br>Type alias for observer callback functions.</td>
+</tr>
+<tr class="even">
+<td>using int</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></strong> <br>Type alias for callback identifiers.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Public Functions inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>() =default</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback)<br>Register a new observer callback.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-notifyobservers">notifyObservers</a></strong>()<br>Notify all registered observers.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-removeobserver">removeObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a> id)<br>Remove a previously registered observer.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> TData <span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RaggedTimeSeries<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Base template class for ragged time series data structures.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>TData</strong> The data type stored in each entry (e.g., <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a>)</li>
+</ul>
+<p><a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> provides a unified interface for time series data where multiple unique entries can exist at each timestamp. Each entry has a unique <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for tracking and manipulation.</p>
+<p>This base class manages:</p>
+<ul>
+<li>Time series storage as a map from <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> to vectors of DataEntry<tdata></tdata></li>
+<li><a href="../../api_generated/Classes/structImage.html">Image</a> size metadata</li>
+<li><a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> association</li>
+<li>Identity context (data key and <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a>) for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management</li>
+</ul>
+<p>Derived classes (<a href="../../api_generated/Classes/classLineData.html">LineData</a>, <a href="../../api_generated/Classes/classMaskData.html">MaskData</a>, <a href="../../api_generated/Classes/classPointData.html">PointData</a>) specialize the template parameter TData and provide domain-specific operations.</p>
+</section>
+<section id="public-types-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-types-documentation">Public Types Documentation</h2>
+<section id="using-datamodifier" class="level3">
+<h3 class="anchored" data-anchor-id="using-datamodifier">using DataModifier</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;::</span>DataModifier <span class="op">=</span>  ModificationHandle<span class="op">&lt;</span>TData<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Type alias for modification handle.</p>
+<p>This provides a unified type for RAII-style modification handles. Derived classes can use this or define their own aliases for convenience.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-raggedtimeseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-raggedtimeseries">function RaggedTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>RaggedTimeSeries<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-raggedtimeseries-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-raggedtimeseries-1">function ~RaggedTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="op">~</span>RaggedTimeSeries<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-raggedtimeseries-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-raggedtimeseries-2">function RaggedTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>RaggedTimeSeries<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    RaggedTimeSeries <span class="op">&amp;&amp;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>RaggedTimeSeries <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    RaggedTimeSeries <span class="op">&amp;&amp;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-raggedtimeseries-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-raggedtimeseries-3">function RaggedTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>RaggedTimeSeries<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    RaggedTimeSeries <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-operator-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-operator-1">function operator=</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>RaggedTimeSeries <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    RaggedTimeSeries <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-raggedtimeseries-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-raggedtimeseries-4">function RaggedTimeSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">explicit</span> RaggedTimeSeries<span class="op">(</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> time_data_pairs</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createfilteredcopy" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfilteredcopy">function createFilteredCopy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> createFilteredCopy<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy containing only entries with specified EntityIds.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_ids</strong> Set of EntityIds to include in the filtered copy</li>
+</ul>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds()</a> for lazy zero-copy access to filtered data</p>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> containing only matching entries</p>
+<p>This creates a new <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> (with owning storage) containing only the entries matching the provided EntityIds. The returned series will have new EntityIds assigned if an identity context is set, or will preserve the original EntityIds if no registry is set.</p>
+<p>Note: This creates a copy, not a view. For zero-copy iteration, use <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds()</a> instead.</p>
+</section>
+<section id="function-createtimerangecopy" class="level3">
+<h3 class="anchored" data-anchor-id="function-createtimerangecopy">function createTimeRangeCopy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> createTimeRangeCopy<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy containing only entries in a time range.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start_time</strong> Start of time range (inclusive)</li>
+<li><strong>end_time</strong> End of time range (inclusive)</li>
+</ul>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> containing only entries in the time range</p>
+<p>Creates a new <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> (with owning storage) containing only entries within the specified time range [start, end] (inclusive).</p>
+</section>
+<section id="function-settimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-settimeframe">function setTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setTimeFrame<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the time frame for this data structure.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_frame</strong> Shared pointer to the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> to associate with this data</li>
+</ul>
+</section>
+<section id="function-gettimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeframe">function getTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the current time frame.</p>
+<p><strong>Return</strong>: Shared pointer to the associated <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, or nullptr if none is set</p>
+</section>
+<section id="function-getimagesize" class="level3">
+<h3 class="anchored" data-anchor-id="function-getimagesize">function getImageSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ImageSize getImageSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the image size associated with this data.</p>
+<p><strong>Return</strong>: The current <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a></p>
+</section>
+<section id="function-setimagesize" class="level3">
+<h3 class="anchored" data-anchor-id="function-setimagesize">function setImageSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setImageSize<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> image_size</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the image size for this data.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>image_size</strong> The <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> to set</li>
+</ul>
+</section>
+<section id="function-setidentitycontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-setidentitycontext">function setIdentityContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setIdentityContext<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> registry</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set identity context for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> maintenance.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_key</strong> String key identifying this data in the <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a></li>
+<li><strong>registry</strong> Pointer to the <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> (must remain valid)</li>
+</ul>
+<p><strong>Precondition</strong>: registry != nullptr</p>
+<p>This establishes the connection to an <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> that will manage EntityIds for all entries in this data structure.</p>
+</section>
+<section id="function-rebuildallentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-rebuildallentityids">function rebuildAllEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> rebuildAllEntityIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Rebuild EntityIds for all entries using the current identity context.</p>
+<p><strong>Precondition</strong>: Identity context should be set via setIdentityContext before calling</p>
+<p>This method regenerates EntityIds for all data entries across all time frames. If no identity context is set (_identity_registry is nullptr), all EntityIds are reset to <a href="../../api_generated/Classes/structEntityId.html">EntityId(0)</a>.</p>
+<p>The EntityKind used depends on the derived class type:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> uses <a href="../../api_generated/Files/EntityTypes_8hpp.html#enumvalue-lineentity">EntityKind::LineEntity</a></li>
+<li><a href="../../api_generated/Classes/classMaskData.html">MaskData</a> uses <a href="../../api_generated/Files/EntityTypes_8hpp.html#enumvalue-maskentity">EntityKind::MaskEntity</a></li>
+<li><a href="../../api_generated/Classes/classPointData.html">PointData</a> uses <a href="../../api_generated/Files/EntityTypes_8hpp.html#enumvalue-pointentity">EntityKind::PointEntity</a></li>
+</ul>
+</section>
+<section id="function-addentryattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-addentryattime">function addEntryAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addEntryAtTime<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a data entry at a specific time with a specific entity ID.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>data</strong> The data to add</li>
+<li><strong>entity_id</strong> The entity ID to assign to the entry</li>
+<li><strong>notify</strong> If true, observers will be notified of the change</li>
+</ul>
+<p>This method is used internally for move operations to preserve entity IDs. It directly adds an entry without generating a new <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+</section>
+<section id="function-copybyentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-copybyentityids">function copyByEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> DerivedTarget <span class="op">&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>size_t copyByEntityIds<span class="op">(</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    DerivedTarget <span class="op">&amp;</span> target<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Copy entries with specific EntityIds to another <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>target</strong> The target to copy entries to</li>
+<li><strong>entity_ids</strong> Set of EntityIds to copy</li>
+<li><strong>notify</strong> If true, the target will notify its observers after the operation</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>DerivedTarget</strong> The derived class type (<a href="../../api_generated/Classes/classLineData.html">LineData</a>, <a href="../../api_generated/Classes/classMaskData.html">MaskData</a>, or <a href="../../api_generated/Classes/classPointData.html">PointData</a>)</li>
+</ul>
+<p><strong>Return</strong>: The number of entries actually copied</p>
+<p>Copies all entries that match the given EntityIds to the target. The copied entries will get new EntityIds in the target based on the target’s identity context. Uses the copy_by_entity_ids helper function which properly handles the differences in addAtTime APIs across derived classes.</p>
+</section>
+<section id="function-movebyentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-movebyentityids">function moveByEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> DerivedTarget <span class="op">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>size_t moveByEntityIds<span class="op">(</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    DerivedTarget <span class="op">&amp;</span> target<span class="op">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Move entries with specific EntityIds to another <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>target</strong> The target to move entries to</li>
+<li><strong>entity_ids</strong> Set of EntityIds to move</li>
+<li><strong>notify</strong> If true, both source and target will notify their observers after the operation</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>DerivedTarget</strong> The derived class type (<a href="../../api_generated/Classes/classLineData.html">LineData</a>, <a href="../../api_generated/Classes/classMaskData.html">MaskData</a>, or <a href="../../api_generated/Classes/classPointData.html">PointData</a>)</li>
+</ul>
+<p><strong>Return</strong>: The number of entries actually moved</p>
+<p>Moves all entries that match the given EntityIds to the target. The moved entries will keep the same EntityIds in the target and be removed from source. Uses the move_by_entity_ids helper function.</p>
+</section>
+<section id="function-getdatabyentityid" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdatabyentityid">function getDataByEntityId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>reference_wrapper<span class="op">&lt;</span> TData <span class="at">const</span> <span class="op">&gt;</span> <span class="op">&gt;</span> getDataByEntityId<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Find the data associated with a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to look up</li>
+</ul>
+<p><strong>Return</strong>: Optional containing a const reference to the data if found, std::nullopt otherwise</p>
+<p>This method provides reverse lookup from <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to the actual data, supporting group-based visualization workflows.</p>
+</section>
+<section id="function-gettimebyentityid" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimebyentityid">function getTimeByEntityId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> getTimeByEntityId<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Find the time frame index for a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to look up</li>
+</ul>
+<p><strong>Return</strong>: Optional containing the <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> if found, std::nullopt otherwise</p>
+<p>Returns the time frame associated with the given <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+</section>
+<section id="function-getdatabyentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdatabyentityids">function getDataByEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getDataByEntityIds<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> EntityId <span class="at">const</span> <span class="op">&gt;</span> entity_ids</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all data that match the given EntityIds as a lazy view.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_ids</strong> Span of EntityIds to look up</li>
+</ul>
+<p><strong>Return</strong>: A lazy view yielding (<a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData const&amp;) pairs for found entities</p>
+<p><strong>Note</strong>: The returned view is lazy - lookups happen during iteration. The span must remain valid for the lifetime of the view.</p>
+<p>This method returns a lazy range that performs O(1) lookups for each <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> on iteration. Only found entities are yielded.</p>
+</section>
+<section id="function-getdatabyentityids-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getdatabyentityids-1">function getDataByEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getDataByEntityIds<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all data that match the given EntityIds (vector overload).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_ids</strong> Vector of EntityIds to look up</li>
+</ul>
+<p><strong>Return</strong>: A lazy view yielding (<a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData const&amp;) pairs for found entities</p>
+<p>Convenience overload that accepts a vector of EntityIds.</p>
+</section>
+<section id="function-getmutabledata" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmutabledata">function getMutableData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> DataModifier <span class="op">&gt;</span> getMutableData<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a mutable handle to data by <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to look up</li>
+<li><strong>notify</strong> Whether to notify observers when the handle is destroyed</li>
+</ul>
+<p><strong>Return</strong>: Optional containing a DataModifier handle if found, std::nullopt otherwise</p>
+<p>This method returns an RAII-style handle. The handle provides pointer-like access to the underlying TData (<a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a>).</p>
+<p>When the handle is destroyed (goes out of scope), the observers will be automatically notified if requested.</p>
+</section>
+<section id="function-clearbyentityid" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearbyentityid">function clearByEntityId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> clearByEntityId<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear data by its <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> of the data to clear</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p><strong>Return</strong>: true if the data was found and cleared, false otherwise</p>
+<p>Removes the data entry associated with the given <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from the time series. If this results in an empty time frame, the time frame is also removed.</p>
+</section>
+<section id="function-clearbyentityids" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearbyentityids">function clearByEntityIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> clearByEntityIds<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear multiple data entries by their EntityIds in a single pass.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>entity_ids</strong> Set of EntityIds to remove</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p><strong>Return</strong>: Number of entries actually removed</p>
+<p>Bulk removal is O(n + k) total, far more efficient than calling <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearbyentityid">clearByEntityId()</a> k times which would be O(n * k).</p>
+</section>
+<section id="function-clearattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-clearattime">function clearAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> clearAtTime<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all data at a specific time with timeframe conversion.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_index_and_frame</strong> The time and timeframe to clear at</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p><strong>Return</strong>: true if data was found and cleared, false otherwise</p>
+<p>Removes all data entries at the specified time. If the time is from a different timeframe, it will be converted to this data’s timeframe first.</p>
+</section>
+<section id="function-addattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add data at a specific time (by copying).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>data</strong> The data to add (will be copied)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p>This overload is called when you pass an existing lvalue (e.g., a named variable). It will create a copy of the data.</p>
+</section>
+<section id="function-addattime-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime-1">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add data at a specific time with timeframe conversion (by copying).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_index_and_frame</strong> The time and timeframe to add at</li>
+<li><strong>data</strong> The data to add (will be copied)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+</section>
+<section id="function-addattime-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime-2">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add data at a specific time (by moving).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>data</strong> The data to add (will be moved)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p>This overload is called when you pass an rvalue (e.g., a temporary object or the result of std::move()). It will move the data, avoiding a copy.</p>
+</section>
+<section id="function-addattime-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime-3">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add data at a specific time with timeframe conversion (by moving).</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time_index_and_frame</strong> The time and timeframe to add at</li>
+<li><strong>data</strong> The data to add (will be moved)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+</section>
+<section id="function-emplaceattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-emplaceattime">function emplaceAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span><span class="op">...</span> TDataArgs<span class="op">&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> emplaceAtTime<span class="op">(</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    TDataArgs <span class="op">&amp;&amp;...</span> args</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a data entry in-place at a specific time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>args</strong> The arguments to forward to TData’s constructor</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>TDataArgs</strong> The types of arguments for TData’s constructor</li>
+</ul>
+<p>This method perfectly forwards its arguments to the constructor of the TData (e.g., <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a>) object. This is the most efficient way to add new data.</p>
+</section>
+<section id="function-addattime-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime-4">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_to_add<span class="op">,</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a batch of data at a specific time by copying them.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>data_to_add</strong> Vector of data to add (will be copied)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p>Appends the data entries to any already existing at that time.</p>
+</section>
+<section id="function-addattime-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-addattime-5">function addAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="op">&amp;&amp;</span> data_to_add<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a batch of data at a specific time by moving them.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to add the data at</li>
+<li><strong>data_to_add</strong> Vector of data to add (will be moved)</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p>Appends the data entries to any already existing at that time. The input vector will be left in a state with “empty” data entries.</p>
+</section>
+<section id="function-gettimecount" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimecount">function getTimeCount</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>size_t getTimeCount<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the number of distinct time frames with data.</p>
+<p><strong>Return</strong>: The count of time frames containing at least one entry</p>
+</section>
+<section id="function-getmaxentriesatanytime" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmaxentriesatanytime">function getMaxEntriesAtAnyTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>size_t getMaxEntriesAtAnyTime<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the maximum number of entries at any single time frame.</p>
+<p><strong>Return</strong>: The maximum number of entries at any time, or 0 if no data exists</p>
+<p>Scans all time frames and returns the size of the largest vector of entries. This represents the maximum “width” of the ragged array structure.</p>
+</section>
+<section id="function-gettotalentrycount" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettotalentrycount">function getTotalEntryCount</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>size_t getTotalEntryCount<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the total number of entries across all time frames.</p>
+<p><strong>Return</strong>: The total count of all entries</p>
+<p>Sums the number of entries at each time frame to get the total count of all data entries in this time series.</p>
+</section>
+<section id="function-gettimeswithdata" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimeswithdata">function getTimesWithData</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getTimesWithData<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get all times with data.</p>
+<p><strong>Return</strong>: A view of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> keys</p>
+<p>Returns a view over the keys of the data map for zero-copy iteration.</p>
+</section>
+<section id="function-getattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-getattime">function getAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getAtTime<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getattime-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getattime-1">function getAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getAtTime<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeframe</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getattime-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-getattime-2">function getAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getAtTime<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getentityidsattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-getentityidsattime">function getEntityIdsAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getEntityIdsAtTime<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getentityidsattime-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getentityidsattime-1">function getEntityIdsAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getEntityIdsAtTime<span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeframe</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-getelementsinrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-getelementsinrange">function getElementsInRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getElementsInRange<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get data entries with their associated times as a zero-copy range within a TimeFrameInterval.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>interval</strong> The TimeFrameInterval specifying the range [start, end] (inclusive)</li>
+<li><strong>interval</strong> The TimeFrameInterval specifying the range [start, end] (inclusive)</li>
+</ul>
+<p><strong>Return</strong>:</p>
+<ul>
+<li>A zero-copy view of time-data entries pairs for times within the specified interval</li>
+<li>A zero-copy filtered view of <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data()</a> for times within the interval</li>
+</ul>
+<p>Returns a filtered view of time-data entries pairs for times within the specified interval [start, end] (inclusive). This method provides zero-copy access to the underlying DataEntry<tdata> data structure.</tdata></p>
+<p>Get a filtered view of elements within a TimeFrameInterval</p>
+<p>Returns a filtered view of (Time, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData const&amp;) tuples for times within the specified interval [start, end] (inclusive). This method provides zero-copy access to the underlying data.</p>
+</section>
+<section id="function-getelementsinrange-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-getelementsinrange-1">function getElementsInRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> getElementsInRange<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeframe</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get a filtered view of elements within a TimeFrameInterval with timeframe conversion.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>interval</strong> The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)</li>
+<li><strong>source_timeframe</strong> The timeframe that the interval is expressed in</li>
+</ul>
+<p><strong>Return</strong>: A zero-copy filtered view of <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data()</a> for times within the converted interval</p>
+<p>Converts the time range from the source timeframe to the target timeframe (this data’s timeframe) and returns a filtered view of (Time, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData const&amp;) tuples for times within the converted interval range. If the timeframes are the same, no conversion is performed. This method provides zero-copy access to the underlying data.</p>
+</section>
+<section id="function-elements" class="level3">
+<h3 class="anchored" data-anchor-id="function-elements">function elements</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> elements<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A flattened view of (Time, <a href="../../api_generated/Classes/structDataEntry.html">DataEntry</a>) pairs.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elementsview">elementsView()</a> for concept-compliant iteration with <a href="../../api_generated/Classes/structRaggedTimeSeries_1_1RaggedElement.html">RaggedElement</a></p>
+<p>This creates a zero-overhead 1D view of all entities across all times. Crucially, it preserves the <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> for each entity.</p>
+<p>Returns <code>std::pair&lt;[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md), [DataEntry](/api_generated/Classes/structDataEntry.md)&lt;TData&gt;&gt;</code> for backward compatibility with existing code that uses <code>.first</code>, <code>.second</code>, and structured bindings.</p>
+<p>Usage: <code>for(auto [time, entry] : ts.elements()) { ... }</code></p>
+</section>
+<section id="function-elementsview" class="level3">
+<h3 class="anchored" data-anchor-id="function-elementsview">function elementsView</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> elementsView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A flattened view of <a href="">RaggedElement</a> objects (concept-compliant).</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/structRaggedTimeSeries_1_1RaggedElement.html">RaggedElement</a></li>
+<li><a href="../../api_generated/Files/TimeSeriesConcepts_8hpp.html#file-timeseriesconcepts.hpp">TimeSeriesConcepts.hpp</a> for concept definitions</li>
+</ul>
+<p><strong>Return</strong>: A lazy range view of <a href="../../api_generated/Classes/structRaggedTimeSeries_1_1RaggedElement.html">RaggedElement</a> objects</p>
+<p>This creates a zero-overhead 1D view of all entities across all times. Each element satisfies the TimeSeriesElement and EntityElement concepts, enabling use with generic time series algorithms.</p>
+<p>Use this method when you need concept-compliant elements for generic algorithms. Use <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elements">elements()</a> when you need backward-compatible pair iteration.</p>
+<p>Usage: ```cpp</p>
+<p>for (auto elem : ts.elementsView()) { auto t = elem.time(); // TimeFrameIndex auto id = elem.id(); // EntityId auto&amp; data = elem.data(); // TData const&amp; }</p>
+<pre><code>
+
+### function flattened_data
+
+```cpp
+inline auto flattened_data() const</code></pre>
+<p>A flattened view of (Time, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData) tuples.</p>
+<p><strong>Deprecated</strong>:</p>
+<p>Use <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elementsview">elementsView()</a> instead for concept-compliant iteration</p>
+<p>Helper that unpacks the data for easier structured binding.</p>
+</section>
+<section id="function-view" class="level3">
+<h3 class="anchored" data-anchor-id="function-view">function view</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> view<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a view of this time series. This works for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> and any derived class (like <a href="">PointData</a>).</p>
+</section>
+<section id="function-getstoragecache" class="level3">
+<h3 class="anchored" data-anchor-id="function-getstoragecache">function getStorageCache</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RaggedStorageCache<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getStorageCache<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the storage cache for fast-path iteration.</p>
+<p><strong>Return</strong>: RaggedStorageCache<tdata> with valid pointers if storage is contiguous</tdata></p>
+<p>Returns a cache structure that provides direct pointer access to underlying data when storage is contiguous (owning). For view-based storage, returns an invalid cache.</p>
+<p>This is useful for performance-critical code that needs to iterate over all data with minimal overhead:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> cache <span class="op">=</span> ts<span class="op">.</span>getStorageCache<span class="op">();</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>cache<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fast path: direct pointer access</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> cache<span class="op">.</span>cache_size<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time <span class="op">=</span> cache<span class="op">.</span>getTime<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> data <span class="op">=</span> cache<span class="op">.</span>getData<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ...</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Slow path: use elements() view</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">[</span>time<span class="op">,</span> entry<span class="op">]</span> <span class="op">:</span> ts<span class="op">.</span>elements<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ...</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-isstoragecontiguous" class="level3">
+<h3 class="anchored" data-anchor-id="function-isstoragecontiguous">function isStorageContiguous</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isStorageContiguous<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if storage is currently using the owning backend.</p>
+<p><strong>Return</strong>: true if storage owns its data (contiguous), false if it’s a view</p>
+<p>When storage is owning (contiguous), direct pointer access is available via <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getstoragecache">getStorageCache()</a> for zero-overhead iteration.</p>
+</section>
+<section id="function-getstoragetype" class="level3">
+<h3 class="anchored" data-anchor-id="function-getstoragetype">function getStorageType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RaggedStorageType getStorageType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the underlying storage type.</p>
+<p><strong>Return</strong>: RaggedStorageType enum indicating the storage backend</p>
+</section>
+<section id="function-islazy" class="level3">
+<h3 class="anchored" data-anchor-id="function-islazy">function isLazy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isLazy<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if storage uses lazy evaluation.</p>
+<p><strong>Return</strong>: true if storage is lazy (values computed on-demand), false otherwise</p>
+</section>
+<section id="function-materialize" class="level3">
+<h3 class="anchored" data-anchor-id="function-materialize">function materialize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createfromview" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromview">function createFromView</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::random_access_range ViewType<span class="op">&gt;</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    ImageSize image_size <span class="op">=</span>ImageSize<span class="op">{}</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>view</strong> Random-access range view yielding (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData) tuples</li>
+<li><strong>time_frame</strong> Shared time frame (reuse from base series for efficiency)</li>
+<li><strong>image_size</strong> Optional image size metadata</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ViewType</strong> Random-access range type</li>
+</ul>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize()</a> to convert lazy storage to owning storage</li>
+<li><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data()</a> to get a <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-view">view</a> over an existing <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a></li>
+</ul>
+<p><strong>Return</strong>: std::shared_ptr&lt;RaggedTimeSeries<tdata>&gt; Lazy ragged time series</tdata></p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>The view must remain valid for the lifetime of the returned <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>. Capture by value in lambdas or ensure base series outlives the lazy series.</li>
+<li>For materialized (eager) storage, call .<a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize()</a> on the result</li>
+</ul>
+<p>Creates a <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> that computes values on-demand from a ranges view. The view must be a random-access range that yields tuples compatible with (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData) or (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData const&amp;). No intermediate data is materialized - values are computed when accessed.</p>
+<p>This enables efficient transform pipelines without intermediate allocations:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Skeletonization without materializing intermediate results</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> transformed_view <span class="op">=</span> mask_data<span class="op">.</span>flattened_data<span class="op">()</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="bu">std::</span>views::transform<span class="op">([](</span><span class="kw">auto</span> tuple<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> eid<span class="op">,</span> mask_ref<span class="op">]</span> <span class="op">=</span> tuple<span class="op">;</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_tuple<span class="op">(</span>time<span class="op">,</span> eid<span class="op">,</span> skeletonize<span class="op">(</span>mask_ref<span class="op">.</span>get<span class="op">()));</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> lazy_skeleton <span class="op">=</span> RaggedTimeSeries<span class="op">&lt;</span>Line2D<span class="op">&gt;::</span>createFromView<span class="op">(</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>    transformed_view<span class="op">,</span> </span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>    mask_data<span class="op">.</span>getTimeFrame<span class="op">(),</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>    mask_data<span class="op">.</span>getImageSize<span class="op">()</span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Access computes skeletonization on-demand</span></span>
+<span id="cb58-15"><a href="#cb58-15" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> skeleton <span class="op">=</span> lazy_skeleton<span class="op">-&gt;</span>getData<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createfromviewwithnewids" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfromviewwithnewids">function createFromViewWithNewIds</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range ViewType<span class="op">&gt;</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="op">&gt;</span> createFromViewWithNewIds<span class="op">(</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> registry<span class="op">,</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    ImageSize image_size <span class="op">=</span>ImageSize<span class="op">{}</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view with new EntityIds.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>view</strong> Random-access range view yielding (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, TData) pairs</li>
+<li><strong>time_frame</strong> Shared time frame</li>
+<li><strong>data_key</strong> Data key for <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a></li>
+<li><strong>registry</strong> <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> for generating new EntityIds</li>
+<li><strong>image_size</strong> Optional image size metadata</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ViewType</strong> Random-access range type yielding (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, TData) pairs</li>
+</ul>
+<p><strong>Return</strong>: std::shared_ptr&lt;RaggedTimeSeries<tdata>&gt; Materialized (owning) time series with new EntityIds</tdata></p>
+<p><strong>Note</strong>: This materializes the view immediately since EntityIds must be generated at construction time. For lazy evaluation, use <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromview">createFromView()</a> with pre-assigned EntityIds.</p>
+<p>Same as <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromview">createFromView()</a>, but generates new EntityIds for each element using the provided <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a>. This is useful when creating transformed data that should have distinct entity identities from the source.</p>
+</section>
+</section>
+<section id="protected-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
+<section id="function-getentitykind" class="level3">
+<h3 class="anchored" data-anchor-id="function-getentitykind">function getEntityKind</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="kw">constexpr</span> EntityKind getEntityKind<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the EntityKind for this data type.</p>
+<p><strong>Return</strong>: The EntityKind corresponding to TData</p>
+<p>This method uses if constexpr to determine the correct EntityKind based on the TData template parameter at compile time.</p>
+</section>
+<section id="function-_clearattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-_clearattime">function _clearAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> _clearAtTime<span class="op">(</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clear all data at a specific time (internal helper)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> The time to clear data at</li>
+<li><strong>notify</strong> Whether to notify observers after the operation</li>
+</ul>
+<p><strong>Return</strong>: true if data was found and cleared, false otherwise</p>
+<p>This is the implementation method that directly clears data at a given time without any timeframe conversion. It’s used by the public clearAtTime method and can be used by derived classes.</p>
+</section>
+<section id="function-_updatestoragecache" class="level3">
+<h3 class="anchored" data-anchor-id="function-_updatestoragecache">function _updateStorageCache</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> _updateStorageCache<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the cached storage pointers.</p>
+<p>Called after any modification to the storage to update the cache. If storage is contiguous (owning), the cache will be valid. If storage is non-contiguous (view), the cache will be invalid.</p>
+</section>
+<section id="function-_invalidatestoragecache" class="level3">
+<h3 class="anchored" data-anchor-id="function-_invalidatestoragecache">function _invalidateStorageCache</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> _invalidateStorageCache<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Invalidate the storage cache.</p>
+<p>Called before modifications to ensure cache is refreshed after.</p>
+</section>
+</section>
+<section id="protected-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="protected-attributes-documentation">Protected Attributes Documentation</h2>
+<section id="variable-_storage" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_storage">variable _storage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>RaggedStorageWrapper<span class="op">&lt;</span> TData <span class="op">&gt;</span> _storage<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Storage for time series data using type-erased wrapper Default-constructs with <a href="../../api_generated/Classes/classOwningRaggedStorage.html">OwningRaggedStorage</a> backend</p>
+</section>
+<section id="variable-_cached_storage" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_cached_storage">variable _cached_storage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>RaggedStorageCache<span class="op">&lt;</span> TData <span class="op">&gt;</span> _cached_storage<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cached pointers for fast-path iteration when storage is contiguous This cache is invalidated when storage is modified</p>
+</section>
+<section id="variable-_image_size" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_image_size">variable _image_size</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>ImageSize _image_size<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="../../api_generated/Classes/structImage.html">Image</a> size metadata.</p>
+</section>
+<section id="variable-_time_frame" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_time_frame">variable _time_frame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> _time_frame <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Associated time frame for temporal indexing.</p>
+</section>
+<section id="variable-_identity_data_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_identity_data_key">variable _identity_data_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string _identity_data_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Data key for <a href="">EntityRegistry</a> lookups.</p>
+</section>
+<section id="variable-_identity_registry" class="level3">
+<h3 class="anchored" data-anchor-id="variable-_identity_registry">variable _identity_registry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>EntityRegistry <span class="op">*</span> _identity_registry <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pointer to <a href="">EntityRegistry</a> for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management.</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:21 +0000</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ROADMAP.md – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#roadmap.md" id="toc-roadmap.md" class="nav-link active" data-scroll-target="#roadmap.md">ROADMAP.md</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a>
+  <ul class="collapse">
+  <li><a href="#embeddable-pipeline-builder-widget" id="toc-embeddable-pipeline-builder-widget" class="nav-link" data-scroll-target="#embeddable-pipeline-builder-widget">4.2 — Embeddable Pipeline Builder Widget</a></li>
+  <li><a href="#tensordata-lazy-column-integration" id="toc-tensordata-lazy-column-integration" class="nav-link" data-scroll-target="#tensordata-lazy-column-integration">4.3 — TensorData Lazy Column Integration</a></li>
+  </ul></li>
+  <li><a href="#phase-5-state-serialization" id="toc-phase-5-state-serialization" class="nav-link" data-scroll-target="#phase-5-state-serialization">Phase 5: State Serialization</a>
+  <ul class="collapse">
+  <li><a href="#transformsv2statedata-extension" id="toc-transformsv2statedata-extension" class="nav-link" data-scroll-target="#transformsv2statedata-extension">5.1 — <code>TransformsV2StateData</code> Extension</a></li>
+  <li><a href="#dirty-tracking" id="toc-dirty-tracking" class="nav-link" data-scroll-target="#dirty-tracking">5.2 — Dirty Tracking</a></li>
+  </ul></li>
+  <li><a href="#phase-6-transform-migration-polish" id="toc-phase-6-transform-migration-polish" class="nav-link" data-scroll-target="#phase-6-transform-migration-polish">Phase 6: Transform Migration &amp; Polish</a>
+  <ul class="collapse">
+  <li><a href="#priority-transforms-to-port" id="toc-priority-transforms-to-port" class="nav-link" data-scroll-target="#priority-transforms-to-port">6.1 — Priority Transforms to Port</a></li>
+  <li><a href="#ui-polish" id="toc-ui-polish" class="nav-link" data-scroll-target="#ui-polish">6.2 — UI Polish</a></li>
+  <li><a href="#deprecation-path-for-v1-widget" id="toc-deprecation-path-for-v1-widget" class="nav-link" data-scroll-target="#deprecation-path-for-v1-widget">6.3 — Deprecation Path for V1 Widget</a></li>
+  </ul></li>
+  <li><a href="#implementation-order-dependencies" id="toc-implementation-order-dependencies" class="nav-link" data-scroll-target="#implementation-order-dependencies">Implementation Order &amp; Dependencies</a></li>
+  <li><a href="#key-design-decisions" id="toc-key-design-decisions" class="nav-link" data-scroll-target="#key-design-decisions">Key Design Decisions</a>
+  <ul class="collapse">
+  <li><a href="#why-json-as-the-inter-widget-protocol" id="toc-why-json-as-the-inter-widget-protocol" class="nav-link" data-scroll-target="#why-json-as-the-inter-widget-protocol">Why JSON as the Inter-Widget Protocol?</a></li>
+  <li><a href="#why-not-store-sub-widget-state-in-editorstate" id="toc-why-not-store-sub-widget-state-in-editorstate" class="nav-link" data-scroll-target="#why-not-store-sub-widget-state-in-editorstate">Why Not Store Sub-Widget State in EditorState?</a></li>
+  <li><a href="#why-rflfieldst-for-auto-ui" id="toc-why-rflfieldst-for-auto-ui" class="nav-link" data-scroll-target="#why-rflfieldst-for-auto-ui">Why <code>rfl::fields&lt;T&gt;()</code> for Auto-UI?</a></li>
+  <li><a href="#why-embeddable-builder-instead-of-signals" id="toc-why-embeddable-builder-instead-of-signals" class="nav-link" data-scroll-target="#why-embeddable-builder-instead-of-signals">Why Embeddable Builder Instead of Signals?</a></li>
+  </ul></li>
+  <li><a href="#file-structure" id="toc-file-structure" class="nav-link" data-scroll-target="#file-structure">File Structure</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">ROADMAP.md</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="roadmap.md" class="level1">
+<h1>ROADMAP.md</h1>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># TransformsV2 Widget — Implementation Roadmap</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## Overview</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>The TransformsV2 Widget replaces the V1 <span class="in">`DataTransform_Widget`</span> with a pipeline-centric UI for composing, configuring, executing, and sharing V2 transform pipelines. Key improvements over V1:</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Concern <span class="pp">|</span> V1 <span class="pp">|</span> V2 <span class="pp">|</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Transform model <span class="pp">|</span> Single operation in → out <span class="pp">|</span> Multi-step composable pipeline <span class="pp">|</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Parameter UI <span class="pp">|</span> Hand-written widget per transform <span class="pp">|</span> Auto-generated from reflect-cpp, with override support <span class="pp">|</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> JSON integration <span class="pp">|</span> Load/execute only <span class="pp">|</span> Bidirectional: UI ↔ JSON, live serialization <span class="pp">|</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Reusability <span class="pp">|</span> Standalone widget only <span class="pp">|</span> Embeddable; JSON pipeline connects to TensorData lazy columns, TableView, etc. <span class="pp">|</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> State <span class="pp">|</span> Minimal (selected key/operation) <span class="pp">|</span> Pipeline descriptor as serializable state <span class="pp">|</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Intermediate data <span class="pp">|</span> Materialized to DataManager <span class="pp">|</span> Optional; pipeline fusion avoids allocation <span class="pp">|</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Architecture Diagram</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>┌─────────────────────────────────────────────────────────┐ │ TransformsV2Properties_Widget │ │ ┌───────────────────────┐ ┌────────────────────────┐ │ │ │ Pipeline Builder │ │ JSON Panel │ │ │ │ ┌─────────────────┐ │ │ ┌──────────────────┐ │ │ │ │ │ Input Selector │ │ │ │ Live JSON View │ │ │ │ │ │ (DataFocusAware) │ │ │ │ (auto-synced) │ │ │ │ │ ├─────────────────┤ │ │ ├──────────────────┤ │ │ │ │ │ Step List │ │ │ │ Load/Save │ │ │ │ │ │ (add/remove/ │ │ │ │ Validate │ │ │ │ │ │ reorder steps) │ │ │ │ Execute │ │ │ │ │ ├─────────────────┤ │ │ └──────────────────┘ │ │ │ │ │ Step Config │ │ └────────────────────────┘ │ │ │ │ (auto-generated │ │ │ │ │ │ or custom) │ │ ┌────────────────────────┐ │ │ │ ├─────────────────┤ │ │ Output Config │ │ │ │ │ Pre-Reductions │ │ │ ┌──────────────────┐ │ │ │ │ └─────────────────┘ │ │ │ Output key name │ │ │ │ └───────────────────────┘ │ │ Mode: DataManager │ │ │ │ │ │ or JSON-only │ │ │ │ │ │ Execute button │ │ │ │ │ └──────────────────┘ │ │ │ └────────────────────────┘ │ └─────────────────────────────────────────────────────────┘ │ │ │ builds │ serializes to/from ▼ ▼ TransformPipeline PipelineDescriptor (executable) (JSON-serializable) │ ▼ DataManager / External Consumer</p>
+<pre><code>
+---
+
+## Phase 4: External Pipeline Consumers (Embeddable Mode)
+
+**Goal:** Allow other widgets to use the TransformsV2 pipeline builder to configure pipelines without executing them against DataManager. This is the key extensibility point.
+
+### 4.1 — `PipelineConfigResult` Abstraction
+
+Define a result type that decouples pipeline *configuration* from pipeline *execution*:
+
+```cpp
+struct PipelineConfigResult {
+    std::string pipeline_json;                    // Serialized PipelineDescriptor
+    std::optional&lt;TransformPipeline&gt; pipeline;    // Ready-to-execute pipeline object
+    std::string input_type_name;                  // E.g., "AnalogTimeSeries"
+    std::string output_type_name;                 // E.g., "DigitalEventSeries"
+};</code></pre>
+<section id="embeddable-pipeline-builder-widget" class="level3">
+<h3 class="anchored" data-anchor-id="embeddable-pipeline-builder-widget">4.2 — Embeddable Pipeline Builder Widget</h3>
+<p>Factor the pipeline builder into a reusable widget that can be embedded:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PipelineBuilderWidget <span class="op">:</span> <span class="kw">public</span> <span class="ex">QWidget</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set the input data type (no DataManager needed)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setInputType<span class="op">(</span><span class="bu">std::</span>type_index <span class="dt">input_element_type</span><span class="op">);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the configured pipeline as JSON</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string pipelineJson<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load a pipeline from JSON</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> loadFromJson<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> json<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> pipelineChanged<span class="op">(</span>PipelineConfigResult <span class="at">const</span><span class="op">&amp;</span> result<span class="op">);</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="tensordata-lazy-column-integration" class="level3">
+<h3 class="anchored" data-anchor-id="tensordata-lazy-column-integration">4.3 — TensorData Lazy Column Integration</h3>
+<p>In the TensorInspector widget, when configuring a lazy-evaluated column: 1. Embed a <code>PipelineBuilderWidget</code> in a dialog or sub-panel 2. Set the input type to the tensor’s element type 3. On <code>pipelineChanged</code>, store the JSON in the <code>TensorData</code> column definition 4. The lazy backend uses <code>loadPipelineFromJson()</code> to reconstruct the pipeline at evaluation time</p>
+<p><strong>Files to create:</strong> - <code>src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineBuilderWidget.hpp/.cpp</code> — reusable embeddable builder - Modify <code>TransformsV2Properties_Widget</code> to embed <code>PipelineBuilderWidget</code> + add execution/output controls</p>
+<p><strong>Estimated effort:</strong> Medium. The builder widget is a refactor of Phase 1 UI into a reusable component.</p>
+<hr>
+</section>
+</section>
+<section id="phase-5-state-serialization" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-state-serialization">Phase 5: State Serialization</h2>
+<p><strong>Goal:</strong> Minimal EditorState that preserves the user’s workspace without tracking internal sub-widget details.</p>
+<section id="transformsv2statedata-extension" class="level3">
+<h3 class="anchored" data-anchor-id="transformsv2statedata-extension">5.1 — <code>TransformsV2StateData</code> Extension</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TransformsV2StateData <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string instance_id<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Transforms V2"</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Pipeline state (the JSON is the source of truth)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> pipeline_json<span class="op">;</span>       <span class="co">// Current PipelineDescriptor as JSON</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> input_data_key<span class="op">;</span>      <span class="co">// Currently selected input</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> output_data_key<span class="op">;</span>     <span class="co">// Last used output key name</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> execution_mode<span class="op">;</span>      <span class="co">// "data_manager" or "json_only"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// UI preferences (not pipeline internals)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> json_panel_expanded <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pre_reduction_panel_expanded <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This deliberately does <strong>not</strong> store the internal state of individual parameter widgets. The pipeline JSON captures all parameter values. On workspace restore: 1. <code>fromJson()</code> restores the state data 2. Pipeline JSON is loaded into the builder (Phase 2.2 path) 3. Builder reconstructs step widgets from the descriptor</p>
+</section>
+<section id="dirty-tracking" class="level3">
+<h3 class="anchored" data-anchor-id="dirty-tracking">5.2 — Dirty Tracking</h3>
+<p>Mark state dirty on any pipeline change. This integrates with the workspace save system.</p>
+<p><strong>Files to modify:</strong> - <code>TransformsV2State.hpp/.cpp</code> — extend <code>TransformsV2StateData</code></p>
+<p><strong>Estimated effort:</strong> Small.</p>
+<hr>
+</section>
+</section>
+<section id="phase-6-transform-migration-polish" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-transform-migration-polish">Phase 6: Transform Migration &amp; Polish</h2>
+<p><strong>Goal:</strong> Port V1 transforms to V2, add UX polish.</p>
+<section id="priority-transforms-to-port" class="level3">
+<h3 class="anchored" data-anchor-id="priority-transforms-to-port">6.1 — Priority Transforms to Port</h3>
+<p>Focus on transforms that benefit most from pipelining:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>V1 Transform</th>
+<th>V2 Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mask Area</td>
+<td>✅ Done</td>
+<td><code>CalculateMaskArea</code></td>
+</tr>
+<tr class="even">
+<td>Line Angle</td>
+<td>✅ Done</td>
+<td><code>CalculateLineAngle</code></td>
+</tr>
+<tr class="odd">
+<td>Line Curvature</td>
+<td>✅ Done</td>
+<td><code>CalculateLineCurvature</code></td>
+</tr>
+<tr class="even">
+<td>Z-Score Normalize</td>
+<td>✅ Done</td>
+<td><code>ZScoreNormalizeV2</code> with pre-reductions</td>
+</tr>
+<tr class="odd">
+<td>Analog Event Threshold</td>
+<td>✅ Done</td>
+<td>Container transform</td>
+</tr>
+<tr class="even">
+<td>Mask Centroid</td>
+<td>✅ Done</td>
+<td><code>CalculateMaskCentroid</code></td>
+</tr>
+<tr class="odd">
+<td>Analog Filter</td>
+<td>🔄 Port</td>
+<td>Good pipeline candidate (filter → threshold → detect)</td>
+</tr>
+<tr class="even">
+<td>Line Resample</td>
+<td>✅ Done</td>
+<td><code>ResampleLine</code></td>
+</tr>
+<tr class="odd">
+<td>Others</td>
+<td>🔄 Port</td>
+<td>Follow registration pattern</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ui-polish" class="level3">
+<h3 class="anchored" data-anchor-id="ui-polish">6.2 — UI Polish</h3>
+<ul>
+<li>Keyboard shortcuts (Ctrl+Enter to execute, Ctrl+S to save JSON)</li>
+<li>Undo/redo for pipeline edits (store descriptor stack)</li>
+<li>Transform search/filter in the add-step combo box</li>
+<li>Category grouping in the transform list (from <code>TransformMetadata.category</code>)</li>
+<li>Tooltips from <code>TransformMetadata.description</code></li>
+<li>Dark/light theme support for JSON editor (syntax highlighting)</li>
+</ul>
+</section>
+<section id="deprecation-path-for-v1-widget" class="level3">
+<h3 class="anchored" data-anchor-id="deprecation-path-for-v1-widget">6.3 — Deprecation Path for V1 Widget</h3>
+<ul>
+<li>V1 and V2 widgets coexist; V2 is registered under <code>"View/Tools"</code> menu</li>
+<li>V1 JSON pipelines can be loaded in V2 (V1 format → V2 descriptor conversion)</li>
+<li>Once all transforms are ported, V1 widget can be removed</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="implementation-order-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-order-dependencies">Implementation Order &amp; Dependencies</h2>
+<pre><code>Phase 0 (Auto-UI Infrastructure) ✅ COMPLETE
+    │
+    ├──→ Phase 1 (Pipeline Builder UI) ✅ COMPLETE ──→ Phase 2 (JSON Sync) ✅ COMPLETE
+    │                                                       │
+    │                                                       ├──→ Phase 3 (Execution) ✅ COMPLETE
+    │                                                       │
+    │                                                       └──→ Phase 4 (Embeddable Mode)
+    │
+    └──→ Phase 5 (State Serialization)  [partially done in Phases 2–3; pipeline_json, output_data_key, execution_mode added]
+    
+Phase 6 (Migration &amp; Polish)  [ongoing, parallel with Phase 4]</code></pre>
+<p><strong>Recommended next:</strong> Phase 4 (Embeddable Mode) — factor the pipeline builder into a reusable <code>PipelineBuilderWidget</code> for embedding in <code>TensorInspector</code> and <code>TableDesignerWidget</code>. Phase 5 (remaining state fields: <code>pre_reduction_panel_expanded</code>) is a small add-on.</p>
+<hr>
+</section>
+<section id="key-design-decisions" class="level2">
+<h2 class="anchored" data-anchor-id="key-design-decisions">Key Design Decisions</h2>
+<section id="why-json-as-the-inter-widget-protocol" class="level3">
+<h3 class="anchored" data-anchor-id="why-json-as-the-inter-widget-protocol">Why JSON as the Inter-Widget Protocol?</h3>
+<p>The pipeline JSON (<code>PipelineDescriptor</code>) is already a reflect-cpp struct with automatic serialization. Using it as the interchange format means: - <strong>No new IPC mechanism</strong> — widgets pass strings - <strong>Human-readable</strong> — users can inspect, edit, and version-control pipelines - <strong>Reproducible</strong> — JSON pipelines are scripts that can be re-executed - <strong>Decoupled</strong> — the consumer widget doesn’t need to link against TransformsV2_Widget, only against TransformsV2 core</p>
+</section>
+<section id="why-not-store-sub-widget-state-in-editorstate" class="level3">
+<h3 class="anchored" data-anchor-id="why-not-store-sub-widget-state-in-editorstate">Why Not Store Sub-Widget State in EditorState?</h3>
+<p>Each transform’s parameter widget is ephemeral. The pipeline JSON already captures all parameter values with full fidelity (it’s the same format used for execution). Storing sub-widget state separately would create a parallel source of truth. Instead: - Pipeline JSON is the single source of truth for all parameter values - UI state (which sections are expanded) is minimal and stored in <code>TransformsV2StateData</code> - On restore, the JSON is loaded and widgets are reconstructed from it</p>
+</section>
+<section id="why-rflfieldst-for-auto-ui" class="level3">
+<h3 class="anchored" data-anchor-id="why-rflfieldst-for-auto-ui">Why <code>rfl::fields&lt;T&gt;()</code> for Auto-UI?</h3>
+<p>reflect-cpp’s <code>rfl::fields&lt;T&gt;()</code> returns <code>std::array&lt;MetaField, N&gt;</code> with field name and type as strings at compile time. Combined with <code>rfl::to_view()</code> for mutable access, this gives us: - <strong>Zero-boilerplate field enumeration</strong> for any params struct - <strong>Type string parsing</strong> to select appropriate Qt widgets - <strong>Validator constraint extraction</strong> from <code>rfl::Validator&lt;T, Constraint&gt;</code> type strings to set min/max on spin boxes - <strong>Default values</strong> from default-constructed params via the <code>getXxx()</code> helpers</p>
+<p>The alternative (manually writing a widget per transform) doesn’t scale — V1 has 30+ hand-written widgets each with 50-150 lines of boilerplate.</p>
+</section>
+<section id="why-embeddable-builder-instead-of-signals" class="level3">
+<h3 class="anchored" data-anchor-id="why-embeddable-builder-instead-of-signals">Why Embeddable Builder Instead of Signals?</h3>
+<p>A signal-only approach (<code>pipelineExecuted(QString json)</code>) is one-directional. The embeddable <code>PipelineBuilderWidget</code> allows: - Setting input type constraints (no DataManager needed) - Receiving pipeline changes in real-time (not just on execution) - Pre-populating with an existing pipeline (e.g., editing a TensorData lazy column) - Being placed in dialogs, dock panels, or inline in other widgets</p>
+<hr>
+</section>
+</section>
+<section id="file-structure" class="level2">
+<h2 class="anchored" data-anchor-id="file-structure">File Structure</h2>
+<pre><code>TransformsV2_Widget/
+├── CMakeLists.txt
+├── ROADMAP.md
+├── TransformsV2WidgetRegistration.hpp       ✅ exists (create_editor_custom pattern)
+├── TransformsV2WidgetRegistration.cpp       ✅ exists (create_editor_custom pattern)
+├── Core/
+    │   ├── TransformsV2State.hpp                ✅ Phase 3 complete (output_data_key, execution_mode added)
+    │   └── TransformsV2State.cpp                ✅ Phase 3 complete
+    └── UI/
+        ├── TransformsV2Properties_Widget.hpp    ✅ Phase 3 complete (output config, execute button, progress bar, error label)
+        ├── TransformsV2Properties_Widget.cpp    ✅ Phase 3 complete (onExecuteClicked, generateOutputName, updateExecuteButtonState)
+        ├── TransformsV2Properties_Widget.ui     ✅ exists (base layout, sub-widgets added programmatically)
+        ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
+        ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
+        ├── ParamWidgetRegistry.hpp              ✅ Phase 0 complete
+        ├── PipelineStepListWidget.hpp           ✅ Phase 2 complete (loadFromDescriptors added)
+        ├── PipelineStepListWidget.cpp           ✅ Phase 2 complete
+        ├── StepConfigPanel.hpp                  ✅ Phase 1 complete
+        ├── StepConfigPanel.cpp                  ✅ Phase 1 complete
+        ├── PreReductionPanel.hpp                ✅ Phase 2 complete (loadFromDescriptors added)
+        ├── PreReductionPanel.cpp                ✅ Phase 2 complete
+# In TransformsV2 core library (non-Qt):
+TransformsV2/core/
+├── ParameterSchema.hpp                      ✅ Phase 0 complete
+└── ParameterSchema.cpp                      ✅ Phase 0 complete
+
+# Tests:
+tests/TransformsV2/
+└── test_parameter_schema.test.cpp           ✅ Phase 0 complete (14 cases, 115 assertions)</code></pre>
+<p>```</p>
+<hr>
+<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

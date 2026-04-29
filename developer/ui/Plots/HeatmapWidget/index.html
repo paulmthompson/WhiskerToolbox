@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Heatmap Widget – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../../developer/ui/data_manager/data_manager_widget.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widgets</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">Heatmap Widget</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/python_bindings/python_integration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Python Integration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/benchmark/tensor_car_gpu_cpu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCAR: GPU vs CPU Benchmark Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+ <span class="menu-text">developer/benchmark/tensor_whitening_memory_profile.qmd</span>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/benchmark/dataviewer_rendering_pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataViewer Rendering Pipeline Benchmarks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/analysis/precondition_protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Precondition Documentation Protocol</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/testing/layout_sanity_checker_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Layout Sanity Checker — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../api_generated/index_classes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/coreplotting/feature_color.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">FeatureColor Module</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">PlottingOpenGL</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlottingOpenGL/wide_line_rendering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Wide Line Rendering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/PlottingSVG/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlottingSVG/SVGExport.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — SVGExport (legacy flat document)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlottingSVG/SVGUtils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — SVGUtils</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlottingSVG/decorations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG — Decorations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/PlotDataExport/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlotDataExport</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/DeepLearning/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/model_wrapper_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Creating a C++ Model Wrapper</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/aot_inductor_tutorial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AOT Inductor Export Tutorial</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/recurrent_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recurrent (Feedback) Inputs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/batch_mode_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Mode &amp; Multi-Variant Model Loading</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Range Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">General Encoder Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Device Selector (GPU/CPU)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/transforms_v2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transforms V2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/adding_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Adding New Transforms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/sinc_interpolation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sinc Interpolation Transform</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/tensor_central_difference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCentralDifference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/tensor_temporal_neighbors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorTemporalNeighbors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/analog_to_tensor.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AnalogToTensor &amp; TensorToAnalog</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/tensor_car.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorCAR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/tensor_whitening.qmd</span>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ParameterSchema/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ParameterSchema</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Data Synthesizer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/GeneratorRegistry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generator Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataSynthesizer Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/MLCore/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLCore</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model Interface &amp; Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/softmax_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Softmax Regression Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/logit_projection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Logit Projection Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/lars_projection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LARS Projection Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/supervised_pca.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Supervised PCA Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/supervised_robust_pca.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Supervised Robust PCA Operation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/dim_reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dimensionality Reduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/hmm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hidden Markov Model (Gaussian / GMM)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Feature Processing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/label_assembly.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Label Assembly</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/pipelines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipelines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/validation_cross_validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation &amp; Cross-Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/prediction_regions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Prediction Regions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/sequence_assembler.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sequence Assembler</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Output &amp; Entity Utils</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/MLCore/widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLCore Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text">Generators</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/Analog.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analog Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/DigitalEvent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Event Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/DigitalInterval.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Interval Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/Spatial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/MotionModels.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Motion Models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true">
+ <span class="menu-text">TimeFrame</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/TimeFrame/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeFrame Resampling &amp; Upsampling Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/TimeController/TimeController.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeController</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <span class="sidebar-item-text sidebar-link text-start">
+ <span class="menu-text">Media Processing Pipeline</span></span>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Inspectors</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_inspectors/tensor_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tensor Inspector (Dev)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_inspectors/digital_event_series_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DigitalEventSeries Inspector</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_inspectors/inspector_deletion_lifecycle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspector Lifecycle vs DataManager Deletion</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-17" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-17" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-17" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/mask_csv_rle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Data CSV (RLE) Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/csv_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CSV Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/capnproto_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CapnProto Binary Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/opencv_mask_image.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">OpenCV Binary Image Mask I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/saver_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaverInfo &amp; AtomicWrite</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/generic_time_series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generic Time Series Programming</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_testing_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Testing Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_benchmarking_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Benchmarking Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/concurrency_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concurrency Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Threaded Loading Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-18" role="navigation" aria-expanded="false">
+ <span class="menu-text">TensorData</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-18" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-18" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataObjects/Tensors/row_mutation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorData Row Mutation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataObjects/multi_channel_storage_and_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Channel Storage &amp; Cross-Channel Transforms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataObjects/multi_channel_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Channel Storage Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataObjects/AnalogTimeSeries/tensor_column_analog_storage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorColumnAnalogStorage</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Core Types &amp; Factory</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">getEntityIdsInRange Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concrete Commands</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LoadData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SynthesizeData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Introspection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataManagerSnapshot</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Log Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-20" role="navigation" aria-expanded="true">
+ <span class="menu-text">Triage Session</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-20" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-20" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/TriageSession/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-21" role="navigation" aria-expanded="true">
+ <span class="menu-text">Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-21" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-21" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/WidgetDevelopment/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Widget Development Guide</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/inter_widget_communication_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inter-Widget Communication — Architecture Analysis &amp; Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/KeymapSystem/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keymap System</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-22" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-22" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/KeymapSystem/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keymap System — Implementation Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/KeymapSystem/library_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">KeymapSystem Library Reference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/KeybindingEditor/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keybinding Editor</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-23" role="navigation" aria-expanded="false">
+ <span class="menu-text">Editor State</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-23" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-23" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/EditorState/time_controller_extraction_roadmap.md</span>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-24" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-24" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-24" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/TimeScrollBar/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TimeScrollBar</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/media_widget/media_point_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MediaPoint Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/media_widget/media_line_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MediaLine Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/TriageSession_Widget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-25" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-25" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/autoparam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AutoParam System</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-26" role="navigation" aria-expanded="false">
+ <span class="menu-text">Deep Learning Widget</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-26" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DeepLearning Widget Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">InferenceController</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ui/Plots/plot_widget_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plot Widgets</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-27" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-27" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-28" role="navigation" aria-expanded="false">
+ <span class="menu-text">Common</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-28" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-28" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/Common/ColormapControls/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ColormapControls</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/Common/MultiLaneVerticalAxisWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MultiLaneVerticalAxisWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/Common/TooltipManager/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TooltipManager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/3DPlot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/ACFWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ACF Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/ordering_policy_resolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Ordering Policy Resolver</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/phase4e_spike_to_analog_loader.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Phase 4E: CSV Spike-to-Analog Pairing Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Event Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Heatmap Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/LinePlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Line Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/OnionSkinViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Onion Skin View Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/PSTHWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PSTH Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Scatter Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/SpectrogramWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spectrogram Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temporal Projection View Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#heatmap-widget-overview" id="toc-heatmap-widget-overview" class="nav-link active" data-scroll-target="#heatmap-widget-overview">Heatmap Widget Overview</a></li>
+  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
+  <ul class="collapse">
+  <li><a href="#component-overview" id="toc-component-overview" class="nav-link" data-scroll-target="#component-overview">Component Overview</a></li>
+  <li><a href="#editorstate-pattern" id="toc-editorstate-pattern" class="nav-link" data-scroll-target="#editorstate-pattern">EditorState Pattern</a></li>
+  </ul></li>
+  <li><a href="#state-management" id="toc-state-management" class="nav-link" data-scroll-target="#state-management">State Management</a>
+  <ul class="collapse">
+  <li><a href="#heatmapstatedata" id="toc-heatmapstatedata" class="nav-link" data-scroll-target="#heatmapstatedata">HeatmapStateData</a></li>
+  <li><a href="#signal-architecture" id="toc-signal-architecture" class="nav-link" data-scroll-target="#signal-architecture">Signal Architecture</a></li>
+  <li><a href="#composition-with-plotalignmentstate" id="toc-composition-with-plotalignmentstate" class="nav-link" data-scroll-target="#composition-with-plotalignmentstate">Composition with PlotAlignmentState</a></li>
+  <li><a href="#composition-with-axis-states" id="toc-composition-with-axis-states" class="nav-link" data-scroll-target="#composition-with-axis-states">Composition with Axis States</a></li>
+  </ul></li>
+  <li><a href="#rendering-pipeline" id="toc-rendering-pipeline" class="nav-link" data-scroll-target="#rendering-pipeline">Rendering Pipeline</a>
+  <ul class="collapse">
+  <li><a href="#data-flow" id="toc-data-flow" class="nav-link" data-scroll-target="#data-flow">Data Flow</a></li>
+  </ul></li>
+  <li><a href="#interaction" id="toc-interaction" class="nav-link" data-scroll-target="#interaction">Interaction</a>
+  <ul class="collapse">
+  <li><a href="#zoom-and-pan" id="toc-zoom-and-pan" class="nav-link" data-scroll-target="#zoom-and-pan">Zoom and Pan</a></li>
+  <li><a href="#double-click" id="toc-double-click" class="nav-link" data-scroll-target="#double-click">Double Click</a></li>
+  <li><a href="#hover" id="toc-hover" class="nav-link" data-scroll-target="#hover">Hover</a></li>
+  <li><a href="#right-click-context-menu" id="toc-right-click-context-menu" class="nav-link" data-scroll-target="#right-click-context-menu">Right-Click Context Menu</a>
+  <ul class="collapse">
+  <li><a href="#implementation-pattern" id="toc-implementation-pattern" class="nav-link" data-scroll-target="#implementation-pattern">Implementation Pattern</a></li>
+  </ul></li>
+  <li><a href="#selection" id="toc-selection" class="nav-link" data-scroll-target="#selection">Selection</a></li>
+  </ul></li>
+  <li><a href="#axis-system" id="toc-axis-system" class="nav-link" data-scroll-target="#axis-system">Axis System</a>
+  <ul class="collapse">
+  <li><a href="#time-axis-x" id="toc-time-axis-x" class="nav-link" data-scroll-target="#time-axis-x">Time Axis (X)</a></li>
+  <li><a href="#unit-axis-y" id="toc-unit-axis-y" class="nav-link" data-scroll-target="#unit-axis-y">Unit Axis (Y)</a></li>
+  </ul></li>
+  <li><a href="#properties-panel" id="toc-properties-panel" class="nav-link" data-scroll-target="#properties-panel">Properties Panel</a></li>
+  <li><a href="#visual-customization" id="toc-visual-customization" class="nav-link" data-scroll-target="#visual-customization">Visual Customization</a>
+  <ul class="collapse">
+  <li><a href="#colormap" id="toc-colormap" class="nav-link" data-scroll-target="#colormap">Colormap</a></li>
+  </ul></li>
+  <li><a href="#export" id="toc-export" class="nav-link" data-scroll-target="#export">Export</a>
+  <ul class="collapse">
+  <li><a href="#png-export" id="toc-png-export" class="nav-link" data-scroll-target="#png-export">PNG Export</a></li>
+  </ul></li>
+  <li><a href="#relationship-to-other-widgets" id="toc-relationship-to-other-widgets" class="nav-link" data-scroll-target="#relationship-to-other-widgets">Relationship to Other Widgets</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a>
+  <ul class="collapse">
+  <li><a href="#test-files" id="toc-test-files" class="nav-link" data-scroll-target="#test-files">Test Files</a></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../../developer/ui/data_manager/data_manager_widget.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widgets</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">Heatmap Widget</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Heatmap Widget</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="heatmap-widget-overview" class="level1">
+<h1>Heatmap Widget Overview</h1>
+<p>The <strong>Heatmap Widget</strong> renders a <strong>multi-unit peri-stimulus time heatmap</strong> showing the firing rate (or other scalar metric) of discrete events (<code>DigitalEventSeries</code>) across multiple units, aligned to a user-selected reference event or interval. Each row of the heatmap represents one unit’s rate profile over relative time, with color intensity encoding the magnitude. This provides a compact population-level view that complements the single-unit <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> and trial-level <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>.</p>
+<p>The heatmap is constructed by performing the same per-unit rate estimation as <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> — binning aligned spike times into uniform time bins and optionally smoothing — and then arranging each unit’s rate profile as a row of colored cells. The result is a <code>units × time_bins</code> matrix visualized with a configurable colormap.</p>
+</section>
+<section id="architecture" class="level1">
+<h1>Architecture</h1>
+<p>The widget follows the standard plot widget directory layout:</p>
+<pre><code>Plots/HeatmapWidget/
+├── CMakeLists.txt
+├── HeatmapWidgetRegistration.hpp    # EditorRegistry registration module
+├── HeatmapWidgetRegistration.cpp
+├── Core/
+│   ├── HeatmapState.hpp             # QObject state class + serializable struct
+│   ├── HeatmapState.cpp
+│   ├── HeatmapDataPipeline.hpp      # Pure-data pipeline (testable without OpenGL)
+│   └── HeatmapDataPipeline.cpp
+├── Rendering/
+│   ├── HeatmapOpenGLWidget.hpp      # OpenGL rendering + mouse interaction
+│   └── HeatmapOpenGLWidget.cpp
+└── UI/
+    ├── HeatmapWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── HeatmapWidget.cpp
+    ├── HeatmapWidget.ui
+    ├── HeatmapPropertiesWidget.hpp  # Properties/settings panel
+    ├── HeatmapPropertiesWidget.cpp
+    └── HeatmapPropertiesWidget.ui</code></pre>
+<section id="component-overview" class="level2">
+<h2 class="anchored" data-anchor-id="component-overview">Component Overview</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>HeatmapWidget</code> (UI)</td>
+<td>Top-level Qt widget — composes OpenGL canvas, relative time axis, vertical axis</td>
+</tr>
+<tr class="even">
+<td><code>HeatmapPropertiesWidget</code> (UI)</td>
+<td>Properties panel — alignment settings, axis range controls (via collapsible sections)</td>
+</tr>
+<tr class="odd">
+<td><code>HeatmapOpenGLWidget</code> (Rendering)</td>
+<td>OpenGL canvas — heatmap scene building, rendering, mouse interaction</td>
+</tr>
+<tr class="even">
+<td><code>HeatmapState</code> (Core)</td>
+<td>Serializable state — alignment, view state, background color</td>
+</tr>
+<tr class="odd">
+<td><code>HeatmapDataPipeline</code> (Core)</td>
+<td>Pure-data pipeline — gather, estimate, scale, convert (testable without OpenGL)</td>
+</tr>
+<tr class="even">
+<td><code>HeatmapWidgetRegistration</code></td>
+<td>Registers type with <code>EditorRegistry</code> (state, view, properties factories)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="editorstate-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="editorstate-pattern">EditorState Pattern</h2>
+<p>The Heatmap Widget follows the project’s <strong>EditorState</strong> architecture:</p>
+<ul>
+<li><code>HeatmapState</code> inherits from <code>EditorState</code></li>
+<li>Registered with <code>EditorRegistry</code> via <code>HeatmapWidgetModule::registerTypes()</code></li>
+<li><code>HeatmapWidget</code> is the <strong>view</strong> factory, <code>HeatmapPropertiesWidget</code> is the <strong>properties</strong> factory</li>
+<li>Both share the same <code>HeatmapState</code> instance</li>
+<li>Properties placed in Right zone, view placed in Center zone (default)</li>
+<li>The <code>create_editor_custom</code> factory in <code>HeatmapWidgetRegistration</code> handles coupling the view and properties widgets (e.g., connecting range controls and forwarding <code>timePositionSelected</code> to <code>EditorRegistry::setCurrentTime()</code>)</li>
+</ul>
+</section>
+</section>
+<section id="state-management" class="level1">
+<h1>State Management</h1>
+<section id="heatmapstatedata" class="level2">
+<h2 class="anchored" data-anchor-id="heatmapstatedata">HeatmapStateData</h2>
+<p>The serializable state struct (defined in <code>HeatmapState.hpp</code> alongside <code>HeatmapState</code>) contains all persistent configuration:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> HeatmapStateData <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string instance_id<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Heatmap Plot"</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData alignment<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData view_state<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    RelativeTimeAxisStateData time_axis<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    VerticalAxisStateData vertical_axis<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string background_color <span class="op">=</span> <span class="st">"#FFFFFF"</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> unit_keys<span class="op">;</span>              <span class="co">///&lt; Selected DigitalEventSeries keys</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling<span class="op">;</span>      <span class="co">///&lt; Default: FiringRateHz</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams estimation_params<span class="op">;</span>  <span class="co">///&lt; Default: BinningParams{}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    HeatmapColorRangeConfig color_range<span class="op">;</span>             <span class="co">///&lt; Auto/Manual/Symmetric</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>Colormaps<span class="op">::</span>ColormapPreset colormap<span class="op">;</span> <span class="co">///&lt; Default: Inferno</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode <span class="op">=</span> HeatmapSortMode<span class="op">::</span>Manual<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> sort_ascending <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Note that <code>HeatmapStateData</code> is defined in the same header as <code>HeatmapState</code> rather than in a separate <code>HeatmapStateData.hpp</code>. This is the same pattern used by <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a>.</p>
+</section>
+<section id="signal-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="signal-architecture">Signal Architecture</h2>
+<p>HeatmapState emits category-level signals to minimize coupling complexity:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Signal</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>alignmentEventKeyChanged</code></td>
+<td>Alignment event/interval key changed</td>
+</tr>
+<tr class="even">
+<td><code>intervalAlignmentTypeChanged</code></td>
+<td>Interval alignment type changed</td>
+</tr>
+<tr class="odd">
+<td><code>offsetChanged</code></td>
+<td>Alignment offset changed</td>
+</tr>
+<tr class="even">
+<td><code>windowSizeChanged</code></td>
+<td>Window size changed (also resets zoom/pan to fit)</td>
+</tr>
+<tr class="odd">
+<td><code>viewStateChanged</code></td>
+<td>Zoom, pan, or bounds changed (view transform only — no scene rebuild)</td>
+</tr>
+<tr class="even">
+<td><code>backgroundColorChanged</code></td>
+<td>Background color changed</td>
+</tr>
+<tr class="odd">
+<td><code>estimationParamsChanged</code></td>
+<td><code>EstimationParams</code> variant changed (method or parameters)</td>
+</tr>
+<tr class="even">
+<td><code>scalingChanged</code></td>
+<td>Scaling mode changed</td>
+</tr>
+<tr class="odd">
+<td><code>colorRangeChanged</code></td>
+<td>Color range mode or bounds changed</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Performance-critical separation</strong>: Zoom and pan operations emit only <code>viewStateChanged()</code>, which updates the projection matrix without triggering an expensive scene rebuild via <code>stateChanged()</code>.</p>
+</section>
+<section id="composition-with-plotalignmentstate" class="level2">
+<h2 class="anchored" data-anchor-id="composition-with-plotalignmentstate">Composition with PlotAlignmentState</h2>
+<p><code>HeatmapState</code> owns a <code>PlotAlignmentState</code> instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> and <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a>, ensuring consistent alignment behavior across all trial-aligned plot types.</p>
+</section>
+<section id="composition-with-axis-states" class="level2">
+<h2 class="anchored" data-anchor-id="composition-with-axis-states">Composition with Axis States</h2>
+<p><code>HeatmapState</code> owns both:</p>
+<ul>
+<li><strong><code>RelativeTimeAxisState</code></strong> — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state using the “silent update” pattern described in the <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a>.</li>
+<li><strong><code>VerticalAxisState</code></strong> — for the Y-axis (unit index). The Y bounds are auto-adjusted when <code>unitCountChanged</code> is emitted by the OpenGL widget, along with zoom/pan reset so all units are visible. Uses <code>identityAxis(\"Unit\", 0)</code> mapping for integer labels.</li>
+</ul>
+<p>The window size change handler resets the X view state bounds (<code>x_min</code>, <code>x_max</code>) and zoom/pan to fit the new window, then propagates to both <code>viewStateChanged</code> and <code>stateChanged</code>.</p>
+</section>
+</section>
+<section id="rendering-pipeline" class="level1">
+<h1>Rendering Pipeline</h1>
+<section id="data-flow" class="level2">
+<h2 class="anchored" data-anchor-id="data-flow">Data Flow</h2>
+<p>The data pipeline has been extracted into a pure free function <code>runHeatmapPipeline()</code> in <code>HeatmapDataPipeline.hpp/cpp</code>. This enables comprehensive testing of the gather → estimate → scale → convert pipeline without any OpenGL context. <code>HeatmapOpenGLWidget::rebuildScene()</code> delegates to this function for data processing, then handles colormap selection and OpenGL scene upload.</p>
+<pre><code>HeatmapState (alignment + estimation_params + scaling + sort_mode)
+        ↓
+runHeatmapPipeline()  [HeatmapDataPipeline.cpp — testable free function]
+  ├─ createUnitGatherContexts() — one UnitGatherContext per selected unit
+  ├─ estimateRates(contexts, window_size, estimationParams())
+  ├─ applyScaling(rate_estimate, scaling()) per unit
+  └─ → HeatmapPipelineResult { rows, rate_estimates, success }
+        ↓
+computeSortOrder() + applySortOrder()  [if sort_mode != Manual]
+        ↓
+HeatmapMapper::buildScene() — colormap + color range → RenderableRectangleBatch
+        ↓
+SceneRenderer::uploadScene() + render()</code></pre>
+<p><code>HeatmapOpenGLWidget::rebuildScene()</code> implements this pipeline:</p>
+<ol type="1">
+<li>Guard: returns early if no units are selected or alignment state is missing</li>
+<li>Calls <code>createUnitGatherContexts()</code> to gather trial-aligned <code>DigitalEventSeries</code> for all selected units</li>
+<li>Calls <code>estimateRates()</code> passing <code>_state-&gt;estimationParams()</code> directly (no conversion needed)</li>
+<li>Calls <code>applyScaling()</code> in-place on each <code>RateEstimate</code> using <code>_state-&gt;scaling()</code></li>
+<li>Converts <code>RateEstimate</code> objects to <code>HeatmapRowData</code> using <code>times[]</code> bin centers and <code>metadata.sample_spacing</code></li>
+<li>Applies row sorting via <code>computeSortOrder()</code> and <code>applySortOrder()</code> if sort mode is not Manual</li>
+<li>Calls <code>HeatmapMapper::buildScene()</code> with the colormap and <code>HeatmapColorRange</code> from state</li>
+<li>Uploads via <code>_scene_renderer.uploadScene()</code> and emits <code>unitCountChanged</code></li>
+</ol>
+</section>
+</section>
+<section id="interaction" class="level1">
+<h1>Interaction</h1>
+<section id="zoom-and-pan" class="level2">
+<h2 class="anchored" data-anchor-id="zoom-and-pan">Zoom and Pan</h2>
+<p>The widget supports separated X/Y zoom for independent exploration of time and unit dimensions, using the shared <code>PlotInteractionHelpers</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mouse wheel</td>
+<td>X-zoom only (time axis)</td>
+</tr>
+<tr class="even">
+<td>Shift + wheel</td>
+<td>Y-zoom only (unit axis)</td>
+</tr>
+<tr class="odd">
+<td>Ctrl + wheel</td>
+<td>Uniform zoom (both axes)</td>
+</tr>
+<tr class="even">
+<td>Click + drag</td>
+<td>Pan in both axes</td>
+</tr>
+</tbody>
+</table>
+<p>The interaction delegates to <code>WhiskerToolbox::Plots::handlePanning()</code> and <code>WhiskerToolbox::Plots::handleZoom()</code> from <code>PlotInteractionHelpers</code>, which are shared across all OpenGL plot widgets. A <code>DRAG_THRESHOLD</code> of 5 pixels prevents accidental pans during clicks.</p>
+<p>Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance.</p>
+</section>
+<section id="double-click" class="level2">
+<h2 class="anchored" data-anchor-id="double-click">Double Click</h2>
+<p>Double-clicking emits <code>plotDoubleClicked(time_frame_index)</code>, which the parent <code>HeatmapWidget</code> converts to a <code>TimePosition</code> and forwards to <code>EditorRegistry::setCurrentTime()</code>. This navigates other time-synced widgets to the clicked time position.</p>
+</section>
+<section id="hover" class="level2">
+<h2 class="anchored" data-anchor-id="hover">Hover</h2>
+<p>Hovering over a heatmap row displays a tooltip showing the <code>DigitalEventSeries</code> key name corresponding to the Y-axis position under the cursor. The tooltip is managed by the shared <code>PlotTooltipManager</code> and correctly reflects the current sort order (the cached <code>_display_unit_keys</code> vector is updated after each sort).</p>
+<p><strong>Current implementation</strong>: The tooltip displays the unit key name as plain text.</p>
+<p><strong>Planned</strong>: The tooltip will be extended to show a miniature stacked PSTH histogram and raster plot for the hovered unit, rendered on-demand using cached <code>GatherResult</code> data. See <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap Phase 8</a> for the full implementation plan, including rendering approach and layout.</p>
+</section>
+<section id="right-click-context-menu" class="level2">
+<h2 class="anchored" data-anchor-id="right-click-context-menu">Right-Click Context Menu</h2>
+<p>Right-clicking a heatmap row opens a context menu with actions for the unit under the cursor. The menu is built dynamically using the <strong>ContextAction</strong> system (see <a href="../../EditorState/SelectionContext.qmd"><code>SelectionContext</code></a> and <a href="../../EditorState/ContextAction.qmd"><code>ContextAction</code></a>), following the same pattern as <a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html"><code>ScatterPlotWidget</code></a>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 32%">
+<col style="width: 48%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th>Target Widget</th>
+<th>Settings Transferred</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Open in Event Plot</strong></td>
+<td><code>EventPlotWidget</code></td>
+<td>Alignment event key, interval alignment type, offset, window size</td>
+</tr>
+<tr class="even">
+<td><strong>Open in PSTH</strong></td>
+<td><code>PSTHWidget</code></td>
+<td>Alignment event key, interval alignment type, offset, window size, estimation params, scaling mode</td>
+</tr>
+</tbody>
+</table>
+<p>Each action opens a <strong>new instance</strong> of the target widget (both are <code>allow_multiple = true</code>) via <code>EditorRegistry::openEditor()</code> and configures its state to match the heatmap’s current settings. This gives users a one-click path from population overview to detailed single-unit views.</p>
+<section id="implementation-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-pattern">Implementation Pattern</h3>
+<p>The context menu uses the <strong>ContextAction / SelectionContext</strong> system:</p>
+<ol type="1">
+<li><code>HeatmapOpenGLWidget</code> receives a <code>SelectionContext *</code> via <code>setSelectionContext()</code>, wired in the <code>create_editor_custom</code> factory</li>
+<li>On right-click, <code>contextMenuEvent()</code> calls <code>_selection_context-&gt;setDataFocus()</code> with the clicked unit’s key (type <code>"DigitalEventSeries"</code>)</li>
+<li><code>applicableActions()</code> is queried to find all ContextActions whose <code>is_applicable</code> predicate matches this data focus type</li>
+<li>Menu items are created dynamically from the applicable actions and cleaned up on each invocation (same pattern as <code>ScatterPlotOpenGLWidget</code>)</li>
+</ol>
+<p>The ContextActions (<code>heatmap.open_in_event_plot</code>, <code>heatmap.open_in_psth</code>) are registered in the <code>registerContextActions()</code> helper within <code>HeatmapWidgetRegistration.cpp</code>. Each action captures <code>EditorRegistry *</code> and the owning <code>HeatmapState</code>, enabling:</p>
+<ul>
+<li>Opening the target widget via <code>registry-&gt;openEditor()</code></li>
+<li>Transferring alignment settings from the heatmap state</li>
+<li>Adding the focused unit key as a plot event</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <code>EventPlotWidget</code> and <code>PSTHWidget</code> state headers are included only in <code>HeatmapWidgetRegistration.cpp</code> (not in the OpenGL or UI widget headers), and linked as PRIVATE CMake dependencies. The OpenGL widget itself depends only on <code>SelectionContext</code> for the dynamic menu — the concrete target widget knowledge lives entirely in the registration layer.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="selection" class="level2">
+<h2 class="anchored" data-anchor-id="selection">Selection</h2>
+<p>Single-clicking a heatmap row identifies the <code>DigitalEventSeries</code> key corresponding to the Y-axis position. A signal is emitted carrying that key via <code>SelectionContext</code>, which companion widgets can respond to:</p>
+<ul>
+<li><strong><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a></strong> — updates to display the selected unit’s PSTH histogram</li>
+<li><strong><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a></strong> — updates to display the selected unit’s trial-level raster plot</li>
+</ul>
+<p>This enables rapid population-level exploration: clicking rows in the heatmap drives synchronized detail views without manual widget configuration. Widgets can be <strong>pinned</strong> to opt out of responding to selection changes, preserving a fixed view while the heatmap is browsed. See <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap Phase 7</a> for the full <code>SelectionContext</code> integration design.</p>
+</section>
+</section>
+<section id="axis-system" class="level1">
+<h1>Axis System</h1>
+<section id="time-axis-x" class="level2">
+<h2 class="anchored" data-anchor-id="time-axis-x">Time Axis (X)</h2>
+<p>Uses the shared <code>RelativeTimeAxisWidget</code> with <code>RelativeTimeAxisState</code>. The axis is synchronized bidirectionally with the view state:</p>
+<ul>
+<li><strong>User changes axis range</strong> → view state updates → scene rebuilds</li>
+<li><strong>User zooms/pans</strong> → axis range updates silently (no feedback loop)</li>
+</ul>
+<p>See <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> for full axis integration details.</p>
+</section>
+<section id="unit-axis-y" class="level2">
+<h2 class="anchored" data-anchor-id="unit-axis-y">Unit Axis (Y)</h2>
+<p>Uses a <code>VerticalAxisWidget</code> with <code>VerticalAxisState</code>. The Y bounds are automatically set when the OpenGL widget reports the unit count via <code>unitCountChanged</code>. The widget auto-fits by resetting Y zoom to 1.0 and Y pan to 0.0. Uses <code>identityAxis("Unit", 0)</code> for integer unit-index labels.</p>
+</section>
+</section>
+<section id="properties-panel" class="level1">
+<h1>Properties Panel</h1>
+<p>The <code>HeatmapPropertiesWidget</code> provides the following collapsible sections:</p>
+<ol type="1">
+<li><strong>PlotAlignmentWidget</strong> — Shared alignment UI (event/interval key, alignment type, offset, window size).</li>
+<li><strong>Unit Selection</strong> — <code>Feature_Tree_Widget</code> filtered to <code>DigitalEventSeries</code>, with prefix-based group toggling. Syncs with <code>HeatmapState::unit_keys</code>.</li>
+<li><strong>Scaling &amp; Estimation</strong> — Composable controls from the <code>RateEstimationControls</code> library:
+<ul>
+<li><strong><code>EstimationMethodControls</code></strong>: method combo (Histogram Binning / Gaussian Kernel / Causal Exponential) with a <code>QStackedWidget</code> showing per-method parameter spinboxes. Emits <code>paramsChanged(EstimationParams)</code> → connected directly to <code>HeatmapState::setEstimationParams()</code>. Stub methods show a “Not yet implemented” page.</li>
+<li><strong><code>ScalingModeControls</code></strong>: scaling mode combo auto-populated from <code>allScalingModes()</code>. Emits <code>scalingModeChanged(ScalingMode)</code> → connected directly to <code>HeatmapState::setScaling()</code>.</li>
+<li><strong><code>ColormapControls</code></strong> (from <a href="../../../../developer/ui/Plots/Common/ColormapControls/index.html"><code>Plots/Common/ColormapControls</code></a>): colormap preset combo (with painted gradient icon previews), color range mode combo (Auto / Manual / Symmetric) with vmin/vmax spinboxes (visible only in Manual mode). Emits <code>colormapChanged(ColormapPreset)</code> → <code>HeatmapState::setColormapPreset()</code> and <code>colorRangeChanged(ColorRangeConfig)</code> → <code>HeatmapState::setColorRange()</code>.</li>
+</ul></li>
+<li><strong>Sorting</strong> — Collapsible section with a sort mode combo box (Manual / Time to Peak / Peak Rate / Mean Rate / Alphabetical) and an ascending/descending checkbox. Sort mode changes emit <code>sortChanged()</code> → triggers scene rebuild. Time-to-Peak sorting produces the characteristic “diagonal stripe” pattern for temporal sequence visualization. The sorted order is reflected in the Y-axis row positions.</li>
+<li><strong>Time Axis Range Controls</strong> — <code>RelativeTimeAxisRangeControls</code> in a collapsible <code>Section</code>.</li>
+<li><strong>Y-Axis Range Controls</strong> — <code>VerticalAxisRangeControls</code> in a collapsible <code>Section</code>.</li>
+</ol>
+<p>The <code>EstimationParams</code> value flows unchanged from UI → state → renderer: no <code>std::visit</code> or intermediate extraction is needed at the widget layer. The <code>_updating_ui</code> anti-recursion guard prevents feedback loops between state signals and the UI controls.</p>
+</section>
+<section id="visual-customization" class="level1">
+<h1>Visual Customization</h1>
+<section id="colormap" class="level2">
+<h2 class="anchored" data-anchor-id="colormap">Colormap</h2>
+<p>The mapping from scalar rate values to RGBA display colors is configurable via a colormap. Each cell’s value in the <code>units × time_bins</code> matrix passes through the colormap to produce its rendered color, with intensity encoding magnitude.</p>
+<p>The default colormap is <strong>Inferno</strong> (perceptually uniform, dark-to-bright), which is accessible for color vision deficiency. Available presets:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 41%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Preset</th>
+<th>Characteristics</th>
+<th>Recommended For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Inferno</td>
+<td>Perceptually uniform, dark-to-bright</td>
+<td>Firing rate (default)</td>
+</tr>
+<tr class="even">
+<td>Viridis</td>
+<td>Perceptually uniform, blue-green-yellow</td>
+<td>General use</td>
+</tr>
+<tr class="odd">
+<td>Magma</td>
+<td>Perceptually uniform, dark-to-pink</td>
+<td>Firing rate</td>
+</tr>
+<tr class="even">
+<td>Plasma</td>
+<td>Perceptually uniform, blue-to-yellow</td>
+<td>General use</td>
+</tr>
+<tr class="odd">
+<td>Coolwarm</td>
+<td>Diverging blue-white-red</td>
+<td>Z-score scaling</td>
+</tr>
+<tr class="even">
+<td>Grayscale</td>
+<td>Simple grayscale</td>
+<td>Publication printing</td>
+</tr>
+<tr class="odd">
+<td>Hot</td>
+<td>Black-red-yellow-white</td>
+<td>High-contrast display</td>
+</tr>
+</tbody>
+</table>
+<p>The colormap is selected from the properties panel via a combo box with a visual gradient preview. When z-score scaling is active, the <strong>Coolwarm</strong> diverging colormap is automatically suggested. See <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap Phase 2</a> for the shared colormap infrastructure design and <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap Phase 9</a> for the selection UI.</p>
+</section>
+</section>
+<section id="export" class="level1">
+<h1>Export</h1>
+<section id="png-export" class="level2">
+<h2 class="anchored" data-anchor-id="png-export">PNG Export</h2>
+<p>The heatmap can be exported as a PNG image capturing the current view. The basic export uses Qt’s <code>QOpenGLWidget::grabFramebuffer()</code> to capture exactly what is displayed, including the current zoom and pan state.</p>
+<p>Planned export options (see <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap Phase 10</a>):</p>
+<ul>
+<li><strong>High-resolution export</strong> — render at a user-specified scale factor (2×, 4×) for publication quality</li>
+<li><strong>Composite export</strong> — include axis labels and colorbar alongside the heatmap in a single image</li>
+<li><strong>SVG export</strong> — resolution-independent output, to be adopted when shared SVG infrastructure is available from the <a href="../../../../developer/ui/Plots/PSTHWidget/roadmap.html">PSTH Roadmap</a> Phase 5</li>
+</ul>
+<p>Export will be accessible via a button in the properties panel and a right-click context menu on the plot.</p>
+</section>
+</section>
+<section id="relationship-to-other-widgets" class="level1">
+<h1>Relationship to Other Widgets</h1>
+<p>The Heatmap Widget is designed as the <strong>population-level companion</strong> to the single-unit <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> and trial-level <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Shared Component</th>
+<th>HeatmapWidget</th>
+<th><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a></th>
+<th><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PlotAlignmentWidget</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>PlotAlignmentState</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td><code>RelativeTimeAxisWidget</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>GatherResult</code></td>
+<td>Yes (per-unit, aggregated)</td>
+<td>Yes (per-trial views)</td>
+<td>Yes (aggregated)</td>
+</tr>
+<tr class="odd">
+<td><code>EventRateEstimation</code> library</td>
+<td>Yes (per-unit)</td>
+<td>N/A</td>
+<td>Yes (single-unit)</td>
+</tr>
+<tr class="even">
+<td><code>EstimationParams</code> / <code>EstimationMethodControls</code></td>
+<td>Yes</td>
+<td>N/A</td>
+<td>Planned</td>
+</tr>
+<tr class="odd">
+<td><code>ScalingMode</code> / <code>ScalingModeControls</code></td>
+<td>Yes</td>
+<td>N/A</td>
+<td>Planned</td>
+</tr>
+<tr class="even">
+<td><code>SelectionContext</code> linking</td>
+<td>Planned (source)</td>
+<td>Planned</td>
+<td>Planned</td>
+</tr>
+<tr class="odd">
+<td>OpenGL rendering</td>
+<td><code>SceneRenderer</code></td>
+<td><code>SceneRenderer</code></td>
+<td><code>SceneRenderer</code></td>
+</tr>
+<tr class="even">
+<td>Zoom/Pan interaction</td>
+<td><code>PlotInteractionHelpers</code></td>
+<td><code>PlotInteractionHelpers</code></td>
+<td><code>PlotInteractionHelpers</code></td>
+</tr>
+</tbody>
+</table>
+<p>The intended workflow is:</p>
+<ol type="1">
+<li><strong>HeatmapWidget</strong> shows all units at a glance, colored by firing rate</li>
+<li><strong><a href="#selection">Row selection</a></strong> drives <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> and <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> to show the selected unit’s detailed histogram and raster</li>
+<li><strong><a href="#hover">Row hover</a></strong> shows a miniature stacked PSTH + raster tooltip for that unit without changing the selection</li>
+</ol>
+<p>This three-widget ensemble provides a complete neural population analysis view. See the <a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">roadmap</a> for implementation plans.</p>
+</section>
+<section id="testing" class="level1">
+<h1>Testing</h1>
+<section id="test-files" class="level2">
+<h2 class="anchored" data-anchor-id="test-files">Test Files</h2>
+<ul>
+<li>Properties widget observer tests follow the common pattern in <code>tests/WhiskerToolbox/Plots/HeatmapWidget/</code></li>
+<li>Common plot widget tests are instantiated via <code>PlotWidgetCommonTests.hpp</code> (see <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a>)</li>
+</ul>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> — Shared architecture, axis types, DataManager integration</li>
+<li><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> — Single-unit PSTH; shares rate estimation and histogram infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> — Trial-level raster plot; shares alignment and <code>GatherResult</code> infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/HeatmapWidget/roadmap.html">HeatmapWidget Roadmap</a> — Planned features and development phases</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
