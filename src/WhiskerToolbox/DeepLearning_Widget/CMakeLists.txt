@@ -14,6 +14,7 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/ResultProcessor.cpp
     Core/DeepLearningParamSchemas.hpp
     Core/DeepLearningParamSchemas.cpp
+    Core/DeepLearningParamSchemasUIHints.hpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
     Core/SlotAssembler.hpp

@@ -7,9 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
-
-#include "ParameterSchema/ParameterSchema.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 
 #include <rfl/json.hpp>
 

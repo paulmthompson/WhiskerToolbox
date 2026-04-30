@@ -9,10 +9,12 @@
 #include "DataManager/utils/DataManagerKeys.hpp"
 #include "DeepLearning/post_encoder/PostEncoderParamSchemas.hpp"
 #include "DeepLearning/post_encoder/SpatialPointExtractModule.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 #include "Media/Media_Data.hpp"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <QGroupBox>

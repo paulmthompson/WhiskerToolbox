@@ -6,67 +6,7 @@
 
 #include "DeepLearningParamSchemas.hpp"
 
-#include "ParameterSchema/ParameterSchema.hpp"
-
-
-// ============================================================================
-// ParameterUIHints specializations
-// ============================================================================
-
-template<>
-struct ParameterUIHints<dl::widget::RelativeCaptureParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::StaticCaptureInitParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::StaticSequenceEntryParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::RecurrentSequenceEntryParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::SequenceEntryParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::StaticInputSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::DynamicInputSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::OutputSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::EncoderShapeParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::RecurrentBindingSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::PostEncoderSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
+#include "DeepLearningParamSchemasUIHints.hpp"
 
 void ParameterUIHints<dl::widget::RelativeCaptureParams>::annotate(
         ParameterSchema & schema) {
