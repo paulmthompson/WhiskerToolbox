@@ -352,6 +352,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#variable-start_time" id="toc-variable-start_time" class="nav-link" data-scroll-target="#variable-start_time">variable start_time</a></li>
   <li><a href="#variable-end_time" id="toc-variable-end_time" class="nav-link" data-scroll-target="#variable-end_time">variable end_time</a></li>
+  <li><a href="#variable-x_origin" id="toc-variable-x_origin" class="nav-link" data-scroll-target="#variable-x_origin">variable x_origin</a></li>
   <li><a href="#variable-gap_threshold" id="toc-variable-gap_threshold" class="nav-link" data-scroll-target="#variable-gap_threshold">variable gap_threshold</a></li>
   <li><a href="#variable-detect_gaps" id="toc-variable-detect_gaps" class="nav-link" data-scroll-target="#variable-detect_gaps">variable detect_gaps</a></li>
   <li><a href="#variable-color" id="toc-variable-color" class="nav-link" data-scroll-target="#variable-color">variable color</a></li>
@@ -408,22 +409,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-end-time">end_time</a></strong></td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
+<td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-x-origin">x_origin</a></strong> <br>View-origin time subtracted from rendered X coordinates.</td>
+</tr>
+<tr class="even">
 <td>float</td>
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-gap-threshold">gap_threshold</a></strong> <br>Time index gap threshold for segment breaks.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-detect-gaps">detect_gaps</a></strong> <br>Whether to break lines at gaps.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>glm::vec4</td>
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-color">color</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>float</td>
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-thickness">thickness</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#enum-analogrendermode">AnalogRenderMode</a></td>
 <td><strong><a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html#variable-render-mode">render_mode</a></strong> <br>How to render the series.</td>
 </tr>
@@ -440,30 +445,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-end_time">variable end_time</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TimeFrameIndex end_time <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="variable-x_origin" class="level3">
+<h3 class="anchored" data-anchor-id="variable-x_origin">variable x_origin</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TimeFrameIndex x_origin <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>View-origin time subtracted from rendered X coordinates.</p>
+</section>
 <section id="variable-gap_threshold" class="level3">
 <h3 class="anchored" data-anchor-id="variable-gap_threshold">variable gap_threshold</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> gap_threshold <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> gap_threshold <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Time index gap threshold for segment breaks.</p>
 </section>
 <section id="variable-detect_gaps" class="level3">
 <h3 class="anchored" data-anchor-id="variable-detect_gaps">variable detect_gaps</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> detect_gaps <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> detect_gaps <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether to break lines at gaps.</p>
 </section>
 <section id="variable-color" class="level3">
 <h3 class="anchored" data-anchor-id="variable-color">variable color</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec4 color <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec4 color <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-thickness" class="level3">
 <h3 class="anchored" data-anchor-id="variable-thickness">variable thickness</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> thickness <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> thickness <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-render_mode" class="level3">
 <h3 class="anchored" data-anchor-id="variable-render_mode">variable render_mode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>AnalogRenderMode render_mode <span class="op">{</span>AnalogRenderMode<span class="op">::</span>Line<span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>AnalogRenderMode render_mode <span class="op">{</span>AnalogRenderMode<span class="op">::</span>Line<span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>How to render the series.</p>
 <hr>
-<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
+<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
 
 
 </section>

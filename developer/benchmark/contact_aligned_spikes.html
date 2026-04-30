@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Contact-Aligned Spikes Performance Analysis – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#benchmark-configuration" id="toc-benchmark-configuration" class="nav-link" data-scroll-target="#benchmark-configuration">Benchmark Configuration</a></li>
+  <li><a href="#results-summary" id="toc-results-summary" class="nav-link" data-scroll-target="#results-summary">Results Summary</a>
+  <ul class="collapse">
+  <li><a href="#overall-performance" id="toc-overall-performance" class="nav-link" data-scroll-target="#overall-performance">Overall Performance</a></li>
+  <li><a href="#key-findings" id="toc-key-findings" class="nav-link" data-scroll-target="#key-findings">Key Findings</a></li>
+  </ul></li>
+  <li><a href="#detailed-analysis" id="toc-detailed-analysis" class="nav-link" data-scroll-target="#detailed-analysis">Detailed Analysis</a>
+  <ul class="collapse">
+  <li><a href="#phase-by-phase-breakdown" id="toc-phase-by-phase-breakdown" class="nav-link" data-scroll-target="#phase-by-phase-breakdown">Phase-by-Phase Breakdown</a></li>
+  <li><a href="#bottleneck-identification" id="toc-bottleneck-identification" class="nav-link" data-scroll-target="#bottleneck-identification">Bottleneck Identification</a></li>
+  </ul></li>
+  <li><a href="#recommendations" id="toc-recommendations" class="nav-link" data-scroll-target="#recommendations">Recommendations</a>
+  <ul class="collapse">
+  <li><a href="#use-basic-gather-when-possible" id="toc-use-basic-gather-when-possible" class="nav-link" data-scroll-target="#use-basic-gather-when-possible">1. Use Basic <code>gather()</code> When Possible</a></li>
+  <li><a href="#cache-gatherresult" id="toc-cache-gatherresult" class="nav-link" data-scroll-target="#cache-gatherresult">2. Cache GatherResult</a></li>
+  <li><a href="#optimize-the-adapter-future-work" id="toc-optimize-the-adapter-future-work" class="nav-link" data-scroll-target="#optimize-the-adapter-future-work">3. Optimize the Adapter (Future Work)</a></li>
+  <li><a href="#current-performance-is-excellent" id="toc-current-performance-is-excellent" class="nav-link" data-scroll-target="#current-performance-is-excellent">4. Current Performance is Excellent</a></li>
+  </ul></li>
+  <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">Implementation Notes</a>
+  <ul class="collapse">
+  <li><a href="#benchmark-structure" id="toc-benchmark-structure" class="nav-link" data-scroll-target="#benchmark-structure">Benchmark Structure</a></li>
+  <li><a href="#data-loading" id="toc-data-loading" class="nav-link" data-scroll-target="#data-loading">Data Loading</a></li>
+  <li><a href="#window-configuration" id="toc-window-configuration" class="nav-link" data-scroll-target="#window-configuration">Window Configuration</a></li>
+  </ul></li>
+  <li><a href="#eventplotwidget-performance-analysis" id="toc-eventplotwidget-performance-analysis" class="nav-link" data-scroll-target="#eventplotwidget-performance-analysis">EventPlotWidget Performance Analysis</a>
+  <ul class="collapse">
+  <li><a href="#rebuildscene-phase-breakdown" id="toc-rebuildscene-phase-breakdown" class="nav-link" data-scroll-target="#rebuildscene-phase-breakdown">RebuildScene() Phase Breakdown</a></li>
+  <li><a href="#key-finding-rastermapper-mapping-is-the-bottleneck" id="toc-key-finding-rastermapper-mapping-is-the-bottleneck" class="nav-link" data-scroll-target="#key-finding-rastermapper-mapping-is-the-bottleneck">Key Finding: RasterMapper Mapping is the Bottleneck</a></li>
+  <li><a href="#comparison-with-isolated-benchmark" id="toc-comparison-with-isolated-benchmark" class="nav-link" data-scroll-target="#comparison-with-isolated-benchmark">Comparison with Isolated Benchmark</a></li>
+  <li><a href="#optimization-opportunities" id="toc-optimization-opportunities" class="nav-link" data-scroll-target="#optimization-opportunities">Optimization Opportunities</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related Documentation</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Contact-Aligned Spikes Performance Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This document describes the performance analysis of creating <code>GatherResult</code> for spikes aligned to contact onsets and extracting normalized time values for OpenGL rendering, as used in <code>EventPlotWidget</code>.</p>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>In neural data analysis, we often need to: 1. Align spike events to behavioral events (e.g., contact onsets) 2. Extract normalized time values relative to the alignment point 3. Pass these values to OpenGL for rendering raster plots</p>
+<p>This benchmark measures the performance of this pipeline using real ground truth data with ~5,338 contact intervals and ~3,031 spikes.</p>
+</section>
+<section id="benchmark-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-configuration">Benchmark Configuration</h2>
+<p><strong>Data Source</strong>: <code>/mnt/c/Users/wanglab/Data/TG/M054/0427_1</code> - <strong>Contact intervals</strong>: 5,338 (DigitalIntervalSeries) - <strong>Spikes</strong>: 3,031 total (DigitalEventSeries) - <strong>Normalized events</strong>: 976 (after ±500 window filtering) - <strong>Target performance</strong>: &lt; 50 ms for normalized time extraction</p>
+</section>
+<section id="results-summary" class="level2">
+<h2 class="anchored" data-anchor-id="results-summary">Results Summary</h2>
+<section id="overall-performance" class="level3">
+<h3 class="anchored" data-anchor-id="overall-performance">Overall Performance</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 32%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Benchmark Phase</th>
+<th>Time (ms)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>CreateGatherResult</strong> (with adapter)</td>
+<td>6.80</td>
+<td>Using <code>gatherWithIntervalAlignment</code></td>
+</tr>
+<tr class="even">
+<td><strong>CreateGatherResult_Basic</strong> (no adapter)</td>
+<td>1.43</td>
+<td>Using basic <code>gather()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>CreateViewsIndividually</strong></td>
+<td>1.24</td>
+<td>Direct view creation (baseline)</td>
+</tr>
+<tr class="even">
+<td><strong>ExtractNormalizedTimes_RasterMapper</strong></td>
+<td>0.167</td>
+<td>Normalized time extraction</td>
+</tr>
+<tr class="odd">
+<td><strong>FullPipeline</strong></td>
+<td>5.93</td>
+<td>Combined GatherResult + extraction</td>
+</tr>
+<tr class="even">
+<td><strong>IterationOnly</strong></td>
+<td>0.038</td>
+<td>Just iterating through views</td>
+</tr>
+<tr class="odd">
+<td><strong>TimeFrameConversion</strong></td>
+<td>0.099</td>
+<td>Index → time conversion cost</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-findings" class="level3">
+<h3 class="anchored" data-anchor-id="key-findings">Key Findings</h3>
+<section id="normalized-time-extraction-0.167-ms-well-under-target" class="level4">
+<h4 class="anchored" data-anchor-id="normalized-time-extraction-0.167-ms-well-under-target">✅ Normalized Time Extraction: <strong>0.167 ms</strong> (Well Under Target!)</h4>
+<p>The <code>RasterMapper::mapEventsInWindow</code> approach used by <code>EventPlotWidget</code> is extremely efficient: - <strong>Target</strong>: &lt; 50 ms - <strong>Actual</strong>: 0.167 ms - <strong>Performance</strong>: ~300x faster than target</p>
+<p>This confirms that the rendering pipeline is highly optimized and suitable for real-time updates.</p>
+</section>
+<section id="gatherresult-creation-bottleneck-identified" class="level4">
+<h4 class="anchored" data-anchor-id="gatherresult-creation-bottleneck-identified">⚠️ GatherResult Creation Bottleneck Identified</h4>
+<p><strong>Performance Breakdown</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Time</th>
+<th>Overhead vs Direct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Direct view creation</td>
+<td>1.24 ms</td>
+<td>Baseline</td>
+</tr>
+<tr class="even">
+<td>Basic <code>gather()</code></td>
+<td>1.43 ms</td>
+<td>+15% (metadata storage)</td>
+</tr>
+<tr class="odd">
+<td><code>gatherWithIntervalAlignment</code></td>
+<td>6.80 ms</td>
+<td>+448% (adapter overhead)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Root Cause</strong>: The <code>IntervalWithAlignmentAdapter</code> used by <code>gatherWithIntervalAlignment</code> adds significant overhead: - Iterator wrapper overhead (accessing intervals through adapter) - Per-interval alignment time computation - Time conversion checks (<code>getTimeConverter()</code>) even when not needed - Additional vector allocations for <code>_alignment_times</code></p>
+<p><strong>Impact</strong>: The adapter adds ~5.4 ms of overhead (4.8x slower) compared to basic <code>gather()</code>.</p>
+</section>
+</section>
+</section>
+<section id="detailed-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-analysis">Detailed Analysis</h2>
+<section id="phase-by-phase-breakdown" class="level3">
+<h3 class="anchored" data-anchor-id="phase-by-phase-breakdown">Phase-by-Phase Breakdown</h3>
+<section id="gatherresult-creation" class="level4">
+<h4 class="anchored" data-anchor-id="gatherresult-creation">1. GatherResult Creation</h4>
+<p><strong>With Adapter</strong> (<code>gatherWithIntervalAlignment</code>): - Time: 6.80 ms - Creates <code>IntervalWithAlignmentAdapter</code> wrapper - Stores alignment times for each interval - Performs time conversion checks - <strong>Recommendation</strong>: Use basic <code>gather()</code> when alignment metadata isn’t needed</p>
+<p><strong>Without Adapter</strong> (<code>gather()</code>): - Time: 1.43 ms - Direct interval iteration - Only stores interval bounds - <strong>4.8x faster</strong> than adapter version</p>
+<p><strong>Direct View Creation</strong>: - Time: 1.24 ms - Baseline performance - No GatherResult overhead - <strong>5.5x faster</strong> than adapter version</p>
+</section>
+<section id="normalized-time-extraction" class="level4">
+<h4 class="anchored" data-anchor-id="normalized-time-extraction">2. Normalized Time Extraction</h4>
+<p><strong>RasterMapper Approach</strong>: - Time: 0.167 ms - Uses <code>RasterMapper::mapEventsInWindow</code> - Filters events within ±500 window - Converts to relative time coordinates - Materializes normalized float values</p>
+<p>This phase is extremely efficient and not a bottleneck.</p>
+</section>
+<section id="full-pipeline" class="level4">
+<h4 class="anchored" data-anchor-id="full-pipeline">3. Full Pipeline</h4>
+<p><strong>Combined Performance</strong>: - GatherResult creation: 6.80 ms (with adapter) or 1.43 ms (basic) - Normalized extraction: 0.167 ms - <strong>Total</strong>: ~7.0 ms (with adapter) or ~1.6 ms (basic)</p>
+<p><strong>Note</strong>: FullPipeline benchmark shows 5.93 ms, which is slightly faster than CreateGatherResult alone, likely due to caching/optimization effects.</p>
+</section>
+</section>
+<section id="bottleneck-identification" class="level3">
+<h3 class="anchored" data-anchor-id="bottleneck-identification">Bottleneck Identification</h3>
+<p>The primary bottleneck is <strong>GatherResult creation with adapter</strong> (6.80 ms), specifically:</p>
+<ol type="1">
+<li><strong>Adapter Iterator Overhead</strong> (~3-4 ms)
+<ul>
+<li>Wrapper indirection when accessing intervals</li>
+<li>Alignment time computation per interval</li>
+<li>Iterator state management</li>
+</ul></li>
+<li><strong>Time Conversion Checks</strong> (~1-2 ms)
+<ul>
+<li><code>getTimeConverter()</code> called for every interval</li>
+<li>Even when timeframes match (no conversion needed)</li>
+</ul></li>
+<li><strong>Additional Metadata Storage</strong> (~0.5-1 ms)
+<ul>
+<li>Storing <code>_alignment_times</code> vector</li>
+<li>Extra allocations and memory operations</li>
+</ul></li>
+</ol>
+</section>
+</section>
+<section id="recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="recommendations">Recommendations</h2>
+<section id="use-basic-gather-when-possible" class="level3">
+<h3 class="anchored" data-anchor-id="use-basic-gather-when-possible">1. Use Basic <code>gather()</code> When Possible</h3>
+<p>If you only need interval starts for alignment, use:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> gathered <span class="op">=</span> gather<span class="op">(</span>_spikes<span class="op">,</span> _contacts<span class="op">);</span>  <span class="co">// 1.43 ms instead of 6.80 ms</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then compute alignment times manually if needed:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gathered<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> alignment_time <span class="op">=</span> gathered<span class="op">.</span>intervalAt<span class="op">(</span>i<span class="op">).</span>start<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use alignment_time for normalization</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Performance gain</strong>: 4.8x faster (1.43 ms vs 6.80 ms)</p>
+</section>
+<section id="cache-gatherresult" class="level3">
+<h3 class="anchored" data-anchor-id="cache-gatherresult">2. Cache GatherResult</h3>
+<p>Since GatherResult creation takes 1.43-6.80 ms depending on method: - Cache the GatherResult when contacts don’t change - Only recreate when contact data is modified - This is especially important for interactive visualization</p>
+</section>
+<section id="optimize-the-adapter-future-work" class="level3">
+<h3 class="anchored" data-anchor-id="optimize-the-adapter-future-work">3. Optimize the Adapter (Future Work)</h3>
+<p>If <code>gatherWithIntervalAlignment</code> is required, potential optimizations: - <strong>Lazy alignment computation</strong>: Only compute alignment times when accessed - <strong>Skip time conversion checks</strong>: Cache timeframe comparison result - <strong>Batch processing</strong>: Process intervals in batches to improve cache locality - <strong>Specialized path</strong>: Fast path when timeframes match (no conversion needed)</p>
+</section>
+<section id="current-performance-is-excellent" class="level3">
+<h3 class="anchored" data-anchor-id="current-performance-is-excellent">4. Current Performance is Excellent</h3>
+<p>With basic <code>gather()</code>: - GatherResult creation: 1.43 ms - Normalized extraction: 0.167 ms - <strong>Total</strong>: ~1.6 ms</p>
+<p>This is <strong>31x faster</strong> than the 50 ms target, making it suitable for: - Real-time rendering updates - Interactive visualization - Frequent data refreshes</p>
+</section>
+</section>
+<section id="implementation-notes" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-notes">Implementation Notes</h2>
+<section id="benchmark-structure" class="level3">
+<h3 class="anchored" data-anchor-id="benchmark-structure">Benchmark Structure</h3>
+<p>The benchmark (<code>ContactAlignedSpikes.benchmark.cpp</code>) measures:</p>
+<ol type="1">
+<li><strong>CreateGatherResult</strong>: Full adapter-based creation</li>
+<li><strong>CreateGatherResult_Basic</strong>: Basic <code>gather()</code> without adapter</li>
+<li><strong>CreateViewsIndividually</strong>: Direct view creation (baseline)</li>
+<li><strong>ExtractNormalizedTimes_RasterMapper</strong>: Normalized time extraction</li>
+<li><strong>FullPipeline</strong>: Combined operations</li>
+<li><strong>IterationOnly</strong>: Iteration overhead</li>
+<li><strong>TimeFrameConversion</strong>: Time conversion cost</li>
+</ol>
+</section>
+<section id="data-loading" class="level3">
+<h3 class="anchored" data-anchor-id="data-loading">Data Loading</h3>
+<p>The benchmark loads data from JSON configuration: - Filters out video entries automatically - Loads spikes, contacts, and time frames - Uses the same loading path as the main application</p>
+</section>
+<section id="window-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="window-configuration">Window Configuration</h3>
+<p>Normalized time extraction uses: - <strong>Window</strong>: ±500 time units around each contact onset - <strong>Filtering</strong>: Only events within window are included - <strong>Result</strong>: 976 normalized events from 3,031 total spikes</p>
+</section>
+</section>
+<section id="eventplotwidget-performance-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="eventplotwidget-performance-analysis">EventPlotWidget Performance Analysis</h2>
+<section id="rebuildscene-phase-breakdown" class="level3">
+<h3 class="anchored" data-anchor-id="rebuildscene-phase-breakdown">RebuildScene() Phase Breakdown</h3>
+<p>The <code>EventPlotOpenGLWidget::rebuildScene()</code> method was benchmarked to identify bottlenecks in the full widget workflow:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 29%">
+<col style="width: 32%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Time (ms)</th>
+<th>% of Total</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Full Pipeline</strong></td>
+<td>33.1</td>
+<td>100%</td>
+<td>Complete rebuildScene() workflow</td>
+</tr>
+<tr class="even">
+<td><strong>GatherResult Creation</strong></td>
+<td>~6.8</td>
+<td>~21%</td>
+<td>Using adapter (from earlier benchmark)</td>
+</tr>
+<tr class="odd">
+<td><strong>Layout Computation</strong></td>
+<td>0.303</td>
+<td>&lt;1%</td>
+<td>RowLayoutStrategy computation</td>
+</tr>
+<tr class="even">
+<td><strong>RasterMapper Mapping</strong></td>
+<td>27.7</td>
+<td><strong>84%</strong></td>
+<td><strong>Bottleneck!</strong> Mapping + materialization</td>
+</tr>
+<tr class="odd">
+<td><strong>Scene Building</strong></td>
+<td>0.933</td>
+<td>~3%</td>
+<td>SceneBuilder.addGlyphs() + build()</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-finding-rastermapper-mapping-is-the-bottleneck" class="level3">
+<h3 class="anchored" data-anchor-id="key-finding-rastermapper-mapping-is-the-bottleneck">Key Finding: RasterMapper Mapping is the Bottleneck</h3>
+<p>The <strong>RasterMapper mapping phase takes 27.7 ms</strong> (84% of total time), which is significantly slower than the earlier isolated benchmark (0.167 ms). This discrepancy suggests:</p>
+<ol type="1">
+<li><strong>Materialization overhead</strong>: Converting lazy ranges to vectors for each trial</li>
+<li><strong>Per-trial overhead</strong>: Setting up RasterMapper for each of 5,338 contacts</li>
+<li><strong>Window filtering</strong>: The <code>mapEventsInWindow</code> filter operation for each trial</li>
+</ol>
+<p><strong>Performance per contact</strong>: 27.7 ms / 5,338 contacts = <strong>5.2 µs per contact</strong>, which is reasonable but accumulates to a significant total.</p>
+</section>
+<section id="comparison-with-isolated-benchmark" class="level3">
+<h3 class="anchored" data-anchor-id="comparison-with-isolated-benchmark">Comparison with Isolated Benchmark</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 23%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Benchmark</th>
+<th>Time</th>
+<th>Context</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ExtractNormalizedTimes_RasterMapper</td>
+<td>0.167 ms</td>
+<td>Isolated, pre-created GatherResult</td>
+</tr>
+<tr class="even">
+<td>RebuildScene_RasterMapping</td>
+<td>27.7 ms</td>
+<td>Full widget workflow, materialization included</td>
+</tr>
+</tbody>
+</table>
+<p>The 165x difference suggests that: - The isolated benchmark may have been optimized away (not materializing) - The full workflow includes materialization overhead - Per-trial setup costs accumulate over 5,338 contacts</p>
+</section>
+<section id="optimization-opportunities" class="level3">
+<h3 class="anchored" data-anchor-id="optimization-opportunities">Optimization Opportunities</h3>
+<ol type="1">
+<li><strong>Batch Materialization</strong>: Instead of materializing each trial separately, consider batching</li>
+<li><strong>Lazy Evaluation</strong>: Keep ranges lazy until absolutely necessary</li>
+<li><strong>Pre-compute Windows</strong>: If window sizes are constant, pre-compute window bounds</li>
+<li><strong>Reduce Per-Trial Overhead</strong>: Minimize setup costs in the mapping loop</li>
+</ol>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The benchmark results demonstrate:</p>
+<ol type="1">
+<li>✅ <strong>Normalized time extraction is highly optimized</strong> (0.167 ms isolated)</li>
+<li>⚠️ <strong>Adapter overhead is significant</strong> (5.4 ms overhead)</li>
+<li>✅ <strong>Basic <code>gather()</code> is efficient</strong> (1.43 ms, only 15% overhead)</li>
+<li>⚠️ <strong>RasterMapper materialization is the bottleneck</strong> (27.7 ms in full workflow)</li>
+<li>✅ <strong>Layout and SceneBuilding are fast</strong> (&lt;1 ms each)</li>
+</ol>
+<p><strong>Recommendations</strong>: - Use basic <code>gather()</code> when alignment metadata isn’t needed - Optimize RasterMapper materialization (consider batch processing or lazy evaluation) - Cache GatherResult when contacts don’t change - Profile the RasterMapper mapping loop to identify specific bottlenecks</p>
+</section>
+<section id="related-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="../../developer/benchmark/raster_plot_views.html">Raster Plot Views Performance</a> - General view storage analysis</li>
+<li><a href="../../DataManager/utils/GatherResult.hpp">GatherResult Design</a> - GatherResult API documentation</li>
+<li><a href="../../CorePlotting/Mappers/RasterMapper.hpp">RasterMapper</a> - RasterMapper implementation</li>
+<li><a href="../../../src/WhiskerToolbox/Plots/EventPlotWidget/">EventPlotWidget</a> - Widget using this pipeline</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

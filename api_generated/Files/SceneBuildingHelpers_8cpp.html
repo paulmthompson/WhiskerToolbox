@@ -448,7 +448,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use range-based mapper with indices for gap detection</span></span>
 <span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mapped_range <span class="op">=</span> CorePlotting<span class="op">::</span>TimeSeriesMapper<span class="op">::</span>mapAnalogSeriesWithIndices<span class="op">(</span></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">);</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">,</span> params<span class="op">.</span>x_origin<span class="op">.</span>getValue<span class="op">());</span></span>
 <span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>params<span class="op">.</span>detect_gaps<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use GapDetector for segmented rendering</span></span>
@@ -508,7 +508,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use range-based mapper, materialize here</span></span>
 <span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mapped_range <span class="op">=</span> CorePlotting<span class="op">::</span>TimeSeriesMapper<span class="op">::</span>mapAnalogSeries<span class="op">(</span></span>
-<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">);</span></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">,</span> params<span class="op">.</span>x_origin<span class="op">.</span>getValue<span class="op">());</span></span>
 <span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Materialize and convert to positions</span></span>
 <span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> vertex<span class="op">:</span> mapped_range<span class="op">)</span> <span class="op">{</span></span>
@@ -538,7 +538,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use range-based mapper - returns materialized vector for cross-TimeFrame support</span></span>
 <span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mapped_events <span class="op">=</span> CorePlotting<span class="op">::</span>TimeSeriesMapper<span class="op">::</span>mapEventsInRange<span class="op">(</span></span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">);</span></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">,</span> params<span class="op">.</span>x_origin<span class="op">.</span>getValue<span class="op">());</span></span>
 <span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reserve space</span></span>
 <span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>positions<span class="op">.</span>reserve<span class="op">(</span>mapped_events<span class="op">.</span>size<span class="op">());</span></span>
@@ -571,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use range-based mapper - returns materialized vector for cross-TimeFrame support</span></span>
 <span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mapped_intervals <span class="op">=</span> CorePlotting<span class="op">::</span>TimeSeriesMapper<span class="op">::</span>mapIntervalsInRange<span class="op">(</span></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">);</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>            series<span class="op">,</span> local_layout<span class="op">,</span> <span class="op">*</span>master_time_frame<span class="op">,</span> params<span class="op">.</span>start_time<span class="op">,</span> params<span class="op">.</span>end_time<span class="op">,</span> params<span class="op">.</span>x_origin<span class="op">.</span>getValue<span class="op">());</span></span>
 <span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reserve space</span></span>
 <span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>    <span class="co">//batch.bounds.reserve(mapped_intervals.size());</span></span>
@@ -694,7 +694,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract vertices for the requested range (using series timeframe indices)</span></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> flat_vertices <span class="op">=</span> cache<span class="op">.</span>getVerticesForRange<span class="op">(</span>cache_start<span class="op">,</span> cache_end<span class="op">);</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> flat_vertices <span class="op">=</span> cache<span class="op">.</span>getVerticesForRange<span class="op">(</span>cache_start<span class="op">,</span> cache_end<span class="op">,</span> cache_start<span class="op">);</span></span>
 <span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Gap detection is currently not supported with caching</span></span>
 <span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (would require tracking original indices in the cache)</span></span>
@@ -710,7 +710,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace DataViewerHelpers</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-29 at 00:15:26 +0000</p>
+<p>Updated on 2026-04-30 at 14:52:46 +0000</p>
 
 
 </section>

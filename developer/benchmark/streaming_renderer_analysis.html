@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>TriageSessionWidgetModule – Neuralyzer</title>
+<title>streaming_renderer_analysis – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,6 +22,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -310,39 +345,169 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#triagesessionwidgetmodule" id="toc-triagesessionwidgetmodule" class="nav-link active" data-scroll-target="#triagesessionwidgetmodule">TriageSessionWidgetModule</a></li>
+  <li><a href="#streaming-polyline-renderer---performance-analysis" id="toc-streaming-polyline-renderer---performance-analysis" class="nav-link active" data-scroll-target="#streaming-polyline-renderer---performance-analysis">Streaming Polyline Renderer - Performance Analysis</a>
+  <ul class="collapse">
+  <li><a href="#executive-summary" id="toc-executive-summary" class="nav-link" data-scroll-target="#executive-summary">Executive Summary</a></li>
+  <li><a href="#benchmark-results" id="toc-benchmark-results" class="nav-link" data-scroll-target="#benchmark-results">Benchmark Results</a></li>
+  <li><a href="#current-architecture" id="toc-current-architecture" class="nav-link" data-scroll-target="#current-architecture">Current Architecture</a></li>
+  <li><a href="#optimization-approaches" id="toc-optimization-approaches" class="nav-link" data-scroll-target="#optimization-approaches">Optimization Approaches</a>
+  <ul class="collapse">
+  <li><a href="#approach-1-renderer-level-dirty-tracking-implemented" id="toc-approach-1-renderer-level-dirty-tracking-implemented" class="nav-link" data-scroll-target="#approach-1-renderer-level-dirty-tracking-implemented">Approach 1: Renderer-Level Dirty Tracking (Implemented)</a></li>
+  <li><a href="#approach-2-ring-buffer-incremental-generation-recommended" id="toc-approach-2-ring-buffer-incremental-generation-recommended" class="nav-link" data-scroll-target="#approach-2-ring-buffer-incremental-generation-recommended">Approach 2: Ring Buffer + Incremental Generation (Recommended)</a></li>
+  <li><a href="#approach-3-persistent-mapped-buffers-gl-4.4" id="toc-approach-3-persistent-mapped-buffers-gl-4.4" class="nav-link" data-scroll-target="#approach-3-persistent-mapped-buffers-gl-4.4">Approach 3: Persistent Mapped Buffers (GL 4.4+)</a></li>
+  </ul></li>
+  <li><a href="#recommended-implementation-path" id="toc-recommended-implementation-path" class="nav-link" data-scroll-target="#recommended-implementation-path">Recommended Implementation Path</a>
+  <ul class="collapse">
+  <li><a href="#phase-1-vertex-cache-high-impact" id="toc-phase-1-vertex-cache-high-impact" class="nav-link" data-scroll-target="#phase-1-vertex-cache-high-impact">Phase 1: Vertex Cache (High Impact)</a></li>
+  <li><a href="#phase-2-incremental-batch-building" id="toc-phase-2-incremental-batch-building" class="nav-link" data-scroll-target="#phase-2-incremental-batch-building">Phase 2: Incremental Batch Building</a></li>
+  <li><a href="#phase-3-ring-buffer-gpu-upload" id="toc-phase-3-ring-buffer-gpu-upload" class="nav-link" data-scroll-target="#phase-3-ring-buffer-gpu-upload">Phase 3: Ring Buffer GPU Upload</a></li>
+  </ul></li>
+  <li><a href="#files-modified" id="toc-files-modified" class="nav-link" data-scroll-target="#files-modified">Files Modified</a>
+  <ul class="collapse">
+  <li><a href="#new-files" id="toc-new-files" class="nav-link" data-scroll-target="#new-files">New Files</a></li>
+  <li><a href="#future-changes-phase-1-3" id="toc-future-changes-phase-1-3" class="nav-link" data-scroll-target="#future-changes-phase-1-3">Future Changes (Phase 1-3)</a></li>
+  </ul></li>
+  <li><a href="#usage-example-future" id="toc-usage-example-future" class="nav-link" data-scroll-target="#usage-example-future">Usage Example (Future)</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
-
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">TriageSessionWidgetModule</h1>
-</div>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
 
 
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
 
 
-</header>
+<section id="streaming-polyline-renderer---performance-analysis" class="level1">
+<h1>Streaming Polyline Renderer - Performance Analysis</h1>
+<section id="executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="executive-summary">Executive Summary</h2>
+<p>Benchmarking reveals that for scrolling time series data, the <strong>CPU-side vertex generation</strong> is the primary bottleneck, not GPU buffer uploads. A ring buffer strategy that only generates new edge data can be <strong>36,000x faster</strong> than regenerating all vertices each frame.</p>
+</section>
+<section id="benchmark-results" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-results">Benchmark Results</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Strategy</th>
+<th>Time (100K points, scroll by 10)</th>
+<th>Upload %</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Full Rebuild</td>
+<td>1.35ms</td>
+<td>100%</td>
+</tr>
+<tr class="even">
+<td>Dirty Region Detection</td>
+<td>396µs</td>
+<td>100%</td>
+</tr>
+<tr class="odd">
+<td>Ring Buffer</td>
+<td><strong>37ns</strong></td>
+<td><strong>0.01%</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="current-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="current-architecture">Current Architecture</h2>
+<pre><code>OpenGLWidget::renderWithSceneRenderer()
+    └── addAnalogBatchesToBuilder()
+        └── buildAnalogSeriesBatchSimplified()
+            └── TimeSeriesMapper::mapAnalogSeriesWithIndices()
+                └── Iterates through ALL points in visible range
+                    └── Creates new vertices vector</code></pre>
+<p>Every frame: 1. Iterates through all visible data points 2. Allocates new vertex vectors 3. Uploads entire buffer to GPU</p>
+</section>
+<section id="optimization-approaches" class="level2">
+<h2 class="anchored" data-anchor-id="optimization-approaches">Optimization Approaches</h2>
+<section id="approach-1-renderer-level-dirty-tracking-implemented" class="level3">
+<h3 class="anchored" data-anchor-id="approach-1-renderer-level-dirty-tracking-implemented">Approach 1: Renderer-Level Dirty Tracking (Implemented)</h3>
+<p><strong>Status:</strong> Implemented in <code>StreamingPolyLineRenderer</code> <strong>Benefit:</strong> Minimal (~3.5x) <strong>Reason:</strong> The vertex VALUES change when scrolling, so dirty detection finds 100% dirty.</p>
+</section>
+<section id="approach-2-ring-buffer-incremental-generation-recommended" class="level3">
+<h3 class="anchored" data-anchor-id="approach-2-ring-buffer-incremental-generation-recommended">Approach 2: Ring Buffer + Incremental Generation (Recommended)</h3>
+<p><strong>Status:</strong> Design complete, implementation needed at batch builder level <strong>Benefit:</strong> Up to 36,000x for small scroll steps</p>
+<p><strong>Key Changes Required:</strong> 1. <code>AnalogSeriesCache</code> - Maintain vertex data for extended time range 2. <code>buildAnalogSeriesBatchIncremental()</code> - Only generate new edge data 3. <code>StreamingPolyLineRenderer::updateEdgeData()</code> - Use glBufferSubData</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AnalogSeriesCache <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cached data covers [cached_start, cached_end]</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> vertices<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex cached_start<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex cached_end<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// On scroll from [old_start, old_end] to [new_start, new_end]:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. If overlap exists, keep overlapping vertices</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Generate only [new_start, old_start) or (old_end, new_end]</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="approach-3-persistent-mapped-buffers-gl-4.4" class="level3">
+<h3 class="anchored" data-anchor-id="approach-3-persistent-mapped-buffers-gl-4.4">Approach 3: Persistent Mapped Buffers (GL 4.4+)</h3>
+<p><strong>Status:</strong> Future enhancement <strong>Benefit:</strong> Eliminates driver overhead for frequent updates</p>
+<p>Uses <code>GL_MAP_PERSISTENT_BIT</code> + <code>GL_MAP_COHERENT_BIT</code> for zero-copy updates.</p>
+</section>
+</section>
+<section id="recommended-implementation-path" class="level2">
+<h2 class="anchored" data-anchor-id="recommended-implementation-path">Recommended Implementation Path</h2>
+<section id="phase-1-vertex-cache-high-impact" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-vertex-cache-high-impact">Phase 1: Vertex Cache (High Impact)</h3>
+<p>Add caching to <code>TimeSeriesDataStore</code>: - Cache vertex data for each analog series - Track cached time range - Provide <code>getVerticesForRange()</code> that returns cached or generates new</p>
+</section>
+<section id="phase-2-incremental-batch-building" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-incremental-batch-building">Phase 2: Incremental Batch Building</h3>
+<p>Modify <code>buildAnalogSeriesBatch</code>: - Accept cached vertices from Phase 1 - Only iterate over new time range - Append/prepend to existing vertex buffer</p>
+</section>
+<section id="phase-3-ring-buffer-gpu-upload" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-ring-buffer-gpu-upload">Phase 3: Ring Buffer GPU Upload</h3>
+<p>Modify <code>StreamingPolyLineRenderer</code>: - Maintain ring buffer on GPU (3x visible capacity) - Track write position - Use glBufferSubData for edge updates only</p>
+</section>
+</section>
+<section id="files-modified" class="level2">
+<h2 class="anchored" data-anchor-id="files-modified">Files Modified</h2>
+<section id="new-files" class="level3">
+<h3 class="anchored" data-anchor-id="new-files">New Files</h3>
+<ul>
+<li><code>src/PlottingOpenGL/Renderers/StreamingPolyLineRenderer.hpp/cpp</code> ✓</li>
+<li><code>benchmark/PolyLineUpload.benchmark.cpp</code> ✓</li>
+</ul>
+</section>
+<section id="future-changes-phase-1-3" class="level3">
+<h3 class="anchored" data-anchor-id="future-changes-phase-1-3">Future Changes (Phase 1-3)</h3>
+<ul>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.hpp</code> - Add vertex cache</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/SceneBuildingHelpers.cpp</code> - Incremental building</li>
+<li><code>src/PlottingOpenGL/SceneRenderer.hpp</code> - Optional streaming mode</li>
+</ul>
+</section>
+</section>
+<section id="usage-example-future" class="level2">
+<h2 class="anchored" data-anchor-id="usage-example-future">Usage Example (Future)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In OpenGLWidget</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> renderWithSceneRenderer<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if we can use incremental update</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_streaming_enabled <span class="op">&amp;&amp;</span> canIncrementalUpdate<span class="op">(</span>old_time_range<span class="op">,</span> new_time_range<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Only generate new edge vertices</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> edge_batch <span class="op">=</span> buildIncrementalBatch<span class="op">(</span>new_start<span class="op">,</span> old_start<span class="op">);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        _streaming_renderer<span class="op">-&gt;</span>appendEdgeData<span class="op">(</span>edge_batch<span class="op">);</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fall back to full rebuild</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> full_batch <span class="op">=</span> buildFullBatch<span class="op">();</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        _streaming_renderer<span class="op">-&gt;</span>uploadData<span class="op">(</span>full_batch<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The <code>StreamingPolyLineRenderer</code> with dirty region detection provides modest improvement for the current architecture. For significant performance gains (1000x+), vertex caching must be implemented at the data store level.</p>
+<p>The benchmark proves the concept works - implementing the full solution requires refactoring the vertex generation pipeline, which is a larger undertaking but would enable smooth 60fps scrolling even with millions of data points.</p>
 
 
-<section id="triagesessionwidgetmodule" class="level1">
-<h1>TriageSessionWidgetModule</h1>
-<hr>
-<p>Updated on 2026-04-29 at 00:15:23 +0000</p>
-
-
+</section>
 </section>
 
 </main> <!-- /main -->

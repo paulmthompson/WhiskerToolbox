@@ -349,11 +349,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a>
   <ul class="collapse">
-  <li><a href="#spatial-index-synchronization-in-scenebuilder" id="toc-spatial-index-synchronization-in-scenebuilder" class="nav-link" data-scroll-target="#spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</a></li>
-  </ul></li>
-  <li><a href="#priority-2-performance-optimizations" id="toc-priority-2-performance-optimizations" class="nav-link" data-scroll-target="#priority-2-performance-optimizations">Priority 2: Performance Optimizations</a>
-  <ul class="collapse">
-  <li><a href="#memory-allocation-in-scenebuilder" id="toc-memory-allocation-in-scenebuilder" class="nav-link" data-scroll-target="#memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</a></li>
   <li><a href="#allocation-in-gapdetectortransform" id="toc-allocation-in-gapdetectortransform" class="nav-link" data-scroll-target="#allocation-in-gapdetectortransform">2.2 Allocation in GapDetector::transform</a></li>
   <li><a href="#scenebuilder-vertex-resizing" id="toc-scenebuilder-vertex-resizing" class="nav-link" data-scroll-target="#scenebuilder-vertex-resizing">2.3 SceneBuilder Vertex Resizing</a></li>
   <li><a href="#rastermappermaptrials-materialization" id="toc-rastermappermaptrials-materialization" class="nav-link" data-scroll-target="#rastermappermaptrials-materialization">2.4 RasterMapper::mapTrials Materialization</a></li>
@@ -430,54 +425,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Priority 1: Critical Issues</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### 1.1 Floating Point Precision Risk in TimeSeriesMapper</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### 1.2 Spatial Index Synchronization in SceneBuilder</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>**File**: <span class="co">[</span><span class="ot">Mappers/TimeSeriesMapper.hpp</span><span class="co">](Mappers/TimeSeriesMapper.hpp#L88-L97)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>**File**: <span class="co">[</span><span class="ot">SceneGraph/SceneBuilder.hpp</span><span class="co">](SceneGraph/SceneBuilder.hpp#L333-L347)</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>**Issue**: Absolute time indices are cast directly to <span class="in">`float`</span>:</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="in">```cpp</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time_frame<span class="op">.</span>getTimeAtIndex<span class="op">(</span>event_with_id<span class="op">.</span>event_time<span class="op">));</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Problem</strong>: - IEEE 754 32-bit float has only ~7 decimal digits of precision - For microsecond timestamps since epoch or long recordings (&gt;1 hour at 30kHz ≈ 10⁸ samples), this causes: - “Shaking polygon” jitter artifacts - Inability to distinguish adjacent samples when zoomed in</p>
-<p><strong>Fix Options</strong> (choose one): 1. <strong>Double for World Coordinates</strong>: Change <code>RenderableScene</code> matrices and <code>MappedElement</code> to use <code>double</code>/<code>glm::dvec2</code> 2. <strong>Relative Encoding (Recommended)</strong>: Subtract <code>view_state.time_start</code> from absolute time before casting to float. Render everything relative to current view window start.</p>
-<p><strong>Action Items</strong>: - [ ] Update <code>MappedElement</code> to support camera-relative encoding - [ ] Add <code>view_origin</code> parameter to <code>mapEvents</code>, <code>mapEventsInRange</code>, <code>mapIntervals</code>, <code>mapIntervalsInRange</code>, <code>mapAnalogSeries*</code> functions - [ ] Subtract view origin before <code>static_cast&lt;float&gt;</code> in all mappers - [ ] Update <code>SceneBuilder</code> to handle relative coordinates consistently</p>
-<p><strong>Affected Functions</strong>: - <code>TimeSeriesMapper::mapEvents()</code> - <code>TimeSeriesMapper::mapEventsInRange()</code> - <code>TimeSeriesMapper::mapIntervals()</code> - <code>TimeSeriesMapper::mapIntervalsInRange()</code> - <code>TimeSeriesMapper::mapAnalogSeries()</code> - <code>TimeSeriesMapper::mapAnalogSeriesWithIndices()</code> - <code>TimeSeriesMapper::mapAnalogSeriesFull()</code> - <code>RasterMapper::mapEventsRelative()</code> (already uses relative time)</p>
-<hr>
-<section id="spatial-index-synchronization-in-scenebuilder" class="level3">
-<h3 class="anchored" data-anchor-id="spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</h3>
-<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L333-L347">SceneGraph/SceneBuilder.hpp</a></p>
-<p><strong>Issue</strong>: Range-based methods (<code>addGlyphs</code>, <code>addRectangles</code>) populate <code>_pending_spatial_inserts</code>, but low-level batch methods (<code>addGlyphBatch</code>, <code>addPolyLineBatch</code>, <code>addRectangleBatch</code>) do not.</p>
-<p><strong>Consequence</strong>: Manual batches (e.g., from <code>GapDetector</code>) bypass the pending queue. When <code>build()</code> calls <code>buildSpatialIndexFromPending()</code>, these batches aren’t indexed.</p>
-<p><strong>Action Items</strong>: - [ ] Either: Update <code>addGlyphBatch</code> / <code>addRectangleBatch</code> to also populate <code>_pending_spatial_inserts</code> - [ ] Or: Update <code>build()</code> to call <code>buildSpatialIndex()</code> which iterates all batches, not just pending inserts - [ ] Document clearly which methods auto-populate spatial index</p>
-<hr>
-</section>
-</section>
-<section id="priority-2-performance-optimizations" class="level2">
-<h2 class="anchored" data-anchor-id="priority-2-performance-optimizations">Priority 2: Performance Optimizations</h2>
-<section id="memory-allocation-in-scenebuilder" class="level3">
-<h3 class="anchored" data-anchor-id="memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</h3>
-<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L304-L318">SceneGraph/SceneBuilder.hpp</a></p>
-<p><strong>Issue</strong>: <code>_pending_spatial_inserts</code> allocates heap memory every frame, then immediately drains into QuadTree in <code>build()</code>.</p>
-<p><strong>Optimization</strong>: Since <code>setBounds()</code> must be called before adding glyphs (per comments), insert directly into QuadTree:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>MappedElementRange R<span class="op">&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SceneBuilder <span class="op">&amp;</span> addGlyphs<span class="op">(...)</span> <span class="op">{</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_scene<span class="op">.</span>spatial_index<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"Bounds must be set before adding glyphs"</span><span class="op">);</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> elem <span class="op">:</span> elements<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        batch<span class="op">.</span>positions<span class="op">.</span>emplace_back<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">);</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">.</span>spatial_index<span class="op">-&gt;</span>insert<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">,</span> elem<span class="op">.</span>entity_id<span class="op">);</span>  <span class="co">// Direct insertion</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>**Issue**: Range-based methods (<span class="in">`addGlyphs`</span>, <span class="in">`addRectangles`</span>) populate <span class="in">`_pending_spatial_inserts`</span>, but low-level batch methods (<span class="in">`addGlyphBatch`</span>, <span class="in">`addPolyLineBatch`</span>, <span class="in">`addRectangleBatch`</span>) do not.</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>**Consequence**: Manual batches (e.g., from <span class="in">`GapDetector`</span>) bypass the pending queue. When <span class="in">`build()`</span> calls <span class="in">`buildSpatialIndexFromPending()`</span>, these batches aren't indexed.</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>**Action Items**:</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Either: Update <span class="in">`addGlyphBatch`</span> / <span class="in">`addRectangleBatch`</span> to also populate <span class="in">`_pending_spatial_inserts`</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Or: Update <span class="in">`build()`</span> to call <span class="in">`buildSpatialIndex()`</span> which iterates all batches, not just pending inserts</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Document clearly which methods auto-populate spatial index</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Priority 2: Performance Optimizations</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">### 2.1 Memory Allocation in SceneBuilder</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>**File**: <span class="co">[</span><span class="ot">SceneGraph/SceneBuilder.hpp</span><span class="co">](SceneGraph/SceneBuilder.hpp#L304-L318)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>**Issue**: <span class="in">`_pending_spatial_inserts`</span> allocates heap memory every frame, then immediately drains into QuadTree in <span class="in">`build()`</span>.</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>**Optimization**: Since <span class="in">`setBounds()`</span> must be called before adding glyphs (per comments), insert directly into QuadTree:</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="in">```cpp</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>MappedElementRange R<span class="op">&gt;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>SceneBuilder <span class="op">&amp;</span> addGlyphs<span class="op">(...)</span> <span class="op">{</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_scene<span class="op">.</span>spatial_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"Bounds must be set before adding glyphs"</span><span class="op">);</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> elem <span class="op">:</span> elements<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>        batch<span class="op">.</span>positions<span class="op">.</span>emplace_back<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">.</span>spatial_index<span class="op">-&gt;</span>insert<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">,</span> elem<span class="op">.</span>entity_id<span class="op">);</span>  <span class="co">// Direct insertion</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Action Items</strong>: - [ ] Remove <code>_pending_spatial_inserts</code> vector - [ ] Initialize QuadTree in <code>setBounds()</code> - [ ] Insert directly into QuadTree in <code>addGlyphs</code> and <code>addRectangles</code> - [ ] Remove <code>buildSpatialIndexFromPending()</code> helper</p>
 <hr>
-</section>
 <section id="allocation-in-gapdetectortransform" class="level3">
 <h3 class="anchored" data-anchor-id="allocation-in-gapdetectortransform">2.2 Allocation in GapDetector::transform</h3>
 <p><strong>File</strong>: <a href="Transformers/GapDetector.cpp#L52-L65">Transformers/GapDetector.cpp</a></p>
 <p><strong>Issue</strong>: Explicit materialization into vectors negates range-based architecture benefits:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> time_values<span class="op">;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>time_values<span class="op">.</span>reserve<span class="op">(</span>time_indices<span class="op">.</span>size<span class="op">());</span>  <span class="co">// Allocation 1</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">(</span>data_span<span class="op">.</span>begin<span class="op">(),</span> data_span<span class="op">.</span>end<span class="op">());</span>  <span class="co">// Allocation 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> time_values<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>time_values<span class="op">.</span>reserve<span class="op">(</span>time_indices<span class="op">.</span>size<span class="op">());</span>  <span class="co">// Allocation 1</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">(</span>data_span<span class="op">.</span>begin<span class="op">(),</span> data_span<span class="op">.</span>end<span class="op">());</span>  <span class="co">// Allocation 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Action Items</strong>: - [ ] Rewrite <code>transform()</code> to use <code>segmentByGaps</code> template logic directly on <code>AnalogTimeSeries</code> view - [ ] Remove intermediate <code>std::vector</code> allocations - [ ] Consider keeping vector overload only for unit testing</p>
 <hr>
 </section>
@@ -485,10 +477,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="scenebuilder-vertex-resizing">2.3 SceneBuilder Vertex Resizing</h3>
 <p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L401-L407">SceneGraph/SceneBuilder.hpp</a></p>
 <p><strong>Issue</strong>: <code>addPolyLine</code> pushes vertices one by one, potentially causing reallocations:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> v <span class="op">:</span> vertices<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>x<span class="op">);</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>y<span class="op">);</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> v <span class="op">:</span> vertices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>x<span class="op">);</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    batch<span class="op">.</span>vertices<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Action Items</strong>: - [ ] Check if range satisfies <code>std::ranges::sized_range</code> - [ ] If so, call <code>batch.vertices.reserve(batch.vertices.size() + std::ranges::size(vertices) * 2)</code> before loop - [ ] Apply same optimization to <code>addPolyLines</code></p>
 <hr>
 </section>
@@ -506,9 +498,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="rectangleinteractioncontroller-constraint-logic">3.1 RectangleInteractionController Constraint Logic</h3>
 <p><strong>File</strong>: <a href="Interaction/RectangleInteractionController.cpp#L93-L97">Interaction/RectangleInteractionController.cpp</a></p>
 <p><strong>Issue</strong>: <code>constrain_to_x_axis</code> hardcodes <code>y=0.0f</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>_config<span class="op">.</span>constrain_to_x_axis<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    _current_bounds <span class="op">=</span> glm<span class="op">::</span>vec4<span class="op">{</span>x<span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> width<span class="op">,</span> _config<span class="op">.</span>viewport_height<span class="op">};</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>_config<span class="op">.</span>constrain_to_x_axis<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    _current_bounds <span class="op">=</span> glm<span class="op">::</span>vec4<span class="op">{</span>x<span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> width<span class="op">,</span> _config<span class="op">.</span>viewport_height<span class="op">};</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Problem</strong>: If layout engine positioned series at <code>y=100.0f</code>, the preview appears at wrong vertical position.</p>
 <p><strong>Action Items</strong>: - [ ] Pass series layout bounds to controller, OR - [ ] Add <code>_config.y_min</code> / <code>_config.y_max</code> fields, OR - [ ] Have PreviewRenderer ignore controller’s Y and draw full-height - [ ] Update <code>start()</code> method to accept series Y position</p>
 <hr>
@@ -517,7 +509,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="hit-testing-interval-logic">3.2 Hit Testing Interval Logic</h3>
 <p><strong>File</strong>: <a href="Interaction/SceneHitTester.hpp#L140">Interaction/SceneHitTester.hpp</a></p>
 <p><strong>Issue</strong>: In <code>queryIntervals</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> dist <span class="op">=</span> y_dist<span class="op">;</span>  <span class="co">// For intervals, X is always inside</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> dist <span class="op">=</span> y_dist<span class="op">;</span>  <span class="co">// For intervals, X is always inside</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Problem</strong>: For overlapping intervals on the same row, X distance matters for determining which interval was clicked (especially at edges or with transparency).</p>
 <p><strong>Action Items</strong>: - [ ] If <code>y_dist == 0</code> (inside Y), factor in distance to interval center in X - [ ] Or strictly return 0 for “most centered” prioritization</p>
 <hr>
@@ -735,7 +727,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>```</p>
 <hr>
-<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+<p>Updated on 2026-04-30 at 14:52:47 +0000</p>
 
 
 </section>

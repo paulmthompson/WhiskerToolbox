@@ -23,6 +23,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -313,7 +348,11 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#coreplotting-code-review-roadmap" id="toc-coreplotting-code-review-roadmap" class="nav-link active" data-scroll-target="#coreplotting-code-review-roadmap">CorePlotting Code Review Roadmap</a></li>
   <li><a href="#priority-1-critical-issues" id="toc-priority-1-critical-issues" class="nav-link" data-scroll-target="#priority-1-critical-issues">Priority 1: Critical Issues</a>
   <ul class="collapse">
-  <li><a href="#floating-point-precision-risk-in-timeseriesmapper" id="toc-floating-point-precision-risk-in-timeseriesmapper" class="nav-link" data-scroll-target="#floating-point-precision-risk-in-timeseriesmapper">1.1 Floating Point Precision Risk in TimeSeriesMapper</a></li>
+  <li><a href="#spatial-index-synchronization-in-scenebuilder" id="toc-spatial-index-synchronization-in-scenebuilder" class="nav-link" data-scroll-target="#spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</a></li>
+  </ul></li>
+  <li><a href="#priority-2-performance-optimizations" id="toc-priority-2-performance-optimizations" class="nav-link" data-scroll-target="#priority-2-performance-optimizations">Priority 2: Performance Optimizations</a>
+  <ul class="collapse">
+  <li><a href="#memory-allocation-in-scenebuilder" id="toc-memory-allocation-in-scenebuilder" class="nav-link" data-scroll-target="#memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</a></li>
   <li><a href="#allocation-in-gapdetectortransform" id="toc-allocation-in-gapdetectortransform" class="nav-link" data-scroll-target="#allocation-in-gapdetectortransform">2.2 Allocation in GapDetector::transform</a></li>
   <li><a href="#rastermappermaptrials-materialization" id="toc-rastermappermaptrials-materialization" class="nav-link" data-scroll-target="#rastermappermaptrials-materialization">2.4 RasterMapper::mapTrials Materialization</a></li>
   </ul></li>
@@ -382,89 +421,38 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="priority-1-critical-issues" class="level1">
 <h1>Priority 1: Critical Issues</h1>
-<section id="floating-point-precision-risk-in-timeseriesmapper" class="level2">
-<h2 class="anchored" data-anchor-id="floating-point-precision-risk-in-timeseriesmapper">1.1 Floating Point Precision Risk in TimeSeriesMapper</h2>
-<p><strong>File</strong>: <a href="Mappers/TimeSeriesMapper.hpp#L88-L97">Mappers/TimeSeriesMapper.hpp</a></p>
-<p><strong>Issue</strong>: Absolute time indices are cast directly to <code>float</code>: ```cpp</p>
-<p>float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time));</float></p>
-<pre><code>
-**Problem**:
-
-* IEEE 754 32-bit float has only ~7 decimal digits of precision
-* For microsecond timestamps since epoch or long recordings (&gt;1 hour at 30kHz ≈ 10⁸ samples), this causes:
-    * "Shaking polygon" jitter artifacts
-    * Inability to distinguish adjacent samples when zoomed in
-
-**Fix Options** (choose one):
-
-1. **Double for World Coordinates**: Change `RenderableScene` matrices and `MappedElement` to use `double`/`glm::dvec2`
-2. **Relative Encoding (Recommended)**: Subtract `view_state.time_start` from absolute time before casting to float. Render everything relative to current view window start.
-
-**Action Items**:
-
-* [ ] Update `MappedElement` to support camera-relative encoding
-* [ ] Add `view_origin` parameter to `mapEvents`, `mapEventsInRange`, `mapIntervals`, `mapIntervalsInRange`, `mapAnalogSeries*` functions
-* [ ] Subtract view origin before `static_cast&lt;float&gt;` in all mappers
-* [ ] Update `SceneBuilder` to handle relative coordinates consistently
-
-**Affected Functions**:
-
-* `TimeSeriesMapper::mapEvents()`
-* `TimeSeriesMapper::mapEventsInRange()`
-* `TimeSeriesMapper::mapIntervals()`
-* `TimeSeriesMapper::mapIntervalsInRange()`
-* `TimeSeriesMapper::mapAnalogSeries()`
-* `TimeSeriesMapper::mapAnalogSeriesWithIndices()`
-* `TimeSeriesMapper::mapAnalogSeriesFull()`
-* `RasterMapper::mapEventsRelative()` (already uses relative time)
-
-
-
-------------------
-
-
-## 1.2 Spatial Index Synchronization in SceneBuilder
-
-**File**: [SceneGraph/SceneBuilder.hpp](SceneGraph/SceneBuilder.hpp#L333-L347)
-
-**Issue**: Range-based methods (`addGlyphs`, `addRectangles`) populate `_pending_spatial_inserts`, but low-level batch methods (`addGlyphBatch`, `addPolyLineBatch`, `addRectangleBatch`) do not.
-
-**Consequence**: Manual batches (e.g., from `GapDetector`) bypass the pending queue. When `build()` calls `buildSpatialIndexFromPending()`, these batches aren't indexed.
-
-**Action Items**:
-
-* [ ] Either: Update `addGlyphBatch` / `addRectangleBatch` to also populate `_pending_spatial_inserts`
-* [ ] Or: Update `build()` to call `buildSpatialIndex()` which iterates all batches, not just pending inserts
-* [ ] Document clearly which methods auto-populate spatial index
-
-
-
-------------------
-
-
-# Priority 2: Performance Optimizations
-
-
-## 2.1 Memory Allocation in SceneBuilder
-
-**File**: [SceneGraph/SceneBuilder.hpp](SceneGraph/SceneBuilder.hpp#L304-L318)
-
-**Issue**: `_pending_spatial_inserts` allocates heap memory every frame, then immediately drains into [QuadTree](/api_generated/Classes/classQuadTree.md) in `build()`.
-
-**Optimization**: Since `setBounds()` must be called before adding glyphs (per comments), insert directly into [QuadTree](/api_generated/Classes/classQuadTree.md):
-
-```cpp
-
-template&lt;MappedElementRange R&gt;
-SceneBuilder &amp; addGlyphs(...) {
-    if (!_scene.spatial_index) {
-        throw std::runtime_error("Bounds must be set before adding glyphs");
-    }
-    for (auto const &amp; elem : elements) {
-        batch.positions.emplace_back(elem.x, elem.y);
-        _scene.spatial_index-&gt;insert(elem.x, elem.y, elem.entity_id);  // Direct insertion
-    }
-}</code></pre>
+<section id="spatial-index-synchronization-in-scenebuilder" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-index-synchronization-in-scenebuilder">1.2 Spatial Index Synchronization in SceneBuilder</h2>
+<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L333-L347">SceneGraph/SceneBuilder.hpp</a></p>
+<p><strong>Issue</strong>: Range-based methods (<code>addGlyphs</code>, <code>addRectangles</code>) populate <code>_pending_spatial_inserts</code>, but low-level batch methods (<code>addGlyphBatch</code>, <code>addPolyLineBatch</code>, <code>addRectangleBatch</code>) do not.</p>
+<p><strong>Consequence</strong>: Manual batches (e.g., from <code>GapDetector</code>) bypass the pending queue. When <code>build()</code> calls <code>buildSpatialIndexFromPending()</code>, these batches aren’t indexed.</p>
+<p><strong>Action Items</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Either: Update <code>addGlyphBatch</code> / <code>addRectangleBatch</code> to also populate <code>_pending_spatial_inserts</code></label></li>
+<li><label><input type="checkbox">Or: Update <code>build()</code> to call <code>buildSpatialIndex()</code> which iterates all batches, not just pending inserts</label></li>
+<li><label><input type="checkbox">Document clearly which methods auto-populate spatial index</label></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="priority-2-performance-optimizations" class="level1">
+<h1>Priority 2: Performance Optimizations</h1>
+<section id="memory-allocation-in-scenebuilder" class="level2">
+<h2 class="anchored" data-anchor-id="memory-allocation-in-scenebuilder">2.1 Memory Allocation in SceneBuilder</h2>
+<p><strong>File</strong>: <a href="SceneGraph/SceneBuilder.hpp#L304-L318">SceneGraph/SceneBuilder.hpp</a></p>
+<p><strong>Issue</strong>: <code>_pending_spatial_inserts</code> allocates heap memory every frame, then immediately drains into <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> in <code>build()</code>.</p>
+<p><strong>Optimization</strong>: Since <code>setBounds()</code> must be called before adding glyphs (per comments), insert directly into <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>MappedElementRange R<span class="op">&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SceneBuilder <span class="op">&amp;</span> addGlyphs<span class="op">(...)</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_scene<span class="op">.</span>spatial_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"Bounds must be set before adding glyphs"</span><span class="op">);</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> elem <span class="op">:</span> elements<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        batch<span class="op">.</span>positions<span class="op">.</span>emplace_back<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">.</span>spatial_index<span class="op">-&gt;</span>insert<span class="op">(</span>elem<span class="op">.</span>x<span class="op">,</span> elem<span class="op">.</span>y<span class="op">,</span> elem<span class="op">.</span>entity_id<span class="op">);</span>  <span class="co">// Direct insertion</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Action Items</strong>:</p>
 <ul class="task-list">
 <li><label><input type="checkbox">Remove <code>_pending_spatial_inserts</code> vector</label></li>
@@ -827,7 +815,7 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 </tbody>
 </table>
 <hr>
-<p>Updated on 2026-04-29 at 00:15:27 +0000</p>
+<p>Updated on 2026-04-30 at 14:52:47 +0000</p>
 
 
 </section>
