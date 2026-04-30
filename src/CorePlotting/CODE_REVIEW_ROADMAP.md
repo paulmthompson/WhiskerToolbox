@@ -6,43 +6,6 @@ This document consolidates findings from two comprehensive code reviews and prov
 
 ## Priority 1: Critical Issues
 
-### 1.1 Floating Point Precision Risk in TimeSeriesMapper
-
-**File**: [Mappers/TimeSeriesMapper.hpp](Mappers/TimeSeriesMapper.hpp#L88-L97)
-
-**Issue**: Absolute time indices are cast directly to `float`:
-```cpp
-float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time));
-```
-
-**Problem**: 
-- IEEE 754 32-bit float has only ~7 decimal digits of precision
-- For microsecond timestamps since epoch or long recordings (>1 hour at 30kHz ≈ 10⁸ samples), this causes:
-  - "Shaking polygon" jitter artifacts
-  - Inability to distinguish adjacent samples when zoomed in
-
-**Fix Options** (choose one):
-1. **Double for World Coordinates**: Change `RenderableScene` matrices and `MappedElement` to use `double`/`glm::dvec2`
-2. **Relative Encoding (Recommended)**: Subtract `view_state.time_start` from absolute time before casting to float. Render everything relative to current view window start.
-
-**Action Items**:
-- [ ] Update `MappedElement` to support camera-relative encoding
-- [ ] Add `view_origin` parameter to `mapEvents`, `mapEventsInRange`, `mapIntervals`, `mapIntervalsInRange`, `mapAnalogSeries*` functions
-- [ ] Subtract view origin before `static_cast<float>` in all mappers
-- [ ] Update `SceneBuilder` to handle relative coordinates consistently
-
-**Affected Functions**:
-- `TimeSeriesMapper::mapEvents()`
-- `TimeSeriesMapper::mapEventsInRange()`
-- `TimeSeriesMapper::mapIntervals()`
-- `TimeSeriesMapper::mapIntervalsInRange()`
-- `TimeSeriesMapper::mapAnalogSeries()`
-- `TimeSeriesMapper::mapAnalogSeriesWithIndices()`
-- `TimeSeriesMapper::mapAnalogSeriesFull()`
-- `RasterMapper::mapEventsRelative()` (already uses relative time)
-
----
-
 ### 1.2 Spatial Index Synchronization in SceneBuilder
 
 **File**: [SceneGraph/SceneBuilder.hpp](SceneGraph/SceneBuilder.hpp#L333-L347)

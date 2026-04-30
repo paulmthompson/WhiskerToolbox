@@ -19,6 +19,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
 
 SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
@@ -82,6 +84,7 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
 
     auto const view_state = gl_widget_->getViewState();
     auto const * state = gl_widget_->state();
+    auto const local_end_time = TimeFrameIndex(std::max<int64_t>(static_cast<int64_t>(end_time) - start_time, 1));
 
     // Fold y_zoom and y_pan into projection via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -89,7 +92,7 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     // View matrix is identity — pan and zoom fully handled by projection
     scene.view_matrix = glm::mat4(1.0f);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            TimeFrameIndex(start_time), TimeFrameIndex(end_time), eff.y_min, eff.y_max);
+            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
 
     // 1. Build interval batches (rendered as background)
     auto const & interval_series_map = gl_widget_->getDigitalIntervalSeriesMap();
@@ -194,6 +197,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     DataViewerHelpers::AnalogBatchParams batch_params;
     batch_params.start_time = TimeFrameIndex(start_time);
     batch_params.end_time = TimeFrameIndex(end_time);
+    batch_params.x_origin = TimeFrameIndex(start_time);
     batch_params.color = color;
     batch_params.thickness = options.get_line_thickness();
     batch_params.detect_gaps = (options.gap_handling == AnalogGapHandlingMode::DetectGaps);
@@ -252,6 +256,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     DataViewerHelpers::EventBatchParams batch_params;
     batch_params.start_time = TimeFrameIndex(start_time);
     batch_params.end_time = TimeFrameIndex(end_time);
+    batch_params.x_origin = TimeFrameIndex(start_time);
     batch_params.color = color;
     batch_params.glyph_size = DataViewer::computeEventGlyphSize(
             y_transform,
@@ -311,6 +316,7 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
     DataViewerHelpers::IntervalBatchParams batch_params;
     batch_params.start_time = TimeFrameIndex(static_cast<int64_t>(start_time));
     batch_params.end_time = TimeFrameIndex(static_cast<int64_t>(end_time));
+    batch_params.x_origin = TimeFrameIndex(static_cast<int64_t>(start_time));
     batch_params.color = color;
 
     // Use simplified API (takes pre-composed model matrix)
