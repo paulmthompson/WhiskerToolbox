@@ -1,0 +1,117 @@
+---
+title: "TensorWhitening"
+---
+
+## Overview
+
+`TensorWhitening` implements robust **ZCA whitening** for 2D `TensorData`
+interpreted as **time x channels**. Included channels are centered by their
+per-channel median, optionally filtered with a MAD-based clean-sample mask for
+covariance estimation, whitened with an epsilon-regularized ZCA matrix, and
+optionally rescaled back toward the original channel amplitude.
+
+Excluded channels are copied through unchanged.
+
+## Location
+
+| File | Description |
+|------|-------------|
+| `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.hpp` | Parameter struct, public transform declaration, and `ParameterUIHints` |
+| `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.cpp` | Robust whitening implementation and LibTorch compute path |
+| `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.test.cpp` | Catch2 coverage for registration, whitening behavior, row preservation, and GPU parity |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `mad_threshold_multiplier` | `float` | `4.0F` | Reject samples whose included-channel absolute deviation exceeds `multiplier * MAD * 1.4826` on any included channel. Set `<= 0` to disable sample rejection. |
+| `exclude_channels` | `std::vector<int>` | `{}` | 0-based channel indices excluded from whitening. Excluded channels are copied through unchanged. |
+| `rescale_amplitude` | `bool` | `true` | Multiply the whitened channels by the mean robust channel amplitude to preserve a familiar scale. |
+| `epsilon` | `float` | `1.0e-8F` | Positive diagonal regularizer added to covariance eigenvalues before inversion. |
+| `use_gpu` | `bool` | `false` | Request CUDA execution. When CUDA is unavailable, the implementation logs a fallback and continues on the LibTorch CPU path. |
+
+## Algorithm
+
+For the included channels only:
+
+1. Convert the input to LibTorch storage if needed.
+2. Select the included channel subset.
+3. Compute per-channel medians and median-center the data.
+4. Estimate a robust scale per channel with:
+
+   $$\sigma_{robust} = \mathrm{median}(|x - \mathrm{median}(x)|) \cdot 1.4826$$
+
+5. If `mad_threshold_multiplier > 0`, build a clean-sample mask that keeps rows
+   whose included channels all remain below their channel-specific threshold.
+6. Estimate covariance from the clean subset when at least two clean samples
+   remain; otherwise fall back to all centered samples.
+7. Compute the ZCA whitening matrix:
+
+   $$C = \frac{X^T X}{N - 1}$$
+
+   $$W = V \operatorname{diag}\left((\lambda + \epsilon)^{-1/2}\right) V^T$$
+
+   where $C = V \operatorname{diag}(\lambda) V^T$.
+
+8. Apply whitening with `X_white = X_centered W`.
+9. If `rescale_amplitude` is enabled, multiply `X_white` by the mean robust
+   channel amplitude.
+10. Write the whitened values back into the included channels and leave excluded
+    channels untouched.
+
+## Backend And Storage
+
+Unlike `TensorCAR`, this transform always executes on the **LibTorch** path for
+both CPU and GPU requests.
+
+- CPU input with non-LibTorch storage is converted with `TensorData::toLibTorch()`.
+- GPU input is converted with `TensorData::toLibTorchStrided()` and moved to CUDA.
+- The final output tensor is materialized as contiguous `float32` LibTorch storage.
+- CUDA results are copied back to CPU before constructing the output `TensorData`
+  so the stored result remains portable in the wider application.
+
+## Row Descriptor Preservation
+
+The transform preserves the input row descriptor and column names.
+
+| Input `RowType` | Output factory |
+|-----------------|----------------|
+| `TimeFrameIndex` | `TensorData::createTimeSeries2DFromStorage(...)` |
+| `Interval` | `TensorData::createFromIntervalsFromStorage(...)` |
+| `Ordinal` | `TensorData::createOrdinal2DFromStorage(...)` |
+
+The storage-backed interval and ordinal factories were added so TransformsV2 can
+return LibTorch-backed results without flattening back through Armadillo-only
+construction paths.
+
+## Validation Rules
+
+The transform returns `nullptr` and logs a message when:
+
+- the input is not 2D
+- the input has fewer than 2 rows
+- the input has zero columns
+- `epsilon <= 0`
+- `exclude_channels` contains an out-of-range index
+- all channels are excluded
+- the input contains `NaN` or `Inf`
+- fewer than two samples remain available for covariance estimation
+
+## Registration
+
+- **Registry name:** `TensorWhitening`
+- **Category:** `Signal Processing`
+- **Transform type:** Container (`TensorData` -> `TensorData`)
+- Registered in `src/TransformsV2/core/RegisteredTransforms.cpp`
+
+## Tests
+
+The test file covers:
+
+- registry registration
+- CPU whitening of included channels
+- interval-row preservation with excluded-channel pass-through
+- robust sample masking behavior
+- default amplitude rescaling
+- validation failures
+- CPU/GPU parity when the LibTorch CUDA path is available

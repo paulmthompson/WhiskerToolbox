@@ -11,6 +11,10 @@ the core inference library.
 
 **Location:** `src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp`
 
+`ParameterUIHints` declarations for schema extraction:
+`src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp`
+(definitions in `DeepLearningParamSchemas.cpp`).
+
 ## Design Rationale
 
 Phase 0.0 of the DeepLearning Widget refactoring moved per-component parameter structs
@@ -107,6 +111,13 @@ struct EncoderShapeParams {
 ```
 
 ## ParameterUIHints
+
+Implementations live in `DeepLearningParamSchemas.cpp`. Explicit specializations of
+`ParameterUIHints<dl::widget::…>` must also be **declared** in
+`DeepLearningParamSchemasUIHints.hpp`. Any translation unit that calls
+`extractParameterSchema<T>()` for these widget types must include that header;
+otherwise the compiler only sees the primary `ParameterUIHints` template and
+instantiates its empty `annotate`, so tooltips and other hints are missing at runtime.
 
 Specializations are provided for structs that benefit from UI annotations:
 
