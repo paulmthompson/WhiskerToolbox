@@ -1011,12 +1011,13 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height());
     float const world_y = coords.canvasYToWorldY(canvas_y);
     float const world_x = coords.canvasXToWorldX(canvas_x);
+    float const local_world_x = world_x - static_cast<float>(static_cast<int64_t>(_state->viewState().x_min));
 
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
     if (_cache_state.scene.spatial_index) {
         CorePlotting::HitTestResult const result = _hit_tester.hitTest(
-                world_x, world_y, _cache_state.scene, _cache_state.layout_response);
+                local_world_x, world_y, _cache_state.scene, _cache_state.layout_response);
 
         if (result.hasHit()) {
             std::string series_type;
@@ -1026,7 +1027,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             if (series_key.empty() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
                 // Try to find series key from glyph batch maps
                 // The QuadTree stores EntityId but not series key, so region query is fallback
-                auto region_result = _hit_tester.querySeriesRegion(world_x, world_y, _cache_state.layout_response);
+                auto region_result = _hit_tester.querySeriesRegion(local_world_x, world_y, _cache_state.layout_response);
                 if (region_result.hasHit()) {
                     series_key = region_result.series_key;
                 }
@@ -1055,7 +1056,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Fall back to series region query (always works, uses layout)
     CorePlotting::HitTestResult const result = _hit_tester.querySeriesRegion(
-            world_x, world_y, _cache_state.layout_response);
+            local_world_x, world_y, _cache_state.layout_response);
 
     if (result.hasHit()) {
         // Determine series type using data store
@@ -1114,12 +1115,13 @@ void OpenGLWidget::updateMatrices() {
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+    auto const local_end_time = TimeFrameIndex(std::max<int64_t>(end_time.getValue() - start_time.getValue(), 1));
 
     // Fold both y_zoom and y_pan into the projection matrix via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
     _cached_projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            start_time, end_time, eff.y_min, eff.y_max);
+            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
 
     // View matrix is identity — pan and zoom are fully handled by the projection
     _cached_view_matrix = glm::mat4(1.0f);
@@ -1129,24 +1131,25 @@ void OpenGLWidget::rebuildScene() {
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+    auto const local_end_time = TimeFrameIndex(std::max<int64_t>(end_time.getValue() - start_time.getValue(), 1));
 
     // Fold y_zoom and y_pan into projection via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
     // Shared projection matrix (time range + zoomed/panned Y to NDC)
     glm::mat4 const projection = CorePlotting::getAnalogProjectionMatrix(
-            start_time, end_time, eff.y_min, eff.y_max);
+            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
 
     // View matrix is identity — pan and zoom fully handled by projection
     glm::mat4 const view = glm::mat4(1.0f);
 
     // Create SceneBuilder and set bounds for spatial indexing
-    // Bounds are in world coordinates: X = [start_time, end_time], Y = [y_min, y_max]
+    // Bounds are view-local world coordinates: X = [0, visible duration], Y = [y_min, y_max]
     BoundingBox const scene_bounds(
-            static_cast<float>(start_time.getValue()),// min_x
-            static_cast<float>(view_state.y_min),     // min_y
-            static_cast<float>(end_time.getValue()),  // max_x
-            static_cast<float>(view_state.y_max)      // max_y
+            0.0f,                                    // min_x
+            static_cast<float>(view_state.y_min),    // min_y
+            static_cast<float>(local_end_time.getValue()),// max_x
+            static_cast<float>(view_state.y_max)     // max_y
     );
 
     CorePlotting::SceneBuilder builder;
@@ -1278,6 +1281,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         DataViewerHelpers::AnalogBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
+        batch_params.x_origin = start_time;
         batch_params.gap_threshold = opts->gap_threshold;
         batch_params.detect_gaps = (opts->gap_handling == AnalogGapHandlingMode::DetectGaps);
         batch_params.color = glm::vec4(
@@ -1389,6 +1393,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
         DataViewerHelpers::EventBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
+        batch_params.x_origin = start_time;
         batch_params.color = glm::vec4(
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
@@ -1476,6 +1481,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         DataViewerHelpers::IntervalBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
+        batch_params.x_origin = start_time;
         batch_params.color = glm::vec4(
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,

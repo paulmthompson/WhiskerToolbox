@@ -1,0 +1,62 @@
+---
+title: "Tensor Whitening"
+---
+
+## Purpose
+
+The **Tensor Whitening** transform applies robust **ZCA whitening** to a 2D
+`TensorData` object interpreted as **time x channels**.
+
+Use it when you want to decorrelate channels, normalize cross-channel covariance,
+and reduce common structure before downstream analysis or machine learning.
+
+## Input Requirements
+
+- Input must be a 2D tensor.
+- Rows are treated as samples in time.
+- Columns are treated as channels or features.
+- At least one channel must remain after exclusions.
+
+## Parameters
+
+| Name | Type | Description | Default |
+|---|---|---|---|
+| `mad_threshold_multiplier` | float | Reject high-amplitude samples when estimating the whitening covariance. Set `<= 0` to disable rejection. | `4.0` |
+| `exclude_channels` | array of integers | 0-based channel indices to leave unchanged. These channels are not used when estimating the whitening transform. | `[]` |
+| `rescale_amplitude` | boolean | Restore the whitened channels toward the original robust amplitude scale. | `true` |
+| `epsilon` | float | Small positive regularizer for numerical stability. | `1.0e-8` |
+| `use_gpu` | boolean | Request CUDA execution. If CUDA is not available, the transform runs on CPU instead. | `false` |
+
+## Notes
+
+- Excluded channels are copied to the output without modification.
+- Whitening is applied only to the included channels.
+- A small `epsilon` helps stabilize nearly singular covariance matrices.
+- Disabling `rescale_amplitude` gives a more literal unit-covariance output.
+
+## Minimal Example
+
+```json
+{
+  "transform": "TensorWhitening",
+  "input": "lfp_tensor",
+  "output": "lfp_tensor_whitened",
+  "params": {
+    "mad_threshold_multiplier": 4.0,
+    "exclude_channels": [0, 31],
+    "rescale_amplitude": true,
+    "epsilon": 1.0e-8,
+    "use_gpu": false
+  }
+}
+```
+
+## Typical Workflow
+
+1. Open the **Transform Widget**.
+2. Select a 2D tensor with channels in columns.
+3. Add **TensorWhitening** to the pipeline.
+4. Exclude any bad or reference channels.
+5. Run on CPU or GPU depending on your environment.
+
+For general pipeline editing, see [Transform Widget](transforms_v2_widget.qmd).

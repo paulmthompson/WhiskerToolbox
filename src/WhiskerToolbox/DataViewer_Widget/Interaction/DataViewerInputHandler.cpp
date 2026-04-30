@@ -6,7 +6,37 @@
 #include <QMouseEvent>
 #include <QWidget>
 
+#include <cstdint>
 #include <iostream>
+
+namespace {
+
+[[nodiscard]] float viewLocalX(float absolute_world_x, CorePlotting::ViewStateData const * view_state) {
+    if (!view_state) {
+        return absolute_world_x;
+    }
+    return absolute_world_x - static_cast<float>(static_cast<int64_t>(view_state->x_min));
+}
+
+[[nodiscard]] CorePlotting::HitTestResult toAbsoluteHitResult(
+        CorePlotting::HitTestResult result,
+        CorePlotting::ViewStateData const * view_state) {
+    if (!view_state || !result.hasHit()) {
+        return result;
+    }
+
+    int64_t const origin = static_cast<int64_t>(view_state->x_min);
+    result.world_x += static_cast<float>(origin);
+    if (result.interval_start.has_value()) {
+        result.interval_start = *result.interval_start + origin;
+    }
+    if (result.interval_end.has_value()) {
+        result.interval_end = *result.interval_end + origin;
+    }
+    return result;
+}
+
+}// namespace
 
 namespace DataViewer {
 
@@ -155,6 +185,7 @@ CorePlotting::HitTestResult DataViewerInputHandler::findIntervalEdgeAtPosition(
     // Use DataViewerCoordinates for coordinate conversion
     auto const coords = _ctx.makeCoordinates();
     float const world_x = coords.canvasXToWorldX(canvas_x);
+    float const local_world_x = viewLocalX(world_x, _ctx.view_state);
 
     // Configure hit tester with edge tolerance in world units
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
@@ -168,11 +199,12 @@ CorePlotting::HitTestResult DataViewerInputHandler::findIntervalEdgeAtPosition(
 
     // Use EntityId-based hit testing for interval edges
     static_cast<void>(canvas_y);// Y not used for edge detection
-    return tester.findIntervalEdgeByEntityId(
-            world_x,
+    auto result = tester.findIntervalEdgeByEntityId(
+            local_world_x,
             *_ctx.scene,
             *_ctx.selected_entities,
             *_ctx.rectangle_batch_key_map);
+    return toAbsoluteHitResult(result, _ctx.view_state);
 }
 
 CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
@@ -190,6 +222,7 @@ CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
     // Use DataViewerCoordinates for coordinate conversion
     auto const coords = _ctx.makeCoordinates();
     auto const [world_x, world_y] = coords.canvasToWorld(canvas_x, canvas_y);
+    float const local_world_x = viewLocalX(world_x, _ctx.view_state);
 
     // Configure hit tester with appropriate tolerances
     constexpr float TOLERANCE_PX = 10.0f;
@@ -204,14 +237,14 @@ CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
 
     // Check for intervals (body hits)
     CorePlotting::HitTestResult result = tester.queryIntervals(
-            world_x,
+            local_world_x,
             world_y,
             *_ctx.scene,
             *_ctx.rectangle_batch_key_map);
 
     // If we got an interval body hit, return it
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::IntervalBody) {
-        return result;
+        return toAbsoluteHitResult(result, _ctx.view_state);
     }
 
     return CorePlotting::HitTestResult::noHit();

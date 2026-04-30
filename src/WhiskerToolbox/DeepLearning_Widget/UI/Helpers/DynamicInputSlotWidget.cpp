@@ -8,11 +8,11 @@
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/channel_encoding/EncoderParamSchemas.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
-
-#include "DeepLearning/channel_encoding/EncoderParamSchemas.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 

@@ -9,6 +9,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 

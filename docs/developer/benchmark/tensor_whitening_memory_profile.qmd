@@ -1,0 +1,136 @@
+---
+title: "TensorWhitening Memory Profiling"
+format: html
+date: 2026-04-22
+---
+
+This page documents the ad-hoc executable used to profile the allocation
+behavior of `TensorWhitening` with heaptrack.
+
+The immediate goal is not to optimize yet. The goal is to establish a reproducible
+baseline for the current implementation so later heaptrack sessions can separate:
+
+- Armadillo-to-LibTorch conversion cost
+- float32 to float64 promotion cost
+- full-matrix clone cost
+- included-channel intermediate allocations
+- CPU-side peak memory versus GPU working-set pressure
+
+## Executable
+
+The profiling tool lives at `benchmark/adhoc/tensor_whitening_memory_profile.cpp`
+and builds to `bin/adhoc/tensor_whitening_memory_profile`.
+
+It generates a synthetic correlated `TensorData` with shape **rows x channels**,
+optionally preconverts the input to LibTorch storage, and then runs the
+production `TensorWhitening` transform on CPU and/or GPU.
+
+## Default Dataset
+
+The defaults match the large validation tensor that exposed the memory problem:
+
+- rows: `29,349,632`
+- columns: `32`
+- dtype: `float32`
+
+This corresponds to an input matrix of roughly **3.5 GiB** before any whitening
+intermediates are allocated.
+
+## Usage
+
+### Estimate only
+
+Use this first to print the expected full-buffer sizes without actually allocating
+the tensor.
+
+```bash
+./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile --estimate-only
+```
+
+### Small CPU smoke test
+
+```bash
+./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile --cpu-only --rows=65536
+```
+
+### CPU heaptrack baseline
+
+```bash
+heaptrack ./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile \
+  --cpu-only --rows=1048576
+```
+
+### GPU heaptrack baseline
+
+```bash
+heaptrack ./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile \
+  --gpu-only --rows=1048576
+```
+
+### Isolate conversion cost
+
+Run once with Armadillo input and once with explicit LibTorch preconversion:
+
+```bash
+./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile \
+  --cpu-only --rows=1048576
+
+./out/build/Clang/Release/bin/adhoc/tensor_whitening_memory_profile \
+  --cpu-only --rows=1048576 --preconvert-libtorch
+```
+
+## Supported Flags
+
+| Flag | Purpose |
+|------|---------|
+| `--cpu-only` | Run only the CPU whitening path |
+| `--gpu-only` | Run only the GPU whitening path |
+| `--rows=<count>` | Override the sample count |
+| `--cols=<count>` | Override the channel count |
+| `--exclude=0,31` | Exclude specific channels |
+| `--mad-threshold=<value>` | Override the MAD multiplier |
+| `--epsilon=<value>` | Override the eigensolver regularizer |
+| `--no-rescale` | Disable amplitude rescaling |
+| `--preconvert-libtorch` | Convert the input to LibTorch before entering the transform |
+| `--estimate-only` | Print rough memory estimates and exit |
+
+## What The Tool Prints
+
+For each run it prints:
+
+- rough full-buffer memory estimates
+- process RSS and HWM snapshots from `/proc/self/status`
+- input storage backend
+- whitening execution time
+- result storage backend
+
+This makes it easier to correlate heaptrack output with the transform stages.
+
+## Current Hypothesis
+
+The current implementation likely fails at large scale because it keeps multiple
+full-size matrix copies alive simultaneously:
+
+1. the original float32 tensor
+2. a LibTorch float32 copy or upload buffer
+3. `input64`
+4. `output64`
+5. `included`
+6. `centered`
+7. `whitened`
+8. the final float32 result
+
+For a 32 x 29,349,632 tensor, that is already enough to predict a peak far above
+the input size even before allocator fragmentation and LibTorch workspace overhead.
+
+## Next Profiling Questions
+
+The first heaptrack review should answer:
+
+1. Which allocations dominate peak RSS on CPU?
+2. How much of the peak comes from Armadillo-to-LibTorch conversion versus the
+   whitening math itself?
+3. Are the largest costs full-matrix allocations, or is there also meaningful
+   fragmentation from repeated smaller allocations?
+4. Which intermediate can be eliminated first: `output64`, `included`, `centered`,
+   or `whitened`?

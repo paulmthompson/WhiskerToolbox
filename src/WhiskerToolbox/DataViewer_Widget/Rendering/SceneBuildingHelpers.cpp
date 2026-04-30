@@ -58,7 +58,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchSimplified(
 
     // Use range-based mapper with indices for gap detection
     auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
-            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time);
+            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time, params.x_origin.getValue());
 
     if (params.detect_gaps) {
         // Use GapDetector for segmented rendering
@@ -118,7 +118,7 @@ CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
 
     // Use range-based mapper, materialize here
     auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeries(
-            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time);
+            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time, params.x_origin.getValue());
 
     // Materialize and convert to positions
     for (auto const & vertex: mapped_range) {
@@ -148,7 +148,7 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
 
     // Use range-based mapper - returns materialized vector for cross-TimeFrame support
     auto mapped_events = CorePlotting::TimeSeriesMapper::mapEventsInRange(
-            series, local_layout, *master_time_frame, params.start_time, params.end_time);
+            series, local_layout, *master_time_frame, params.start_time, params.end_time, params.x_origin.getValue());
 
     // Reserve space
     batch.positions.reserve(mapped_events.size());
@@ -181,7 +181,7 @@ CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
 
     // Use range-based mapper - returns materialized vector for cross-TimeFrame support
     auto mapped_intervals = CorePlotting::TimeSeriesMapper::mapIntervalsInRange(
-            series, local_layout, *master_time_frame, params.start_time, params.end_time);
+            series, local_layout, *master_time_frame, params.start_time, params.end_time, params.x_origin.getValue());
 
     // Reserve space
     //batch.bounds.reserve(mapped_intervals.size());
@@ -304,7 +304,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     }
 
     // Extract vertices for the requested range (using series timeframe indices)
-    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end);
+    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end, cache_start);
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)
