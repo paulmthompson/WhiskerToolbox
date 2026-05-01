@@ -52,7 +52,8 @@ enum class AnalogRenderMode {
 struct AnalogBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    /// Master-clock absolute time at view left; subtracted from plotted X (see TimeSeriesMapper).
+    int64_t x_origin_master_absolute_time{0};
     float gap_threshold{1.0f};///< Time index gap threshold for segment breaks
     bool detect_gaps{true};   ///< Whether to break lines at gaps
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
@@ -66,7 +67,7 @@ struct AnalogBatchParams {
 struct EventBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    int64_t x_origin_master_absolute_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float glyph_size{5.0f};
     CorePlotting::RenderableGlyphBatch::GlyphType glyph_type{
@@ -79,7 +80,7 @@ struct EventBatchParams {
 struct IntervalBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    int64_t x_origin_master_absolute_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 0.5f};
 };
 
@@ -213,7 +214,8 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         AnalogTimeSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         TimeFrameIndex start_time,
-        TimeFrameIndex end_time);
+        TimeFrameIndex end_time,
+        int64_t x_origin_master_absolute_time);
 
 }// namespace DataViewerHelpers
 

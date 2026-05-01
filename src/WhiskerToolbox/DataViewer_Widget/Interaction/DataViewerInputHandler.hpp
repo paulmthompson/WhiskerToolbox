@@ -27,12 +27,14 @@
 #include <QPoint>
 
 #include <functional>
+#include <map>
 #include <optional>
 #include <string>
 #include <unordered_set>
 
 class QMouseEvent;
 class QWidget;
+class TimeFrame;
 
 namespace DataViewer {
 
@@ -45,6 +47,7 @@ struct InputContext {
     CorePlotting::RenderableScene const * scene{nullptr};
     std::unordered_set<EntityId> const * selected_entities{nullptr};
     std::map<size_t, std::string> const * rectangle_batch_key_map{nullptr};
+    TimeFrame const * master_time_frame{nullptr};
     int widget_width{0};
     int widget_height{0};
 
@@ -54,7 +57,7 @@ struct InputContext {
      */
     [[nodiscard]] DataViewerCoordinates makeCoordinates() const {
         if (view_state) {
-            return DataViewerCoordinates(*view_state, widget_width, widget_height);
+            return DataViewerCoordinates(*view_state, widget_width, widget_height, master_time_frame);
         }
         return DataViewerCoordinates();
     }

@@ -134,6 +134,15 @@ struct RenderableScene {
     /// See `view_matrix` note on identity defaults.
     glm::mat4 projection_matrix{1.0f};
 
+    /**
+     * @brief Master-clock absolute time at the left edge of the visible window.
+     *
+     * When non-zero (or always set by DataViewer), polyline/glyph/interval batch X
+     * coordinates are expressed as @c (master_time - this_origin) for float precision.
+     * Hit testing and interval metadata must add this value back to recover absolute time.
+     */
+    int64_t time_axis_origin_master_absolute{0};
+
     // Spatial index for hit testing
     // Built alongside geometry to ensure synchronization
     // Uses same world-space coordinates as Model matrices

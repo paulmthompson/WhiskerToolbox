@@ -39,6 +39,8 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
 
+class TimeFrame;
+
 namespace DataViewer {
 
 /**
@@ -52,13 +54,18 @@ class DataViewerCoordinates {
 public:
     /**
      * @brief Construct from view state and dimensions
-     * 
+     *
      * @param view_state Current ViewStateData with time bounds and Y-axis state
      * @param width Canvas width in pixels
      * @param height Canvas height in pixels
+     * @param master_time_frame When non-null, @c x_min / @c x_max are interpreted as
+     *        @c TimeFrameIndex into this frame and the time axis uses
+     *        @c getTimeAtIndex for canvas/time mapping. When null, @c x_min / @c x_max
+     *        are used directly as integer time values (legacy index semantics).
      */
     DataViewerCoordinates(CorePlotting::ViewStateData const & view_state,
-                          int width, int height);
+                          int width, int height,
+                          TimeFrame const * master_time_frame = nullptr);
 
     /**
      * @brief Default constructor (creates identity-like transforms)

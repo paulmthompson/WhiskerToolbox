@@ -227,31 +227,6 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
         CHECK_THAT(flat[5], WithinAbs(40.0f, 0.01f));
     }
 
-    SECTION("Extract relative X range for large time indices") {
-        AnalogVertexCache large_time_cache;
-        large_time_cache.initialize(100);
-
-        std::vector<CachedAnalogVertex> large_vertices;
-        constexpr int64_t large_start = 14500000;
-        for (int i = 0; i < 10; ++i) {
-            auto const time = TimeFrameIndex{large_start + i};
-            large_vertices.push_back({static_cast<float>(large_start + i), static_cast<float>(i * 10), time});
-        }
-        large_time_cache.setVertices(
-                large_vertices,
-                TimeFrameIndex{large_start},
-                TimeFrameIndex{large_start + 10});
-
-        auto flat = large_time_cache.getVerticesForRange(
-                TimeFrameIndex{large_start},
-                TimeFrameIndex{large_start + 10},
-                TimeFrameIndex{large_start});
-
-        REQUIRE(flat.size() == 20);
-        CHECK_THAT(flat[0], WithinAbs(0.0f, 0.01f));
-        CHECK_THAT(flat[18], WithinAbs(9.0f, 0.01f));
-    }
-
     SECTION("Uncached range returns empty") {
         auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200});
         CHECK(flat.empty());

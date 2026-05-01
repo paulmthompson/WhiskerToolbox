@@ -3,6 +3,7 @@
 
 #include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <QString>
 #include <QStringList>
@@ -15,7 +16,6 @@ class OpenGLWidget;
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
-class TimeFrame;
 struct AnalogSeriesOptionsData;
 struct DigitalEventSeriesOptionsData;
 struct DigitalIntervalSeriesOptionsData;
@@ -97,48 +97,65 @@ public:
 private:
     /**
      * @brief Build a complete RenderableScene from current plot state.
-     * 
+     *
      * Iterates over all visible series and builds the appropriate batch types:
      * - Analog series → RenderablePolyLineBatch
-     * - Digital events → RenderableGlyphBatch  
+     * - Digital events → RenderableGlyphBatch
      * - Digital intervals → RenderableRectangleBatch
-     * 
-     * @param start_time Visible time range start
-     * @param end_time Visible time range end
+     *
+     * @param master_window_start Inclusive visible window start as a @c TimeFrameIndex into the
+     *        DataViewer master @c TimeFrame (same convention as @c ViewStateData::x_min).
+     * @param master_window_end Inclusive visible window end as a @c TimeFrameIndex into the
+     *        master @c TimeFrame (same convention as @c ViewStateData::x_max).
      * @return Complete scene ready for SVG rendering
      */
-    CorePlotting::RenderableScene buildScene(int start_time, int end_time) const;
+    CorePlotting::RenderableScene buildScene(
+            TimeFrameIndex master_window_start,
+            TimeFrameIndex master_window_end) const;
 
     /**
      * @brief Build a RenderablePolyLineBatch from an analog time series.
+     *
+     * @param master_window_start Inclusive query range start (master @c TimeFrame indices).
+     * @param master_window_end Inclusive query range end (master @c TimeFrame indices).
      */
     CorePlotting::RenderablePolyLineBatch buildAnalogBatch(
             std::shared_ptr<AnalogTimeSeries> const & series,
             CorePlotting::LayoutTransform const & layout_transform,
             CorePlotting::SeriesDataCache const & data_cache,
             AnalogSeriesOptionsData const & options,
-            int start_time,
-            int end_time) const;
+            TimeFrameIndex master_window_start,
+            TimeFrameIndex master_window_end) const;
 
     /**
      * @brief Build a RenderableGlyphBatch from a digital event series.
+     *
+     * @param master_window_start Inclusive query range start (master @c TimeFrame indices).
+     * @param master_window_end Inclusive query range end (master @c TimeFrame indices).
      */
     CorePlotting::RenderableGlyphBatch buildEventBatch(
             std::shared_ptr<DigitalEventSeries> const & series,
             CorePlotting::LayoutTransform const & layout_transform,
             DigitalEventSeriesOptionsData const & options,
-            int start_time,
-            int end_time) const;
+            TimeFrameIndex master_window_start,
+            TimeFrameIndex master_window_end) const;
 
     /**
      * @brief Build a RenderableRectangleBatch from a digital interval series.
+     *
+     * @param series The digital interval series data
+     * @param layout_transform The layout transform for the series
+     * @param options The options for the series
+     * @param master_window_start Inclusive query range start (master @c TimeFrame indices).
+     * @param master_window_end Inclusive query range end (master @c TimeFrame indices).
+     * @return A RenderableRectangleBatch for the series
      */
     CorePlotting::RenderableRectangleBatch buildIntervalBatch(
             std::shared_ptr<DigitalIntervalSeries> const & series,
             CorePlotting::LayoutTransform const & layout_transform,
             DigitalIntervalSeriesOptionsData const & options,
-            float start_time,
-            float end_time) const;
+            TimeFrameIndex master_window_start,
+            TimeFrameIndex master_window_end) const;
 
     OpenGLWidget * gl_widget_;
 
