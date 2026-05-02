@@ -2,6 +2,8 @@
 
 #include "SpatialIndex/QuadTree.hpp"
 
+#include <cmath>
+
 namespace CorePlotting {
 
 SceneHitTester::SceneHitTester() = default;
@@ -24,7 +26,7 @@ HitTestResult SceneHitTester::hitTest(
     // (In practice, the widget maintains this mapping when building the scene)
 
     // Strategy 3: Query series regions (always do this as fallback)
-    HitTestResult region_result = querySeriesRegion(world_x, world_y, layout);
+    HitTestResult region_result = querySeriesRegion(world_x, world_y, layout, scene.time_axis_origin_master_absolute);
 
     // If we have a discrete hit, it takes priority over region hits
     if (_config.prioritize_discrete && best_result.isDiscrete()) {
@@ -58,11 +60,13 @@ HitTestResult SceneHitTester::queryQuadTree(
         }
 
         // Create an event hit result
+        float const abs_x = static_cast<float>(
+                static_cast<double>(nearest->x) + static_cast<double>(scene.time_axis_origin_master_absolute));
         return HitTestResult::eventHit(
                 series_key,
                 nearest->data,// QuadTree<EntityId> stores EntityId in .data
                 dist,
-                nearest->x,
+                abs_x,
                 nearest->y);
     }
 
@@ -111,11 +115,16 @@ HitTestResult SceneHitTester::queryIntervals(
                     entity_id = batch.entity_ids[i];
                 }
 
+                int64_t const origin = scene.time_axis_origin_master_absolute;
+                auto const to_abs = [origin](float x) {
+                    return origin + static_cast<int64_t>(std::llround(static_cast<double>(x)));
+                };
+
                 auto result = HitTestResult::intervalBodyHit(
                         series_key,
                         entity_id,
-                        static_cast<int64_t>(rect_x),
-                        static_cast<int64_t>(rect_x + rect_w),
+                        to_abs(rect_x),
+                        to_abs(rect_x + rect_w),
                         dist);
 
                 best = selectBestHit(best, result);
@@ -158,8 +167,16 @@ HitTestResult SceneHitTester::findIntervalEdgeByEntityId(
             auto const & rect = batch.bounds[i];
             float rect_x = rect.x;
             float rect_w = rect.z;
-            float left_edge = rect_x;
-            float right_edge = rect_x + rect_w;
+            float const left_edge = rect_x;
+            float const right_edge = rect_x + rect_w;
+
+            int64_t const origin = scene.time_axis_origin_master_absolute;
+            auto const to_abs = [origin](float x) {
+                return origin + static_cast<int64_t>(std::llround(static_cast<double>(x)));
+            };
+            auto const edge_world_x_abs = [origin](float local_x) {
+                return static_cast<float>(static_cast<double>(local_x) + static_cast<double>(origin));
+            };
 
             // Check left edge
             float left_dist = std::abs(world_x - left_edge);
@@ -168,9 +185,9 @@ HitTestResult SceneHitTester::findIntervalEdgeByEntityId(
                         series_key,
                         entity_id,
                         true,// is_left_edge
-                        static_cast<int64_t>(rect_x),
-                        static_cast<int64_t>(right_edge),
-                        left_edge,
+                        to_abs(rect_x),
+                        to_abs(right_edge),
+                        edge_world_x_abs(left_edge),
                         left_dist);
                 best = selectBestHit(best, result);
             }
@@ -182,9 +199,9 @@ HitTestResult SceneHitTester::findIntervalEdgeByEntityId(
                         series_key,
                         entity_id,
                         false,// is_left_edge (right edge)
-                        static_cast<int64_t>(rect_x),
-                        static_cast<int64_t>(right_edge),
-                        right_edge,
+                        to_abs(rect_x),
+                        to_abs(right_edge),
+                        edge_world_x_abs(right_edge),
                         right_dist);
                 best = selectBestHit(best, result);
             }
@@ -197,13 +214,16 @@ HitTestResult SceneHitTester::findIntervalEdgeByEntityId(
 HitTestResult SceneHitTester::querySeriesRegion(
         float world_x,
         float world_y,
-        LayoutResponse const & layout) const {
+        LayoutResponse const & layout,
+        int64_t const master_time_axis_origin_absolute) const {
     auto series_result = findSeriesAtWorldY(world_y, layout);
 
     if (series_result.has_value()) {
+        float const absolute_world_x = static_cast<float>(
+                static_cast<double>(world_x) + static_cast<double>(master_time_axis_origin_absolute));
         return HitTestResult::analogSeriesHit(
                 series_result->series_key,
-                world_x,
+                absolute_world_x,
                 world_y,
                 series_result->is_within_bounds ? 0.0f : std::abs(series_result->series_local_y));
     }

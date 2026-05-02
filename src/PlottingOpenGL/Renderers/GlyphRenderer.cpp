@@ -39,7 +39,7 @@ bool GlyphRenderer::initialize() {
         m_point_vao.destroy();
         return false;
     }
-    
+
     // Create VBOs
     if (!m_geometry_vbo.create()) {
         m_instanced_vao.destroy();
@@ -100,14 +100,14 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
     auto current_geometry_type = m_current_glyph_type;
 
     // Render each batch separately (each may have different model matrix and glyph type)
-    for (auto const & batch : m_batches) {
+    for (auto const & batch: m_batches) {
         if (batch.positions.empty()) continue;
 
         // Compute MVP = Projection * View * Model (per-batch model matrix)
         glm::mat4 mvp = projection_matrix * view_matrix * batch.model_matrix;
 
         // Choose shader and VAO based on glyph type
-        bool is_point_mode = (batch.glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle);
+        bool const is_point_mode = (batch.glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle);
 
         if (is_point_mode) {
             // Use point shader and VAO
@@ -151,7 +151,7 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
             if (batch.glyph_type != current_geometry_type) {
                 m_current_glyph_type = batch.glyph_type;
                 createGlyphGeometry();
-                
+
                 // Re-upload geometry to VBO
                 if (!m_glyph_vertices.empty()) {
                     (void) m_geometry_vbo.bind();
@@ -184,7 +184,8 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
 
             switch (batch.glyph_type) {
                 case CorePlotting::RenderableGlyphBatch::GlyphType::Tick:
-                    // Draw vertical lines (2 vertices per tick, instanced)
+                case CorePlotting::RenderableGlyphBatch::GlyphType::TopLine:
+                    // Tick: vertical segment; TopLine: horizontal segment (both GL_LINES, 2 verts)
                     glExtra->glDrawArraysInstanced(GL_LINES, 0, m_glyph_vertex_count, instance_count);
                     break;
 
@@ -249,13 +250,13 @@ void GlyphRenderer::uploadData(CorePlotting::RenderableGlyphBatch const & batch)
     m_batches.push_back(std::move(batch_data));
 
     // Create glyph geometry if needed for non-Circle glyph types
-    bool needs_geometry = (batch.glyph_type != CorePlotting::RenderableGlyphBatch::GlyphType::Circle);
-    bool geometry_type_changed = (m_current_glyph_type != batch.glyph_type);
-    
+    bool const needs_geometry = (batch.glyph_type != CorePlotting::RenderableGlyphBatch::GlyphType::Circle);
+    bool const geometry_type_changed = (m_current_glyph_type != batch.glyph_type);
+
     if (needs_geometry && (m_glyph_vertices.empty() || geometry_type_changed)) {
         m_current_glyph_type = batch.glyph_type;
         createGlyphGeometry();
-        
+
         // Upload geometry to VBO
         if (!m_glyph_vertices.empty()) {
             (void) m_instanced_vao.bind();
@@ -285,9 +286,9 @@ bool GlyphRenderer::compileEmbeddedShaders() {
         return false;
     }
 
-    // Compile instanced shader for ticks, squares, crosses
+    // Compile instanced shader for ticks, top lines, squares, crosses
     if (!m_instanced_shader.createFromSource(GlyphShaders::INSTANCED_VERTEX_SHADER,
-                                              GlyphShaders::INSTANCED_FRAGMENT_SHADER)) {
+                                             GlyphShaders::INSTANCED_FRAGMENT_SHADER)) {
         std::cerr << "[GlyphRenderer] Failed to compile instanced shader" << std::endl;
         m_point_shader.destroy();
         return false;
@@ -299,8 +300,9 @@ bool GlyphRenderer::compileEmbeddedShaders() {
 void GlyphRenderer::createGlyphGeometry() {
     m_glyph_vertices.clear();
 
-    // Glyph shapes are defined in normalized coordinates [-0.5, 0.5]
-    // They will be scaled by u_glyph_size in the shader
+    // Glyph shapes are defined in normalized coordinates [-0.5, 0.5] per axis.
+    // Instanced vertex shader: world_pos = a_geometry * u_glyph_size + instance_pos.
+    // Tick: vertical (0, ±0.5); TopLine: horizontal (±0.5, 0); Cross combines both.
 
     switch (m_current_glyph_type) {
         case CorePlotting::RenderableGlyphBatch::GlyphType::Circle:
@@ -313,6 +315,15 @@ void GlyphRenderer::createGlyphGeometry() {
             m_glyph_vertices = {
                     0.0f, -0.5f,// Bottom
                     0.0f, 0.5f  // Top
+            };
+            m_glyph_vertex_count = 2;
+            break;
+
+        case CorePlotting::RenderableGlyphBatch::GlyphType::TopLine:
+            // Horizontal line from -0.5 to 0.5 on the local X axis
+            m_glyph_vertices = {
+                    -0.5f, 0.0f,// Left
+                    0.5f, 0.0f  // Right
             };
             m_glyph_vertex_count = 2;
             break;
@@ -359,7 +370,7 @@ void GlyphRenderer::setupPointVertexAttributes() {
     // For GL_POINTS mode:
     // - location 0: position (vec2) from instance_vbo
     // - location 1: color (vec4) from color_vbo
-    
+
     (void) m_instance_vbo.bind();
     gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
     gl->glEnableVertexAttribArray(0);
@@ -386,26 +397,26 @@ void GlyphRenderer::setupInstancedVertexAttributes() {
     // - location 0: geometry vertex (vec2) from geometry_vbo - per-vertex
     // - location 1: instance position (vec2) from instance_vbo - per-instance
     // - location 2: instance color (vec4) from color_vbo - per-instance
-    
+
     // Geometry attribute (per-vertex)
     (void) m_geometry_vbo.bind();
     gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     gl->glEnableVertexAttribArray(0);
-    glExtra->glVertexAttribDivisor(0, 0); // Per-vertex (not instanced)
+    glExtra->glVertexAttribDivisor(0, 0);// Per-vertex (not instanced)
     m_geometry_vbo.release();
 
     // Instance position attribute (per-instance)
     (void) m_instance_vbo.bind();
     gl->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
     gl->glEnableVertexAttribArray(1);
-    glExtra->glVertexAttribDivisor(1, 1); // Per-instance
+    glExtra->glVertexAttribDivisor(1, 1);// Per-instance
     m_instance_vbo.release();
 
     // Instance color attribute (per-instance)
     (void) m_color_vbo.bind();
     gl->glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
     gl->glEnableVertexAttribArray(2);
-    glExtra->glVertexAttribDivisor(2, 1); // Per-instance
+    glExtra->glVertexAttribDivisor(2, 1);// Per-instance
     m_color_vbo.release();
 
     m_instanced_vao.release();

@@ -1410,7 +1410,8 @@ void DataViewer_Widget::_loadSpikeToAnalogPairing() {
             dlg.analogGroupPrefix(),
             text.toStdString(),
             dlg.placementMode(),
-            config);
+            config,
+            dlg.useBoxGlyph());
 }
 
 void DataViewer_Widget::_loadSpikeToAnalogPairingFromText(QString const & digital_group,
@@ -1429,13 +1430,15 @@ void DataViewer_Widget::_applyAnalogPairing(std::string const & digital_group,
                                             std::string const & analog_group,
                                             std::string const & text,
                                             SpikeToAnalogPlacementMode mode,
-                                            SpikeToAnalogParseConfig const & config) {
+                                            SpikeToAnalogParseConfig const & config,
+                                            bool const overlay_render_digital_events_as_boxes) {
     auto const pairings = parseSpikeToAnalogCSV(text, config);
     if (pairings.empty()) {
         return;
     }
 
-    ui->openGLWidget->loadSpikeToAnalogPairing(digital_group, analog_group, pairings, mode, config);
+    ui->openGLWidget->loadSpikeToAnalogPairing(
+            digital_group, analog_group, pairings, mode, config, overlay_render_digital_events_as_boxes);
     ui->openGLWidget->updateCanvas();
 }
 

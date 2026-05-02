@@ -30,6 +30,8 @@
 #include <optional>
 #include <string>
 
+class TimeFrame;
+
 namespace DataViewer {
 
 /**
@@ -48,6 +50,7 @@ enum class InteractionMode {
 struct InteractionContext {
     CorePlotting::ViewStateData const * view_state{nullptr};
     CorePlotting::RenderableScene const * scene{nullptr};
+    TimeFrame const * master_time_frame{nullptr};
     int widget_width{0};
     int widget_height{0};
 
@@ -57,7 +60,7 @@ struct InteractionContext {
      */
     [[nodiscard]] DataViewerCoordinates makeCoordinates() const {
         if (view_state) {
-            return DataViewerCoordinates(*view_state, widget_width, widget_height);
+            return DataViewerCoordinates(*view_state, widget_width, widget_height, master_time_frame);
         }
         return DataViewerCoordinates();
     }

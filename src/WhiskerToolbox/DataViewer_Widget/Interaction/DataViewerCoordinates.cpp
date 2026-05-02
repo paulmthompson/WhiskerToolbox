@@ -1,13 +1,23 @@
 #include "DataViewerCoordinates.hpp"
 
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 namespace DataViewer {
 
 DataViewerCoordinates::DataViewerCoordinates(
         CorePlotting::ViewStateData const & view_state,
-        int width, int height)
-    : _time_params(static_cast<int64_t>(view_state.x_min), static_cast<int64_t>(view_state.x_max), width),
+        int width, int height,
+        TimeFrame const * master_time_frame)
+    : _time_params([&]() {
+          int64_t time_start = static_cast<int64_t>(view_state.x_min);
+          int64_t time_end = static_cast<int64_t>(view_state.x_max);
+          if (master_time_frame != nullptr) {
+              time_start = static_cast<int64_t>(master_time_frame->getTimeAtIndex(TimeFrameIndex{time_start}));
+              time_end = static_cast<int64_t>(master_time_frame->getTimeAtIndex(TimeFrameIndex{time_end}));
+          }
+          return CorePlotting::TimeAxisParams(time_start, time_end, width);
+      }()),
       _y_params([&]() {
           auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
           return CorePlotting::YAxisParams(eff.y_min, eff.y_max, height, 0.0f);

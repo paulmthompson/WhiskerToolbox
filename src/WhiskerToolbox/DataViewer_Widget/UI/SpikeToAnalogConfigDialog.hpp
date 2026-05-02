@@ -12,6 +12,7 @@
 
 #include "Ordering/SpikeToAnalogPairingLoader.hpp"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -83,10 +84,17 @@ public:
      */
     [[nodiscard]] std::string filePath() const;
 
+    /**
+     * @brief When placement is Overlay, true if user wants digital events as time-axis boxes.
+     */
+    [[nodiscard]] bool useBoxGlyph() const;
+
 private slots:
     void _onBrowseClicked();
 
 private:
+    void _syncOverlayBoxGlyphControl();
+
     QComboBox * _delimiter_combo{nullptr};
     QSpinBox * _digital_col_spin{nullptr};
     QSpinBox * _analog_col_spin{nullptr};
@@ -97,6 +105,7 @@ private:
     QLineEdit * _digital_prefix_edit{nullptr};
     QLineEdit * _analog_prefix_edit{nullptr};
     QComboBox * _placement_combo{nullptr};
+    QCheckBox * _overlay_box_glyph_check{nullptr};
     QLineEdit * _file_path_edit{nullptr};
     QPushButton * _browse_button{nullptr};
     QDialogButtonBox * _button_box{nullptr};

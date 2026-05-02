@@ -52,6 +52,31 @@
 #include <ranges>
 #include <unordered_map>
 
+namespace {
+
+[[nodiscard]] int64_t masterAbsoluteTimeAtViewStart(
+        std::shared_ptr<TimeFrame> const & master_tf,
+        CorePlotting::ViewStateData const & vs) {
+    if (!master_tf) {
+        return 0;
+    }
+    return static_cast<int64_t>(master_tf->getTimeAtIndex(
+            TimeFrameIndex{static_cast<int64_t>(vs.x_min)}));
+}
+
+[[nodiscard]] int64_t masterAbsoluteTimeSpanForOrtho(
+        std::shared_ptr<TimeFrame> const & master_tf,
+        TimeFrameIndex const start,
+        TimeFrameIndex const end) {
+    if (!master_tf) {
+        return std::max<int64_t>(end.getValue() - start.getValue(), 1);
+    }
+    auto const t0 = static_cast<int64_t>(master_tf->getTimeAtIndex(start));
+    auto const t1 = static_cast<int64_t>(master_tf->getTimeAtIndex(end));
+    return std::max<int64_t>(t1 - t0, 1);
+}
+
+}// namespace
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -276,6 +301,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     ctx.scene = &_cache_state.scene;
     ctx.selected_entities = &_selection_manager->selectedEntities();
     ctx.rectangle_batch_key_map = &_cache_state.rectangle_batch_key_map;
+    ctx.master_time_frame = _master_time_frame.get();
     ctx.widget_width = width();
     ctx.widget_height = height();
     _input_handler->setContext(ctx);
@@ -305,6 +331,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     ctx.scene = &_cache_state.scene;
     ctx.selected_entities = &_selection_manager->selectedEntities();
     ctx.rectangle_batch_key_map = &_cache_state.rectangle_batch_key_map;
+    ctx.master_time_frame = _master_time_frame.get();
     ctx.widget_width = width();
     ctx.widget_height = height();
     _input_handler->setContext(ctx);
@@ -779,7 +806,7 @@ void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> const & master_
 
 float OpenGLWidget::canvasXToTime(float canvas_x) const {
     // Use DataViewerCoordinates for coordinate transform
-    DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height());
+    DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height(), _master_time_frame.get());
     return coords.canvasXToTime(canvas_x);
 }
 
@@ -801,7 +828,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     auto const & view = _state->viewState();
 
     // Step 1: Create DataViewerCoordinates for coordinate conversion
-    DataViewer::DataViewerCoordinates const coords(view, width(), height());
+    DataViewer::DataViewerCoordinates const coords(view, width(), height(), _master_time_frame.get());
 
     // Step 2: Get layout from cached response
     auto const * series_layout = _cache_state.layout_response.findLayout(series_key);
@@ -1008,10 +1035,11 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Convert canvas coordinates to world coordinates via DataViewerCoordinates
     // (accounts for zoom and pan through effective viewport)
-    DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height());
+    DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height(), _master_time_frame.get());
     float const world_y = coords.canvasYToWorldY(canvas_y);
     float const world_x = coords.canvasXToWorldX(canvas_x);
-    float const local_world_x = world_x - static_cast<float>(static_cast<int64_t>(_state->viewState().x_min));
+    int64_t const origin_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, _state->viewState());
+    float const local_world_x = world_x - static_cast<float>(static_cast<double>(origin_abs));
 
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
@@ -1027,7 +1055,8 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             if (series_key.empty() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
                 // Try to find series key from glyph batch maps
                 // The QuadTree stores EntityId but not series key, so region query is fallback
-                auto region_result = _hit_tester.querySeriesRegion(local_world_x, world_y, _cache_state.layout_response);
+                auto region_result = _hit_tester.querySeriesRegion(
+                        local_world_x, world_y, _cache_state.layout_response, origin_abs);
                 if (region_result.hasHit()) {
                     series_key = region_result.series_key;
                 }
@@ -1056,7 +1085,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Fall back to series region query (always works, uses layout)
     CorePlotting::HitTestResult const result = _hit_tester.querySeriesRegion(
-            local_world_x, world_y, _cache_state.layout_response);
+            local_world_x, world_y, _cache_state.layout_response, origin_abs);
 
     if (result.hasHit()) {
         // Determine series type using data store
@@ -1115,7 +1144,8 @@ void OpenGLWidget::updateMatrices() {
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    auto const local_end_time = TimeFrameIndex(std::max<int64_t>(end_time.getValue() - start_time.getValue(), 1));
+    int64_t const span = masterAbsoluteTimeSpanForOrtho(_master_time_frame, start_time, end_time);
+    auto const local_end_time = TimeFrameIndex(span);
 
     // Fold both y_zoom and y_pan into the projection matrix via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1131,7 +1161,8 @@ void OpenGLWidget::rebuildScene() {
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    auto const local_end_time = TimeFrameIndex(std::max<int64_t>(end_time.getValue() - start_time.getValue(), 1));
+    int64_t const span = masterAbsoluteTimeSpanForOrtho(_master_time_frame, start_time, end_time);
+    auto const local_end_time = TimeFrameIndex(span);
 
     // Fold y_zoom and y_pan into projection via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1146,10 +1177,10 @@ void OpenGLWidget::rebuildScene() {
     // Create SceneBuilder and set bounds for spatial indexing
     // Bounds are view-local world coordinates: X = [0, visible duration], Y = [y_min, y_max]
     BoundingBox const scene_bounds(
-            0.0f,                                    // min_x
-            static_cast<float>(view_state.y_min),    // min_y
-            static_cast<float>(local_end_time.getValue()),// max_x
-            static_cast<float>(view_state.y_max)     // max_y
+            0.0f,                                // min_x
+            static_cast<float>(view_state.y_min),// min_y
+            static_cast<float>(span),            // max_x (master-clock span)
+            static_cast<float>(view_state.y_max) // max_y
     );
 
     CorePlotting::SceneBuilder builder;
@@ -1164,6 +1195,8 @@ void OpenGLWidget::rebuildScene() {
 
     // Build the scene (this also builds spatial index for discrete elements)
     _cache_state.scene = builder.build();
+    _cache_state.scene.time_axis_origin_master_absolute =
+            masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
     _cache_state.scene_dirty = false;
 
     // Store batch key maps for hit testing
@@ -1224,6 +1257,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1281,7 +1315,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         DataViewerHelpers::AnalogBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
-        batch_params.x_origin = start_time;
+        batch_params.x_origin_master_absolute_time = x_origin_master_abs;
         batch_params.gap_threshold = opts->gap_threshold;
         batch_params.detect_gaps = (opts->gap_handling == AnalogGapHandlingMode::DetectGaps);
         batch_params.color = glm::vec4(
@@ -1326,6 +1360,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1382,34 +1417,53 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
             }
         }
 
-        // Create model matrix from composed transform
-        glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
-
         // Parse color from state options
         int r, g, b;
         hexToRGB(opts->hex_color(), r, g, b);
-
-        // Build batch parameters from state options
-        DataViewerHelpers::EventBatchParams batch_params;
-        batch_params.start_time = start_time;
-        batch_params.end_time = end_time;
-        batch_params.x_origin = start_time;
-        batch_params.color = glm::vec4(
+        glm::vec4 const event_color{
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
                 static_cast<float>(b) / 255.0f,
-                opts->get_alpha());
+                opts->get_alpha()};
+
+        DataViewerHelpers::EventBatchParams batch_params;
+        batch_params.start_time = start_time;
+        batch_params.end_time = end_time;
+        batch_params.x_origin_master_absolute_time = x_origin_master_abs;
+        batch_params.color = event_color;
+
+        if (opts->glyph_shape == EventGlyphShapeData::Box) {
+            glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
+            auto rect_batch = DataViewerHelpers::buildEventSeriesBoxBatchSimplified(
+                    *series,
+                    _master_time_frame,
+                    batch_params,
+                    model_matrix,
+                    static_cast<float>(opts->box_width_ticks));
+            if (!rect_batch.bounds.empty()) {
+                builder.addRectangleBatch(std::move(rect_batch));
+            }
+            continue;
+        }
+
+        CorePlotting::LayoutTransform glyph_y_transform = y_transform;
+        if (opts->glyph_shape == EventGlyphShapeData::TopLine) {
+            glyph_y_transform.offset += glyph_y_transform.gain;
+        }
+        glm::mat4 const glyph_model_matrix = CorePlotting::createModelMatrix(glyph_y_transform);
+
         batch_params.glyph_size = DataViewer::computeEventGlyphSize(
                 y_transform,
                 lane_half_height,
                 opts->event_height,
                 opts->margin_factor,
                 opts->get_line_thickness());
-        batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
+        batch_params.glyph_type = (opts->glyph_shape == EventGlyphShapeData::TopLine)
+                                          ? CorePlotting::RenderableGlyphBatch::GlyphType::TopLine
+                                          : CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
-        // Build and add batch using simplified API
         auto batch = DataViewerHelpers::buildEventSeriesBatchSimplified(
-                *series, _master_time_frame, batch_params, model_matrix);
+                *series, _master_time_frame, batch_params, glyph_model_matrix);
 
         if (!batch.positions.empty()) {
             builder.addGlyphBatch(std::move(batch));
@@ -1425,6 +1479,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1481,7 +1536,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         DataViewerHelpers::IntervalBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
-        batch_params.x_origin = start_time;
+        batch_params.x_origin_master_absolute_time = x_origin_master_abs;
         batch_params.color = glm::vec4(
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
@@ -1577,7 +1632,8 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
                                             std::string const & analog_group,
                                             std::vector<SpikeToAnalogPairing> const & pairings,
                                             SpikeToAnalogPlacementMode mode,
-                                            SpikeToAnalogParseConfig const & config) {
+                                            SpikeToAnalogParseConfig const & config,
+                                            bool const overlay_render_digital_events_as_boxes) {
     if (pairings.empty()) {
         return;
     }
@@ -1695,6 +1751,16 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
             dig_override.lane_id = shared_lane_id;
             dig_override.overlay_mode = LaneOverlayMode::Overlay;
             _state->setSeriesLaneOverride(dig_key, dig_override);
+
+            if (overlay_render_digital_events_as_boxes) {
+                QString const qdig = QString::fromStdString(dig_key);
+                DigitalEventSeriesOptionsData ev_opts;
+                if (auto const * existing = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(qdig)) {
+                    ev_opts = *existing;
+                }
+                ev_opts.glyph_shape = EventGlyphShapeData::Box;
+                _state->seriesOptions().set(qdig, ev_opts);
+            }
         }
         return;
     }
@@ -1755,7 +1821,7 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
 
         spdlog::debug("SpikeToAnalog [{}]: {} \u2192 {}",
                       mode == SpikeToAnalogPlacementMode::AdjacentBelow ? "AdjacentBelow"
-                                                                         : "AdjacentAbove",
+                                                                        : "AdjacentAbove",
                       dig_key,
                       ana_key);
 

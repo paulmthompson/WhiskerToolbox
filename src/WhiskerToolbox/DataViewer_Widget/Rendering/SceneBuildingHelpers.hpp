@@ -52,7 +52,8 @@ enum class AnalogRenderMode {
 struct AnalogBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    /// Master-clock absolute time at view left; subtracted from plotted X (see TimeSeriesMapper).
+    int64_t x_origin_master_absolute_time{0};
     float gap_threshold{1.0f};///< Time index gap threshold for segment breaks
     bool detect_gaps{true};   ///< Whether to break lines at gaps
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
@@ -66,7 +67,7 @@ struct AnalogBatchParams {
 struct EventBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    int64_t x_origin_master_absolute_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float glyph_size{5.0f};
     CorePlotting::RenderableGlyphBatch::GlyphType glyph_type{
@@ -79,7 +80,7 @@ struct EventBatchParams {
 struct IntervalBatchParams {
     TimeFrameIndex start_time{0};
     TimeFrameIndex end_time{0};
-    TimeFrameIndex x_origin{0};///< View-origin time subtracted from rendered X coordinates
+    int64_t x_origin_master_absolute_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 0.5f};
 };
 
@@ -149,6 +150,25 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
+ * @brief Build a RenderableRectangleBatch from digital events drawn as time-axis boxes
+ *
+ * Each event becomes a rectangle spanning the full lane height in local Y ([-1, 1] → height 2)
+ * with X extent @p box_width_world centered on the event time (same X units as mapEventsInRange).
+ *
+ * @param series Event series
+ * @param master_time_frame Master clock for X mapping and range filtering
+ * @param params Time window, origin subtraction, and RGBA color (shared with glyph batch params)
+ * @param model_matrix Lane model matrix (same as glyph/interval batches for that series)
+ * @param box_width_world Full width along the time axis (e.g. option box_width_ticks as float)
+ */
+CorePlotting::RenderableRectangleBatch buildEventSeriesBoxBatchSimplified(
+        DigitalEventSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        EventBatchParams const & params,
+        glm::mat4 const & model_matrix,
+        float box_width_world);
+
+/**
  * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries
  * 
  * Converts intervals to rectangles with X coordinates from interval bounds
@@ -213,7 +233,8 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         AnalogTimeSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         TimeFrameIndex start_time,
-        TimeFrameIndex end_time);
+        TimeFrameIndex end_time,
+        int64_t x_origin_master_absolute_time);
 
 }// namespace DataViewerHelpers
 

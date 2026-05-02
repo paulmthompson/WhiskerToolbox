@@ -22,7 +22,7 @@ namespace PlottingOpenGL {
  * 
  * Rendering Strategy:
  *   - Uses instanced rendering (glDrawArraysInstanced)
- *   - Each glyph type (circle, square, tick, cross) has a predefined shape
+ *   - Each glyph type (circle, square, tick, top line, cross) has predefined CPU-side line or quad geometry
  *   - Position and color can vary per instance
  *   - Model matrix from the batch positions the entire batch in world space
  * 
@@ -34,7 +34,8 @@ namespace PlottingOpenGL {
  * Supported Glyph Types:
  *   - Circle: Point primitive (GL_POINTS) with gl_PointSize
  *   - Square: Quad rendered as two triangles
- *   - Tick: Vertical line segment
+ *   - Tick: Vertical line segment (local geometry along ±Y, scaled by batch.size)
+ *   - TopLine: Horizontal line segment (local geometry along ±X, scaled by batch.size)
  *   - Cross: Two perpendicular line segments
  * 
  * @see CorePlotting::RenderableGlyphBatch
@@ -109,24 +110,24 @@ public:
     [[nodiscard]] bool isUsingShaderManager() const { return m_use_shader_manager; }
 
 private:
-    bool loadShadersFromManager();
+    static bool loadShadersFromManager();
     bool compileEmbeddedShaders();
     void setupVertexAttributes();
-    void setupPointVertexAttributes();  // For GL_POINTS mode
-    void setupInstancedVertexAttributes();  // For instanced mode
+    void setupPointVertexAttributes();    // For GL_POINTS mode
+    void setupInstancedVertexAttributes();// For instanced mode
     void createGlyphGeometry();
 
     std::string m_shader_base_path;
     bool m_use_shader_manager{false};
-    
+
     // Embedded shaders: point shader for circles, instanced for other glyphs
-    GLShaderProgram m_point_shader;      // For GL_POINTS (circles)
-    GLShaderProgram m_instanced_shader;  // For instanced rendering (tick, square, cross)
-    
+    GLShaderProgram m_point_shader;    // For GL_POINTS (circles)
+    GLShaderProgram m_instanced_shader;// For instanced rendering (tick, square, cross)
+
     // Separate VAOs for different rendering modes
-    GLVertexArray m_point_vao;       // For GL_POINTS mode
-    GLVertexArray m_instanced_vao;   // For instanced rendering mode
-    
+    GLVertexArray m_point_vao;    // For GL_POINTS mode
+    GLVertexArray m_instanced_vao;// For instanced rendering mode
+
     GLBuffer m_geometry_vbo{GLBuffer::Type::Vertex};// Glyph shape vertices
     GLBuffer m_instance_vbo{GLBuffer::Type::Vertex};// Per-instance positions
     GLBuffer m_color_vbo{GLBuffer::Type::Vertex};   // Per-instance colors
@@ -150,14 +151,14 @@ private:
     // Combined instance data for GPU upload
     std::vector<glm::vec2> m_all_positions;
     std::vector<glm::vec4> m_all_colors;
-    
+
     // Default glyph settings (for setGlyphSize API and geometry creation)
     float m_glyph_size{5.0f};
     CorePlotting::RenderableGlyphBatch::GlyphType m_current_glyph_type{
             CorePlotting::RenderableGlyphBatch::GlyphType::Circle};
 
     bool m_initialized{false};
-    
+
     // Shader program name for ShaderManager
     static constexpr char const * SHADER_PROGRAM_NAME = "glyph_renderer";
 };
@@ -166,7 +167,7 @@ private:
  * @brief Embedded fallback shader source code for the glyph renderer.
  * 
  * These shaders support both GL_POINTS mode (for circles) and instanced
- * rendering mode (for ticks, squares, crosses).
+ * rendering mode (for ticks, top lines, squares, crosses).
  * 
  * Attribute layout for instanced rendering:
  *   - location 0: geometry vertex (per-vertex)
@@ -178,14 +179,17 @@ private:
 namespace GlyphShaders {
 
 /**
- * @brief Vertex shader for instanced glyph rendering (ticks, squares, crosses)
- * 
- * This shader combines per-vertex geometry with per-instance position offsets.
+ * @brief Vertex shader for instanced glyph rendering (ticks, top lines, squares, crosses)
+ *
+ * Per-vertex shape @c a_geometry is authored in normalized [-0.5, 0.5] space on the CPU
+ * (@c GlyphRenderer::createGlyphGeometry): Tick uses a vertical segment (Δx=0), TopLine a
+ * horizontal segment (Δy=0). Both multiply by @c u_glyph_size and add the instance anchor.
+ * There is no geometry shader; orientation is entirely encoded in the vertex buffer.
  */
 constexpr char const * INSTANCED_VERTEX_SHADER = R"(
 #version 410 core
 
-layout (location = 0) in vec2 a_geometry;       // Per-vertex glyph shape
+layout (location = 0) in vec2 a_geometry;       // Per-vertex glyph shape (tick vs top line vs …)
 layout (location = 1) in vec2 a_instance_pos;   // Per-instance position
 layout (location = 2) in vec4 a_instance_color; // Per-instance color
 
@@ -195,7 +199,7 @@ uniform float u_glyph_size;
 out vec4 v_color;
 
 void main() {
-    // Scale geometry by glyph size and add instance position
+    // world = normalized_shape * pixel_or_world_size + instance_anchor
     vec2 world_pos = a_geometry * u_glyph_size + a_instance_pos;
     gl_Position = u_mvp_matrix * vec4(world_pos, 0.0, 1.0);
     v_color = a_instance_color;

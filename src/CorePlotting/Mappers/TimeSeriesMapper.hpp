@@ -61,8 +61,41 @@ namespace CorePlotting {
  * - Interval display: temporal regions/epochs
  * 
  * All range-returning methods support zero-copy single-traversal consumption.
+ *
+ * ## Cross-@c TimeFrame contract (physical time vs indices)
+ *
+ * Callers are expected to construct @c TimeFrame objects so that @c getTimeAtIndex returns
+ * comparable physical-time scalars for the same instant across frames. Index equality is
+ * not preserved across frames: the same instant may be @c TimeFrameIndex @em 20 in one
+ * frame and @em 50 in another. Range filtering still uses @c convert_time_index where
+ * needed; plotted X for a sample uses that sample's own frame's @c getTimeAtIndex, then
+ * subtracts an origin computed the same way (scalar arithmetic in one physical axis).
  */
 namespace TimeSeriesMapper {
+
+namespace {
+
+/**
+ * @brief Physical-time scalar for an index into the data object's @c TimeFrame.
+ *
+ * @p index_into_data_frame is an index into @p data_time_frame when that pointer is
+ * non-null; @c data_time_frame->getTimeAtIndex is used. When @p data_time_frame is null,
+ * @p index_into_data_frame is interpreted as an index into @p query_time_frame.
+ *
+ * @note Per project convention, @c getTimeAtIndex values are comparable across
+ *       @c TimeFrame instances for the same instant; only indices differ between frames.
+ */
+[[nodiscard]] inline int64_t physicalTimeAtDataIndex(
+        TimeFrame const * data_time_frame,
+        TimeFrame const & query_time_frame,
+        TimeFrameIndex index_into_data_frame) {
+    if (data_time_frame != nullptr) {
+        return static_cast<int64_t>(data_time_frame->getTimeAtIndex(index_into_data_frame));
+    }
+    return static_cast<int64_t>(query_time_frame.getTimeAtIndex(index_into_data_frame));
+}
+
+}// namespace
 
 // ============================================================================
 // Event Mapping: DigitalEventSeries → MappedElement range
@@ -130,9 +163,9 @@ namespace TimeSeriesMapper {
 
     // views::all on an rvalue vector creates an owning_view
     return series.viewInRange(start_time, end_time, query_time_frame) |
-           std::views::transform([series_tf, y_center, x_origin_time](auto const & event) {
-               int64_t const absolute_time = series_tf->getTimeAtIndex(event.event_time);
-               float const x = static_cast<float>(absolute_time - x_origin_time);
+           std::views::transform([series_tf, y_center, x_origin_time, &query_time_frame](auto const & event) {
+               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, event.event_time);
+               float const x = static_cast<float>(abs_time - x_origin_time);
                return MappedElement{x, y_center, event.entity_id};
            });
 }
@@ -211,11 +244,11 @@ namespace TimeSeriesMapper {
     auto const * series_tf = series.getTimeFrame().get();
 
     // views::all on an rvalue vector creates an owning_view
-    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f, x_origin_time](auto const & interval_with_id) {
-               auto x_start = static_cast<float>(
-                       static_cast<int64_t>(series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.start))) - x_origin_time);
-               auto x_end = static_cast<float>(
-                       static_cast<int64_t>(series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.end))) - x_origin_time);
+    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f, x_origin_time, &query_time_frame](auto const & interval_with_id) {
+               auto const xa = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.start});
+               auto const xb = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.end});
+               auto x_start = static_cast<float>(static_cast<double>(xa) - static_cast<double>(x_origin_time));
+               auto x_end = static_cast<float>(static_cast<double>(xb) - static_cast<double>(x_origin_time));
 
                // Clip to visible range
                x_start = std::max(x_start, start_time_f);
@@ -271,11 +304,9 @@ namespace TimeSeriesMapper {
     auto const * series_tf = series.getTimeFrame().get();
 
     // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time](auto const & tv_point) {
-               // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
-               int64_t const absolute_time = series_tf ? series_tf->getTimeAtIndex(tv_point.time_frame_index)
-                                                       : tv_point.time_frame_index.getValue();
-               float x = static_cast<float>(absolute_time - x_origin_time);
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time, &query_time_frame](auto const & tv_point) {
+               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
+               float const x = static_cast<float>(static_cast<double>(abs_time) - static_cast<double>(x_origin_time));
                float y = tv_point.value() * y_scale + y_offset;
                return MappedVertex{x, y};
            });
@@ -338,11 +369,9 @@ namespace TimeSeriesMapper {
     auto const * series_tf = series.getTimeFrame().get();
 
     // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time](auto const & tv_point) {
-               // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
-               int64_t const absolute_time = series_tf ? series_tf->getTimeAtIndex(tv_point.time_frame_index)
-                                                       : tv_point.time_frame_index.getValue();
-               float x = static_cast<float>(absolute_time - x_origin_time);
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time, &query_time_frame](auto const & tv_point) {
+               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
+               float const x = static_cast<float>(static_cast<double>(abs_time) - static_cast<double>(x_origin_time));
                float y = tv_point.value() * y_scale + y_offset;
                return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
            });

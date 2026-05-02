@@ -335,12 +335,15 @@ public:
      *                      @c analog_key_one_based fields control how the numeric
      *                      suffix in series key names is interpreted when building
      *                      the channel-to-key lookup maps.
+     * @param overlay_render_digital_events_as_boxes If true and @p mode is Overlay,
+     *        set each affected digital event series' @c glyph_shape to Box in state.
      */
     void loadSpikeToAnalogPairing(std::string const & digital_group,
                                   std::string const & analog_group,
                                   std::vector<SpikeToAnalogPairing> const & pairings,
                                   SpikeToAnalogPlacementMode mode,
-                                  SpikeToAnalogParseConfig const & config = SpikeToAnalogParseConfig{});
+                                  SpikeToAnalogParseConfig const & config = SpikeToAnalogParseConfig{},
+                                  bool overlay_render_digital_events_as_boxes = false);
 
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());

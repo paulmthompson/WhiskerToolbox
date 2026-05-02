@@ -5,6 +5,7 @@
 
 #include "SpikeToAnalogConfigDialog.hpp"
 
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -124,6 +125,17 @@ SpikeToAnalogConfigDialog::SpikeToAnalogConfigDialog(QWidget * parent)
             "Overlay: spike series shares the analog series' lane band."));
     series_form->addRow(QStringLiteral("Placement mode:"), _placement_combo);
 
+    _overlay_box_glyph_check = new QCheckBox(
+            QStringLiteral("Render overlaid events as box markers"), this);
+    _overlay_box_glyph_check->setToolTip(QStringLiteral(
+            "When Placement is Overlay, draw each spike train as a box (time width from event options) "
+            "instead of tick marks. Other placement modes ignore this option."));
+    _overlay_box_glyph_check->setEnabled(false);
+    series_form->addRow(_overlay_box_glyph_check);
+
+    connect(_placement_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SpikeToAnalogConfigDialog::_syncOverlayBoxGlyphControl);
+
     layout->addLayout(series_form);
 
     // ── File path ───────────────────────────────────────────────────────────
@@ -152,6 +164,16 @@ SpikeToAnalogConfigDialog::SpikeToAnalogConfigDialog(QWidget * parent)
     connect(_browse_button, &QPushButton::clicked, this, &SpikeToAnalogConfigDialog::_onBrowseClicked);
     connect(_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    _syncOverlayBoxGlyphControl();
+}
+
+void SpikeToAnalogConfigDialog::_syncOverlayBoxGlyphControl() {
+    bool const overlay = (placementMode() == SpikeToAnalogPlacementMode::Overlay);
+    _overlay_box_glyph_check->setEnabled(overlay);
+    if (!overlay) {
+        _overlay_box_glyph_check->setChecked(false);
+    }
 }
 
 void SpikeToAnalogConfigDialog::_onBrowseClicked() {
@@ -208,4 +230,8 @@ SpikeToAnalogPlacementMode SpikeToAnalogConfigDialog::placementMode() const {
 
 std::string SpikeToAnalogConfigDialog::filePath() const {
     return _file_path_edit->text().toStdString();
+}
+
+bool SpikeToAnalogConfigDialog::useBoxGlyph() const {
+    return _overlay_box_glyph_check->isChecked();
 }
