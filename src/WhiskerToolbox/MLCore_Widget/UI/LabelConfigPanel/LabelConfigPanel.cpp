@@ -493,7 +493,7 @@ void LabelConfigPanel::_registerObservers() {
     // DataManager observer — refreshes interval and data key combos
     _dm_observer_id = _data_manager->addObserver([this]() {
         QTimer::singleShot(0, this, &LabelConfigPanel::refreshAll);
-    });
+    }, "LabelConfigPanel");
 
     // EntityGroupManager observer — refreshes group combos
     auto * group_mgr = _data_manager->getEntityGroupManager();

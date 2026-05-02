@@ -48,7 +48,7 @@ void ThreeDPlotWidget::setState(std::shared_ptr<ThreeDPlotState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "3DPlotWidget");
     }
 }
 

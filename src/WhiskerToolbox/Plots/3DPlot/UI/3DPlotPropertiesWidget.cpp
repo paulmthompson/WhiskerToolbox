@@ -39,7 +39,7 @@ ThreeDPlotPropertiesWidget::ThreeDPlotPropertiesWidget(std::shared_ptr<ThreeDPlo
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateAddDataComboBox();
-        });
+        }, "3DPlotPropertiesWidget");
     }
 
     // Connect UI signals to slots

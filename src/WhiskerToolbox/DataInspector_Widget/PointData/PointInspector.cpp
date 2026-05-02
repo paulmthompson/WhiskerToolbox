@@ -163,7 +163,7 @@ PointInspector::PointInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        });
+        }, "PointInspector");
     }
 
     // Initialize group filter combo box (always populate, even without group manager)

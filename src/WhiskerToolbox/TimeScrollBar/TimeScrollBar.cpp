@@ -124,7 +124,7 @@ TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager,
     if (_data_manager) {
         _data_manager_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        });
+        }, "TimeScrollBar - DataManager Changed from constructor");
         _populateTimeKeySelector();
     }
 }
@@ -611,7 +611,7 @@ void TimeScrollBar::setDataManager(std::shared_ptr<DataManager> data_manager) {
     if (_data_manager) {
         _data_manager_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        });
+        }, "TimeScrollBar - DataManager Changed from setDataManager");
         _populateTimeKeySelector();
     }
 }

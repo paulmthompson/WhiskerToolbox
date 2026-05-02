@@ -107,7 +107,7 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populatePointComboBox();
             _populateLineComboBox();
-        });
+        }, "TemporalProjectionViewPropertiesWidget");
     }
 
     // Connect state signals

@@ -64,7 +64,7 @@ LineInspector::LineInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        });
+        }, "LineInspector");
     }
 
     // Initialize group filter combo box

@@ -124,7 +124,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateAddEventComboBox();
-        });
+        }, "PSTHPropertiesWidget");
     }
 
     // Connect state signals to update UI

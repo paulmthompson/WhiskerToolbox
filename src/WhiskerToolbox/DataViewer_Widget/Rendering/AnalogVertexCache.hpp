@@ -220,6 +220,7 @@ public:
      * using the extent of @p vertices alone.
      *
      * @param vertices Vertices to prepend (may be empty; call is a no-op if so)
+     * @param requested_start Start time index of the requested range (inclusive)
      *
      * @pre vertices must be sorted in ascending order by time_idx
      *      (enforcement: none) [IMPORTANT]
@@ -236,7 +237,7 @@ public:
      * @post cachedStart() <= old cachedStart() (window expands or stays)
      * @post size() <= capacity()
      */
-    void prependVertices(std::vector<CachedAnalogVertex> const & vertices);
+    void prependVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_start);
 
     /**
      * @brief Add vertices to the back of the cache (for scrolling right)
@@ -249,6 +250,7 @@ public:
      * using the extent of @p vertices alone.
      *
      * @param vertices Vertices to append (may be empty; call is a no-op if so)
+     * @param requested_end End time index of the requested range (exclusive)
      *
      * @pre vertices must be sorted in ascending order by time_idx
      *      (enforcement: none) [IMPORTANT]
@@ -266,7 +268,7 @@ public:
      * @post cachedEnd() >= old cachedEnd() (window expands or stays)
      * @post size() <= capacity()
      */
-    void appendVertices(std::vector<CachedAnalogVertex> const & vertices);
+    void appendVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_end);
 
     /**
      * @brief Replace all cached vertices (for cache misses or initialization)

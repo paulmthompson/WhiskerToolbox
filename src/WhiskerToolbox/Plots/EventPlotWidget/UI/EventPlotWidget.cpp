@@ -163,7 +163,7 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "EventPlotWidget");
     }
 
     // Initialize axis ranges from current view state

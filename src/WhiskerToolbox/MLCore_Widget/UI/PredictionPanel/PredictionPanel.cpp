@@ -387,7 +387,7 @@ void PredictionPanel::_registerDataManagerObserver() {
 
     _dm_observer_id = _data_manager->addObserver([this]() {
         QTimer::singleShot(0, this, &PredictionPanel::refreshRegionList);
-    });
+    }, "PredictionPanel");
 }
 
 void PredictionPanel::_updateRegionInfo() {

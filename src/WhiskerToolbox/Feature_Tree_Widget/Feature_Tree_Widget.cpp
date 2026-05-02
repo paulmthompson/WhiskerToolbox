@@ -95,7 +95,7 @@ void Feature_Tree_Widget::setDataManager(std::shared_ptr<DataManager> data_manag
     // Register observer for data manager updates
     _observer_id = _data_manager->addObserver([this]() {
         _refreshFeatures();
-    });
+    }, "Feature_Tree_Widget");
 
     // Initial population
     _refreshFeatures();

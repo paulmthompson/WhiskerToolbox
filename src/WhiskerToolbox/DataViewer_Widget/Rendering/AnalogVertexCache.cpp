@@ -1,5 +1,7 @@
 #include "AnalogVertexCache.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cmath>
 #include <ranges>
@@ -7,6 +9,9 @@
 namespace DataViewer {
 
 void AnalogVertexCache::initialize(size_t capacity) {
+    if (m_capacity != capacity && m_capacity > 0) {
+        spdlog::debug("AnalogVertexCache: Cache wiped and re-initialized. Capacity changing from {} to {}", m_capacity, capacity);
+    }
     m_capacity = capacity;
     m_vertices.set_capacity(capacity);
     invalidate();
@@ -70,11 +75,9 @@ std::vector<MissingRange> AnalogVertexCache::getMissingRanges(TimeFrameIndex sta
     return result;
 }
 
-void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & vertices) {
-    if (vertices.empty()) {
-        return;
-    }
+void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_start) {
 
+    bool const was_empty = vertices.empty();
     // Insert at front - circular buffer handles overflow automatically
     // We need to insert in reverse order since push_front will reverse them
     for (auto vertice: std::ranges::reverse_view(vertices)) {
@@ -82,7 +85,7 @@ void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & 
     }
 
     // Update cached range
-    m_cached_start = vertices.front().time_idx;
+    m_cached_start = was_empty ? requested_start : vertices.front().time_idx;
     if (!m_valid) {
         m_cached_end = vertices.back().time_idx + TimeFrameIndex{1};
     }
@@ -94,24 +97,21 @@ void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & 
     }
 }
 
-void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & vertices) {
-    if (vertices.empty()) {
-        return;
-    }
+void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_end) {
+    bool const was_empty = vertices.empty();
 
-    // Insert at back - circular buffer handles overflow automatically
     for (auto const & v: vertices) {
         m_vertices.push_back(v);
     }
 
-    // Update cached range
-    m_cached_end = vertices.back().time_idx + TimeFrameIndex{1};
+    // Always update to the requested boundary so we don't infinitely query empty gaps
+    m_cached_end = requested_end;
+    
     if (!m_valid) {
-        m_cached_start = vertices.front().time_idx;
+        m_cached_start = was_empty ? requested_end : vertices.front().time_idx;
     }
     m_valid = true;
 
-    // Update start if buffer overflowed (oldest data was discarded)
     if (!m_vertices.empty()) {
         m_cached_start = m_vertices.front().time_idx;
     }

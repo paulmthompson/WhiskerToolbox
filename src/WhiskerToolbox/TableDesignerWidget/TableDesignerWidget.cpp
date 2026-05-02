@@ -150,7 +150,7 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     if (_data_manager) {
         _data_manager->addObserver([this]() {
             refreshAllDataSources();
-        });
+        }, "TableDesignerWidget");
     }
 
     qDebug() << "TableDesignerWidget initialized with TableViewerWidget for efficient pagination";

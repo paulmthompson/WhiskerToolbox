@@ -46,7 +46,7 @@ MaskInspector::MaskInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        });
+        }, "MaskInspector");
     }
 
     // Initialize group filter combo box

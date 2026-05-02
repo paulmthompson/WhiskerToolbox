@@ -79,7 +79,7 @@ void ACFWidget::setState(std::shared_ptr<ACFState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "ACFWidget");
     }
 }
 

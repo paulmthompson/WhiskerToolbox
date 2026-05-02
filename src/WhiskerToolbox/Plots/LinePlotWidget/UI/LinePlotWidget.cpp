@@ -101,7 +101,7 @@ void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "LinePlotWidget");
     }
 }
 

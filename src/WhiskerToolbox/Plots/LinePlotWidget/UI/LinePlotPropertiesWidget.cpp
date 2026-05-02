@@ -84,7 +84,7 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateAddSeriesComboBox();
-        });
+        }, "LinePlotPropertiesWidget");
     }
 
     // Connect state signals to update UI

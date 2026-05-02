@@ -95,7 +95,7 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _refreshDataSourceCombos();
-        });
+        }, "DeepLearningPropertiesWidget - Refresh Data Source Combos");
     }
 
     connect(_state.get(), &DeepLearningState::modelChanged, this, [this] {
@@ -980,7 +980,7 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
     // Register DataManager observer for live updates, store callback ID
     int dm_cb_id = -1;
     if (_data_manager) {
-        dm_cb_id = _data_manager->addObserver(populate_combo);
+        dm_cb_id = _data_manager->addObserver(populate_combo, "DeepLearningPropertiesWidget - Populate Interval Combo");
     }
     // Clean up observer when dialog closes
     QObject::connect(&dialog, &QObject::destroyed,
