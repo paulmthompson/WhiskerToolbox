@@ -502,9 +502,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>MissingRange<span class="op">&gt;</span> getMissingRanges<span class="op">(</span>TimeFrameIndex start<span class="op">,</span> TimeFrameIndex end<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
 <span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> prependVertices<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>CachedAnalogVertex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">);</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> prependVertices<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>CachedAnalogVertex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">,</span> TimeFrameIndex requested_start<span class="op">);</span></span>
 <span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> appendVertices<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>CachedAnalogVertex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">);</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> appendVertices<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>CachedAnalogVertex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">,</span> TimeFrameIndex requested_end<span class="op">);</span></span>
 <span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setVertices<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>CachedAnalogVertex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">,</span></span>
 <span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>                     TimeFrameIndex start<span class="op">,</span> TimeFrameIndex end<span class="op">);</span></span>
@@ -531,7 +531,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_WIDGET_ANALOGVERTEXCACHE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:54 +0000</p>
+<p>Updated on 2026-05-02 at 19:24:05 +0000</p>
 
 
 </section>

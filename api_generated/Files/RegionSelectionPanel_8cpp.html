@@ -724,7 +724,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>    _dm_observer_id <span class="op">=</span> _data_manager<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
 <span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use a queued invocation to avoid re-entrancy during DataManager mutations</span></span>
 <span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>RegionSelectionPanel<span class="op">::</span>refreshRegionList<span class="op">);</span></span>
-<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="st">"RegionSelectionPanel"</span><span class="op">);</span></span>
 <span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> RegionSelectionPanel<span class="op">::</span>_syncToState<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
@@ -755,7 +755,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _state<span class="op">-&gt;</span>predictionRegionKey<span class="op">();</span></span>
 <span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:55 +0000</p>
+<p>Updated on 2026-05-02 at 19:24:05 +0000</p>
 
 
 </section>

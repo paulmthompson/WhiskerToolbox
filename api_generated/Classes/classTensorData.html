@@ -684,6 +684,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="additional-inherited-members" class="level2">
 <h2 class="anchored" data-anchor-id="additional-inherited-members">Additional inherited members</h2>
+<p><strong>Public Classes inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structObserverData_1_1ObserverEntry.html">ObserverEntry</a></strong> <br>Entry in the observer map.</td>
+</tr>
+</tbody>
+</table>
 <p><strong>Public Types inherited from <a href="../../api_generated/Classes/classObserverData.html">ObserverData</a></strong></p>
 <table class="caption-top table">
 <thead>
@@ -714,11 +729,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>() =default</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>(std::string name =“UnnamedObservable”)</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></td>
-<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback)<br>Register a new observer callback.</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback, std::string name =“Anonymous”)<br>Register a new observer callback.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -1466,7 +1481,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Each column is backed by a type-erased provider function that computes the column data on demand. Results are cached per-column and can be invalidated to trigger recomputation.</p>
 <p><a href="../../api_generated/Classes/classColumn.html">Column</a> names are taken from the <a href="../../api_generated/Classes/structColumnSource.html#variable-name">ColumnSource::name</a> fields. Row semantics are specified by the <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a>.</p>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:49 +0000</p>
+<p>Updated on 2026-05-02 at 19:23:59 +0000</p>
 
 
 </section>

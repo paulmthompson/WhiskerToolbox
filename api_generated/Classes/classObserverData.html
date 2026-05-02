@@ -347,6 +347,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#observerdata" id="toc-observerdata" class="nav-link active" data-scroll-target="#observerdata">ObserverData</a>
   <ul class="collapse">
+  <li><a href="#public-classes" id="toc-public-classes" class="nav-link" data-scroll-target="#public-classes">Public Classes</a></li>
   <li><a href="#public-types" id="toc-public-types" class="nav-link" data-scroll-target="#public-types">Public Types</a></li>
   <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
@@ -394,6 +395,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Manages observer callbacks for implementing the observer pattern. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;Observer_Data.hpp&gt;</code></p>
 <p>Inherited by <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries&lt; Line2D &gt;</a>, <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries&lt; Mask2D &gt;</a>, <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries&lt; Point2D&lt; float &gt; &gt;</a>, <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>, <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>, <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>, <a href="../../api_generated/Classes/classMediaData.html">MediaData</a>, <a href="../../api_generated/Classes/classRaggedAnalogTimeSeries.html">RaggedAnalogTimeSeries</a>, <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries&lt; TData &gt;</a>, <a href="../../api_generated/Classes/classTensorData.html">TensorData</a></p>
+<section id="public-classes" class="level2">
+<h2 class="anchored" data-anchor-id="public-classes">Public Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structObserverData_1_1ObserverEntry.html">ObserverEntry</a></strong> <br>Entry in the observer map.</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="public-types" class="level2">
 <h2 class="anchored" data-anchor-id="public-types">Public Types</h2>
 <table class="caption-top table">
@@ -427,11 +445,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>() =default</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-observerdata">ObserverData</a></strong>(std::string name =“UnnamedObservable”)</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/classObserverData.html#using-callbackid">CallbackID</a></td>
-<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback)<br>Register a new observer callback.</td>
+<td><strong><a href="../../api_generated/Classes/classObserverData.html#function-addobserver">addObserver</a></strong>(<a href="../../api_generated/Classes/classObserverData.html#using-observercallback">ObserverCallback</a> callback, std::string name =“Anonymous”)<br>Register a new observer callback.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -485,17 +503,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-observerdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-observerdata">function ObserverData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ObserverData<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">explicit</span> ObserverData<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name <span class="op">=</span><span class="st">"UnnamedObservable"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-addobserver" class="level3">
 <h3 class="anchored" data-anchor-id="function-addobserver">function addObserver</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>CallbackID addObserver<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ObserverCallback callback</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ObserverCallback callback<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name <span class="op">=</span><span class="st">"Anonymous"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register a new observer callback.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>callback</strong> The callback function to invoke on notifications. Must be a valid callable (non-empty std::function).</li>
+<li><strong>name</strong> The name of the observer. This is used for debugging and logging.</li>
 </ul>
 <p><strong>Return</strong>: A unique identifier for this observer registration. Use this ID to remove the observer later via <a href="../../api_generated/Classes/classObserverData.html#function-removeobserver">removeObserver()</a>.</p>
 <p><strong>Note</strong>: The returned ID should be stored if you intend to remove the observer later. Discarding the ID makes removal impossible.</p>
@@ -520,7 +542,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Removes the observer associated with the given ID. After removal, the callback will no longer be invoked during <a href="../../api_generated/Classes/classObserverData.html#function-notifyobservers">notifyObservers()</a>.</p>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:49 +0000</p>
+<p>Updated on 2026-05-02 at 19:23:59 +0000</p>
 
 
 </section>

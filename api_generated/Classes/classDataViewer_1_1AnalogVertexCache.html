@@ -452,11 +452,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-prependvertices">prependVertices</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">CachedAnalogVertex</a> &gt; const &amp; vertices)<br>Add vertices to the front of the cache (for scrolling left)</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-prependvertices">prependVertices</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">CachedAnalogVertex</a> &gt; const &amp; vertices, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> requested_start)<br>Add vertices to the front of the cache (for scrolling left)</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-appendvertices">appendVertices</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">CachedAnalogVertex</a> &gt; const &amp; vertices)<br>Add vertices to the back of the cache (for scrolling right)</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-appendvertices">appendVertices</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">CachedAnalogVertex</a> &gt; const &amp; vertices, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> requested_end)<br>Add vertices to the back of the cache (for scrolling right)</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -624,12 +624,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-prependvertices" class="level3">
 <h3 class="anchored" data-anchor-id="function-prependvertices">function prependVertices</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> prependVertices<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> CachedAnalogVertex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> CachedAnalogVertex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex requested_start</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add vertices to the front of the cache (for scrolling left)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>vertices</strong> Vertices to prepend (may be empty; call is a no-op if so)</li>
+<li><strong>requested_start</strong> Start time index of the requested range (inclusive)</li>
 </ul>
 <p><strong>Precondition</strong>:</p>
 <ul>
@@ -650,12 +652,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-appendvertices" class="level3">
 <h3 class="anchored" data-anchor-id="function-appendvertices">function appendVertices</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> appendVertices<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> CachedAnalogVertex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> CachedAnalogVertex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> vertices<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex requested_end</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add vertices to the back of the cache (for scrolling right)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>vertices</strong> Vertices to append (may be empty; call is a no-op if so)</li>
+<li><strong>requested_end</strong> End time index of the requested range (exclusive)</li>
 </ul>
 <p><strong>Precondition</strong>:</p>
 <ul>
@@ -749,7 +753,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-utilizationratio">function utilizationRatio</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> utilizationRatio<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
+<p>Updated on 2026-05-02 at 19:24:01 +0000</p>
 
 
 </section>

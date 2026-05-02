@@ -619,7 +619,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> removeCallbackFromData<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> <span class="dt">int</span> callback_id<span class="op">);</span></span>
 <span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> addObserver<span class="op">(</span>ObserverCallback callback<span class="op">);</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> addObserver<span class="op">(</span>ObserverCallback callback<span class="op">,</span> <span class="bu">std::</span>string name <span class="op">=</span> <span class="st">"Anonymous"</span><span class="op">);</span></span>
 <span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeObserver<span class="op">(</span><span class="dt">int</span> callback_id<span class="op">);</span></span>
 <span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a></span>
@@ -760,7 +760,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-209"><a href="#cb8-209" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
 <span id="cb8-210"><a href="#cb8-210" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span>TimeKey<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;&gt;</span> _times<span class="op">;</span></span>
 <span id="cb8-211"><a href="#cb8-211" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a>    ObserverData _manager_observers<span class="op">;</span></span>
+<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a>    ObserverData _manager_observers <span class="op">=</span> ObserverData<span class="op">(</span><span class="st">"DataManager"</span><span class="op">);</span></span>
 <span id="cb8-213"><a href="#cb8-213" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-214"><a href="#cb8-214" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> DataTypeVariant<span class="op">&gt;</span></span>
 <span id="cb8-215"><a href="#cb8-215" aria-hidden="true" tabindex="-1"></a>            _data<span class="op">;</span></span>
@@ -827,7 +827,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-276"><a href="#cb8-276" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-277"><a href="#cb8-277" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAMANAGER_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-02 at 04:02:52 +0000</p>
+<p>Updated on 2026-05-02 at 19:24:03 +0000</p>
 
 
 </section>
