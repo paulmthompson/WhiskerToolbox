@@ -163,6 +163,39 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
     return batch;
 }
 
+CorePlotting::RenderableRectangleBatch buildEventSeriesBoxBatchSimplified(
+        DigitalEventSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        EventBatchParams const & params,
+        glm::mat4 const & model_matrix,
+        float const box_width_world) {
+
+    CorePlotting::RenderableRectangleBatch batch;
+    batch.model_matrix = model_matrix;
+
+    if (!master_time_frame) {
+        return batch;
+    }
+
+    auto const local_layout = makeLocalSpaceLayout();
+    auto mapped_events = CorePlotting::TimeSeriesMapper::mapEventsInRange(
+            series, local_layout, *master_time_frame, params.start_time, params.end_time, params.x_origin_master_absolute_time);
+
+    float const half_width = box_width_world * 0.5f;
+    if (half_width <= 0.0f) {
+        return batch;
+    }
+
+    for (auto const & event: mapped_events) {
+        // Bottom-left (x, y), full local lane height: y = -1, height = 2 → [-1, +1]
+        batch.bounds.emplace_back(event.x - half_width, -1.0f, box_width_world, 2.0f);
+        batch.colors.push_back(params.color);
+        batch.entity_ids.push_back(event.entity_id);
+    }
+
+    return batch;
+}
+
 CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
         DigitalIntervalSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,

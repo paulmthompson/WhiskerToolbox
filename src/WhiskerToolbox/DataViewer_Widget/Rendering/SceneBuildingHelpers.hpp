@@ -150,6 +150,25 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
+ * @brief Build a RenderableRectangleBatch from digital events drawn as time-axis boxes
+ *
+ * Each event becomes a rectangle spanning the full lane height in local Y ([-1, 1] → height 2)
+ * with X extent @p box_width_world centered on the event time (same X units as mapEventsInRange).
+ *
+ * @param series Event series
+ * @param master_time_frame Master clock for X mapping and range filtering
+ * @param params Time window, origin subtraction, and RGBA color (shared with glyph batch params)
+ * @param model_matrix Lane model matrix (same as glyph/interval batches for that series)
+ * @param box_width_world Full width along the time axis (e.g. option box_width_ticks as float)
+ */
+CorePlotting::RenderableRectangleBatch buildEventSeriesBoxBatchSimplified(
+        DigitalEventSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        EventBatchParams const & params,
+        glm::mat4 const & model_matrix,
+        float box_width_world);
+
+/**
  * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries
  * 
  * Converts intervals to rectangles with X coordinates from interval bounds

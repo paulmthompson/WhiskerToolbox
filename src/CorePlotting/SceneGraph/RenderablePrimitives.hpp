@@ -72,6 +72,7 @@ struct RenderableGlyphBatch {
         Circle,
         Square,
         Tick,
+        TopLine,///< Horizontal segment through the glyph center (screen-space extent via size)
         Cross
     };
     GlyphType glyph_type{GlyphType::Circle};

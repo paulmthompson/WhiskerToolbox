@@ -1,6 +1,6 @@
 /**
  * @file SVGGlyphRenderer.test.cpp
- * @brief Tests for PlottingSVG::SVGGlyphRenderer (tick, circle, square, cross).
+ * @brief Tests for PlottingSVG::SVGGlyphRenderer (tick, top line, circle, square, cross).
  */
 
 #include <catch2/catch_test_macros.hpp>
@@ -70,6 +70,42 @@ TEST_CASE("SVGGlyphRenderer Tick draws ±size/2 from glyph center",
     // y=+0.5 → svg_y = 100*(1-0.5)/2 = 25 (upper)
     REQUIRE_THAT(elements[0], ContainsSubstring("y1=\"75\""));
     REQUIRE_THAT(elements[0], ContainsSubstring("y2=\"25\""));
+}
+
+TEST_CASE("SVGGlyphRenderer TopLine produces line element",
+          "[PlottingSVG][SVGGlyphRenderer]") {
+    auto batch = makeSingleGlyphBatch(GlyphType::TopLine);
+    glm::mat4 const I{1.0f};
+
+    auto const elements = PlottingSVG::SVGGlyphRenderer::render(batch, I, I, 200, 200);
+    REQUIRE(elements.size() == 1);
+    REQUIRE_THAT(elements[0], ContainsSubstring("<line"));
+    REQUIRE_THAT(elements[0], ContainsSubstring(R"(stroke="#FF0000")"));
+    REQUIRE_THAT(elements[0], ContainsSubstring("stroke-opacity=\"0.8\""));
+}
+
+TEST_CASE("SVGGlyphRenderer TopLine draws ±size/2 along X from glyph center",
+          "[PlottingSVG][SVGGlyphRenderer]") {
+    CorePlotting::RenderableGlyphBatch batch;
+    batch.positions = {glm::vec2{0.0f, 0.0f}};
+    batch.colors = {glm::vec4{1.0f, 0.0f, 0.0f, 0.8f}};
+    batch.glyph_type = GlyphType::TopLine;
+    batch.size = 1.0f;// ±0.5 in world (fits within NDC with identity MVP)
+    batch.model_matrix = glm::mat4{1.0f};
+
+    glm::mat4 const I{1.0f};
+    int const W = 100;
+    int const H = 100;
+
+    auto const elements = PlottingSVG::SVGGlyphRenderer::render(batch, I, I, W, H);
+    REQUIRE(elements.size() == 1);
+
+    // pos.x=0, half_size=0.5, so left=(-0.5,0), right=(+0.5,0)
+    // svg_x = W*(ndc_x+1)/2 → 25 and 75; y=0 → svg_y=50 for both
+    REQUIRE_THAT(elements[0], ContainsSubstring("x1=\"25\""));
+    REQUIRE_THAT(elements[0], ContainsSubstring("x2=\"75\""));
+    REQUIRE_THAT(elements[0], ContainsSubstring("y1=\"50\""));
+    REQUIRE_THAT(elements[0], ContainsSubstring("y2=\"50\""));
 }
 
 TEST_CASE("SVGGlyphRenderer Circle produces circle element",

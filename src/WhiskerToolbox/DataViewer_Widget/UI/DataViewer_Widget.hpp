@@ -186,12 +186,16 @@ private slots:
      *
      * Called by both @c _loadSpikeToAnalogPairing (interactive, full config) and
      * @c _loadSpikeToAnalogPairingFromText (test slot, default config).
+     *
+     * @param overlay_render_digital_events_as_boxes If true and mode is Overlay, set each
+     *        paired digital series to @c EventGlyphShapeData::Box in series options.
      */
     void _applyAnalogPairing(std::string const & digital_group,
                              std::string const & analog_group,
                              std::string const & text,
                              SpikeToAnalogPlacementMode mode,
-                             SpikeToAnalogParseConfig const & config);
+                             SpikeToAnalogParseConfig const & config,
+                             bool overlay_render_digital_events_as_boxes = false);
 
 public slots:
     /**

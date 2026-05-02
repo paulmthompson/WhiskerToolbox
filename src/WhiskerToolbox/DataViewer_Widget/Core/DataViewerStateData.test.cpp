@@ -136,6 +136,8 @@ TEST_CASE("DigitalEventSeriesOptionsData serialization", "[DataViewerStateData]"
         REQUIRE(data.hex_color() == "#007bff");
         REQUIRE(data.get_is_visible() == true);
         REQUIRE(data.plotting_mode == EventPlottingModeData::FullCanvas);
+        REQUIRE(data.glyph_shape == EventGlyphShapeData::Tick);
+        REQUIRE(data.box_width_ticks == 10);
         REQUIRE(data.vertical_spacing == Approx(0.1f));
         REQUIRE(data.event_height == Approx(0.05f));
         REQUIRE(data.margin_factor == Approx(0.95f));
@@ -150,11 +152,23 @@ TEST_CASE("DigitalEventSeriesOptionsData serialization", "[DataViewerStateData]"
         REQUIRE(json.find("\"Stacked\"") != std::string::npos);
     }
 
+    SECTION("EventGlyphShapeData enum serializes as string") {
+        DigitalEventSeriesOptionsData opts;
+        opts.glyph_shape = EventGlyphShapeData::Box;
+
+        auto json = rfl::json::write(opts);
+
+        REQUIRE(json.find("\"Box\"") != std::string::npos);
+        REQUIRE(json.find("\"glyph_shape\":0") == std::string::npos);
+    }
+
     SECTION("Full event options round-trip") {
         DigitalEventSeriesOptionsData opts;
         opts.hex_color() = "#ff9500";
         opts.alpha() = 0.7f;
         opts.plotting_mode = EventPlottingModeData::Stacked;
+        opts.glyph_shape = EventGlyphShapeData::TopLine;
+        opts.box_width_ticks = 24;
         opts.vertical_spacing = 0.2f;
         opts.event_height = 0.1f;
         opts.margin_factor = 0.9f;
@@ -167,9 +181,26 @@ TEST_CASE("DigitalEventSeriesOptionsData serialization", "[DataViewerStateData]"
         REQUIRE(data.hex_color() == "#ff9500");
         REQUIRE(data.get_alpha() == Approx(0.7f));
         REQUIRE(data.plotting_mode == EventPlottingModeData::Stacked);
+        REQUIRE(data.glyph_shape == EventGlyphShapeData::TopLine);
+        REQUIRE(data.box_width_ticks == 24);
         REQUIRE(data.vertical_spacing == Approx(0.2f));
         REQUIRE(data.event_height == Approx(0.1f));
         REQUIRE(data.margin_factor == Approx(0.9f));
+    }
+
+    SECTION("All EventGlyphShapeData values round-trip") {
+        for (auto shape: {EventGlyphShapeData::Tick, EventGlyphShapeData::TopLine, EventGlyphShapeData::Box}) {
+            DigitalEventSeriesOptionsData opts;
+            opts.glyph_shape = shape;
+            opts.box_width_ticks = 7;
+
+            auto json = rfl::json::write(opts);
+            auto result = rfl::json::read<DigitalEventSeriesOptionsData>(json);
+
+            REQUIRE(result);
+            REQUIRE(result.value().glyph_shape == shape);
+            REQUIRE(result.value().box_width_ticks == 7);
+        }
     }
 }
 
@@ -572,6 +603,8 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         DigitalEventSeriesOptionsData event1;
         event1.hex_color() = "#ff9500";
         event1.plotting_mode = EventPlottingModeData::Stacked;
+        event1.glyph_shape = EventGlyphShapeData::Box;
+        event1.box_width_ticks = 16;
         state.event_options["spikes_1"] = event1;
 
         // Add interval series options
@@ -652,6 +685,8 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.event_options.size() == 1);
         REQUIRE(data.event_options.at("spikes_1").hex_color() == "#ff9500");
         REQUIRE(data.event_options.at("spikes_1").plotting_mode == EventPlottingModeData::Stacked);
+        REQUIRE(data.event_options.at("spikes_1").glyph_shape == EventGlyphShapeData::Box);
+        REQUIRE(data.event_options.at("spikes_1").box_width_ticks == 16);
 
         // Verify interval options
         REQUIRE(data.interval_options.size() == 1);

@@ -117,6 +117,18 @@ enum class EventPlottingModeData {
 };
 
 /**
+ * @brief Visual glyph shape for digital event markers in data coordinates / screen space
+ *
+ * Serializes as "Tick", "TopLine", or "Box" automatically. Used by the renderer to choose
+ * the event pipeline (tick/top line vs. data-width box overlay).
+ */
+enum class EventGlyphShapeData {
+    Tick,   ///< Standard vertical line at the event time
+    TopLine,///< Horizontal line at the top of the lane (screen-space extent)
+    Box     ///< Filled or outlined box; X extent is box_width_ticks in data coordinates
+};
+
+/**
  * @brief Serializable display options for digital event series
  */
 struct DigitalEventSeriesOptionsData {
@@ -124,9 +136,11 @@ struct DigitalEventSeriesOptionsData {
 
     // Event-specific settings
     EventPlottingModeData plotting_mode = EventPlottingModeData::FullCanvas;
-    float vertical_spacing = 0.1f;///< Vertical spacing for stacked mode
-    float event_height = 0.05f;   ///< Height of individual events
-    float margin_factor = 0.95f;  ///< Margin factor (0.95 = 95% of allocated space)
+    EventGlyphShapeData glyph_shape = EventGlyphShapeData::Tick;///< Marker shape for events
+    int box_width_ticks = 10;                                   ///< Box extent along the time axis in ticks (EventGlyphShapeData::Box only)
+    float vertical_spacing = 0.1f;                              ///< Vertical spacing for stacked mode
+    float event_height = 0.05f;                                 ///< Height of individual events
+    float margin_factor = 0.95f;                                ///< Margin factor (0.95 = 95% of allocated space)
 
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }

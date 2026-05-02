@@ -42,8 +42,8 @@ namespace {
     if (!master_tf) {
         return std::max<int64_t>(end.getValue() - start.getValue(), 1);
     }
-    int64_t const t0 = static_cast<int64_t>(master_tf->getTimeAtIndex(start));
-    int64_t const t1 = static_cast<int64_t>(master_tf->getTimeAtIndex(end));
+    auto const t0 = static_cast<int64_t>(master_tf->getTimeAtIndex(start));
+    auto const t1 = static_cast<int64_t>(master_tf->getTimeAtIndex(end));
     return std::max<int64_t>(t1 - t0, 1);
 }
 
@@ -164,14 +164,26 @@ CorePlotting::RenderableScene SVGExporter::buildScene(
     for (auto const & [key, event_data]: event_series_map) {
         auto const * opts = state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
         if (opts && opts->get_is_visible()) {
-            auto batch = buildEventBatch(
-                    event_data.series,
-                    event_data.layout_transform,
-                    *opts,
-                    master_window_start,
-                    master_window_end);
-            if (!batch.positions.empty()) {
-                scene.glyph_batches.push_back(std::move(batch));
+            if (opts->glyph_shape == EventGlyphShapeData::Box) {
+                auto batch = buildEventBoxBatch(
+                        event_data.series,
+                        event_data.layout_transform,
+                        *opts,
+                        master_window_start,
+                        master_window_end);
+                if (!batch.bounds.empty()) {
+                    scene.rectangle_batches.push_back(std::move(batch));
+                }
+            } else {
+                auto batch = buildEventBatch(
+                        event_data.series,
+                        event_data.layout_transform,
+                        *opts,
+                        master_window_start,
+                        master_window_end);
+                if (!batch.positions.empty()) {
+                    scene.glyph_batches.push_back(std::move(batch));
+                }
             }
         }
     }
@@ -270,8 +282,12 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
         lane_half_height = layout.y_transform.gain;
     }
 
-    // Create model matrix from composed transform
-    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
+    CorePlotting::LayoutTransform glyph_y_transform = y_transform;
+    if (options.glyph_shape == EventGlyphShapeData::TopLine) {
+        glyph_y_transform.offset += glyph_y_transform.gain;
+    }
+
+    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(glyph_y_transform);
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -280,7 +296,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
             static_cast<float>(r) / 255.0f,
             static_cast<float>(g) / 255.0f,
             static_cast<float>(b) / 255.0f,
-            1.0f);
+            options.get_alpha());
 
     // Set up batch params
     DataViewerHelpers::EventBatchParams batch_params;
@@ -296,7 +312,9 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
             options.event_height,
             options.margin_factor,
             static_cast<float>(options.get_line_thickness()));
-    batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
+    batch_params.glyph_type = (options.glyph_shape == EventGlyphShapeData::TopLine)
+                                      ? CorePlotting::RenderableGlyphBatch::GlyphType::TopLine
+                                      : CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
     // Use simplified API (takes pre-composed model matrix)
     auto batch = DataViewerHelpers::buildEventSeriesBatchSimplified(
@@ -309,6 +327,53 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     batch.colors.resize(batch.positions.size(), color);
 
     return batch;
+}
+
+CorePlotting::RenderableRectangleBatch SVGExporter::buildEventBoxBatch(
+        std::shared_ptr<DigitalEventSeries> const & series,
+        CorePlotting::LayoutTransform const & layout_transform,
+        DigitalEventSeriesOptionsData const & options,
+        TimeFrameIndex const master_window_start,
+        TimeFrameIndex const master_window_end) const {
+
+    auto const view_state = gl_widget_->getViewState();
+    auto const y_min = static_cast<float>(view_state.y_min);
+    auto const y_max = static_cast<float>(view_state.y_max);
+
+    CorePlotting::SeriesLayout const layout{
+            "",
+            layout_transform,
+            0};
+
+    CorePlotting::LayoutTransform const y_transform =
+            (options.plotting_mode == EventPlottingModeData::FullCanvas)
+                    ? DataViewer::composeEventFullCanvasYTransform(y_min, y_max, options.margin_factor)
+                    : DataViewer::composeEventYTransform(layout, options.margin_factor, gl_widget_->state()->globalYScale());
+
+    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
+
+    int r, g, b;
+    hexToRGB(options.hex_color(), r, g, b);
+    glm::vec4 const color(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            options.get_alpha());
+
+    DataViewerHelpers::EventBatchParams batch_params;
+    batch_params.start_time = master_window_start;
+    batch_params.end_time = master_window_end;
+    if (auto const mtf = gl_widget_->getMasterTimeFrame()) {
+        batch_params.x_origin_master_absolute_time = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+    }
+    batch_params.color = color;
+
+    return DataViewerHelpers::buildEventSeriesBoxBatchSimplified(
+            *series,
+            gl_widget_->getMasterTimeFrame(),
+            batch_params,
+            model_matrix,
+            static_cast<float>(options.box_width_ticks));
 }
 
 CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(

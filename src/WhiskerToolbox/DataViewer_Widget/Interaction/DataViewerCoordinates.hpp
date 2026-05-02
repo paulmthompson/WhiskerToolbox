@@ -5,8 +5,7 @@
  * @file DataViewerCoordinates.hpp
  * @brief Coordinate transformation utilities for the DataViewer widget
  * 
- * This class consolidates coordinate transformation logic that was previously
- * duplicated across OpenGLWidget, DataViewerInputHandler, and DataViewerInteractionManager.
+ * This class consolidates coordinate transformation logic 
  * 
  * It provides a unified interface for converting between:
  * - Canvas coordinates (pixels, origin at top-left)

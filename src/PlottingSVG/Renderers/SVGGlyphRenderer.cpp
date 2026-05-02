@@ -1,6 +1,6 @@
 /**
  * @file SVGGlyphRenderer.cpp
- * @brief `RenderableGlyphBatch` → tick / circle / square / cross SVG primitives.
+ * @brief `RenderableGlyphBatch` → tick / top line / circle / square / cross SVG primitives.
  */
 
 #include "PlottingSVG/Renderers/SVGGlyphRenderer.hpp"
@@ -57,6 +57,22 @@ SVGGlyphRenderer::render(CorePlotting::RenderableGlyphBatch const & batch,
 
                 element << R"(<line x1=")" << svg_bottom.x << R"(" y1=")" << svg_bottom.y
                         << R"(" x2=")" << svg_top.x << R"(" y2=")" << svg_top.y
+                        << R"(" stroke=")" << color_hex
+                        << R"(" stroke-width="1" stroke-opacity=")" << alpha << R"("/>)";
+                break;
+            }
+            case CorePlotting::RenderableGlyphBatch::GlyphType::TopLine: {
+                // Horizontal segment through the glyph center; ±size/2 along world X.
+                float const half_size = batch.size / 2.0f;
+                glm::vec4 const left_vertex(pos.x - half_size, pos.y, 0.0f, 1.0f);
+                glm::vec4 const right_vertex(pos.x + half_size, pos.y, 0.0f, 1.0f);
+                glm::vec2 const svg_left =
+                        transformVertexToSVG(left_vertex, mvp, canvas_width, canvas_height);
+                glm::vec2 const svg_right =
+                        transformVertexToSVG(right_vertex, mvp, canvas_width, canvas_height);
+
+                element << R"(<line x1=")" << svg_left.x << R"(" y1=")" << svg_left.y
+                        << R"(" x2=")" << svg_right.x << R"(" y2=")" << svg_right.y
                         << R"(" stroke=")" << color_hex
                         << R"(" stroke-width="1" stroke-opacity=")" << alpha << R"("/>)";
                 break;

@@ -1,12 +1,13 @@
 #include "EventViewer_Widget.hpp"
 #include "ui_EventViewer_Widget.h"
 
+#include "DataManager/DataManager.hpp"
 #include "DataViewer_Widget/Core/DataViewerState.hpp"
 #include "DataViewer_Widget/Rendering/OpenGLWidget.hpp"
 
-#include "DataManager/DataManager.hpp"
-
 #include <QColorDialog>
+#include <QSignalBlocker>
+
 #include <iostream>
 
 EventViewer_Widget::EventViewer_Widget(std::shared_ptr<DataManager> data_manager, OpenGLWidget * opengl_widget, QWidget * parent)
@@ -32,6 +33,12 @@ EventViewer_Widget::EventViewer_Widget(std::shared_ptr<DataManager> data_manager
             this, &EventViewer_Widget::_setVerticalSpacing);
     connect(ui->height_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &EventViewer_Widget::_setEventHeight);
+    connect(ui->glyph_shape_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &EventViewer_Widget::_setGlyphShape);
+    connect(ui->box_width_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &EventViewer_Widget::_setBoxWidth);
+
+    _updateBoxWidthControlsForGlyphShape(EventGlyphShapeData::Tick);
 }
 
 EventViewer_Widget::~EventViewer_Widget() {
@@ -57,11 +64,22 @@ void EventViewer_Widget::setActiveKey(std::string const & key) {
             ui->mode_combo->setCurrentIndex(static_cast<int>(opts->plotting_mode));
             ui->spacing_spinbox->setValue(static_cast<double>(opts->vertical_spacing));
             ui->height_spinbox->setValue(static_cast<double>(opts->event_height));
+
+            QSignalBlocker const glyph_block{ui->glyph_shape_combo};
+            QSignalBlocker const box_block{ui->box_width_spinbox};
+            ui->glyph_shape_combo->setCurrentIndex(static_cast<int>(opts->glyph_shape));
+            ui->box_width_spinbox->setValue(opts->box_width_ticks);
+            _updateBoxWidthControlsForGlyphShape(opts->glyph_shape);
         } else {
             _updateColorDisplay("#FF0000");    // Default red
             ui->mode_combo->setCurrentIndex(0);// Default to Stacked
             ui->spacing_spinbox->setValue(0.1);// Default spacing
             ui->height_spinbox->setValue(0.05);// Default height
+            QSignalBlocker const glyph_block{ui->glyph_shape_combo};
+            QSignalBlocker const box_block{ui->box_width_spinbox};
+            ui->glyph_shape_combo->setCurrentIndex(static_cast<int>(EventGlyphShapeData::Tick));
+            ui->box_width_spinbox->setValue(10);
+            _updateBoxWidthControlsForGlyphShape(EventGlyphShapeData::Tick);
         }
     }
 
@@ -155,4 +173,42 @@ void EventViewer_Widget::_setEventHeight(double height) {
             _opengl_widget->update();
         }
     }
+}
+
+void EventViewer_Widget::_setGlyphShape(int const shape_index) {
+    if (_active_key.empty()) {
+        return;
+    }
+    if (shape_index < 0 || shape_index > static_cast<int>(EventGlyphShapeData::Box)) {
+        return;
+    }
+    auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(QString::fromStdString(_active_key));
+    if (!opts) {
+        return;
+    }
+    opts->glyph_shape = static_cast<EventGlyphShapeData>(shape_index);
+    _updateBoxWidthControlsForGlyphShape(opts->glyph_shape);
+    _opengl_widget->update();
+}
+
+void EventViewer_Widget::_setBoxWidth(int const ticks) {
+    if (_active_key.empty()) {
+        return;
+    }
+    auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(QString::fromStdString(_active_key));
+    if (!opts || opts->glyph_shape != EventGlyphShapeData::Box) {
+        return;
+    }
+    opts->box_width_ticks = ticks;
+    _opengl_widget->update();
+}
+
+/**
+ * @brief Toggle visibility of box-width controls to match the selected marker shape
+ */
+void EventViewer_Widget::_updateBoxWidthControlsForGlyphShape(EventGlyphShapeData const shape) {
+    bool const show_box_width = (shape == EventGlyphShapeData::Box);
+    ui->box_width_label->setVisible(show_box_width);
+    ui->box_width_spinbox->setVisible(show_box_width);
+    ui->box_width_spinbox->setEnabled(show_box_width);
 }

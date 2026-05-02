@@ -1,6 +1,8 @@
 #ifndef EVENTVIEWER_WIDGET_HPP
 #define EVENTVIEWER_WIDGET_HPP
 
+#include "DataViewer_Widget/Core/DataViewerStateData.hpp"
+
 #include <QWidget>
 
 #include <string>
@@ -26,34 +28,52 @@ signals:
 
 private slots:
     void _openColorDialog();
-    void _setEventColor(const QString& hex_color);
+    void _setEventColor(QString const & hex_color);
     void _setEventAlpha(int alpha);
-    
+
     /**
      * @brief Set the display mode for the active event series
      * @param mode_index Index from combo box (0=Stacked, 1=FullCanvas)
      */
     void _setDisplayMode(int mode_index);
-    
+
     /**
      * @brief Set the vertical spacing between stacked event series
      * @param spacing Spacing value in normalized coordinates
      */
     void _setVerticalSpacing(double spacing);
-    
+
     /**
      * @brief Set the height of individual event lines in stacked mode
      * @param height Height value in normalized coordinates
      */
     void _setEventHeight(double height);
 
+    /**
+     * @brief Set event marker shape from glyph_shape_combo index
+     * @param shape_index Matches EventGlyphShapeData (0=Tick, 1=TopLine, 2=Box)
+     */
+    void _setGlyphShape(int shape_index);
+
+    /**
+     * @brief Persist box width along the time axis in sample ticks (Box marker only)
+     * @param ticks Full width of the box in time ticks
+     */
+    void _setBoxWidth(int ticks);
+
 private:
     void _updateColorDisplay(QString const & hex_color);
-    
+
+    /**
+     * @brief Show and enable box-width controls only when shape is Box
+     * @param shape Current glyph shape for the active series UI
+     */
+    void _updateBoxWidthControlsForGlyphShape(EventGlyphShapeData shape);
+
     Ui::EventViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
     std::string _active_key;
 };
 
-#endif// EVENTVIEWER_WIDGET_HPP 
+#endif// EVENTVIEWER_WIDGET_HPP

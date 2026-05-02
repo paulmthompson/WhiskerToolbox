@@ -141,6 +141,16 @@ private:
             TimeFrameIndex master_window_end) const;
 
     /**
+     * @brief Build event markers as filled rectangles (box glyph) for SVG export.
+     */
+    CorePlotting::RenderableRectangleBatch buildEventBoxBatch(
+            std::shared_ptr<DigitalEventSeries> const & series,
+            CorePlotting::LayoutTransform const & layout_transform,
+            DigitalEventSeriesOptionsData const & options,
+            TimeFrameIndex master_window_start,
+            TimeFrameIndex master_window_end) const;
+
+    /**
      * @brief Build a RenderableRectangleBatch from a digital interval series.
      *
      * @param series The digital interval series data
