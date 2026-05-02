@@ -47,7 +47,7 @@ DataInspectorPropertiesWidget::DataInspectorPropertiesWidget(
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        });
+        }, "DataInspectorPropertiesWidget");
     }
 }
 

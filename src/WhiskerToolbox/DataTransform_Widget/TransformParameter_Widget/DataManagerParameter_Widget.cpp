@@ -29,7 +29,7 @@ void DataManagerParameter_Widget::setDataManager(std::shared_ptr<DataManager> dm
                 if (!self) return;
                 self->onDataManagerDataChanged();
             }, Qt::QueuedConnection);
-        });
+        }, "DataManagerParameter_Widget");
     } else {
         _connected_dm = nullptr;
     }

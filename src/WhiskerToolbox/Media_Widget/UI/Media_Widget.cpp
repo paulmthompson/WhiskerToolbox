@@ -104,7 +104,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 
     _data_manager->addObserver([this]() {
         _createOptions();
-    });
+    }, "Media_Widget");
 
     // Wire up the scene to the graphics view immediately so that
     // data overlays render without requiring a separate media load.

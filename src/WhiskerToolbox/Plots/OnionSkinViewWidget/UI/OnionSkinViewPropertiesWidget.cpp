@@ -178,7 +178,7 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             _populateLineComboBox();
             _populateMaskComboBox();
             _purgeStaleKeys();
-        });
+        }, "OnionSkinViewPropertiesWidget");
     }
 
     // Connect state signals

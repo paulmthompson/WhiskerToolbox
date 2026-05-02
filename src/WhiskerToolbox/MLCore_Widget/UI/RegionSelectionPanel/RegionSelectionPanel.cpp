@@ -343,7 +343,7 @@ void RegionSelectionPanel::_registerDataManagerObserver() {
     _dm_observer_id = _data_manager->addObserver([this]() {
         // Use a queued invocation to avoid re-entrancy during DataManager mutations
         QTimer::singleShot(0, this, &RegionSelectionPanel::refreshRegionList);
-    });
+    }, "RegionSelectionPanel");
 }
 
 void RegionSelectionPanel::_syncToState(std::string const & key) {

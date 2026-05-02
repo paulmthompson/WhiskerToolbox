@@ -230,7 +230,7 @@ void Whisker_Widget::openWidget() {
     _data_manager->addObserver([this]() {
         _populateWhiskerPadCombo();
         _populateMaskCombo();
-    });
+    }, "Whisker_Widget");
 
     _createNewWhiskerPad();
 

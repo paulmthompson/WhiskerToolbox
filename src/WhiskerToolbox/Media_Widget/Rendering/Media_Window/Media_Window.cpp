@@ -58,7 +58,7 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 
     _data_manager->addObserver([this]() {
         _addRemoveData();
-    });
+    }, "Media_Window");
 
     _canvasImage = QImage(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));

@@ -81,7 +81,7 @@ void OnionSkinViewWidget::setState(std::shared_ptr<OnionSkinViewState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "OnionSkinViewWidget");
     }
 }
 

@@ -221,9 +221,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                 }
             });
 
-    // Note: Layout computation is now handled by OpenGLWidget's internal LayoutEngine
-    // (Phase 4.9 migration - unified layout system)
-
     // Set up observer to automatically clean up data when it's deleted from DataManager
     // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
     _data_manager->addObserver([this]() {
@@ -231,7 +228,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         QMetaObject::invokeMethod(self, [self]() {
             if (!self) return;
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
-    });
+    }, "DataViewer_Widget");
 
     // We should always get the master clock because we plot
     // Check for master clock

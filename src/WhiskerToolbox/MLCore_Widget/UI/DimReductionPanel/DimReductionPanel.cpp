@@ -897,7 +897,7 @@ void DimReductionPanel::_registerDataManagerObserver() {
                 if (isSupervisedMode()) {
                     refreshLabelSources();
                 }
-            });
+            }, "DimReductionPanel");
 
     // Register group observer for group-based label modes
     auto * group_mgr = _data_manager->getEntityGroupManager();

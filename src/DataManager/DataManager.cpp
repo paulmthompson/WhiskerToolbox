@@ -329,6 +329,7 @@ bool tryBatchLoadFromRegistry(
 }
 
 DataManager::DataManager() {
+
     _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<EmptyMediaData>();
 
@@ -540,8 +541,8 @@ bool DataManager::removeCallbackFromData(std::string const & key, int callback_i
     return false;
 }
 
-int DataManager::addObserver(ObserverCallback callback) {
-    return _manager_observers.addObserver(std::move(callback));
+int DataManager::addObserver(ObserverCallback callback, std::string name) {
+    return _manager_observers.addObserver(std::move(callback), std::move(name));
 }
 
 void DataManager::removeObserver(int callback_id) {

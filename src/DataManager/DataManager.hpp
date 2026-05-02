@@ -186,11 +186,11 @@ public:
     * such as when data is added or modified.
     *
     * @param callback The function to call when the DataManager state changes
-    *
-    * @note Unlike addCallbackToData, this function doesn't return an ID,
-    *       so callbacks cannot be selectively removed later
+    * @param name The name of the observer. This is used for debugging and logging.
+    * @return int A unique identifier for the observer registration. Use this ID
+    *         to remove the observer later via removeObserver().
     */
-    int addObserver(ObserverCallback callback);
+    int addObserver(ObserverCallback callback, std::string name = "Anonymous");
 
     void removeObserver(int callback_id);
 
@@ -457,7 +457,7 @@ public:
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
-    ObserverData _manager_observers;
+    ObserverData _manager_observers = ObserverData("DataManager");
 
     std::unordered_map<std::string, DataTypeVariant>
             _data;

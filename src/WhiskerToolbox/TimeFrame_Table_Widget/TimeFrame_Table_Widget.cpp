@@ -75,7 +75,7 @@ void TimeFrame_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_ma
     // Subscribe to DataManager-level observer so we refresh whenever data changes
     _data_manager->addObserver([this]() {
         _refreshTable();
-    });
+    }, "TimeFrame_Table_Widget");
 }
 
 void TimeFrame_Table_Widget::populateTable() {

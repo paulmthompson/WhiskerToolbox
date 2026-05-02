@@ -44,7 +44,7 @@ PlotAlignmentWidget::PlotAlignmentWidget(PlotAlignmentState * state,
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateAlignmentEventComboBox();
             _updateEventCount();
-        });
+        }, "PlotAlignmentWidget");
     }
 
     // Connect state signals to update UI

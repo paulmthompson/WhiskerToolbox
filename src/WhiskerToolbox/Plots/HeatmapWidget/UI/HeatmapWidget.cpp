@@ -172,7 +172,7 @@ void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        });
+        }, "HeatmapWidget");
     }
 
     // Initialize axis ranges from current view state

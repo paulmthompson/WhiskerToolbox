@@ -512,7 +512,7 @@ void ClusteringPanel::_registerDataManagerObserver() {
 
     _dm_observer_id = _data_manager->addObserver([this]() {
         QTimer::singleShot(0, this, &ClusteringPanel::refreshTensorList);
-    });
+    }, "ClusteringPanel");
 }
 
 void ClusteringPanel::_restoreFromState() {

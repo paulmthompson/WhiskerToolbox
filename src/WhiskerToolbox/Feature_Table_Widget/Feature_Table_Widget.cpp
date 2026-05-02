@@ -103,7 +103,7 @@ void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_mana
 
     _data_manager->addObserver([this]() {
         _refreshFeatures();
-    });
+    }, "Feature_Table_Widget");
 }
 
 void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {

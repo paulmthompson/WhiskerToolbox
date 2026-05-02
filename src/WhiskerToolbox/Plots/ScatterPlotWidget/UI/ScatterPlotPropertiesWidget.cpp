@@ -78,7 +78,7 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<Scatter
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateKeyComboBoxes();
             _populateColorKeyCombo();
-        });
+        }, "ScatterPlotPropertiesWidget");
     }
 
     if (_state) {

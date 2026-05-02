@@ -14,6 +14,7 @@
  */
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 /**
@@ -35,6 +36,7 @@ enum class NotifyObservers {
     Yes,///< Notify observers after the operation
     No  ///< Do not notify observers after the operation
 };
+
 
 /**
  * @brief Manages observer callbacks for implementing the observer pattern
@@ -72,13 +74,28 @@ enum class NotifyObservers {
 class ObserverData {
 
 public:
-    ObserverData() = default;
+    explicit ObserverData(std::string name = "UnnamedObservable")
+        : _name(std::move(name)) {}
 
-    /// @brief Type alias for observer callback functions
+    /**
+     * @brief Type alias for observer callback functions
+     */
     using ObserverCallback = std::function<void()>;
 
-    /// @brief Type alias for callback identifiers
+    /**
+     * @brief Type alias for callback identifiers
+     */
     using CallbackID = int;
+
+    /**
+    * @brief Entry in the observer map
+     *
+     * This struct holds an observer callback and its associated name.
+     */
+    struct ObserverEntry {
+        ObserverCallback callback;
+        std::string name;
+    };
 
     /**
      * @brief Register a new observer callback
@@ -88,13 +105,14 @@ public:
      *
      * @param callback The callback function to invoke on notifications.
      *                 Must be a valid callable (non-empty std::function).
+     * @param name The name of the observer. This is used for debugging and logging.
      * @return A unique identifier for this observer registration. Use this ID
      *         to remove the observer later via removeObserver().
      *
      * @note The returned ID should be stored if you intend to remove the
      *       observer later. Discarding the ID makes removal impossible.
      */
-    [[nodiscard]] CallbackID addObserver(ObserverCallback callback);
+    [[nodiscard]] CallbackID addObserver(ObserverCallback callback, std::string name = "Anonymous");
 
     /**
      * @brief Notify all registered observers
@@ -119,7 +137,8 @@ public:
     void removeObserver(CallbackID id);
 
 private:
-    std::unordered_map<CallbackID, ObserverCallback> _observers;
+    std::string _name;
+    std::unordered_map<CallbackID, ObserverEntry> _observers;
     CallbackID _next_id = 1;///< Monotonically increasing ID counter
 };
 
