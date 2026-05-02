@@ -327,8 +327,8 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
             cache.setVertices(vertices, cache_start, cache_end);
         } else {
             for (auto const & missing_range: missing_ranges) {
-                spdlog::debug("AnalogVertexCache: Incremental generation [{}, {}] prepending: {}", 
-                              missing_range.start.getValue(), missing_range.end.getValue(), missing_range.prepend);
+                //spdlog::debug("AnalogVertexCache: Incremental generation [{}, {}] prepending: {}", 
+                //              missing_range.start.getValue(), missing_range.end.getValue(), missing_range.prepend);
     
                 TimeFrameIndex master_start = missing_range.start;
                 TimeFrameIndex master_end = missing_range.end;

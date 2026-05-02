@@ -29,6 +29,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QFile>
@@ -41,11 +42,11 @@
 #include <QTextStream>
 #include <QTreeWidget>
 #include <QWheelEvent>
-
-#include "StateManagement/AppFileDialog.hpp"
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -318,6 +319,8 @@ void DataViewer_Widget::_onTimeChanged(TimePosition const & position) {
     // Get the TimeFrame for the data this widget is displaying (master clock)
     auto my_tf = _time_frame;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     if (position.sameClock(my_tf)) {
         // Same clock - use index directly
         _state->current_position = position;
@@ -329,25 +332,17 @@ void DataViewer_Widget::_onTimeChanged(TimePosition const & position) {
         ui->openGLWidget->updateCanvas(converted);
     }
 
+    auto update_labels_start_time = std::chrono::high_resolution_clock::now();
     _updateLabels();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto update_canvas_duration = std::chrono::duration_cast<std::chrono::milliseconds>(update_labels_start_time - start_time);
+    auto update_labels_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - update_labels_start_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    spdlog::debug("[DataViewer_Widget] _onTimeChanged took {} milliseconds", total_duration.count());
+    spdlog::debug("[DataViewer_Widget] _onTimeChanged update_canvas took {} milliseconds", update_canvas_duration.count());
+    spdlog::debug("[DataViewer_Widget] _onTimeChanged update_labels took {} milliseconds", update_labels_duration.count());
 }
-
-void DataViewer_Widget::_updatePlot(int time) {
-    // Note: 'time' is a frame index from the scrollbar, for the "time" time frame
-    // This method is kept for backward compatibility but should not be used
-    // with the new TimePosition-based system
-
-    if (_time_frame.get() != _data_manager->getTime(TimeKey("time")).get()) {
-        auto time_in_ticks = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
-        TimeFrameIndex const master_index = _time_frame->getIndexAtTime(static_cast<float>(time_in_ticks));
-        ui->openGLWidget->updateCanvas(master_index);
-    } else {
-        ui->openGLWidget->updateCanvas(TimeFrameIndex(time));
-    }
-
-    _updateLabels();
-}
-
 
 void DataViewer_Widget::addFeature(std::string const & key, std::string const & color) {
     std::cout << "Adding feature: " << key << " with color: " << color << std::endl;

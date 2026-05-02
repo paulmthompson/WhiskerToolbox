@@ -1,4 +1,4 @@
-# TimeController: Qt-free current visualization time and active TimeKey
+
 
 add_library(TimeController STATIC
     TimeController.hpp

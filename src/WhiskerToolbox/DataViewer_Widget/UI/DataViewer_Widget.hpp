@@ -161,7 +161,6 @@ private slots:
     void _removeSelectedFeature(std::string const & key);
     void _plotSelectedFeatureWithoutUpdate(std::string const & key, std::string const & color);
     void _removeSelectedFeatureWithoutUpdate(std::string const & key);
-    void _updatePlot(int time);
     void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
     void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);

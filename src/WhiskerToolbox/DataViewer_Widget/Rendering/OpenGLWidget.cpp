@@ -288,8 +288,9 @@ void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
     // (e.g., display_mode changes, series visibility changes)
     _cache_state.layout_response_dirty = true;
     _cache_state.scene_dirty = true;
-    //std::cout << "Redrawing at " << _time << std::endl;
+
     update();
+    //repaint(); // Use this for debugging because it forces a repaint.
 }
 
 // Mouse event handlers - delegate to input handler and interaction manager
@@ -548,31 +549,55 @@ void OpenGLWidget::initializeGL() {
 void OpenGLWidget::paintGL() {
     int r, g, b;
     hexToRGB(_state->themeState().background_color, r, g, b);
+
+    auto paint_gl_start_time = std::chrono::high_resolution_clock::now();
     glClearColor(
             static_cast<float>(r) / 255.0f,
             static_cast<float>(g) / 255.0f,
             static_cast<float>(b) / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    auto gl_clear_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - paint_gl_start_time);
 
     // View state is already updated in updateCanvas() - just use it here
+    auto render_with_scene_renderer_start_time = std::chrono::high_resolution_clock::now();
     if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
     }
-
+    auto render_with_scene_renderer_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - render_with_scene_renderer_start_time);
+    
+    auto draw_axis_start_time = std::chrono::high_resolution_clock::now();
     drawAxis();
-
+    auto draw_axis_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_axis_start_time);
+    
+    auto draw_grid_lines_start_time = std::chrono::high_resolution_clock::now();
     drawGridLines();
-
+    auto draw_grid_lines_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_grid_lines_start_time);
+    
     //unified controller preview overlay
+    auto draw_interaction_preview_start_time = std::chrono::high_resolution_clock::now();
     drawInteractionPreview();
-
+    auto draw_interaction_preview_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_interaction_preview_start_time);
+    
     // Lane drag overlay (always drawn when active, independent of developer mode)
+    auto draw_lane_drag_overlay_start_time = std::chrono::high_resolution_clock::now();
     drawLaneDragOverlay();
-
+    auto draw_lane_drag_overlay_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_lane_drag_overlay_start_time);
+    
     // Developer overlay (QPainter on top of GL)
+    auto draw_developer_overlays_start_time = std::chrono::high_resolution_clock::now();
     if (_state && _state->developerMode()) {
         drawDeveloperOverlays();
     }
+    auto draw_developer_overlays_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_developer_overlays_start_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - paint_gl_start_time);
+    spdlog::debug("[OpenGLWidget] paintGL took {} milliseconds", total_duration.count());
+    spdlog::debug("[OpenGLWidget] gl_clear took {} milliseconds", gl_clear_duration.count());
+    spdlog::debug("[OpenGLWidget] render_with_scene_renderer took {} milliseconds", render_with_scene_renderer_duration.count());
+    spdlog::debug("[OpenGLWidget] draw_axis took {} milliseconds", draw_axis_duration.count());
+    spdlog::debug("[OpenGLWidget] draw_grid_lines took {} milliseconds", draw_grid_lines_duration.count());
+    spdlog::debug("[OpenGLWidget] draw_interaction_preview took {} milliseconds", draw_interaction_preview_duration.count());
+    spdlog::debug("[OpenGLWidget] draw_lane_drag_overlay took {} milliseconds", draw_lane_drag_overlay_duration.count());
+    spdlog::debug("[OpenGLWidget] draw_developer_overlays took {} milliseconds", draw_developer_overlays_duration.count());
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
