@@ -328,7 +328,7 @@ public:
      * @post Return value size is even (pairs of x,y floats)
      * @post Return value is empty when cache is invalid or start is not found
      */
-    [[nodiscard]] std::vector<float> getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end) const;
+    [[nodiscard]] std::vector<float> getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end, TimeFrameIndex x_origin = TimeFrameIndex{0}) const;
 
     /**
      * @brief Get statistics about cache usage
