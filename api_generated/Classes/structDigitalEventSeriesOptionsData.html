@@ -364,6 +364,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#variable-style" id="toc-variable-style" class="nav-link" data-scroll-target="#variable-style">variable style</a></li>
   <li><a href="#variable-plotting_mode" id="toc-variable-plotting_mode" class="nav-link" data-scroll-target="#variable-plotting_mode">variable plotting_mode</a></li>
+  <li><a href="#variable-glyph_shape" id="toc-variable-glyph_shape" class="nav-link" data-scroll-target="#variable-glyph_shape">variable glyph_shape</a></li>
+  <li><a href="#variable-box_width_ticks" id="toc-variable-box_width_ticks" class="nav-link" data-scroll-target="#variable-box_width_ticks">variable box_width_ticks</a></li>
   <li><a href="#variable-vertical_spacing" id="toc-variable-vertical_spacing" class="nav-link" data-scroll-target="#variable-vertical_spacing">variable vertical_spacing</a></li>
   <li><a href="#variable-event_height" id="toc-variable-event_height" class="nav-link" data-scroll-target="#variable-event_height">variable event_height</a></li>
   <li><a href="#variable-margin_factor" id="toc-variable-margin_factor" class="nav-link" data-scroll-target="#variable-margin_factor">variable margin_factor</a></li>
@@ -463,6 +465,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html#variable-plotting-mode">plotting_mode</a></strong></td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Files/DataViewerStateData_8hpp.html#enum-eventglyphshapedata">EventGlyphShapeData</a></td>
+<td><strong><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html#variable-glyph-shape">glyph_shape</a></strong> <br>Marker shape for events.</td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html#variable-box-width-ticks">box_width_ticks</a></strong> <br>Box extent along the time axis in ticks (<a href="">EventGlyphShapeData::Box</a> only)</td>
+</tr>
+<tr class="odd">
 <td>float</td>
 <td><strong><a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html#variable-vertical-spacing">vertical_spacing</a></strong> <br>Vertical spacing for stacked mode.</td>
 </tr>
@@ -523,22 +533,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-plotting_mode">variable plotting_mode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>EventPlottingModeData plotting_mode <span class="op">=</span> EventPlottingModeData<span class="op">::</span>FullCanvas<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="variable-glyph_shape" class="level3">
+<h3 class="anchored" data-anchor-id="variable-glyph_shape">variable glyph_shape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>EventGlyphShapeData glyph_shape <span class="op">=</span> EventGlyphShapeData<span class="op">::</span>Tick<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Marker shape for events.</p>
+</section>
+<section id="variable-box_width_ticks" class="level3">
+<h3 class="anchored" data-anchor-id="variable-box_width_ticks">variable box_width_ticks</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> box_width_ticks <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Box extent along the time axis in ticks (<a href="">EventGlyphShapeData::Box</a> only)</p>
+</section>
 <section id="variable-vertical_spacing" class="level3">
 <h3 class="anchored" data-anchor-id="variable-vertical_spacing">variable vertical_spacing</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> vertical_spacing <span class="op">=</span> <span class="fl">0.1</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> vertical_spacing <span class="op">=</span> <span class="fl">0.1</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Vertical spacing for stacked mode.</p>
 </section>
 <section id="variable-event_height" class="level3">
 <h3 class="anchored" data-anchor-id="variable-event_height">variable event_height</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> event_height <span class="op">=</span> <span class="fl">0.05</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> event_height <span class="op">=</span> <span class="fl">0.05</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Height of individual events.</p>
 </section>
 <section id="variable-margin_factor" class="level3">
 <h3 class="anchored" data-anchor-id="variable-margin_factor">variable margin_factor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> margin_factor <span class="op">=</span> <span class="fl">0.95</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> margin_factor <span class="op">=</span> <span class="fl">0.95</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Margin factor (0.95 = 95% of allocated space)</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:40 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:48 +0000</p>
 
 
 </section>

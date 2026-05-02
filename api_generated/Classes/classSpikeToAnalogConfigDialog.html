@@ -363,6 +363,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-analoggroupprefix" id="toc-function-analoggroupprefix" class="nav-link" data-scroll-target="#function-analoggroupprefix">function analogGroupPrefix</a></li>
   <li><a href="#function-placementmode" id="toc-function-placementmode" class="nav-link" data-scroll-target="#function-placementmode">function placementMode</a></li>
   <li><a href="#function-filepath" id="toc-function-filepath" class="nav-link" data-scroll-target="#function-filepath">function filePath</a></li>
+  <li><a href="#function-useboxglyph" id="toc-function-useboxglyph" class="nav-link" data-scroll-target="#function-useboxglyph">function useBoxGlyph</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -454,6 +455,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/classSpikeToAnalogConfigDialog.html#function-filepath">filePath</a></strong>() const<br>Return the absolute path to the CSV file chosen by the user.</td>
 </tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSpikeToAnalogConfigDialog.html#function-useboxglyph">useBoxGlyph</a></strong>() const<br>When placement is Overlay, true if user wants digital events as time-axis boxes.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -531,8 +536,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string filePath<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return the absolute path to the CSV file chosen by the user.</p>
 <p><strong>Return</strong>: Empty string if no file was selected.</p>
+</section>
+<section id="function-useboxglyph" class="level3">
+<h3 class="anchored" data-anchor-id="function-useboxglyph">function useBoxGlyph</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> useBoxGlyph<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When placement is Overlay, true if user wants digital events as time-axis boxes.</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:41 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:49 +0000</p>
 
 
 </section>

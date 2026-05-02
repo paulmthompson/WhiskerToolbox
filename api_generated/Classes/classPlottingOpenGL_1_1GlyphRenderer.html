@@ -511,7 +511,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Rendering Strategy:</p>
 <ul>
 <li>Uses instanced rendering (glDrawArraysInstanced)</li>
-<li>Each glyph type (circle, square, tick, cross) has a predefined shape</li>
+<li>Each glyph type (circle, square, tick, top line, cross) has predefined CPU-side line or quad geometry</li>
 <li>Position and color can vary per instance</li>
 <li>Model matrix from the batch positions the entire batch in world space</li>
 </ul>
@@ -525,7 +525,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>Circle: <a href="../../api_generated/Classes/structPoint.html">Point</a> primitive (GL_POINTS) with gl_PointSize</li>
 <li>Square: Quad rendered as two triangles</li>
-<li>Tick: Vertical line segment</li>
+<li>Tick: Vertical line segment (local geometry along ±Y, scaled by batch.size)</li>
+<li>TopLine: Horizontal line segment (local geometry along ±X, scaled by batch.size)</li>
 <li>Cross: Two perpendicular line segments</li>
 </ul>
 </section>
@@ -633,7 +634,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isUsingShaderManager<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if using <a href="../../api_generated/Classes/classShaderManager.html">ShaderManager</a> (vs embedded fallback).</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

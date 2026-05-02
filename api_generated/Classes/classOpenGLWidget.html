@@ -648,7 +648,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classOpenGLWidget.html#function-loadspiketoanalogpairing">loadSpikeToAnalogPairing</a></strong>(std::string const &amp; digital_group, std::string const &amp; analog_group, std::vector&lt; <a href="../../api_generated/Classes/structSpikeToAnalogPairing.html">SpikeToAnalogPairing</a> &gt; const &amp; pairings, <a href="../../api_generated/Files/SpikeToAnalogPairingLoader_8hpp.html#enum-spiketoanalogplacementmode">SpikeToAnalogPlacementMode</a> mode, <a href="../../api_generated/Classes/structSpikeToAnalogParseConfig.html">SpikeToAnalogParseConfig</a> const &amp; config =<a href="../../api_generated/Classes/structSpikeToAnalogParseConfig.html">SpikeToAnalogParseConfig</a>)<br>Apply lane placement overrides based on spike-to-analog pairings.</td>
+<td><strong><a href="../../api_generated/Classes/classOpenGLWidget.html#function-loadspiketoanalogpairing">loadSpikeToAnalogPairing</a></strong>(std::string const &amp; digital_group, std::string const &amp; analog_group, std::vector&lt; <a href="../../api_generated/Classes/structSpikeToAnalogPairing.html">SpikeToAnalogPairing</a> &gt; const &amp; pairings, <a href="../../api_generated/Files/SpikeToAnalogPairingLoader_8hpp.html#enum-spiketoanalogplacementmode">SpikeToAnalogPlacementMode</a> mode, <a href="../../api_generated/Classes/structSpikeToAnalogParseConfig.html">SpikeToAnalogParseConfig</a> const &amp; config =<a href="../../api_generated/Classes/structSpikeToAnalogParseConfig.html">SpikeToAnalogParseConfig</a>, bool overlay_render_digital_events_as_boxes =false)<br>Apply lane placement overrides based on spike-to-analog pairings.</td>
 </tr>
 <tr class="even">
 <td>std::pair&lt; int, int &gt;</td>
@@ -1071,8 +1071,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> analog_group<span class="op">,</span></span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SpikeToAnalogPairing <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> pairings<span class="op">,</span></span>
 <span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    SpikeToAnalogPlacementMode mode<span class="op">,</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    SpikeToAnalogParseConfig <span class="at">const</span> <span class="op">&amp;</span> config <span class="op">=</span>SpikeToAnalogParseConfig<span class="op">{}</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    SpikeToAnalogParseConfig <span class="at">const</span> <span class="op">&amp;</span> config <span class="op">=</span>SpikeToAnalogParseConfig<span class="op">{},</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> overlay_render_digital_events_as_boxes <span class="op">=</span><span class="kw">false</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply lane placement overrides based on spike-to-analog pairings.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1081,6 +1082,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>pairings</strong> Parsed pairings from <code>parseSpikeToAnalogCSV</code></li>
 <li><strong>mode</strong> Lane placement policy</li>
 <li><strong>config</strong> Parse config; the <code>digital_key_one_based</code> and <code>analog_key_one_based</code> fields control how the numeric suffix in series key names is interpreted when building the channel-to-key lookup maps.</li>
+<li><strong>overlay_render_digital_events_as_boxes</strong> If true and <code>mode</code> is Overlay, set each affected digital event series’ <code>glyph_shape</code> to Box in state.</li>
 </ul>
 <p><strong>Precondition</strong>: <code>pairings</code> must not be empty; zero-length pairings are no-ops.</p>
 <p>For each pairing in <code>pairings</code>, locates the digital series key (<code>digital_group</code> + “<em>” + (digital_channel + 1)) and the analog series key (<code>analog_group</code> + ”</em>” + (analog_channel + 1)) that are currently registered in the data store.</p>
@@ -1219,7 +1221,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QEvent</span> <span class="op">*</span> event</span>
 <span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:41 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:49 +0000</p>
 
 
 </section>

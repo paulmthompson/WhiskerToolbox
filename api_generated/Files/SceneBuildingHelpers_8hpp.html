@@ -464,7 +464,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AnalogBatchParams <span class="op">{</span></span>
 <span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex x_origin<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> x_origin_master_absolute_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> gap_threshold<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> detect_gaps<span class="op">{</span><span class="kw">true</span><span class="op">};</span>   </span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 color<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
@@ -475,7 +475,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> EventBatchParams <span class="op">{</span></span>
 <span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex x_origin<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> x_origin_master_absolute_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 color<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
 <span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> glyph_size<span class="op">{</span><span class="fl">5.0</span><span class="bu">f</span><span class="op">};</span></span>
 <span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType <span class="dt">glyph_type</span><span class="op">{</span></span>
@@ -485,7 +485,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> IntervalBatchParams <span class="op">{</span></span>
 <span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex x_origin<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> x_origin_master_absolute_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>vec4 color<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">};</span></span>
 <span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
@@ -518,36 +518,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>        EventBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
 <span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">);</span></span>
 <span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildIntervalSeriesBatchSimplified<span class="op">(</span></span>
-<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildEventSeriesBoxBatchSimplified<span class="op">(</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>        DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
 <span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>        IntervalBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">);</span></span>
-<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a><span class="co">// Cached Vertex API for efficient scrolling (Phase: Streaming Optimization)</span></span>
-<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="co">// These functions use AnalogVertexCache to minimize vertex regeneration</span></span>
-<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a><span class="co">// when scrolling time series data.</span></span>
-<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderablePolyLineBatch buildAnalogSeriesBatchCached<span class="op">(</span></span>
-<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
-<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>        AnalogBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
-<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>        DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache<span class="op">);</span></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>        EventBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> box_width_world<span class="op">);</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildIntervalSeriesBatchSimplified<span class="op">(</span></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>        IntervalBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">);</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a><span class="co">// Cached Vertex API for efficient scrolling (Phase: Streaming Optimization)</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a><span class="co">// These functions use AnalogVertexCache to minimize vertex regeneration</span></span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="co">// when scrolling time series data.</span></span>
 <span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>DataViewer<span class="op">::</span>CachedAnalogVertex<span class="op">&gt;</span> generateVerticesForRange<span class="op">(</span></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderablePolyLineBatch buildAnalogSeriesBatchCached<span class="op">(</span></span>
 <span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
 <span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex start_time<span class="op">,</span></span>
-<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex end_time<span class="op">);</span></span>
-<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace DataViewerHelpers</span></span>
-<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_WIDGET_SCENEBUILDINGHELPERS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>        AnalogBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>        DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache<span class="op">);</span></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>DataViewer<span class="op">::</span>CachedAnalogVertex<span class="op">&gt;</span> generateVerticesForRange<span class="op">(</span></span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> x_origin_master_absolute_time<span class="op">);</span></span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace DataViewerHelpers</span></span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_WIDGET_SCENEBUILDINGHELPERS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:46 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:54 +0000</p>
 
 
 </section>

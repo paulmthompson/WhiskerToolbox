@@ -367,6 +367,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-glyph_batches" id="toc-variable-glyph_batches" class="nav-link" data-scroll-target="#variable-glyph_batches">variable glyph_batches</a></li>
   <li><a href="#variable-view_matrix" id="toc-variable-view_matrix" class="nav-link" data-scroll-target="#variable-view_matrix">variable view_matrix</a></li>
   <li><a href="#variable-projection_matrix" id="toc-variable-projection_matrix" class="nav-link" data-scroll-target="#variable-projection_matrix">variable projection_matrix</a></li>
+  <li><a href="#variable-time_axis_origin_master_absolute" id="toc-variable-time_axis_origin_master_absolute" class="nav-link" data-scroll-target="#variable-time_axis_origin_master_absolute">variable time_axis_origin_master_absolute</a></li>
   <li><a href="#variable-spatial_index" id="toc-variable-spatial_index" class="nav-link" data-scroll-target="#variable-spatial_index">variable spatial_index</a></li>
   <li><a href="#variable-entity_to_series_key" id="toc-variable-entity_to_series_key" class="nav-link" data-scroll-target="#variable-entity_to_series_key">variable entity_to_series_key</a></li>
   <li><a href="#variable-selected_entities" id="toc-variable-selected_entities" class="nav-link" data-scroll-target="#variable-selected_entities">variable selected_entities</a></li>
@@ -475,18 +476,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-projection-matrix">projection_matrix</a></strong></td>
 </tr>
 <tr class="even">
+<td>int64_t</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-time-axis-origin-master-absolute">time_axis_origin_master_absolute</a></strong> <br>Master-clock absolute time at the left edge of the visible window.</td>
+</tr>
+<tr class="odd">
 <td>std::unique_ptr&lt; <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a>&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-spatial-index">spatial_index</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::unordered_map&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, std::string &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-entity-to-series-key">entity_to_series_key</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-selected-entities">selected_entities</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::optional&lt; <a href="../../api_generated/Classes/structCorePlotting_1_1Interaction_1_1GlyphPreview.html">Interaction::GlyphPreview</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html#variable-active-preview">active_preview</a></strong></td>
 </tr>
@@ -655,23 +660,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 projection_matrix <span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Shared projection matrix (world → NDC mapping). Default is identity. See <code>view_matrix</code> note on identity defaults.</p>
 </section>
+<section id="variable-time_axis_origin_master_absolute" class="level3">
+<h3 class="anchored" data-anchor-id="variable-time_axis_origin_master_absolute">variable time_axis_origin_master_absolute</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> time_axis_origin_master_absolute <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Master-clock absolute time at the left edge of the visible window.</p>
+<p>When non-zero (or always set by <a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a>), polyline/glyph/interval batch X coordinates are expressed as ``(master_time - this_origin) for float precision. Hit testing and interval metadata must add this value back to recover absolute time.</p>
+</section>
 <section id="variable-spatial_index" class="level3">
 <h3 class="anchored" data-anchor-id="variable-spatial_index">variable spatial_index</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> QuadTree<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="op">&gt;</span> spatial_index<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> QuadTree<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="op">&gt;</span> spatial_index<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-entity_to_series_key" class="level3">
 <h3 class="anchored" data-anchor-id="variable-entity_to_series_key">variable entity_to_series_key</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> EntityId<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> entity_to_series_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> EntityId<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> entity_to_series_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-selected_entities" class="level3">
 <h3 class="anchored" data-anchor-id="variable-selected_entities">variable selected_entities</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> selected_entities<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> selected_entities<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-active_preview" class="level3">
 <h3 class="anchored" data-anchor-id="variable-active_preview">variable active_preview</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> Interaction<span class="op">::</span>GlyphPreview <span class="op">&gt;</span> active_preview<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> Interaction<span class="op">::</span>GlyphPreview <span class="op">&gt;</span> active_preview<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

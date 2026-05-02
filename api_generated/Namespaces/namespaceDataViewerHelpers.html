@@ -359,6 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-buildanalogseriesbatchsimplified" id="toc-function-buildanalogseriesbatchsimplified" class="nav-link" data-scroll-target="#function-buildanalogseriesbatchsimplified">function buildAnalogSeriesBatchSimplified</a></li>
   <li><a href="#function-buildanalogseriesmarkerbatchsimplified" id="toc-function-buildanalogseriesmarkerbatchsimplified" class="nav-link" data-scroll-target="#function-buildanalogseriesmarkerbatchsimplified">function buildAnalogSeriesMarkerBatchSimplified</a></li>
   <li><a href="#function-buildeventseriesbatchsimplified" id="toc-function-buildeventseriesbatchsimplified" class="nav-link" data-scroll-target="#function-buildeventseriesbatchsimplified">function buildEventSeriesBatchSimplified</a></li>
+  <li><a href="#function-buildeventseriesboxbatchsimplified" id="toc-function-buildeventseriesboxbatchsimplified" class="nav-link" data-scroll-target="#function-buildeventseriesboxbatchsimplified">function buildEventSeriesBoxBatchSimplified</a></li>
   <li><a href="#function-buildintervalseriesbatchsimplified" id="toc-function-buildintervalseriesbatchsimplified" class="nav-link" data-scroll-target="#function-buildintervalseriesbatchsimplified">function buildIntervalSeriesBatchSimplified</a></li>
   <li><a href="#function-generateverticesforrange" id="toc-function-generateverticesforrange" class="nav-link" data-scroll-target="#function-generateverticesforrange">function generateVerticesForRange</a></li>
   <li><a href="#function-buildanalogseriesbatchcached" id="toc-function-buildanalogseriesbatchcached" class="nav-link" data-scroll-target="#function-buildanalogseriesbatchcached">function buildAnalogSeriesBatchCached</a></li>
@@ -458,13 +459,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableRectangleBatch.html">CorePlotting::RenderableRectangleBatch</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildintervalseriesbatchsimplified">buildIntervalSeriesBatchSimplified</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1IntervalBatchParams.html">IntervalBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix)<br>Build a RenderableRectangleBatch from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildeventseriesboxbatchsimplified">buildEventSeriesBoxBatchSimplified</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1EventBatchParams.html">EventBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix, float box_width_world)<br>Build a RenderableRectangleBatch from digital events drawn as time-axis boxes.</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">DataViewer::CachedAnalogVertex</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-generateverticesforrange">generateVerticesForRange</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time)<br>Generate vertices for a specific time range (helper for cache population)</td>
+<td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableRectangleBatch.html">CorePlotting::RenderableRectangleBatch</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildintervalseriesbatchsimplified">buildIntervalSeriesBatchSimplified</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1IntervalBatchParams.html">IntervalBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix)<br>Build a RenderableRectangleBatch from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
 <tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">DataViewer::CachedAnalogVertex</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-generateverticesforrange">generateVerticesForRange</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time, int64_t x_origin_master_absolute_time)<br>Generate vertices for a specific time range (helper for cache population)</td>
+</tr>
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildanalogseriesbatchcached">buildAnalogSeriesBatchCached</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html">AnalogBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix, <a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html">DataViewer::AnalogVertexCache</a> &amp; cache)<br>Build analog batch using vertex cache for efficient scrolling.</td>
 </tr>
@@ -558,14 +563,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: A batch ready for upload to GlyphRenderer</p>
 <p>For events rendered as ticks (vertical lines), we use glyphs positioned at the event times. The Model matrix handles vertical positioning.</p>
 </section>
+<section id="function-buildeventseriesboxbatchsimplified" class="level3">
+<h3 class="anchored" data-anchor-id="function-buildeventseriesboxbatchsimplified">function buildEventSeriesBoxBatchSimplified</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildEventSeriesBoxBatchSimplified<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    EventBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> box_width_world</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build a RenderableRectangleBatch from digital events drawn as time-axis boxes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series</strong> Event series</li>
+<li><strong>master_time_frame</strong> Master clock for X mapping and range filtering</li>
+<li><strong>params</strong> Time window, origin subtraction, and RGBA color (shared with glyph batch params)</li>
+<li><strong>model_matrix</strong> Lane model matrix (same as glyph/interval batches for that series)</li>
+<li><strong>box_width_world</strong> Full width along the time axis (e.g.&nbsp;option box_width_ticks as float)</li>
+</ul>
+<p>Each event becomes a rectangle spanning the full lane height in local Y ([-1, 1] → height 2) with X extent <code>box_width_world</code> centered on the event time (same X units as mapEventsInRange).</p>
+</section>
 <section id="function-buildintervalseriesbatchsimplified" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildintervalseriesbatchsimplified">function buildIntervalSeriesBatchSimplified</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildIntervalSeriesBatchSimplified<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    IntervalBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderableRectangleBatch buildIntervalSeriesBatchSimplified<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    IntervalBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a RenderableRectangleBatch from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -579,12 +604,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-generateverticesforrange" class="level3">
 <h3 class="anchored" data-anchor-id="function-generateverticesforrange">function generateVerticesForRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> DataViewer<span class="op">::</span>CachedAnalogVertex <span class="op">&gt;</span> generateVerticesForRange<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> DataViewer<span class="op">::</span>CachedAnalogVertex <span class="op">&gt;</span> generateVerticesForRange<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> x_origin_master_absolute_time</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Generate vertices for a specific time range (helper for cache population)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -598,13 +624,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-buildanalogseriesbatchcached" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildanalogseriesbatchcached">function buildAnalogSeriesBatchCached</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderablePolyLineBatch buildAnalogSeriesBatchCached<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    AnalogBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>RenderablePolyLineBatch buildAnalogSeriesBatchCached<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    AnalogBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build analog batch using vertex cache for efficient scrolling.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -624,7 +650,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>For typical scrolling (scroll by 10-100 points out of 100K visible), this is ~26-130x faster than regenerating all vertices.</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

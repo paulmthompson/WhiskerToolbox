@@ -436,7 +436,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_point_vao</span><span class="op">.</span>destroy<span class="op">();</span></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create VBOs</span></span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_geometry_vbo</span><span class="op">.</span>create<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_instanced_vao</span><span class="op">.</span>destroy<span class="op">();</span></span>
@@ -497,14 +497,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="dt">current_geometry_type</span> <span class="op">=</span> <span class="dt">m_current_glyph_type</span><span class="op">;</span></span>
 <span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Render each batch separately (each may have different model matrix and glyph type)</span></span>
-<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> batch <span class="op">:</span> <span class="va">m_batches</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> batch<span class="op">:</span> <span class="va">m_batches</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>batch<span class="op">.</span>positions<span class="op">.</span>empty<span class="op">())</span> <span class="cf">continue</span><span class="op">;</span></span>
 <span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Compute MVP = Projection * View * Model (per-batch model matrix)</span></span>
 <span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 mvp <span class="op">=</span> projection_matrix <span class="op">*</span> view_matrix <span class="op">*</span> batch<span class="op">.</span>model_matrix<span class="op">;</span></span>
 <span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Choose shader and VAO based on glyph type</span></span>
-<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> is_point_mode <span class="op">=</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">==</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">);</span></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> <span class="at">const</span> is_point_mode <span class="op">=</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">==</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">);</span></span>
 <span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>is_point_mode<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Use point shader and VAO</span></span>
@@ -548,7 +548,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">!=</span> <span class="dt">current_geometry_type</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>                <span class="dt">m_current_glyph_type</span> <span class="op">=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">;</span></span>
 <span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>                createGlyphGeometry<span class="op">();</span></span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Re-upload geometry to VBO</span></span>
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span><span class="va">m_glyph_vertices</span><span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>                    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_geometry_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
@@ -581,236 +581,247 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>            <span class="cf">switch</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Tick<span class="op">:</span></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Draw vertical lines (2 vertices per tick, instanced)</span></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_LINES<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Square<span class="op">:</span></span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Draw quads as triangle strip (4 vertices)</span></span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_TRIANGLE_STRIP<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
-<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Cross<span class="op">:</span></span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Draw two perpendicular lines (4 vertices)</span></span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_LINES<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>                <span class="cf">default</span><span class="op">:</span></span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_shader</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>hasData<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">!</span><span class="va">m_batches</span><span class="op">.</span>empty<span class="op">();</span></span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>clearData<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_batches</span><span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_all_positions</span><span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_all_colors</span><span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertices</span><span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>uploadData<span class="op">(</span>CorePlotting<span class="op">::</span>RenderableGlyphBatch <span class="at">const</span> <span class="op">&amp;</span> batch<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_initialized</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>batch<span class="op">.</span>positions<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create new batch data</span></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    BatchData batch_data<span class="op">;</span></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">;</span></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>glyph_size <span class="op">=</span> batch<span class="op">.</span>size<span class="op">;</span></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>model_matrix <span class="op">=</span> batch<span class="op">.</span>model_matrix<span class="op">;</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>positions <span class="op">=</span> batch<span class="op">.</span>positions<span class="op">;</span></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>has_per_instance_colors <span class="op">=</span> <span class="op">!</span>batch<span class="op">.</span>colors<span class="op">.</span>empty<span class="op">();</span></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Prepare colors - if no per-instance colors, create a buffer with global color</span></span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>batch_data<span class="op">.</span>has_per_instance_colors<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>        batch_data<span class="op">.</span>colors <span class="op">=</span> batch<span class="op">.</span>colors<span class="op">;</span></span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create uniform color array for all instances</span></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>        batch_data<span class="op">.</span>colors<span class="op">.</span>resize<span class="op">(</span>batch<span class="op">.</span>positions<span class="op">.</span>size<span class="op">(),</span> glm<span class="op">::</span>vec4<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store batch</span></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_batches</span><span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>batch_data<span class="op">));</span></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create glyph geometry if needed for non-Circle glyph types</span></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> needs_geometry <span class="op">=</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">!=</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">);</span></span>
-<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> geometry_type_changed <span class="op">=</span> <span class="op">(</span><span class="dt">m_current_glyph_type</span> <span class="op">!=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">);</span></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>needs_geometry <span class="op">&amp;&amp;</span> <span class="op">(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> geometry_type_changed<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>        <span class="dt">m_current_glyph_type</span> <span class="op">=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">;</span></span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>        createGlyphGeometry<span class="op">();</span></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Upload geometry to VBO</span></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span><span class="va">m_glyph_vertices</span><span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instanced_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_geometry_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_geometry_vbo</span><span class="op">.</span>allocate<span class="op">(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>data<span class="op">(),</span></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>                                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">float</span><span class="op">)));</span></span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_geometry_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setGlyphSize<span class="op">(</span><span class="dt">float</span> size<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_size</span> <span class="op">=</span> size<span class="op">;</span></span>
-<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>loadShadersFromManager<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Not implemented for instanced shaders yet</span></span>
-<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>compileEmbeddedShaders<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile point shader for GL_POINTS (circles)</span></span>
-<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_point_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>GlyphShaders<span class="op">::</span>POINT_VERTEX_SHADER<span class="op">,</span></span>
-<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>                                         GlyphShaders<span class="op">::</span>POINT_FRAGMENT_SHADER<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"[GlyphRenderer] Failed to compile point shader"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile instanced shader for ticks, squares, crosses</span></span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_instanced_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>GlyphShaders<span class="op">::</span>INSTANCED_VERTEX_SHADER<span class="op">,</span></span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>                                              GlyphShaders<span class="op">::</span>INSTANCED_FRAGMENT_SHADER<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"[GlyphRenderer] Failed to compile instanced shader"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_point_shader</span><span class="op">.</span>destroy<span class="op">();</span></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>createGlyphGeometry<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertices</span><span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Glyph shapes are defined in normalized coordinates [-0.5, 0.5]</span></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="co">// They will be scaled by u_glyph_size in the shader</span></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span><span class="dt">m_current_glyph_type</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">:</span></span>
-<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>            <span class="co">// For circles, we use GL_POINTS, no geometry needed</span></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Tick<span class="op">:</span></span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Vertical line from -0.5 to 0.5</span></span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span><span class="co">// Bottom</span></span>
-<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span>  <span class="co">// Top</span></span>
-<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>            <span class="op">};</span></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
-<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Square<span class="op">:</span></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Quad as triangle strip</span></span>
-<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span><span class="co">// Bottom-left</span></span>
-<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="co">// Bottom-right</span></span>
-<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="co">// Top-left</span></span>
-<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span>   <span class="co">// Top-right</span></span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>TopLine<span class="op">:</span></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Tick: vertical segment; TopLine: horizontal segment (both GL_LINES, 2 verts)</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_LINES<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Square<span class="op">:</span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Draw quads as triangle strip (4 vertices)</span></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_TRIANGLE_STRIP<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Cross<span class="op">:</span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Draw two perpendicular lines (4 vertices)</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                    glExtra<span class="op">-&gt;</span>glDrawArraysInstanced<span class="op">(</span>GL_LINES<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="va">m_glyph_vertex_count</span><span class="op">,</span> instance_count<span class="op">);</span></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>                <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_shader</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>hasData<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">!</span><span class="va">m_batches</span><span class="op">.</span>empty<span class="op">();</span></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>clearData<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_batches</span><span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_all_positions</span><span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_all_colors</span><span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertices</span><span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>uploadData<span class="op">(</span>CorePlotting<span class="op">::</span>RenderableGlyphBatch <span class="at">const</span> <span class="op">&amp;</span> batch<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_initialized</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>batch<span class="op">.</span>positions<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create new batch data</span></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>    BatchData batch_data<span class="op">;</span></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">;</span></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>glyph_size <span class="op">=</span> batch<span class="op">.</span>size<span class="op">;</span></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>model_matrix <span class="op">=</span> batch<span class="op">.</span>model_matrix<span class="op">;</span></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>positions <span class="op">=</span> batch<span class="op">.</span>positions<span class="op">;</span></span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>    batch_data<span class="op">.</span>has_per_instance_colors <span class="op">=</span> <span class="op">!</span>batch<span class="op">.</span>colors<span class="op">.</span>empty<span class="op">();</span></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Prepare colors - if no per-instance colors, create a buffer with global color</span></span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>batch_data<span class="op">.</span>has_per_instance_colors<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>        batch_data<span class="op">.</span>colors <span class="op">=</span> batch<span class="op">.</span>colors<span class="op">;</span></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create uniform color array for all instances</span></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>        batch_data<span class="op">.</span>colors<span class="op">.</span>resize<span class="op">(</span>batch<span class="op">.</span>positions<span class="op">.</span>size<span class="op">(),</span> glm<span class="op">::</span>vec4<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store batch</span></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_batches</span><span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>batch_data<span class="op">));</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create glyph geometry if needed for non-Circle glyph types</span></span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> needs_geometry <span class="op">=</span> <span class="op">(</span>batch<span class="op">.</span><span class="dt">glyph_type</span> <span class="op">!=</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">);</span></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> geometry_type_changed <span class="op">=</span> <span class="op">(</span><span class="dt">m_current_glyph_type</span> <span class="op">!=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">);</span></span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>needs_geometry <span class="op">&amp;&amp;</span> <span class="op">(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> geometry_type_changed<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>        <span class="dt">m_current_glyph_type</span> <span class="op">=</span> batch<span class="op">.</span><span class="dt">glyph_type</span><span class="op">;</span></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>        createGlyphGeometry<span class="op">();</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Upload geometry to VBO</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span><span class="va">m_glyph_vertices</span><span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instanced_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_geometry_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_geometry_vbo</span><span class="op">.</span>allocate<span class="op">(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>data<span class="op">(),</span></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>                                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="va">m_glyph_vertices</span><span class="op">.</span>size<span class="op">()</span> <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">float</span><span class="op">)));</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_geometry_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setGlyphSize<span class="op">(</span><span class="dt">float</span> size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_size</span> <span class="op">=</span> size<span class="op">;</span></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>loadShadersFromManager<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Not implemented for instanced shaders yet</span></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> GlyphRenderer<span class="op">::</span>compileEmbeddedShaders<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile point shader for GL_POINTS (circles)</span></span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_point_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>GlyphShaders<span class="op">::</span>POINT_VERTEX_SHADER<span class="op">,</span></span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>                                         GlyphShaders<span class="op">::</span>POINT_FRAGMENT_SHADER<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"[GlyphRenderer] Failed to compile point shader"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compile instanced shader for ticks, top lines, squares, crosses</span></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span><span class="va">m_instanced_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>GlyphShaders<span class="op">::</span>INSTANCED_VERTEX_SHADER<span class="op">,</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>                                             GlyphShaders<span class="op">::</span>INSTANCED_FRAGMENT_SHADER<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"[GlyphRenderer] Failed to compile instanced shader"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_point_shader</span><span class="op">.</span>destroy<span class="op">();</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>createGlyphGeometry<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_glyph_vertices</span><span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Glyph shapes are defined in normalized coordinates [-0.5, 0.5] per axis.</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Instanced vertex shader: world_pos = a_geometry * u_glyph_size + instance_pos.</span></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Tick: vertical (0, ±0.5); TopLine: horizontal (±0.5, 0); Cross combines both.</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span><span class="dt">m_current_glyph_type</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">:</span></span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>            <span class="co">// For circles, we use GL_POINTS, no geometry needed</span></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Tick<span class="op">:</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Vertical line from -0.5 to 0.5</span></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span><span class="co">// Bottom</span></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span>  <span class="co">// Top</span></span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>            <span class="op">};</span></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>TopLine<span class="op">:</span></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Horizontal line from -0.5 to 0.5 on the local X axis</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span><span class="co">// Left</span></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span>  <span class="co">// Right</span></span>
 <span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>            <span class="op">};</span></span>
-<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
 <span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
 <span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Cross<span class="op">:</span></span>
-<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Two perpendicular lines</span></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Square<span class="op">:</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Quad as triangle strip</span></span>
 <span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Horizontal line</span></span>
-<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Vertical line</span></span>
-<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
-<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Deprecated - use setupPointVertexAttributes() and setupInstancedVertexAttributes()</span></span>
-<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>    setupPointVertexAttributes<span class="op">();</span></span>
-<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a>    setupInstancedVertexAttributes<span class="op">();</span></span>
-<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupPointVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> gl <span class="op">=</span> GLFunctions<span class="op">::</span>get<span class="op">();</span></span>
-<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>gl<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_point_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For GL_POINTS mode:</span></span>
-<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 0: position (vec2) from instance_vbo</span></span>
-<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 1: color (vec4) from color_vbo</span></span>
-<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instance_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec2<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instance_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span><span class="co">// Bottom-left</span></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="co">// Bottom-right</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="co">// Top-left</span></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span>   <span class="co">// Top-right</span></span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>            <span class="op">};</span></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> CorePlotting<span class="op">::</span>RenderableGlyphBatch<span class="op">::</span>GlyphType<span class="op">::</span>Cross<span class="op">:</span></span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Two perpendicular lines</span></span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertices</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Horizontal line</span></span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>                    <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Vertical line</span></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a>                    <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>            <span class="va">m_glyph_vertex_count</span> <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Deprecated - use setupPointVertexAttributes() and setupInstancedVertexAttributes()</span></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a>    setupPointVertexAttributes<span class="op">();</span></span>
+<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>    setupInstancedVertexAttributes<span class="op">();</span></span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupPointVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> gl <span class="op">=</span> GLFunctions<span class="op">::</span>get<span class="op">();</span></span>
+<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>gl<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_color_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec4<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_color_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_point_vao</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupInstancedVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> gl <span class="op">=</span> GLFunctions<span class="op">::</span>get<span class="op">();</span></span>
-<span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> glExtra <span class="op">=</span> GLFunctions<span class="op">::</span>getExtra<span class="op">();</span></span>
-<span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>gl <span class="op">||</span> <span class="op">!</span>glExtra<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instanced_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For instanced mode:</span></span>
-<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 0: geometry vertex (vec2) from geometry_vbo - per-vertex</span></span>
-<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 1: instance position (vec2) from instance_vbo - per-instance</span></span>
-<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 2: instance color (vec4) from color_vbo - per-instance</span></span>
-<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Geometry attribute (per-vertex)</span></span>
-<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_geometry_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="dv">2</span> <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">float</span><span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Per-vertex (not instanced)</span></span>
-<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_geometry_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Instance position attribute (per-instance)</span></span>
-<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instance_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec2<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span> <span class="co">// Per-instance</span></span>
-<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instance_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Instance color attribute (per-instance)</span></span>
-<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_color_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
-<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec4<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">2</span><span class="op">);</span></span>
-<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span> <span class="co">// Per-instance</span></span>
-<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_color_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
-<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace PlottingOpenGL</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_point_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For GL_POINTS mode:</span></span>
+<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 0: position (vec2) from instance_vbo</span></span>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 1: color (vec4) from color_vbo</span></span>
+<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instance_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec2<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instance_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_color_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec4<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_color_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_point_vao</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> GlyphRenderer<span class="op">::</span>setupInstancedVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> gl <span class="op">=</span> GLFunctions<span class="op">::</span>get<span class="op">();</span></span>
+<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> glExtra <span class="op">=</span> GLFunctions<span class="op">::</span>getExtra<span class="op">();</span></span>
+<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>gl <span class="op">||</span> <span class="op">!</span>glExtra<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instanced_vao</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For instanced mode:</span></span>
+<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 0: geometry vertex (vec2) from geometry_vbo - per-vertex</span></span>
+<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 1: instance position (vec2) from instance_vbo - per-instance</span></span>
+<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - location 2: instance color (vec4) from color_vbo - per-instance</span></span>
+<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Geometry attribute (per-vertex)</span></span>
+<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_geometry_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="dv">2</span> <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">float</span><span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">);</span><span class="co">// Per-vertex (not instanced)</span></span>
+<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_geometry_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Instance position attribute (per-instance)</span></span>
+<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_instance_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec2<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span><span class="co">// Per-instance</span></span>
+<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instance_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Instance color attribute (per-instance)</span></span>
+<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="va">m_color_vbo</span><span class="op">.</span>bind<span class="op">();</span></span>
+<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glVertexAttribPointer<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> GL_FLOAT<span class="op">,</span> GL_FALSE<span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span>glm<span class="op">::</span>vec4<span class="op">),</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a>    gl<span class="op">-&gt;</span>glEnableVertexAttribArray<span class="op">(</span><span class="dv">2</span><span class="op">);</span></span>
+<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a>    glExtra<span class="op">-&gt;</span>glVertexAttribDivisor<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span><span class="co">// Per-instance</span></span>
+<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_color_vbo</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a>    <span class="va">m_instanced_vao</span><span class="op">.</span>release<span class="op">();</span></span>
+<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace PlottingOpenGL</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:45 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:53 +0000</p>
 
 
 </section>

@@ -637,175 +637,176 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>                                  <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> analog_group<span class="op">,</span></span>
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>                                  <span class="bu">std::</span>vector<span class="op">&lt;</span>SpikeToAnalogPairing<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> pairings<span class="op">,</span></span>
 <span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>                                  SpikeToAnalogPlacementMode mode<span class="op">,</span></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>                                  SpikeToAnalogParseConfig <span class="at">const</span> <span class="op">&amp;</span> config <span class="op">=</span> SpikeToAnalogParseConfig<span class="op">{});</span></span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> getCanvasSize<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_pair<span class="op">(</span>width<span class="op">(),</span> height<span class="op">());</span></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
-<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Developer Overlay Controls</span></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayLaneBoundaries<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayOriginMarkers<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayCrosshair<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerDiagnostics getDiagnostics<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CorePlotting<span class="op">::</span>LayoutResponse <span class="at">const</span> <span class="op">&amp;</span> layoutResponse<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _cache_state<span class="op">.</span>layout_response<span class="op">;</span></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Coordinate conversion methods</span></span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> canvasXToTime<span class="op">(</span><span class="dt">float</span> canvas_x<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> canvasYToAnalogValue<span class="op">(</span><span class="dt">float</span> canvas_y<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> series_key<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;&gt;</span> findSeriesAtPosition<span class="op">(</span><span class="dt">float</span> canvas_x<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>    <span class="co">// State access for display options (use these instead of deprecated getXxxConfig methods)</span></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerState <span class="op">*</span> state<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> _state<span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerState <span class="at">const</span> <span class="op">*</span> state<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _state<span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="ex">slots</span><span class="op">:</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateCanvas<span class="op">()</span> <span class="op">{</span> updateCanvas<span class="op">(</span>_time<span class="op">);</span> <span class="op">}</span></span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateCanvas<span class="op">(</span>TimeFrameIndex time<span class="op">);</span></span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setLaneDragOverlay<span class="op">(</span><span class="dt">bool</span> active<span class="op">,</span> <span class="dt">float</span> lane_center<span class="op">,</span> <span class="dt">float</span> lane_extent<span class="op">,</span> <span class="dt">float</span> marker_ndc_y<span class="op">);</span></span>
-<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseHover<span class="op">(</span><span class="dt">float</span> time_coordinate<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_info<span class="op">);</span></span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseClick<span class="op">(</span><span class="dt">float</span> time_coordinate<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_info<span class="op">);</span></span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> entitySelectionChanged<span class="op">(</span>EntityId entity_id<span class="op">,</span> <span class="dt">bool</span> is_selected<span class="op">);</span></span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionModeChanged<span class="op">(</span>InteractionMode mode<span class="op">);</span></span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionCompleted<span class="op">(</span>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>DataCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> sceneRebuilt<span class="op">();</span></span>
-<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
-<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> initializeGL<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> paintGL<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> resizeGL<span class="op">(</span><span class="dt">int</span> w<span class="op">,</span> <span class="dt">int</span> h<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> cleanup<span class="op">();</span></span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mousePressEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseMoveEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseReleaseEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseDoubleClickEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> leaveEvent<span class="op">(</span><span class="ex">QEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawAxis<span class="op">();</span></span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawGridLines<span class="op">();</span></span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawInteractionPreview<span class="op">();</span></span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawDeveloperOverlays<span class="op">();</span></span>
-<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawLaneBoundaries<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
-<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawOriginMarkers<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
-<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawCursorCrosshair<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawLaneDragOverlay<span class="op">();</span></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> handleInteractionCompleted<span class="op">(</span>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>DataCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New SceneRenderer-based rendering methods</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> renderWithSceneRenderer<span class="op">();</span></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addAnalogBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEventBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addIntervalBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>TimeSeriesDataStore<span class="op">&gt;</span> _data_store<span class="op">;</span></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataViewerState<span class="op">&gt;</span> _state<span class="op">;</span></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex _time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>    OpenGLResourceState _gl_state<span class="op">;</span></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>    SceneCacheState _cache_state<span class="op">;</span></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> _scene_rebuild_count<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Input, Interaction, Selection, and Tooltip Handlers</span></span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (Extracted from widget for cleaner separation of concerns)</span></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerInputHandler<span class="op">&gt;</span> _input_handler<span class="op">;</span></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerInteractionManager<span class="op">&gt;</span> _interaction_manager<span class="op">;</span></span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerSelectionManager<span class="op">&gt;</span> _selection_manager<span class="op">;</span></span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerTooltipController<span class="op">&gt;</span> _tooltip_controller<span class="op">;</span></span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Master time frame for X-axis coordinate system</span></span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> _master_time_frame<span class="op">;</span></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Layout engine for coordinate allocation</span></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Uses StackedLayoutStrategy for DataViewer-style vertical stacking</span></span>
-<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>LayoutEngine _layout_engine<span class="op">{</span></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>make_unique<span class="op">&lt;</span>CorePlotting<span class="op">::</span>StackedLayoutStrategy<span class="op">&gt;()};</span></span>
-<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PlottingOpenGL Renderers</span></span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>    <span class="co">// These use the new CorePlotting RenderableBatch approach for rendering.</span></span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).</span></span>
-<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>PlottingOpenGL<span class="op">::</span>SceneRenderer<span class="op">&gt;</span> _scene_renderer<span class="op">;</span></span>
-<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AxisRenderer for axis lines and grid overlays</span></span>
-<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>PlottingOpenGL<span class="op">::</span>AxisRenderer<span class="op">&gt;</span> _axis_renderer<span class="op">;</span></span>
-<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The hit tester provides unified hit testing via SceneHitTester</span></span>
-<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SceneHitTester _hit_tester<span class="op">;</span></span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> OverlayToggles <span class="op">{</span></span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> lane_boundaries <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> origin_markers <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> crosshair <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    OverlayToggles _overlay_toggles<span class="op">;</span></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> DragOverlayData <span class="op">{</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> lane_center<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span> </span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> lane_extent<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span> </span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> marker_ndc_y<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    DragOverlayData _drag_overlay<span class="op">;</span></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> _last_mouse_pos<span class="op">;</span></span>
-<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CorePlotting<span class="op">::</span>LayoutRequest buildLayoutRequest<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> computeAndApplyLayout<span class="op">();</span></span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rebuildScene<span class="op">();</span></span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> hasNewVisibleSeries<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateMatrices<span class="op">();</span></span>
-<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Cached view state for dirty detection ===</span></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData _cached_view_state<span class="op">;</span></span>
-<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> _previous_time_start<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> _previous_time_end<span class="op">{</span><span class="dv">1000</span><span class="op">};</span></span>
-<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> _cached_global_y_scale<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 _cached_projection_matrix<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 _cached_view_matrix<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">//OPENGLWIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>                                  SpikeToAnalogParseConfig <span class="at">const</span> <span class="op">&amp;</span> config <span class="op">=</span> SpikeToAnalogParseConfig<span class="op">{},</span></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>                                  <span class="dt">bool</span> overlay_render_digital_events_as_boxes <span class="op">=</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> getCanvasSize<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_pair<span class="op">(</span>width<span class="op">(),</span> height<span class="op">());</span></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Developer Overlay Controls</span></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayLaneBoundaries<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayOriginMarkers<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setOverlayCrosshair<span class="op">(</span><span class="dt">bool</span> enabled<span class="op">);</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerDiagnostics getDiagnostics<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CorePlotting<span class="op">::</span>LayoutResponse <span class="at">const</span> <span class="op">&amp;</span> layoutResponse<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _cache_state<span class="op">.</span>layout_response<span class="op">;</span></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Coordinate conversion methods</span></span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> canvasXToTime<span class="op">(</span><span class="dt">float</span> canvas_x<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> canvasYToAnalogValue<span class="op">(</span><span class="dt">float</span> canvas_y<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> series_key<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;&gt;</span> findSeriesAtPosition<span class="op">(</span><span class="dt">float</span> canvas_x<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>    <span class="co">// State access for display options (use these instead of deprecated getXxxConfig methods)</span></span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerState <span class="op">*</span> state<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> _state<span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DataViewerState <span class="at">const</span> <span class="op">*</span> state<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _state<span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="ex">slots</span><span class="op">:</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateCanvas<span class="op">()</span> <span class="op">{</span> updateCanvas<span class="op">(</span>_time<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateCanvas<span class="op">(</span>TimeFrameIndex time<span class="op">);</span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setLaneDragOverlay<span class="op">(</span><span class="dt">bool</span> active<span class="op">,</span> <span class="dt">float</span> lane_center<span class="op">,</span> <span class="dt">float</span> lane_extent<span class="op">,</span> <span class="dt">float</span> marker_ndc_y<span class="op">);</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseHover<span class="op">(</span><span class="dt">float</span> time_coordinate<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_info<span class="op">);</span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseClick<span class="op">(</span><span class="dt">float</span> time_coordinate<span class="op">,</span> <span class="dt">float</span> canvas_y<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> series_info<span class="op">);</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> entitySelectionChanged<span class="op">(</span>EntityId entity_id<span class="op">,</span> <span class="dt">bool</span> is_selected<span class="op">);</span></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionModeChanged<span class="op">(</span>InteractionMode mode<span class="op">);</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionCompleted<span class="op">(</span>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>DataCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> sceneRebuilt<span class="op">();</span></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> initializeGL<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> paintGL<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> resizeGL<span class="op">(</span><span class="dt">int</span> w<span class="op">,</span> <span class="dt">int</span> h<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> cleanup<span class="op">();</span></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mousePressEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseMoveEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseReleaseEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseDoubleClickEvent<span class="op">(</span><span class="ex">QMouseEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> leaveEvent<span class="op">(</span><span class="ex">QEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawAxis<span class="op">();</span></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawGridLines<span class="op">();</span></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawInteractionPreview<span class="op">();</span></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawDeveloperOverlays<span class="op">();</span></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawLaneBoundaries<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawOriginMarkers<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawCursorCrosshair<span class="op">(</span><span class="ex">QPainter</span> <span class="op">&amp;</span> painter<span class="op">);</span></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> drawLaneDragOverlay<span class="op">();</span></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> handleInteractionCompleted<span class="op">(</span>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>DataCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    <span class="co">// New SceneRenderer-based rendering methods</span></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> renderWithSceneRenderer<span class="op">();</span></span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addAnalogBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEventBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addIntervalBatchesToBuilder<span class="op">(</span>CorePlotting<span class="op">::</span>SceneBuilder <span class="op">&amp;</span> builder<span class="op">);</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>TimeSeriesDataStore<span class="op">&gt;</span> _data_store<span class="op">;</span></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataViewerState<span class="op">&gt;</span> _state<span class="op">;</span></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex _time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>    OpenGLResourceState _gl_state<span class="op">;</span></span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>    SceneCacheState _cache_state<span class="op">;</span></span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> _scene_rebuild_count<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Input, Interaction, Selection, and Tooltip Handlers</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (Extracted from widget for cleaner separation of concerns)</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========================================================================</span></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerInputHandler<span class="op">&gt;</span> _input_handler<span class="op">;</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerInteractionManager<span class="op">&gt;</span> _interaction_manager<span class="op">;</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerSelectionManager<span class="op">&gt;</span> _selection_manager<span class="op">;</span></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataViewer<span class="op">::</span>DataViewerTooltipController<span class="op">&gt;</span> _tooltip_controller<span class="op">;</span></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Master time frame for X-axis coordinate system</span></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> _master_time_frame<span class="op">;</span></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Layout engine for coordinate allocation</span></span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Uses StackedLayoutStrategy for DataViewer-style vertical stacking</span></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>LayoutEngine _layout_engine<span class="op">{</span></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>make_unique<span class="op">&lt;</span>CorePlotting<span class="op">::</span>StackedLayoutStrategy<span class="op">&gt;()};</span></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PlottingOpenGL Renderers</span></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    <span class="co">// These use the new CorePlotting RenderableBatch approach for rendering.</span></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).</span></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>PlottingOpenGL<span class="op">::</span>SceneRenderer<span class="op">&gt;</span> _scene_renderer<span class="op">;</span></span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AxisRenderer for axis lines and grid overlays</span></span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>PlottingOpenGL<span class="op">::</span>AxisRenderer<span class="op">&gt;</span> _axis_renderer<span class="op">;</span></span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The hit tester provides unified hit testing via SceneHitTester</span></span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SceneHitTester _hit_tester<span class="op">;</span></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> OverlayToggles <span class="op">{</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> lane_boundaries <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> origin_markers <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> crosshair <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>    OverlayToggles _overlay_toggles<span class="op">;</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> DragOverlayData <span class="op">{</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> lane_center<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span> </span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> lane_extent<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span> </span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> marker_ndc_y<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    DragOverlayData _drag_overlay<span class="op">;</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> _last_mouse_pos<span class="op">;</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CorePlotting<span class="op">::</span>LayoutRequest buildLayoutRequest<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> computeAndApplyLayout<span class="op">();</span></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rebuildScene<span class="op">();</span></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> hasNewVisibleSeries<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> updateMatrices<span class="op">();</span></span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Cached view state for dirty detection ===</span></span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData _cached_view_state<span class="op">;</span></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> _previous_time_start<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> _previous_time_end<span class="op">{</span><span class="dv">1000</span><span class="op">};</span></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> _cached_global_y_scale<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 _cached_projection_matrix<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 _cached_view_matrix<span class="op">{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">//OPENGLWIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:46 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:54 +0000</p>
 
 
 </section>

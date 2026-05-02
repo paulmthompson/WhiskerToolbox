@@ -398,7 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>constexpr char const *</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacePlottingOpenGL_1_1GlyphShaders.html#variable-instanced-vertex-shader">INSTANCED_VERTEX_SHADER</a></strong> <br>Vertex shader for instanced glyph rendering (ticks, squares, crosses)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacePlottingOpenGL_1_1GlyphShaders.html#variable-instanced-vertex-shader">INSTANCED_VERTEX_SHADER</a></strong> <br>Vertex shader for instanced glyph rendering (ticks, top lines, squares, crosses)</td>
 </tr>
 <tr class="even">
 <td>constexpr char const *</td>
@@ -418,7 +418,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <p>Embedded fallback shader source code for the glyph renderer.</p>
-<p>These shaders support both GL_POINTS mode (for circles) and instanced rendering mode (for ticks, squares, crosses).</p>
+<p>These shaders support both GL_POINTS mode (for circles) and instanced rendering mode (for ticks, top lines, squares, crosses).</p>
 <p>Attribute layout for instanced rendering:</p>
 <ul>
 <li>location 0: geometry vertex (per-vertex)</li>
@@ -434,7 +434,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span>  <span class="op">*</span> INSTANCED_VERTEX_SHADER <span class="op">=</span> <span class="st">R"(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="vs">#version 410 core</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="vs">layout (location = 0) in vec2 a_geometry;       // Per-vertex glyph shape</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="vs">layout (location = 0) in vec2 a_geometry;       // Per-vertex glyph shape (tick vs top line vs …)</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="vs">layout (location = 1) in vec2 a_instance_pos;   // Per-instance position</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="vs">layout (location = 2) in vec4 a_instance_color; // Per-instance color</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
@@ -444,14 +444,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="vs">out vec4 v_color;</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="vs">void main() {</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="vs">    // Scale geometry by glyph size and add instance position</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="vs">    // world = normalized_shape * pixel_or_world_size + instance_anchor</span></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="vs">    vec2 world_pos = a_geometry * u_glyph_size + a_instance_pos;</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="vs">    gl_Position = u_mvp_matrix * vec4(world_pos, 0.0, 1.0);</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="vs">    v_color = a_instance_color;</span></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="vs">}</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="st">)"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Vertex shader for instanced glyph rendering (ticks, squares, crosses)</p>
-<p>This shader combines per-vertex geometry with per-instance position offsets.</p>
+<p>Vertex shader for instanced glyph rendering (ticks, top lines, squares, crosses)</p>
+<p>Per-vertex shape <code>a_geometry</code> is authored in normalized [-0.5, 0.5] space on the CPU (<code>GlyphRenderer::createGlyphGeometry</code>): Tick uses a vertical segment (Δx=0), TopLine a horizontal segment (Δy=0). Both multiply by <code>u_glyph_size</code> and add the instance anchor. There is no geometry shader; orientation is entirely encoded in the vertex buffer.</p>
 </section>
 <section id="variable-instanced_fragment_shader" class="level3">
 <h3 class="anchored" data-anchor-id="variable-instanced_fragment_shader">variable INSTANCED_FRAGMENT_SHADER</h3>
@@ -513,7 +513,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="vs">}</span></span>
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="st">)"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

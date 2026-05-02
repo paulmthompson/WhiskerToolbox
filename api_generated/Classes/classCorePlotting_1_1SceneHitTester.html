@@ -436,7 +436,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1HitTestResult.html">HitTestResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneHitTester.html#function-queryseriesregion">querySeriesRegion</a></strong>(float world_x, float world_y, <a href="../../api_generated/Classes/structCorePlotting_1_1LayoutResponse.html">LayoutResponse</a> const &amp; layout) const<br>Query which series region contains the given point.</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneHitTester.html#function-queryseriesregion">querySeriesRegion</a></strong>(float world_x, float world_y, <a href="../../api_generated/Classes/structCorePlotting_1_1LayoutResponse.html">LayoutResponse</a> const &amp; layout, int64_t master_time_axis_origin_absolute =0) const<br>Query which series region contains the given point.</td>
 </tr>
 </tbody>
 </table>
@@ -577,8 +577,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>HitTestResult querySeriesRegion<span class="op">(</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y<span class="op">,</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    LayoutResponse <span class="at">const</span> <span class="op">&amp;</span> layout</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    LayoutResponse <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> master_time_axis_origin_absolute <span class="op">=</span><span class="dv">0</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Query which series region contains the given point.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -589,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/structCorePlotting_1_1HitTestResult.html">HitTestResult</a> with AnalogSeries type if within a series region</p>
 <p>Use this to determine which analog series the mouse is hovering over. Does not check for discrete elements.</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

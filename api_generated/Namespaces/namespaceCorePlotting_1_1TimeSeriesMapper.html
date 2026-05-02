@@ -351,6 +351,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#choosing-the-right-mapper" id="toc-choosing-the-right-mapper" class="nav-link" data-scroll-target="#choosing-the-right-mapper">Choosing the Right Mapper</a></li>
   <li><a href="#model-matrix-rendering-pattern" id="toc-model-matrix-rendering-pattern" class="nav-link" data-scroll-target="#model-matrix-rendering-pattern">Model-Matrix Rendering Pattern</a></li>
+  <li><a href="#cross-c-timeframe-contract-physical-time-vs-indices" id="toc-cross-c-timeframe-contract-physical-time-vs-indices" class="nav-link" data-scroll-target="#cross-c-timeframe-contract-physical-time-vs-indices">Cross-<span class="citation" data-cites="c">@c</span> TimeFrame contract (physical time vs indices)</a></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-mapeventstovector" id="toc-function-mapeventstovector" class="nav-link" data-scroll-target="#function-mapeventstovector">function mapEventsToVector</a></li>
@@ -486,6 +487,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Interval display: temporal regions/epochs</li>
 </ul>
 <p>All range-returning methods support zero-copy single-traversal consumption.</p>
+</section>
+<section id="cross-c-timeframe-contract-physical-time-vs-indices" class="level2">
+<h2 class="anchored" data-anchor-id="cross-c-timeframe-contract-physical-time-vs-indices">Cross-<span class="citation" data-cites="c">@c</span> TimeFrame contract (physical time vs indices)</h2>
+<p>Callers are expected to construct <code>[TimeFrame](/api_generated/Classes/classTimeFrame.md)</code> objects so that <code>getTimeAtIndex</code> returns comparable physical-time scalars for the same instant across frames. Index equality is not preserved across frames: the same instant may be <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code><em>20</em> in one frame and <em>50</em> in another. Range filtering still uses <code>convert_time_index</code> where needed; plotted X for a sample uses that sample’s own frame’s <code>getTimeAtIndex</code>, then subtracts an origin computed the same way (scalar arithmetic in one physical axis).</p>
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
@@ -748,7 +753,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: Range of <a href="../../api_generated/Classes/structCorePlotting_1_1MappedAnalogVertex.html">MappedAnalogVertex</a></p>
 <p>Returns <a href="../../api_generated/Classes/structCorePlotting_1_1MappedAnalogVertex.html">MappedAnalogVertex</a> which includes the original time frame index, enabling the caller to detect gaps based on index discontinuities.</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

@@ -412,7 +412,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1DataViewerCoordinates.html#function-dataviewercoordinates">DataViewerCoordinates</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a> const &amp; view_state, int width, int height)<br>Construct from view state and dimensions.</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1DataViewerCoordinates.html#function-dataviewercoordinates">DataViewerCoordinates</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a> const &amp; view_state, int width, int height, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * master_time_frame =nullptr)<br>Construct from view state and dimensions.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -494,14 +494,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>DataViewerCoordinates<span class="op">(</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">*</span> master_time_frame <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Construct from view state and dimensions.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>view_state</strong> Current ViewStateData with time bounds and Y-axis state</li>
 <li><strong>width</strong> Canvas width in pixels</li>
 <li><strong>height</strong> Canvas height in pixels</li>
+<li><strong>master_time_frame</strong> When non-null, <code>x_min</code> / <code>x_max</code> are interpreted as <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> into this frame and the time axis uses <code>getTimeAtIndex</code> for canvas/time mapping. When null, <code>x_min</code> / <code>x_max</code> are used directly as integer time values (legacy index semantics).</li>
 </ul>
 </section>
 <section id="function-dataviewercoordinates-1" class="level3">
@@ -669,7 +671,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Get world Y units per pixel.</p>
 <p><strong>Return</strong>: World Y units per pixel</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:43 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:51 +0000</p>
 
 
 </section>

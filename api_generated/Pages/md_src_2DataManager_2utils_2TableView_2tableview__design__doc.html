@@ -535,7 +535,7 @@ ul.task-list li input[type="checkbox"] {
 <p>// 2. Use std::visit with a lambda to process the descriptor type-safely. std::string tooltip_text = std::visit(<a href="auto&amp;&amp; arg"></a> -&gt; std::string { using T = std::decay_t&lt;decltype(arg)&gt;; if constexpr (std::is_same_v&lt;T, size_t&gt;) { return “Source Index:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, double&gt;) { return “Source Timestamp:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, Interval&gt;) { return “Source Interval: [” + std::to_string(arg.start) + ”, ” + std::to_string(arg.end) + ”]”; } else { return “Source: N/A”; } }, desc);</p>
 <p>// 3. Display the generated tooltip text to the user. show_tooltip(tooltip_text); }</p>
 <hr>
-<p>Updated on 2026-04-30 at 14:52:47 +0000</p>
+<p>Updated on 2026-05-02 at 04:02:55 +0000</p>
 
 
 </section>
