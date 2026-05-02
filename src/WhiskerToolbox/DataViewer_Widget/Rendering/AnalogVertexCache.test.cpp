@@ -161,7 +161,8 @@ TEST_CASE("AnalogVertexCache: appendVertices", "[AnalogVertexCache]") {
     for (int i = 50; i < 60; ++i) {
         append.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
-    cache.appendVertices(append);
+
+    cache.appendVertices(append, TimeFrameIndex{0});
 
     CHECK(cache.size() == 60);
     CHECK(cache.cachedEnd() == TimeFrameIndex{60});
@@ -184,7 +185,7 @@ TEST_CASE("AnalogVertexCache: prependVertices", "[AnalogVertexCache]") {
     for (int i = 40; i < 50; ++i) {
         prepend.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
-    cache.prependVertices(prepend);
+    cache.prependVertices(prepend, TimeFrameIndex{40});
 
     CHECK(cache.size() == 60);
     CHECK(cache.cachedStart() == TimeFrameIndex{40});
@@ -271,7 +272,7 @@ TEST_CASE("AnalogVertexCache: capacity overflow", "[AnalogVertexCache]") {
     for (int i = 50; i < 60; ++i) {
         append.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
-    cache.appendVertices(append);
+    cache.appendVertices(append, TimeFrameIndex{0});
 
     // Size should still be at capacity
     CHECK(cache.size() == 50);

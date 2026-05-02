@@ -11,6 +11,8 @@
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -301,7 +303,11 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     size_t const desired_capacity = std::max(visible_points * 3, static_cast<size_t>(64));
 
     if (!cache.isInitialized() || cache.capacity() < desired_capacity) {
-        cache.initialize(desired_capacity);
+        size_t new_capacity = cache.isInitialized() ? std::max(desired_capacity, cache.capacity() * 2) : desired_capacity;
+        if (cache.isInitialized()) {
+            spdlog::debug("AnalogVertexCache: Growing geometrically from {} to {} (desired {})", cache.capacity(), new_capacity, desired_capacity);
+        }
+        cache.initialize(new_capacity);
     }
 
     // Check if we need to update the cache (using series timeframe indices)
@@ -311,27 +317,33 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         if (missing_ranges.size() == 1 &&
             missing_ranges[0].start == cache_start &&
             missing_ranges[0].end == cache_end) {
+
+            spdlog::debug("AnalogVertexCache: Complete cache miss for range [{}, {}]", cache_start.getValue(), cache_end.getValue());
+        
             // Complete cache miss - regenerate all vertices
             // Note: generateVerticesForRange takes master timeframe indices and converts internally
             auto vertices = generateVerticesForRange(series, master_time_frame,
                                                      params.start_time, params.end_time, params.x_origin_master_absolute_time);
             cache.setVertices(vertices, cache_start, cache_end);
         } else {
-            // Incremental update - only generate missing ranges
-            // Convert the missing ranges back to master timeframe for generateVerticesForRange
-            for (auto const & range: missing_ranges) {
-                TimeFrameIndex master_start = range.start;
-                TimeFrameIndex master_end = range.end;
+            for (auto const & missing_range: missing_ranges) {
+                spdlog::debug("AnalogVertexCache: Incremental generation [{}, {}] prepending: {}", 
+                              missing_range.start.getValue(), missing_range.end.getValue(), missing_range.prepend);
+    
+                TimeFrameIndex master_start = missing_range.start;
+                TimeFrameIndex master_end = missing_range.end;
                 if (series_tf && series_tf != master_time_frame.get()) {
                     std::tie(master_start, master_end) = convertTimeFrameRange(
-                            range.start, range.end, *series_tf, *master_time_frame);
+                            missing_range.start, missing_range.end, *series_tf, *master_time_frame);
                 }
                 auto vertices = generateVerticesForRange(series, master_time_frame,
                                                          master_start, master_end, params.x_origin_master_absolute_time);
-                if (range.prepend) {
-                    cache.prependVertices(vertices);
+                
+                // FIX: Pass the explicitly requested boundaries to the cache modifiers
+                if (missing_range.prepend) {
+                    cache.prependVertices(vertices, missing_range.start);
                 } else {
-                    cache.appendVertices(vertices);
+                    cache.appendVertices(vertices, missing_range.end);
                 }
             }
         }
