@@ -1137,7 +1137,16 @@ void OpenGLWidget::renderWithSceneRenderer() {
     }
 
     // Always render with current matrices (handles Y-axis pan/zoom without rebuild)
+    auto t_render_start = std::chrono::steady_clock::now();
+    
     _scene_renderer->render(_cached_view_matrix, _cached_projection_matrix);
+    
+    auto t_render_end = std::chrono::steady_clock::now();
+    auto ms_render = std::chrono::duration_cast<std::chrono::milliseconds>(t_render_end - t_render_start).count();
+    
+    if (ms_render > 5) {
+        spdlog::debug("Performance Warning [GL Render]: Draw call took {}ms", ms_render);
+    }
 }
 
 void OpenGLWidget::updateMatrices() {
@@ -1189,9 +1198,13 @@ void OpenGLWidget::rebuildScene() {
     builder.setSelectedEntities(_selection_manager->selectedEntities());
 
     // Add all series batches to the scene builder
+    auto t_start = std::chrono::steady_clock::now();
+
     addAnalogBatchesToBuilder(builder);
     addEventBatchesToBuilder(builder);
     addIntervalBatchesToBuilder(builder);
+
+    auto t_batches = std::chrono::steady_clock::now();
 
     // Build the scene (this also builds spatial index for discrete elements)
     _cache_state.scene = builder.build();
@@ -1199,12 +1212,28 @@ void OpenGLWidget::rebuildScene() {
             masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
     _cache_state.scene_dirty = false;
 
+    auto t_build = std::chrono::steady_clock::now();
+
     // Store batch key maps for hit testing
     _cache_state.rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
     _cache_state.glyph_batch_key_map = builder.getGlyphBatchKeyMap();
 
     // Upload scene to renderer and render
     _scene_renderer->uploadScene(_cache_state.scene);
+
+    auto t_upload = std::chrono::steady_clock::now();
+
+    // Calculate durations in milliseconds
+    auto ms_batches = std::chrono::duration_cast<std::chrono::milliseconds>(t_batches - t_start).count();
+    auto ms_build   = std::chrono::duration_cast<std::chrono::milliseconds>(t_build - t_batches).count();
+    auto ms_upload  = std::chrono::duration_cast<std::chrono::milliseconds>(t_upload - t_build).count();
+
+    // Log if the total rebuild takes longer than 5ms
+    if ((ms_batches + ms_build + ms_upload) > 5) {
+        spdlog::debug("Performance Warning [rebuildScene]: Batches: {}ms | Build: {}ms | Upload: {}ms", 
+                      ms_batches, ms_build, ms_upload);
+    }
+
 
     // Update cached matrices
     _cached_projection_matrix = projection;
@@ -1572,19 +1601,19 @@ void OpenGLWidget::computeAndApplyLayout() {
         return;
     }
 
-    // Build layout request from current series state
+    auto t_start = std::chrono::steady_clock::now();
+
     CorePlotting::LayoutRequest const request = buildLayoutRequest();
-
-    // Compute layout using LayoutEngine
     _cache_state.layout_response = _layout_engine.compute(request);
-
-    // Apply computed layout to display options via data store
     _data_store->applyLayoutResponse(_cache_state.layout_response);
 
-    // Note: _cache_state.rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
-    // This ensures the batch key map stays synchronized with the actual rendered batches
-
     _cache_state.layout_response_dirty = false;
+
+    auto t_end = std::chrono::steady_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+    if (ms > 2) {
+        spdlog::debug("Performance Warning [Layout]: computeAndApplyLayout took {}ms", ms);
+    }
 }
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
