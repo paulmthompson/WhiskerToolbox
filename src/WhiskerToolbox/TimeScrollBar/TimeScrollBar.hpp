@@ -127,6 +127,10 @@ private:
     float _target_fps{25.F};
     bool _play_mode{false};
 
+    /// Carries sub-frame remainder so averaged time advance matches `_target_fps` when the
+    /// QTimer runs at the capped UI refresh rate (`playbackUiRefreshFps`).
+    double _playback_frame_accum{0.0};
+
     /// Active frame-skip filter (nullptr → no filtering)
     std::unique_ptr<FrameFilter> _frame_filter;
 

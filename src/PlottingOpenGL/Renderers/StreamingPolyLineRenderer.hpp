@@ -330,6 +330,77 @@ private:
     static constexpr char const * SHADER_PROGRAM_NAME = "streaming_polyline_renderer";
 };
 
+/**
+ * @brief Embedded fallback shader source code for the polyline renderer.
+ * 
+ * These match the interface of WhiskerToolbox/shaders/line.vert and line.frag
+ * but are embedded for cases where shader files are not available.
+ */
+namespace StreamingPolyLineShaders {
+
+
+constexpr char const * VERTEX_SHADER = R"(
+#version 410 core
+
+layout(location = 0) in vec2 a_position;
+
+uniform mat4 u_mvp_matrix;
+
+void main() {
+    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+}
+)";
+
+constexpr char const * GEOMETRY_SHADER = R"(
+#version 410 core
+
+layout(lines) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+uniform float u_line_width;
+uniform vec2 u_viewport_size;
+
+void main() {
+    vec2 p0 = gl_in[0].gl_Position.xy;
+    vec2 p1 = gl_in[1].gl_Position.xy;
+
+    vec2 sp0 = p0 * u_viewport_size * 0.5;
+    vec2 sp1 = p1 * u_viewport_size * 0.5;
+
+    vec2 dir = sp1 - sp0;
+    float len = length(dir);
+    if (len < 0.001) return;
+    dir /= len;
+    vec2 perp = vec2(-dir.y, dir.x);
+
+    vec2 offset_ndc = perp * u_line_width / u_viewport_size;
+
+    gl_Position = vec4(p0 + offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p0 - offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p1 + offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p1 - offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    EndPrimitive();
+}
+)";
+
+constexpr char const * FRAGMENT_SHADER = R"(
+#version 410 core
+
+uniform vec4 u_color;
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = u_color;
+}
+)";
+
+}// namespace StreamingPolyLineShaders
+
 }// namespace PlottingOpenGL
 
 #endif// PLOTTINGOPENGL_RENDERERS_STREAMINGPOLYLINERENDERER_HPP

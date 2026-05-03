@@ -427,9 +427,9 @@ bool StreamingPolyLineRenderer::loadShadersFromManager() {
 
 bool StreamingPolyLineRenderer::compileEmbeddedShaders() {
     // Reuse the same embedded shaders as PolyLineRenderer (includes geometry shader)
-    return m_embedded_shader.createFromSource(PolyLineShaders::VERTEX_SHADER,
-                                              PolyLineShaders::GEOMETRY_SHADER,
-                                              PolyLineShaders::FRAGMENT_SHADER);
+    return m_embedded_shader.createFromSource(StreamingPolyLineShaders::VERTEX_SHADER,
+                                              StreamingPolyLineShaders::GEOMETRY_SHADER,
+                                              StreamingPolyLineShaders::FRAGMENT_SHADER);
 }
 
 void StreamingPolyLineRenderer::setupVertexAttributes() {
