@@ -66,6 +66,7 @@ website:
               href: developer/coreplotting/index.qmd
               contents:
                 - developer/coreplotting/feature_color.qmd
+                - developer/coreplotting/min_max_polyline_decimation.qmd
             - section: "PlottingOpenGL"
               contents:
                 - developer/PlottingOpenGL/wide_line_rendering.qmd

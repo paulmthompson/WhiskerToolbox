@@ -59,6 +59,9 @@ struct AnalogBatchParams {
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float thickness{1.0f};
     AnalogRenderMode render_mode{AnalogRenderMode::Line};///< How to render the series
+
+    /// Uniform x-axis buckets per line for min–max decimation; @c 0 disables.
+    int min_max_decimation_bucket_count{0};
 };
 
 /**

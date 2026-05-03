@@ -94,6 +94,9 @@ struct AnalogSeriesOptionsData {
     bool enable_gap_detection = false;///< Enable automatic gap detection
     float gap_threshold = 5.0f;       ///< Threshold for gap detection (in samples)
 
+    /// When true, analog polylines are min–max decimated to ~viewport resolution before GPU/SVG.
+    bool enable_min_max_line_decimation = false;
+
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }
     [[nodiscard]] float get_alpha() const { return style.get().alpha; }

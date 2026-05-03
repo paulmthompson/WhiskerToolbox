@@ -5,3 +5,7 @@ title: "DataViewerWidget"
 # DataViewerWidget
 
 This section provides user guidance on the DataViewerWidget.
+
+## Analog series: min–max decimation
+
+For very long analog traces, enabling **Min–max decimation (dense traces)** in the analog series panel reduces the number of points sent to the GPU (and to SVG export) while preserving the visible envelope in the time direction. Turn it off if you need every sample drawn (for example when verifying sample-accurate alignment at extreme zoom).

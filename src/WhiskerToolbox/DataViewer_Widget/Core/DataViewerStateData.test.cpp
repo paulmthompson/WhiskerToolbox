@@ -67,6 +67,7 @@ TEST_CASE("AnalogSeriesOptionsData serialization", "[DataViewerStateData]") {
         REQUIRE(data.gap_handling == AnalogGapHandlingMode::AlwaysConnect);
         REQUIRE(data.enable_gap_detection == false);
         REQUIRE(data.gap_threshold == Approx(5.0f));
+        REQUIRE(data.enable_min_max_line_decimation == false);
     }
 
     SECTION("AnalogGapHandlingMode enum serializes as string") {
@@ -103,6 +104,7 @@ TEST_CASE("AnalogSeriesOptionsData serialization", "[DataViewerStateData]") {
         opts.gap_handling = AnalogGapHandlingMode::ShowMarkers;
         opts.enable_gap_detection = true;
         opts.gap_threshold = 10.0f;
+        opts.enable_min_max_line_decimation = true;
 
         auto json = rfl::json::write(opts);
         auto result = rfl::json::read<AnalogSeriesOptionsData>(json);
@@ -118,6 +120,7 @@ TEST_CASE("AnalogSeriesOptionsData serialization", "[DataViewerStateData]") {
         REQUIRE(data.gap_handling == AnalogGapHandlingMode::ShowMarkers);
         REQUIRE(data.enable_gap_detection == true);
         REQUIRE(data.gap_threshold == Approx(10.0f));
+        REQUIRE(data.enable_min_max_line_decimation == true);
     }
 }
 

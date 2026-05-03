@@ -32,6 +32,7 @@ private slots:
     void _setLineThickness(double thickness);
     void _setGapHandlingMode(int mode_index);
     void _setGapThreshold(int threshold);
+    void _setMinMaxLineDecimation(bool enabled);
 
 private:
     void _updateColorDisplay(QString const & hex_color);

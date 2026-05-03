@@ -7,6 +7,7 @@
 
 #include "DataManager/DataManager.hpp"
 
+#include <QCheckBox>
 #include <QColorDialog>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -38,6 +39,8 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
             this, &AnalogViewer_Widget::_setGapHandlingMode);
     connect(ui->gap_threshold_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setGapThreshold);
+    connect(ui->min_max_decimation_checkbox, &QCheckBox::toggled,
+            this, &AnalogViewer_Widget::_setMinMaxLineDecimation);
 
     // Create std dev display labels (inserted before vertical spacer)
     auto * main_layout = qobject_cast<QVBoxLayout *>(layout());
@@ -91,12 +94,14 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
             // Set gap handling controls
             ui->gap_mode_combo->setCurrentIndex(static_cast<int>(opts->gap_handling));
             ui->gap_threshold_spinbox->setValue(static_cast<int>(opts->gap_threshold));
+            ui->min_max_decimation_checkbox->setChecked(opts->enable_min_max_line_decimation);
         } else {
             _updateColorDisplay("#0000FF");           // Default blue
             ui->scale_spinbox->setValue(1.0);         // Default scale
             ui->line_thickness_spinbox->setValue(1.0);// Default line thickness
             ui->gap_mode_combo->setCurrentIndex(0);   // Default to AlwaysConnect
             ui->gap_threshold_spinbox->setValue(5);   // Default threshold (5 frames)
+            ui->min_max_decimation_checkbox->setChecked(false);
         }
     }
 
@@ -200,6 +205,17 @@ void AnalogViewer_Widget::_setGapThreshold(int threshold) {
         if (opts) {
             opts->gap_threshold = static_cast<float>(threshold);
             // Trigger immediate repaint
+            _opengl_widget->update();
+        }
+    }
+}
+
+/// @brief Persist per-series min–max line decimation and refresh the plot.
+void AnalogViewer_Widget::_setMinMaxLineDecimation(bool enabled) {
+    if (!_active_key.empty()) {
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->enable_min_max_line_decimation = enabled;
             _opengl_widget->update();
         }
     }

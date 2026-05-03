@@ -564,25 +564,25 @@ void OpenGLWidget::paintGL() {
         renderWithSceneRenderer();
     }
     auto render_with_scene_renderer_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - render_with_scene_renderer_start_time);
-    
+
     auto draw_axis_start_time = std::chrono::high_resolution_clock::now();
     drawAxis();
     auto draw_axis_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_axis_start_time);
-    
+
     auto draw_grid_lines_start_time = std::chrono::high_resolution_clock::now();
     drawGridLines();
     auto draw_grid_lines_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_grid_lines_start_time);
-    
+
     //unified controller preview overlay
     auto draw_interaction_preview_start_time = std::chrono::high_resolution_clock::now();
     drawInteractionPreview();
     auto draw_interaction_preview_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_interaction_preview_start_time);
-    
+
     // Lane drag overlay (always drawn when active, independent of developer mode)
     auto draw_lane_drag_overlay_start_time = std::chrono::high_resolution_clock::now();
     drawLaneDragOverlay();
     auto draw_lane_drag_overlay_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_lane_drag_overlay_start_time);
-    
+
     // Developer overlay (QPainter on top of GL)
     auto draw_developer_overlays_start_time = std::chrono::high_resolution_clock::now();
     if (_state && _state->developerMode()) {
@@ -1163,12 +1163,12 @@ void OpenGLWidget::renderWithSceneRenderer() {
 
     // Always render with current matrices (handles Y-axis pan/zoom without rebuild)
     auto t_render_start = std::chrono::steady_clock::now();
-    
+
     _scene_renderer->render(_cached_view_matrix, _cached_projection_matrix);
-    
+
     auto t_render_end = std::chrono::steady_clock::now();
     auto ms_render = std::chrono::duration_cast<std::chrono::milliseconds>(t_render_end - t_render_start).count();
-    
+
     if (ms_render > 5) {
         spdlog::debug("Performance Warning [GL Render]: Draw call took {}ms", ms_render);
     }
@@ -1250,12 +1250,12 @@ void OpenGLWidget::rebuildScene() {
 
     // Calculate durations in milliseconds
     auto ms_batches = std::chrono::duration_cast<std::chrono::milliseconds>(t_batches - t_start).count();
-    auto ms_build   = std::chrono::duration_cast<std::chrono::milliseconds>(t_build - t_batches).count();
-    auto ms_upload  = std::chrono::duration_cast<std::chrono::milliseconds>(t_upload - t_build).count();
+    auto ms_build = std::chrono::duration_cast<std::chrono::milliseconds>(t_build - t_batches).count();
+    auto ms_upload = std::chrono::duration_cast<std::chrono::milliseconds>(t_upload - t_build).count();
 
     // Log if the total rebuild takes longer than 5ms
     if ((ms_batches + ms_build + ms_upload) > 5) {
-        spdlog::debug("Performance Warning [rebuildScene]: Batches: {}ms | Build: {}ms | Upload: {}ms", 
+        spdlog::debug("Performance Warning [rebuildScene]: Batches: {}ms | Build: {}ms | Upload: {}ms",
                       ms_batches, ms_build, ms_upload);
     }
 
@@ -1378,6 +1378,12 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 static_cast<float>(b) / 255.0f,
                 opts->get_alpha());
         batch_params.thickness = opts->get_line_thickness();
+
+        batch_params.min_max_decimation_bucket_count = 0;
+        if (opts->enable_min_max_line_decimation) {
+            int const w = std::max(1, width());
+            batch_params.min_max_decimation_bucket_count = std::clamp(w * 2, 512, 8192);
+        }
 
         // Choose render mode based on gap handling setting from state
         if (opts->gap_handling == AnalogGapHandlingMode::ShowMarkers) {
