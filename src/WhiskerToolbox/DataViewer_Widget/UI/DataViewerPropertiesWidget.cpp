@@ -11,6 +11,7 @@
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
 #include "SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.hpp"
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
+#include "SubWidgets/DigitalEvent/GroupEventViewer_Widget.hpp"
 #include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -241,10 +242,8 @@ void DataViewerPropertiesWidget::_onThemeChanged(int index) {
     DataViewerTheme theme = DataViewerTheme::Dark;
     switch (index) {
         case 0:
-            theme = DataViewerTheme::Dark;
-            break;
         case 1:
-            // Purple theme - map to Dark for now (keeping UI consistent)
+            // Index 1: purple theme maps to Dark for now (keeping UI consistent)
             theme = DataViewerTheme::Dark;
             break;
         case 2:
@@ -332,6 +331,7 @@ void DataViewerPropertiesWidget::_handleGroupSelected(std::string const & group_
     }
 
     int constexpr stacked_widget_group_analog_index = 3;
+    int constexpr stacked_widget_group_event_index = 4;
 
     auto const type = _data_manager->getType(children.front());
     if (type == DM_DataType::Analog) {
@@ -340,6 +340,13 @@ void DataViewerPropertiesWidget::_handleGroupSelected(std::string const & group_
                 ui->stackedWidget->widget(stacked_widget_group_analog_index));
         if (group_widget) {
             group_widget->setActiveKeys(group_name, children);
+        }
+    } else if (type == DM_DataType::DigitalEvent) {
+        ui->stackedWidget->setCurrentIndex(stacked_widget_group_event_index);
+        auto * group_event_widget = dynamic_cast<GroupEventViewer_Widget *>(
+                ui->stackedWidget->widget(stacked_widget_group_event_index));
+        if (group_event_widget) {
+            group_event_widget->setActiveKeys(group_name, children);
         }
     }
 }
@@ -487,11 +494,13 @@ void DataViewerPropertiesWidget::_setupStackedWidget() {
     auto * interval_widget = new IntervalViewer_Widget(_data_manager, _opengl_widget);
     auto * event_widget = new EventViewer_Widget(_data_manager, _opengl_widget);
     auto * group_analog_widget = new GroupAnalogViewer_Widget(_data_manager, _opengl_widget);
+    auto * group_event_widget = new GroupEventViewer_Widget(_data_manager, _opengl_widget);
 
     ui->stackedWidget->addWidget(analog_widget);      // Index 0
     ui->stackedWidget->addWidget(interval_widget);    // Index 1
     ui->stackedWidget->addWidget(event_widget);       // Index 2
     ui->stackedWidget->addWidget(group_analog_widget);// Index 3
+    ui->stackedWidget->addWidget(group_event_widget); // Index 4
 
     // Connect color change signals from sub-widgets
     connect(analog_widget, &AnalogViewer_Widget::colorChanged,
@@ -501,6 +510,8 @@ void DataViewerPropertiesWidget::_setupStackedWidget() {
     connect(event_widget, &EventViewer_Widget::colorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
     connect(group_analog_widget, &GroupAnalogViewer_Widget::colorChanged,
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
+    connect(group_event_widget, &GroupEventViewer_Widget::colorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
 }
 

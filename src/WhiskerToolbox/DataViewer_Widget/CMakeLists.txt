@@ -72,6 +72,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.cpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.hpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.ui
+        UI/SubWidgets/DigitalEvent/GroupEventViewer_Widget.cpp
+        UI/SubWidgets/DigitalEvent/GroupEventViewer_Widget.hpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.cpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.ui
