@@ -61,8 +61,9 @@ struct KeyConflict {
  * - Adapter routing: dispatches actions to registered KeyActionAdapters
  *
  * When installed as a QApplication event filter, it intercepts key events and
- * dispatches them through the scope resolution pipeline. Text-input widgets
- * (QLineEdit, QTextEdit, etc.) are automatically bypassed.
+ * dispatches them through the scope resolution pipeline. When focus is in a
+ * text-input widget (QLineEdit, QTextEdit, etc.), keybindings are not dispatched
+ * so normal typing is not interrupted.
  */
 class KeymapManager : public QObject {
     Q_OBJECT
@@ -76,7 +77,7 @@ public:
      * @brief Application-wide event filter for keyboard dispatch
      *
      * Intercepts QEvent::KeyPress events and applies scope resolution.
-     * Text-input widgets are bypassed automatically.
+     * If focus is in a text-input widget, matched shortcuts are not dispatched.
      * If no action matches, the event passes through to Qt.
      */
     bool eventFilter(QObject * obj, QEvent * event) override;
