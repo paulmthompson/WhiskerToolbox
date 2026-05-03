@@ -517,6 +517,9 @@ window.Quarto = {
  <span class="menu-text">FeatureColor Module</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/coreplotting/min_max_polyline_decimation.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1487,6 +1490,12 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Plots/DataViewerWidget/AdaptiveStackedWidget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AdaptiveStackedWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
   </div>
@@ -1748,7 +1757,7 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td>Playback 0.5–200 FPS (preset ladder)</td>
-<td><code>TimeScrollBar</code> + <code>time_scroll_bar::timerPeriodMsForTargetFps()</code> — QTimer interval <code>1000/target_fps</code> ms (clamped), <strong>one frame per tick</strong>; rewind / fast-forward step discrete presets (<code>TimeScrollBarPlayback.hpp</code>)</td>
+<td><code>TimeScrollBar</code> + <code>time_scroll_bar::timerPeriodMsForPlayback()</code> / <code>playbackUiRefreshFps()</code> — QTimer capped at <strong>30 Hz</strong>; when <code>target_fps</code> is higher, multiple frames advance per tick so logical speed matches <code>target_fps</code>; rewind / fast-forward step discrete presets (<code>TimeScrollBarPlayback.hpp</code>)</td>
 </tr>
 <tr class="odd">
 <td>Persisted playback rate</td>
@@ -1898,8 +1907,8 @@ window.Quarto = {
 <section id="variable-timer-period-implemented" class="level3">
 <h3 class="anchored" data-anchor-id="variable-timer-period-implemented">3.1 Variable Timer Period (implemented)</h3>
 <ul>
-<li><code>TimeScrollBar</code> keeps <code>float _target_fps</code> (default 25). Playback uses <code>time_scroll_bar::timerPeriodMsForTargetFps(_target_fps)</code> for the QTimer interval (milliseconds rounded from <code>1000 / target_fps</code>, clamped to a 1 ms minimum and a large upper bound for safety).</li>
-<li>Each timer tick advances <strong>exactly one frame</strong> (<code>_vidLoop()</code>), regardless of target FPS. Rates above ~1000 FPS are limited by the 1 ms minimum interval.</li>
+<li><code>TimeScrollBar</code> keeps <code>float _target_fps</code> (default 25). Playback uses <code>time_scroll_bar::timerPeriodMsForPlayback(_target_fps)</code> for the QTimer interval (milliseconds from <code>1000 / playbackUiRefreshFps(target_fps)</code>, clamped to a 1 ms minimum and a large upper bound for safety). The UI refresh rate is capped at <code>kMaxPlaybackUiRefreshFps</code> (30 Hz); when <code>target_fps</code> exceeds that cap, <code>_vidLoop()</code> advances multiple frames per tick using a fractional accumulator so average playback speed still matches <code>target_fps</code>.</li>
+<li>For <code>target_fps</code> at or below the cap, each timer tick still advances one frame (same as one timer tick per frame at low rates).</li>
 </ul>
 </section>
 <section id="discrete-fps-presets-implemented" class="level3">

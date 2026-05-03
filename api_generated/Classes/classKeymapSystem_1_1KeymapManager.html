@@ -566,7 +566,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Scope resolution: resolves key presses using priority order (EditorFocused &gt; AlwaysRouted &gt; Global)</li>
 <li>Adapter routing: dispatches actions to registered KeyActionAdapters</li>
 </ul>
-<p>When installed as a QApplication event filter, it intercepts key events and dispatches them through the scope resolution pipeline. Text-input widgets (QLineEdit, QTextEdit, etc.) are automatically bypassed.</p>
+<p>When installed as a QApplication event filter, it intercepts key events and dispatches them through the scope resolution pipeline. When focus is in a text-input widget (QLineEdit, QTextEdit, etc.), keybindings are not dispatched so normal typing is not interrupted.</p>
 </section>
 <section id="public-signals-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
@@ -603,7 +603,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QEvent</span> <span class="op">*</span> event</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Application-wide event filter for keyboard dispatch.</p>
-<p>Intercepts QEvent::KeyPress events and applies scope resolution. Text-input widgets are bypassed automatically. If no action matches, the event passes through to Qt.</p>
+<p>Intercepts QEvent::KeyPress events and applies scope resolution. If focus is in a text-input widget, matched shortcuts are not dispatched. If no action matches, the event passes through to Qt.</p>
 </section>
 <section id="function-seteditorregistry" class="level3">
 <h3 class="anchored" data-anchor-id="function-seteditorregistry">function setEditorRegistry</h3>
@@ -857,7 +857,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Import user overrides (e.g.&nbsp;from AppPreferencesData on startup)</p>
 <hr>
-<p>Updated on 2026-05-02 at 19:24:01 +0000</p>
+<p>Updated on 2026-05-03 at 19:43:01 +0000</p>
 
 
 </section>

@@ -369,6 +369,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-gap_handling" id="toc-variable-gap_handling" class="nav-link" data-scroll-target="#variable-gap_handling">variable gap_handling</a></li>
   <li><a href="#variable-enable_gap_detection" id="toc-variable-enable_gap_detection" class="nav-link" data-scroll-target="#variable-enable_gap_detection">variable enable_gap_detection</a></li>
   <li><a href="#variable-gap_threshold" id="toc-variable-gap_threshold" class="nav-link" data-scroll-target="#variable-gap_threshold">variable gap_threshold</a></li>
+  <li><a href="#variable-enable_min_max_line_decimation" id="toc-variable-enable_min_max_line_decimation" class="nav-link" data-scroll-target="#variable-enable_min_max_line_decimation">variable enable_min_max_line_decimation</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -480,6 +481,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>float</td>
 <td><strong><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html#variable-gap-threshold">gap_threshold</a></strong> <br>Threshold for gap detection (in samples)</td>
 </tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structAnalogSeriesOptionsData.html#variable-enable-min-max-line-decimation">enable_min_max_line_decimation</a></strong> <br>When true, analog polylines are min–max decimated to ~viewport resolution before GPU/SVG.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -554,8 +559,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-gap_threshold">variable gap_threshold</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> gap_threshold <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Threshold for gap detection (in samples)</p>
+</section>
+<section id="variable-enable_min_max_line_decimation" class="level3">
+<h3 class="anchored" data-anchor-id="variable-enable_min_max_line_decimation">variable enable_min_max_line_decimation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> enable_min_max_line_decimation <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When true, analog polylines are min–max decimated to ~viewport resolution before GPU/SVG.</p>
 <hr>
-<p>Updated on 2026-05-02 at 19:23:59 +0000</p>
+<p>Updated on 2026-05-03 at 19:42:58 +0000</p>
 
 
 </section>

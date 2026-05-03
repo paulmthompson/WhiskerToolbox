@@ -488,6 +488,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">FeatureColor Module</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/coreplotting/min_max_polyline_decimation.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1458,6 +1461,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/AdaptiveStackedWidget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AdaptiveStackedWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
   </div>
@@ -1670,50 +1679,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Properties panel — feature tree, per-series controls, theme/grid/export</td>
 </tr>
 <tr class="odd">
+<td><code>AdaptiveStackedWidget</code> (UI)</td>
+<td>Feature Controls <code>QStackedWidget</code> — vertical size tracks the active editor page only</td>
+</tr>
+<tr class="even">
 <td><code>OpenGLWidget</code> (Rendering)</td>
 <td>OpenGL canvas — builds scene, renders batches, handles mouse events</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>DataViewerState</code> (Core)</td>
 <td>Serializable state — view window, theme, grid, per-series options</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>TimeSeriesDataStore</code> (Core)</td>
 <td>Runtime data — series pointers, layout transforms, vertex caches</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>SeriesOptionsRegistry</code> (Core)</td>
 <td>Type-safe registry for per-series display options in state</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>DataViewerInteractionManager</code> (Interaction)</td>
 <td>Interaction state machine — interval creation/modification</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>DataViewerInputHandler</code> (Interaction)</td>
 <td>Mouse event processing — pan, click, hover routing</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>DataViewerSelectionManager</code> (Interaction)</td>
 <td>Entity selection — multi-select via Ctrl+click</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>DataViewerTooltipController</code> (Interaction)</td>
 <td>Tooltip display with hover delay</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>DataViewerCoordinates</code> (Interaction)</td>
 <td>Canvas ↔︎ world ↔︎ time coordinate conversions</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>SceneBuildingHelpers</code> (Rendering)</td>
 <td>Converts series data into <code>RenderableBatch</code> primitives</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>TransformComposers</code> (Rendering)</td>
 <td>Composes Y transforms from normalization, layout, and global scale</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>DataViewerWidgetRegistration</code></td>
 <td>Registers type with <code>EditorRegistry</code> (state, view, properties factories)</td>
 </tr>

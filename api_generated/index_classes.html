@@ -453,6 +453,9 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">FeatureColor Module</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/coreplotting/min_max_polyline_decimation.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1423,6 +1426,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/ui/Plots/DataViewerWidget/AdaptiveStackedWidget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AdaptiveStackedWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
   </div>
@@ -1538,6 +1547,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classACFWidget.html">ACFWidget</a></strong> <br>Main widget for autocorrelation function visualization.</li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceACFWidgetModule.html">ACFWidgetModule</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structAdapterInfo.html">AdapterInfo</a></strong> <br>Information about an available adapter.</li>
+<li><strong>class <a href="../api_generated/Classes/classAdaptiveStackedWidget.html">AdaptiveStackedWidget</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classAnalogDataAdapter.html">AnalogDataAdapter</a></strong> <br>Adapter that exposes <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> as an <a href="../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classAnalogDataStorageBase.html">AnalogDataStorageBase</a></strong> <br>CRTP base class for analog data storage implementations.</li>
 <li><strong>struct <a href="../api_generated/Classes/structAnalogDataStorageCache.html">AnalogDataStorageCache</a></strong> <br>Cache structure for fast-path access to contiguous analog storage.</li>
@@ -1703,6 +1713,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structContextAction.html">ContextAction</a></strong> <br>A discoverable action that can be offered based on current context.</li>
 <li><strong>struct <a href="../api_generated/Classes/structContrastOptions.html">ContrastOptions</a></strong> <br>Options structure for linear contrast/brightness transformation.</li>
 <li><strong>struct <a href="../api_generated/Classes/structConv2dSameImpl.html">Conv2dSameImpl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1_0d168.html">CorePlotting</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1_0d159.html">CorePlotting</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1_0d103.html">CorePlotting</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting.html">CorePlotting</a></strong>
@@ -1781,6 +1792,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1MappedRectElement.html">MappedRectElement</a></strong> <br>Element type for rectangles (intervals)</li>
 <li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1MappedVertex.html">MappedVertex</a></strong> <br>Single vertex in a polyline (analog series, line data)</li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1MaskContourMapper.html">MaskContourMapper</a></strong></li>
+<li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1MinMaxDecimationParams.html">MinMaxDecimationParams</a></strong> <br>Parameters for min–max polyline decimation.</li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1NormalizationHelpers.html">NormalizationHelpers</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classCorePlotting_1_1OwningLineView.html">OwningLineView</a></strong> <br><a href="../api_generated/Classes/structLine.html">Line</a> view that owns its vertex data.</li>
 <li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1PolyLineStyle.html">PolyLineStyle</a></strong> <br>PolyLine styling options.</li>
@@ -1829,10 +1841,10 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">ViewStateData</a></strong> <br>Serializable 2D camera state.</li>
 <li><strong>struct <a href="../api_generated/Classes/structCorePlotting_1_1YAxisParams.html">YAxisParams</a></strong> <br>Parameters for Y-axis coordinate conversions.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1FeatureColor_1_1_0d135.html">CorePlotting::FeatureColor</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1FeatureColor_1_1_0d128.html">CorePlotting::FeatureColor</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1FeatureColor_1_1_0d126.html">CorePlotting::FeatureColor</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1TimeSeriesMapper_1_1_0d181.html">CorePlotting::TimeSeriesMapper</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1FeatureColor_1_1_0d135.html">CorePlotting::FeatureColor</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceCorePlotting_1_1TimeSeriesMapper_1_1_0d183.html">CorePlotting::TimeSeriesMapper</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classCsvDatasetPreviewModel.html">CsvDatasetPreviewModel</a></strong> <br>Lazy-loading table model for CSV file preview.</li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceCsvExplorerRegistration.html">CsvExplorerRegistration</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classCsvExplorer__Widget.html">CsvExplorer_Widget</a></strong> <br>Widget for browsing CSV/delimited text files.</li>
@@ -1852,7 +1864,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structDataImportWidgetStateData.html">DataImportWidgetStateData</a></strong> <br>Serializable data structure for <a href="">DataImportWidgetState</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classDataImport__Widget.html">DataImport_Widget</a></strong> <br>Main container widget for data import functionality.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataInfo.html">DataInfo</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataInspectorModule_1_1_0d1205.html">DataInspectorModule</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataInspectorModule_1_1_0d1207.html">DataInspectorModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataInspectorModule.html">DataInspectorModule</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classDataInspectorPropertiesWidget.html">DataInspectorPropertiesWidget</a></strong> <br>Properties panel for inspecting data items.</li>
 <li><strong>class <a href="../api_generated/Classes/classDataInspectorState.html">DataInspectorState</a></strong> <br>State class for DataInspector_Widget.</li>
@@ -1879,6 +1891,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classDataTransformWidgetState.html">DataTransformWidgetState</a></strong> <br>State class for <a href="">DataTransform_Widget</a>.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataTransformWidgetStateData.html">DataTransformWidgetStateData</a></strong> <br>Serializable data structure for <a href="">DataTransformWidgetState</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classDataTransform__Widget.html">DataTransform_Widget</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewer_1_1_0d1411.html">DataViewer</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewer_1_1_0d1391.html">DataViewer</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a></strong>
 <ul>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewer_1_1AnalogSeriesEntry.html">AnalogSeriesEntry</a></strong> <br>Data structure holding analog series and its computed/cached state.</li>
@@ -1903,18 +1917,16 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structDataViewer_1_1SeriesInfo.html">SeriesInfo</a></strong> <br>Information about a series at a specific position.</li>
 <li><strong>class <a href="../api_generated/Classes/classDataViewer_1_1TimeSeriesDataStore.html">TimeSeriesDataStore</a></strong> <br>Centralized storage for time series data in the <a href="../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> widget.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewer_1_1_0d1389.html">DataViewer</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewer_1_1_0d1409.html">DataViewer</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classDataViewerDebugPanel.html">DataViewerDebugPanel</a></strong> <br>Developer diagnostics panel showing layout, rendering, and coordinate info.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerDiagnostics.html">DataViewerDiagnostics</a></strong> <br>Complete diagnostics snapshot returned by <a href="">OpenGLWidget::getDiagnostics()</a></li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerGridState.html">DataViewerGridState</a></strong> <br>Grid overlay configuration.</li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewerHelpers_1_1_0d1423.html">DataViewerHelpers</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewerHelpers.html">DataViewerHelpers</a></strong>
 <ul>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html">AnalogBatchParams</a></strong> <br>Parameters for building an analog series batch.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerHelpers_1_1EventBatchParams.html">EventBatchParams</a></strong> <br>Parameters for building a digital event series batch.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerHelpers_1_1IntervalBatchParams.html">IntervalBatchParams</a></strong> <br>Parameters for building a digital interval series batch.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDataViewerHelpers_1_1_0d1421.html">DataViewerHelpers</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerInteractionState.html">DataViewerInteractionState</a></strong> <br>Current interaction state.</li>
 <li><strong>struct <a href="../api_generated/Classes/structDataViewerLayoutConfig.html">DataViewerLayoutConfig</a></strong> <br>Configurable layout parameters for stacked series.</li>
 <li><strong>class <a href="../api_generated/Classes/classDataViewerPropertiesWidget.html">DataViewerPropertiesWidget</a></strong> <br>Properties panel for Data Viewer Widget.</li>
@@ -1934,7 +1946,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structDeepLearningStateData.html">DeepLearningStateData</a></strong> <br>Aggregate data for reflect-cpp serialization.</li>
 <li><strong>class <a href="../api_generated/Classes/classDeepLearningViewWidget.html">DeepLearningViewWidget</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceDeepLearningWidgetModule.html">DeepLearningWidgetModule</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDeepLearningWidgetModule_1_1_0d1463.html">DeepLearningWidgetModule</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceDeepLearningWidgetModule_1_1_0d1469.html">DeepLearningWidgetModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceDefaultDisplayValues.html">DefaultDisplayValues</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a></strong> <br>Tensor storage backend using a flat std::vector<float> in row-major order.</float></li>
 <li><strong>class <a href="../api_generated/Classes/classDenseTimeIndexStorage.html">DenseTimeIndexStorage</a></strong> <br>Dense time index storage for consecutive, regularly-sampled data.</li>
@@ -2060,6 +2072,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structGroupContextMenuCallbacks.html">GroupContextMenuCallbacks</a></strong> <br>Callback structure for group-related actions.</li>
 <li><strong>class <a href="../api_generated/Classes/classGroupContextMenuHandler.html">GroupContextMenuHandler</a></strong> <br>Manages group-related context menu actions.</li>
 <li><strong>struct <a href="../api_generated/Classes/structGroupDescriptor.html">GroupDescriptor</a></strong> <br>Descriptor for a user-defined group containing metadata.</li>
+<li><strong>class <a href="../api_generated/Classes/classGroupEventViewer__Widget.html">GroupEventViewer_Widget</a></strong> <br>Properties for all digital event series in a feature-tree group selection.</li>
 <li><strong>class <a href="../api_generated/Classes/classGroupIntervals__Widget.html">GroupIntervals_Widget</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classGroupManagementWidget.html">GroupManagementWidget</a></strong> <br>Widget for managing data groups in the toolbox panel.</li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceGroupManagementWidgetModule.html">GroupManagementWidgetModule</a></strong></li>
@@ -2097,8 +2110,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classHeatmapState.html">HeatmapState</a></strong> <br>State class for <a href="../api_generated/Classes/classHeatmapWidget.html">HeatmapWidget</a>.</li>
 <li><strong>struct <a href="../api_generated/Classes/structHeatmapStateData.html">HeatmapStateData</a></strong> <br>Serializable state data for <a href="">HeatmapWidget</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classHeatmapWidget.html">HeatmapWidget</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceHeatmapWidgetModule_1_1_0d1778.html">HeatmapWidgetModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceHeatmapWidgetModule.html">HeatmapWidgetModule</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceHeatmapWidgetModule_1_1_0d1772.html">HeatmapWidgetModule</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classHilbertPhaseOperation.html">HilbertPhaseOperation</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structHilbertPhaseParams.html">HilbertPhaseParams</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classHorizontalAxisRangeControls.html">HorizontalAxisRangeControls</a></strong> <br>Widget containing spinboxes for editing min/max range.</li>
@@ -2184,8 +2197,8 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>class <a href="../api_generated/Classes/classKeySequenceRecorder.html">KeySequenceRecorder</a></strong> <br>Push button that captures a single key combination when recording.</li>
 <li><strong>class <a href="../api_generated/Classes/classKeybindingEditor.html">KeybindingEditor</a></strong> <br>Panel for viewing and editing keybindings.</li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceKeybindingEditorModule_1_1_0d1558.html">KeybindingEditorModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceKeybindingEditorModule.html">KeybindingEditorModule</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceKeybindingEditorModule_1_1_0d1564.html">KeybindingEditorModule</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classKeybindingEditorState.html">KeybindingEditorState</a></strong> <br>Minimal <a href="">EditorState</a> for the <a href="">KeybindingEditor</a> widget.</li>
 <li><strong>class <a href="../api_generated/Classes/classKeymapModel.html">KeymapModel</a></strong> <br>Two-level tree model mapping KeymapManager actions into Category → Action rows.
 <ul>
@@ -2325,16 +2338,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structLoaderInfo.html">LoaderInfo</a></strong> <br>Metadata describing a single loader capability within a format loader.</li>
 <li><strong>class <a href="../api_generated/Classes/classLoaderRegistry.html">LoaderRegistry</a></strong> <br>Registry for managing data format loaders.</li>
 <li><strong>struct <a href="../api_generated/Classes/structMBConvImpl.html">MBConvImpl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d789.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d797.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d791.html">MLCore</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d793.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d795.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d785.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d754.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d741.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d739.html">MLCore</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d737.html">MLCore</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore.html">MLCore</a></strong>
 <ul>
 <li><strong>struct <a href="../api_generated/Classes/structMLCore_1_1AssembledLabels.html">AssembledLabels</a></strong> <br>Result of label assembly.</li>
@@ -2464,7 +2468,16 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structMLCore_1_1TSNEParameters.html">TSNEParameters</a></strong> <br>Parameters for t-SNE dimensionality reduction.</li>
 <li><strong>struct <a href="../api_generated/Classes/structMLCore_1_1TensorValidationResult.html">TensorValidationResult</a></strong> <br>Result of standalone tensor validation.</li>
 </ul></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d739.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d741.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d743.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d756.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d787.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d791.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d795.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d797.html">MLCore</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d799.html">MLCore</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCore_1_1_0d801.html">MLCore</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classMLCoreWidget.html">MLCoreWidget</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceMLCoreWidgetModule.html">MLCoreWidgetModule</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classMLCoreWidgetState.html">MLCoreWidgetState</a></strong></li>
@@ -2753,8 +2766,10 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structPlottingOpenGL_1_1StreamingPolyLineRenderer_1_1CachedBatchData.html">CachedBatchData</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structPlottingOpenGL_1_1StreamingPolyLineRenderer_1_1DirtyRegion.html">DirtyRegion</a></strong></li>
 </ul></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingOpenGL_1_1StreamingPolyLineShaders.html">StreamingPolyLineShaders</a></strong> <br>Embedded fallback shader source code for the polyline renderer.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingSVG_1_1_0d843.html">PlottingSVG</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingSVG_1_1_0d842.html">PlottingSVG</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingSVG_1_1_0d845.html">PlottingSVG</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingSVG.html">PlottingSVG</a></strong>
 <ul>
 <li><strong>class <a href="../api_generated/Classes/classPlottingSVG_1_1SVGAxisRenderer.html">SVGAxisRenderer</a></strong> <br>Renders a simple linear axis (uniform tick spacing) as SVG fragments in pixel space.</li>
@@ -2768,7 +2783,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classPlottingSVG_1_1SVGSceneRenderer.html">SVGSceneRenderer</a></strong> <br>Orchestrates <code>[SVGDocument](/api_generated/Classes/classPlottingSVG_1_1SVGDocument.md)</code> assembly, per-batch SVG renderers, and optional decorations.</li>
 <li><strong>struct <a href="../api_generated/Classes/structPlottingSVG_1_1ScalebarTimeRange.html">ScalebarTimeRange</a></strong> <br>Visible time window used to map “full canvas width” ↔︎ elapsed time for the scalebar.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacePlottingSVG_1_1_0d840.html">PlottingSVG</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structPoint.html">Point</a></strong>
 <ul>
 <li><strong>class <a href="../api_generated/Classes/classPoint_1_1Builder.html">Builder</a></strong></li>
@@ -2881,8 +2895,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classScatterPlotState.html">ScatterPlotState</a></strong> <br>State class for <a href="../api_generated/Classes/classScatterPlotWidget.html">ScatterPlotWidget</a>.</li>
 <li><strong>struct <a href="../api_generated/Classes/structScatterPlotStateData.html">ScatterPlotStateData</a></strong> <br>Serializable state data for <a href="">ScatterPlotWidget</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classScatterPlotWidget.html">ScatterPlotWidget</a></strong> <br>Main widget for 2D scatter plot visualization.</li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceScatterPlotWidgetModule_1_1_0d1830.html">ScatterPlotWidgetModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceScatterPlotWidgetModule.html">ScatterPlotWidgetModule</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceScatterPlotWidgetModule_1_1_0d1824.html">ScatterPlotWidgetModule</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structScatterPointData.html">ScatterPointData</a></strong> <br>Holds computed scatter point data from two axis sources.</li>
 <li><strong>struct <a href="../api_generated/Classes/structSceneCacheState.html">SceneCacheState</a></strong> <br>Cached rendering and hit-testing state.</li>
 <li><strong>class <a href="../api_generated/Classes/classSeconds.html">Seconds</a></strong> <br>Strong type for time values in seconds.</li>
@@ -3027,7 +3041,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structStateEstimation_1_1TrackingSessionConfig.html">TrackingSessionConfig</a></strong> <br>Configuration for a tracking session.</li>
 <li><strong>struct <a href="../api_generated/Classes/structStateEstimation_1_1TrackingUpdateResult.html">TrackingUpdateResult</a></strong> <br>Result of a tracking update.</li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceStateEstimation_1_1_0d897.html">StateEstimation</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceStateEstimation_1_1_0d899.html">StateEstimation</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceStateManagement.html">StateManagement</a></strong>
 <ul>
 <li><strong>class <a href="../api_generated/Classes/classStateManagement_1_1AppPreferences.html">AppPreferences</a></strong></li>
@@ -3141,8 +3155,8 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>struct <a href="../api_generated/Classes/structTimePosition.html">TimePosition</a></strong> <br>Position in time with clock identity.</li>
 <li><strong>class <a href="../api_generated/Classes/classTimeScrollBar.html">TimeScrollBar</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceTimeScrollBarModule_1_1_0d1936.html">TimeScrollBarModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceTimeScrollBarModule.html">TimeScrollBarModule</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceTimeScrollBarModule_1_1_0d1942.html">TimeScrollBarModule</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classTimeScrollBarState.html">TimeScrollBarState</a></strong> <br>State class for <a href="">TimeScrollBar</a>.</li>
 <li><strong>struct <a href="../api_generated/Classes/structTimeScrollBarStateData.html">TimeScrollBarStateData</a></strong> <br>Serializable data structure for <a href="">TimeScrollBarState</a>.</li>
 <li><strong>class <a href="../api_generated/Classes/classTimestampInIntervalComputer.html">TimestampInIntervalComputer</a></strong> <br>Computer that returns true if each timestamp lies within any digital interval.</li>
@@ -3169,8 +3183,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>class <a href="../api_generated/Classes/classTriageSessionProperties__Widget.html">TriageSessionProperties_Widget</a></strong> <br>Properties panel for the Triage Session widget.</li>
 <li><strong>class <a href="../api_generated/Classes/classTriageSessionState.html">TriageSessionState</a></strong> <br><a href="">EditorState</a> subclass for the TriageSession widget.</li>
 <li><strong>struct <a href="../api_generated/Classes/structTriageSessionStateData.html">TriageSessionStateData</a></strong> <br>Serializable data structure for <a href="">TriageSessionState</a>.</li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceTriageSessionWidgetModule_1_1_0d1968.html">TriageSessionWidgetModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceTriageSessionWidgetModule.html">TriageSessionWidgetModule</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceTriageSessionWidgetModule_1_1_0d1962.html">TriageSessionWidgetModule</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceUi.html">Ui</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classUncalibratedIndex.html">UncalibratedIndex</a></strong> <br>Strong type for uncalibrated coordinate values.</li>
 <li><strong>struct <a href="../api_generated/Classes/structValidBinaryDataType.html">ValidBinaryDataType</a></strong></li>
@@ -3475,24 +3489,24 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structWhiskerToolbox_1_1has__name__member.html">has_name_member</a></strong> <br>Helper to detect if a type has a <code>name</code> member.</li>
 <li><strong>struct <a href="../api_generated/Classes/structWhiskerToolbox_1_1has__name__member_3_01T_00_01std_1_1void__t_3_01decltype_07std_1.md">has_name_member&lt; T, std::void_t&lt; decltype(std::declval&lt; T &gt;().name)&gt; &gt;</a></strong></li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1DataSynthesizer_1_1_0d570.html">WhiskerToolbox::DataSynthesizer</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather_1_1_0d1062.html">WhiskerToolbox::Gather</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Lineage_1_1_0d206.html">WhiskerToolbox::Lineage</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1698.html">WhiskerToolbox::Plots</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1768.html">WhiskerToolbox::Plots</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1701.html">WhiskerToolbox::Plots</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TensorBuilders_1_1_0d1073.html">WhiskerToolbox::TensorBuilders</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d979.html">WhiskerToolbox::Transforms::V2</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1098.html">WhiskerToolbox::Transforms::V2</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1077.html">WhiskerToolbox::Transforms::V2</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1058.html">WhiskerToolbox::Transforms::V2</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1055.html">WhiskerToolbox::Transforms::V2</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1071.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1043.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1031.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1019.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductions_1_1_0d1016.html">WhiskerToolbox::Transforms::V2::RangeReductions</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Temporal_1_1_0d1026.html">WhiskerToolbox::Transforms::V2::Temporal</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1DataSynthesizer_1_1_0d572.html">WhiskerToolbox::DataSynthesizer</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather_1_1_0d1064.html">WhiskerToolbox::Gather</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Lineage_1_1_0d208.html">WhiskerToolbox::Lineage</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1704.html">WhiskerToolbox::Plots</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1707.html">WhiskerToolbox::Plots</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots_1_1_0d1774.html">WhiskerToolbox::Plots</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TensorBuilders_1_1_0d1075.html">WhiskerToolbox::TensorBuilders</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1079.html">WhiskerToolbox::Transforms::V2</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d981.html">WhiskerToolbox::Transforms::V2</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1100.html">WhiskerToolbox::Transforms::V2</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1060.html">WhiskerToolbox::Transforms::V2</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1_0d1057.html">WhiskerToolbox::Transforms::V2</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1021.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1033.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1045.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1_0d1073.html">WhiskerToolbox::Transforms::V2::Examples</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductions_1_1_0d1018.html">WhiskerToolbox::Transforms::V2::RangeReductions</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Temporal_1_1_0d1028.html">WhiskerToolbox::Transforms::V2::Temporal</a></strong></li>
 <li><strong>class <a href="../api_generated/Classes/classWhiskerTracingOperation.html">WhiskerTracingOperation</a></strong> <br>Whisker tracing operation that detects whiskers in media data.</li>
 <li><strong>struct <a href="../api_generated/Classes/structWhiskerTracingParameters.html">WhiskerTracingParameters</a></strong> <br>Parameters for whisker tracing operation.</li>
 <li><strong>class <a href="../api_generated/Classes/classWhiskerTracing__Widget.html">WhiskerTracing_Widget</a></strong> <br>Widget for configuring whisker tracing parameters.</li>
@@ -3535,10 +3549,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structcbop_1_1SweepEvent.html">SweepEvent</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structcbop_1_1SweepEventComp.html">SweepEventComp</a></strong></li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d27.html">commands</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d30.html">commands</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d40.html">commands</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d197.html">commands</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands.html">commands</a></strong>
 <ul>
 <li><strong>class <a href="../api_generated/Classes/classcommands_1_1AddInterval.html">AddInterval</a></strong></li>
@@ -3576,6 +3586,10 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structcommands_1_1SynthesizeDataParams.html">SynthesizeDataParams</a></strong></li>
 <li><strong>struct <a href="../api_generated/Classes/structcommands_1_1ValidationResult.html">ValidationResult</a></strong> <br>Result of validating a command sequence before execution.</li>
 </ul></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d199.html">commands</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d27.html">commands</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d30.html">commands</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacecommands_1_1_0d40.html">commands</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespacecv.html">cv</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespacedetail.html">detail</a></strong>
 <ul>
@@ -3698,15 +3712,15 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>struct <a href="../api_generated/Classes/structdl_1_1widget_1_1ZerosInitParams.html">ZerosInitParams</a></strong> <br>Initialize recurrent state with zeros.</li>
 </ul></li>
 </ul></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d578.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d582.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d590.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d594.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d606.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d609.html">dl</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1471.html">dl::widget</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1473.html">dl::widget</a></strong></li>
-<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1475.html">dl::widget</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d611.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d608.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d596.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d592.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d584.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1_0d580.html">dl</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1481.html">dl::widget</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1483.html">dl::widget</a></strong></li>
+<li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1479.html">dl::widget</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespacedl_1_1widget_1_1_0d1477.html">dl::widget</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceffmpeg__wrapper.html">ffmpeg_wrapper</a></strong></li>
 <li><strong>namespace <a href="../api_generated/Namespaces/namespaceframe__filter.html">frame_filter</a></strong></li>
@@ -3772,7 +3786,7 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 </ul>
 <hr>
-<p>Updated on 2026-05-02 at 19:24:06 +0000</p>
+<p>Updated on 2026-05-03 at 19:43:05 +0000</p>
 
 
 </section>

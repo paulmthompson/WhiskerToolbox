@@ -994,7 +994,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#dataviewerwidget" id="toc-dataviewerwidget" class="nav-link active" data-scroll-target="#dataviewerwidget">DataViewerWidget</a></li>
+  <li><a href="#dataviewerwidget" id="toc-dataviewerwidget" class="nav-link active" data-scroll-target="#dataviewerwidget">DataViewerWidget</a>
+  <ul class="collapse">
+  <li><a href="#analog-series-minmax-decimation" id="toc-analog-series-minmax-decimation" class="nav-link" data-scroll-target="#analog-series-minmax-decimation">Analog series: min–max decimation</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -1024,8 +1027,13 @@ ul.task-list li input[type="checkbox"] {
 <section id="dataviewerwidget" class="level1">
 <h1>DataViewerWidget</h1>
 <p>This section provides user guidance on the DataViewerWidget.</p>
+<section id="analog-series-minmax-decimation" class="level2">
+<h2 class="anchored" data-anchor-id="analog-series-minmax-decimation">Analog series: min–max decimation</h2>
+<p>In <strong>Feature Controls</strong>, pick a <strong>single analog channel</strong> (leaf) for the full editor (including gap handling), or an <strong>analog group</strong> (folder) for the compact group editor; both include <strong>Min–max decimation (dense traces)</strong> when you want fewer vertices sent to the GPU while preserving the time-wise envelope.</p>
+<p>Turn decimation off if you need every sample drawn (for example when verifying sample-accurate alignment at extreme zoom). The Feature Controls stack sizes itself to the current editor so shorter panels do not leave a large empty gap.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

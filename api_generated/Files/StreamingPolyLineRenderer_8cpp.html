@@ -824,9 +824,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-428"><a href="#cb1-428" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> StreamingPolyLineRenderer<span class="op">::</span>compileEmbeddedShaders<span class="op">()</span> <span class="op">{</span></span>
 <span id="cb1-429"><a href="#cb1-429" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reuse the same embedded shaders as PolyLineRenderer (includes geometry shader)</span></span>
-<span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">m_embedded_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>PolyLineShaders<span class="op">::</span>VERTEX_SHADER<span class="op">,</span></span>
-<span id="cb1-431"><a href="#cb1-431" aria-hidden="true" tabindex="-1"></a>                                              PolyLineShaders<span class="op">::</span>GEOMETRY_SHADER<span class="op">,</span></span>
-<span id="cb1-432"><a href="#cb1-432" aria-hidden="true" tabindex="-1"></a>                                              PolyLineShaders<span class="op">::</span>FRAGMENT_SHADER<span class="op">);</span></span>
+<span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">m_embedded_shader</span><span class="op">.</span>createFromSource<span class="op">(</span>StreamingPolyLineShaders<span class="op">::</span>VERTEX_SHADER<span class="op">,</span></span>
+<span id="cb1-431"><a href="#cb1-431" aria-hidden="true" tabindex="-1"></a>                                              StreamingPolyLineShaders<span class="op">::</span>GEOMETRY_SHADER<span class="op">,</span></span>
+<span id="cb1-432"><a href="#cb1-432" aria-hidden="true" tabindex="-1"></a>                                              StreamingPolyLineShaders<span class="op">::</span>FRAGMENT_SHADER<span class="op">);</span></span>
 <span id="cb1-433"><a href="#cb1-433" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-434"><a href="#cb1-434" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-435"><a href="#cb1-435" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> StreamingPolyLineRenderer<span class="op">::</span>setupVertexAttributes<span class="op">()</span> <span class="op">{</span></span>
@@ -848,7 +848,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-451"><a href="#cb1-451" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-452"><a href="#cb1-452" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace PlottingOpenGL</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-02 at 19:24:03 +0000</p>
+<p>Updated on 2026-05-03 at 19:43:03 +0000</p>
 
 
 </section>

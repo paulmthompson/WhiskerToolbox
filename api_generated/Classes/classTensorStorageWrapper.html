@@ -772,7 +772,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Precondition</strong>: <code>expected_type</code> must be the correct TensorStorageType for T. Passing the wrong enum is undefined behavior.</p>
 <p>When <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> (a static library) is absorbed into DataManagerIO (a shared library with hidden visibility), <code>dynamic_cast</code> fails across library boundaries because each module gets its own typeinfo for <code>StorageModel&lt;T&gt;</code>. This method works around that by checking the <code>TensorStorageType</code> enum (which is value-based and works correctly across boundaries), then using <code>static_cast</code>.</p>
 <hr>
-<p>Updated on 2026-05-02 at 19:23:59 +0000</p>
+<p>Updated on 2026-05-03 at 19:42:59 +0000</p>
 
 
 </section>

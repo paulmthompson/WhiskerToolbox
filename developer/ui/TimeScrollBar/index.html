@@ -453,6 +453,9 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">FeatureColor Module</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/coreplotting/min_max_polyline_decimation.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1423,6 +1426,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/DataViewerWidget/AdaptiveStackedWidget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AdaptiveStackedWidget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../../developer/ui/Plots/DataViewerWidget/developer_debug_panel.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Debug Panel — Plan &amp; Roadmap</span></a>
   </div>
@@ -1540,12 +1549,12 @@ ul.task-list li input[type="checkbox"] {
 <p>The timeline widget (<code>TimeScrollBar</code>) drives the active <code>TimeFrame</code> and syncs with <code>EditorRegistry</code>.</p>
 <section id="playback-phase-3" class="level2">
 <h2 class="anchored" data-anchor-id="playback-phase-3">Playback (Phase 3)</h2>
-<p>Playback advances <strong>one frame per timer tick</strong>. The tick interval is <code>1000 / target_fps</code> milliseconds, so rates below 25 FPS (for example <strong>0.5 FPS</strong>, one frame every two seconds) are supported for slow manual triage.</p>
+<p>Playback advances at the selected <strong>logical</strong> <code>target_fps</code> (frames of time per second). The QTimer tick rate is capped at <strong>30 Hz</strong> (<code>time_scroll_bar::kMaxPlaybackUiRefreshFps</code>): when <code>target_fps</code> exceeds that cap, each tick advances multiple frames so average speed matches <code>target_fps</code>, while UI callbacks stay bounded. For rates at or below the cap, the timer interval is <code>1000 / target_fps</code> milliseconds (for example <strong>0.5 FPS</strong>, one frame every two seconds).</p>
 <section id="discrete-fps-presets" class="level3">
 <h3 class="anchored" data-anchor-id="discrete-fps-presets">Discrete FPS presets</h3>
 <p>Rewind and fast-forward step through this ladder (also used when persisting <code>target_fps</code> in <code>TimeScrollBarStateData</code>):</p>
 <p><code>0.5 → 1 → 2 → 5 → 10 → 25 → 50 → 100 → 200</code></p>
-<p>Shared helpers live in <code>TimeScrollBarPlayback.hpp</code> (<code>time_scroll_bar::kFpsPresets</code>, <code>snapTargetFpsToPreset</code>, <code>timerPeriodMsForTargetFps</code>).</p>
+<p>Shared helpers live in <code>TimeScrollBarPlayback.hpp</code> (<code>time_scroll_bar::kFpsPresets</code>, <code>snapTargetFpsToPreset</code>, <code>timerPeriodMsForTargetFps</code>, <code>playbackUiRefreshFps</code>, <code>timerPeriodMsForPlayback</code>).</p>
 </section>
 <section id="workspace-json" class="level3">
 <h3 class="anchored" data-anchor-id="workspace-json">Workspace JSON</h3>

@@ -720,7 +720,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>See</strong>:</p>
 <ul>
 <li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-gettimeseries">getTimeSeries()</a> for accessing the corresponding time indices</li>
-<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples()</a> for time-value pair iteration that works with any storage</li>
+<li><a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples()</a> for time-value pair iteration that works with <a href="../../api_generated/Files/MinMaxPolylineDecimation_8cpp.html#variable-any">any</a> storage</li>
 </ul>
 <p><strong>Return</strong>: std::span<float const=""> view over the analog data values, or empty span if not contiguous</float></p>
 <p><strong>Note</strong>: For contiguous storage (vector), this provides zero-copy access. For non-contiguous storage, use <a href="../../api_generated/Classes/classAnalogTimeSeries.html#function-getallsamples">getAllSamples()</a> iterator instead.</p>
@@ -1044,7 +1044,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>General-purpose factory that accepts a type-erased storage wrapper and shared time index storage. Used by zero-copy backends (e.g., <a href="../../api_generated/Classes/classTensorColumnAnalogStorage.html">TensorColumnAnalogStorage</a>) that construct the wrapper externally and pass it in.</p>
 <hr>
-<p>Updated on 2026-05-02 at 19:24:00 +0000</p>
+<p>Updated on 2026-05-03 at 19:43:00 +0000</p>
 
 
 </section>

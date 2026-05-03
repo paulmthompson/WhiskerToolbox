@@ -354,10 +354,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-presetindexfortargetfps" id="toc-function-presetindexfortargetfps" class="nav-link" data-scroll-target="#function-presetindexfortargetfps">function presetIndexForTargetFps</a></li>
   <li><a href="#function-snaptargetfpstopreset" id="toc-function-snaptargetfpstopreset" class="nav-link" data-scroll-target="#function-snaptargetfpstopreset">function snapTargetFpsToPreset</a></li>
   <li><a href="#function-timerperiodmsfortargetfps" id="toc-function-timerperiodmsfortargetfps" class="nav-link" data-scroll-target="#function-timerperiodmsfortargetfps">function timerPeriodMsForTargetFps</a></li>
+  <li><a href="#function-playbackuirefreshfps" id="toc-function-playbackuirefreshfps" class="nav-link" data-scroll-target="#function-playbackuirefreshfps">function playbackUiRefreshFps</a></li>
+  <li><a href="#function-timerperiodmsforplayback" id="toc-function-timerperiodmsforplayback" class="nav-link" data-scroll-target="#function-timerperiodmsforplayback">function timerPeriodMsForPlayback</a></li>
   </ul></li>
   <li><a href="#attributes-documentation" id="toc-attributes-documentation" class="nav-link" data-scroll-target="#attributes-documentation">Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-kfpspresets" id="toc-variable-kfpspresets" class="nav-link" data-scroll-target="#variable-kfpspresets">variable kFpsPresets</a></li>
+  <li><a href="#variable-kmaxplaybackuirefreshfps" id="toc-variable-kmaxplaybackuirefreshfps" class="nav-link" data-scroll-target="#variable-kmaxplaybackuirefreshfps">variable kMaxPlaybackUiRefreshFps</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -410,6 +413,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>int</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacetime__scroll__bar.html#function-timerperiodmsfortargetfps">timerPeriodMsForTargetFps</a></strong>(float target_fps)<br>Milliseconds between timer ticks for one-frame-per-tick playback.</td>
 </tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacetime__scroll__bar.html#function-playbackuirefreshfps">playbackUiRefreshFps</a></strong>(float target_fps)<br>Effective timer tick rate (Hz) for playback UI updates.</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacetime__scroll__bar.html#function-timerperiodmsforplayback">timerPeriodMsForPlayback</a></strong>(float target_fps)<br>Milliseconds between playback QTimer ticks (capped refresh; combine with multi-frame steps in <code>TimeScrollBar::_vidLoop</code> for logical <code>target_fps</code>).</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -426,6 +437,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>constexpr std::array&lt; float, 9 &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacetime__scroll__bar.html#variable-kfpspresets">kFpsPresets</a></strong> <br>Discrete playback rates shown in the timeline UI (Phase 3 triage plan).</td>
+</tr>
+<tr class="even">
+<td>constexpr float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacetime__scroll__bar.html#variable-kmaxplaybackuirefreshfps">kMaxPlaybackUiRefreshFps</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -455,16 +470,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Milliseconds between timer ticks for one-frame-per-tick playback.</p>
 <p><strong>Postcondition</strong>: Return value is in <code>[1, 2'000'000]</code> so QTimer stays within practical bounds.</p>
 </section>
+<section id="function-playbackuirefreshfps" class="level3">
+<h3 class="anchored" data-anchor-id="function-playbackuirefreshfps">function playbackUiRefreshFps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> playbackUiRefreshFps<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> target_fps</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Effective timer tick rate (Hz) for playback UI updates.</p>
+<p><strong>Postcondition</strong>: Return value is finite and &gt; 0</p>
+<p>Capped at <code>kMaxPlaybackUiRefreshFps</code> so high logical FPS does not schedule one QTimer callback per source frame. For invalid <code>target_fps</code>, uses 0.5 Hz to match <code>timerPeriodMsForTargetFps</code> fallback (2000 ms).</p>
+</section>
+<section id="function-timerperiodmsforplayback" class="level3">
+<h3 class="anchored" data-anchor-id="function-timerperiodmsforplayback">function timerPeriodMsForPlayback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> timerPeriodMsForPlayback<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> target_fps</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Milliseconds between playback QTimer ticks (capped refresh; combine with multi-frame steps in <code>TimeScrollBar::_vidLoop</code> for logical <code>target_fps</code>).</p>
+<p><strong>Postcondition</strong>: Return value is in <code>[1, 2'000'000]</code> so QTimer stays within practical bounds.</p>
+</section>
 </section>
 <section id="attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-kfpspresets" class="level3">
 <h3 class="anchored" data-anchor-id="variable-kfpspresets">variable kFpsPresets</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>array<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> <span class="dv">9</span> <span class="op">&gt;</span> kFpsPresets <span class="op">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.5</span><span class="bu">F</span><span class="op">,</span> <span class="fl">1.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">2.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">5.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">10.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">25.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">50.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">100.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">200.</span><span class="bu">F</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>array<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> <span class="dv">9</span> <span class="op">&gt;</span> kFpsPresets <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.5</span><span class="bu">F</span><span class="op">,</span> <span class="fl">1.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">2.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">5.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">10.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">25.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">50.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">100.</span><span class="bu">F</span><span class="op">,</span> <span class="fl">200.</span><span class="bu">F</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Discrete playback rates shown in the timeline UI (Phase 3 triage plan).</p>
+</section>
+<section id="variable-kmaxplaybackuirefreshfps" class="level3">
+<h3 class="anchored" data-anchor-id="variable-kmaxplaybackuirefreshfps">variable kMaxPlaybackUiRefreshFps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> kMaxPlaybackUiRefreshFps <span class="op">=</span> <span class="fl">30.</span><span class="bu">F</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum QTimer callback rate during playback; logical speed stays at <code>target_fps</code> by advancing multiple frames per tick when <code>target_fps</code> exceeds this cap.</p>
 <hr>
-<p>Updated on 2026-05-02 at 19:24:01 +0000</p>
+<p>Updated on 2026-05-03 at 19:43:00 +0000</p>
 
 
 </section>
