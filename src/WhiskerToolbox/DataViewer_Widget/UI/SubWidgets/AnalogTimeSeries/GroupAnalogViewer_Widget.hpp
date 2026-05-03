@@ -33,6 +33,7 @@ private slots:
     void _onAlphaChanged(int value);
     void _onScaleChanged(double value);
     void _onThicknessChanged(double value);
+    void _onMinMaxDecimationToggled(bool enabled);
 
 private:
     void _applyToAllKeys(std::function<void(std::string const &)> const & fn);
@@ -51,6 +52,7 @@ private:
     class QLabel * _alpha_value_label{nullptr};
     class QDoubleSpinBox * _scale_spinbox{nullptr};
     class QDoubleSpinBox * _thickness_spinbox{nullptr};
+    class QCheckBox * _min_max_decimation_checkbox{nullptr};
 
     bool _updating{false};
 };

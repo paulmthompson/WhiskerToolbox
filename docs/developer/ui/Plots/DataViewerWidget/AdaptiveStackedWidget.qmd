@@ -1,0 +1,13 @@
+---
+title: "AdaptiveStackedWidget"
+format: html
+---
+
+## Overview
+
+`AdaptiveStackedWidget` is a thin `QStackedWidget` subclass used in `DataViewerPropertiesWidget`
+(Feature Controls). It overrides `sizeHint()` and `minimumSizeHint()` to match the **currently
+visible** page instead of the default behavior (effectively the union / maximum of all pages),
+so the properties panel does not reserve extra vertical space when a shorter editor is active.
+
+**Sources:** `src/WhiskerToolbox/DataViewer_Widget/UI/AdaptiveStackedWidget.hpp|.cpp`

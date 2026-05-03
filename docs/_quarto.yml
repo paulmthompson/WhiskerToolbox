@@ -245,6 +245,7 @@ website:
                   - developer/ui/Plots/3DPlot/index.qmd
                   - developer/ui/Plots/ACFWidget/index.qmd
                   - developer/ui/Plots/DataViewerWidget/index.qmd
+                  - developer/ui/Plots/DataViewerWidget/AdaptiveStackedWidget.qmd
                   - developer/ui/Plots/DataViewerWidget/developer_debug_panel.qmd
                   - developer/ui/Plots/DataViewerWidget/ordering_policy_resolver.qmd
                   - developer/ui/Plots/DataViewerWidget/phase4e_spike_to_analog_loader.qmd

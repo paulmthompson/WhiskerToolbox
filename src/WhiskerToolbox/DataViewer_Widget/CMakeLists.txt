@@ -58,6 +58,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/DataViewerPropertiesWidget.cpp
         UI/DataViewerPropertiesWidget.hpp
         UI/DataViewerPropertiesWidget.ui
+        UI/AdaptiveStackedWidget.cpp
+        UI/AdaptiveStackedWidget.hpp
         UI/Feature_Tree_Model.hpp
         UI/Feature_Tree_Model.cpp
         UI/SeriesOrderingDialog.cpp

@@ -9,6 +9,7 @@
 #include "DataViewer_Widget/Core/DataViewerStateData.hpp"
 #include "DataViewer_Widget/Rendering/OpenGLWidget.hpp"
 
+#include <QCheckBox>
 #include <QColorDialog>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
@@ -98,6 +99,13 @@ GroupAnalogViewer_Widget::GroupAnalogViewer_Widget(std::shared_ptr<DataManager> 
     thickness_row->addWidget(_thickness_spinbox);
     main_layout->addLayout(thickness_row);
 
+    _min_max_decimation_checkbox = new QCheckBox(
+            QStringLiteral("Min–max decimation (dense traces)"), this);
+    _min_max_decimation_checkbox->setToolTip(
+            QStringLiteral("Reduce plotted points per channel to match horizontal resolution. "
+                           "Applies to every series in this group."));
+    main_layout->addWidget(_min_max_decimation_checkbox);
+
     main_layout->addStretch();
 
     // Connections
@@ -107,6 +115,8 @@ GroupAnalogViewer_Widget::GroupAnalogViewer_Widget(std::shared_ptr<DataManager> 
             this, &GroupAnalogViewer_Widget::_onScaleChanged);
     connect(_thickness_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &GroupAnalogViewer_Widget::_onThicknessChanged);
+    connect(_min_max_decimation_checkbox, &QCheckBox::toggled, this,
+            &GroupAnalogViewer_Widget::_onMinMaxDecimationToggled);
 }
 
 GroupAnalogViewer_Widget::~GroupAnalogViewer_Widget() = default;
@@ -119,6 +129,9 @@ void GroupAnalogViewer_Widget::setActiveKeys(std::string const & group_name,
     _count_label->setText(QString::number(static_cast<int>(keys.size())));
 
     if (keys.empty() || !_opengl_widget) {
+        if (_min_max_decimation_checkbox != nullptr) {
+            _min_max_decimation_checkbox->setChecked(false);
+        }
         return;
     }
 
@@ -133,6 +146,9 @@ void GroupAnalogViewer_Widget::setActiveKeys(std::string const & group_name,
         _alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
         _scale_spinbox->setValue(static_cast<double>(opts->user_scale_factor));
         _thickness_spinbox->setValue(static_cast<double>(opts->get_line_thickness()));
+        _min_max_decimation_checkbox->setChecked(opts->enable_min_max_line_decimation);
+    } else {
+        _min_max_decimation_checkbox->setChecked(false);
     }
     _updating = false;
 }
@@ -206,6 +222,21 @@ void GroupAnalogViewer_Widget::_onThicknessChanged(double value) {
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(key));
         if (opts) {
             opts->line_thickness() = static_cast<float>(value);
+        }
+    });
+    _opengl_widget->update();
+}
+
+/// @brief Enable or disable min–max decimation for every channel in the active group.
+void GroupAnalogViewer_Widget::_onMinMaxDecimationToggled(bool enabled) {
+    if (_updating || _active_keys.empty()) {
+        return;
+    }
+
+    _applyToAllKeys([this, enabled](std::string const & key) {
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (opts) {
+            opts->enable_min_max_line_decimation = enabled;
         }
     });
     _opengl_widget->update();

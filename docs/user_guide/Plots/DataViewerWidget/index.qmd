@@ -8,4 +8,6 @@ This section provides user guidance on the DataViewerWidget.
 
 ## Analog series: min–max decimation
 
-For very long analog traces, enabling **Min–max decimation (dense traces)** in the analog series panel reduces the number of points sent to the GPU (and to SVG export) while preserving the visible envelope in the time direction. Turn it off if you need every sample drawn (for example when verifying sample-accurate alignment at extreme zoom).
+In **Feature Controls**, pick a **single analog channel** (leaf) for the full editor (including gap handling), or an **analog group** (folder) for the compact group editor; both include **Min–max decimation (dense traces)** when you want fewer vertices sent to the GPU while preserving the time-wise envelope.
+
+Turn decimation off if you need every sample drawn (for example when verifying sample-accurate alignment at extreme zoom). The Feature Controls stack sizes itself to the current editor so shorter panels do not leave a large empty gap.
