@@ -33,12 +33,13 @@ signals:
 
 private slots:
     void _openColorDialog();
-    void _setIntervalColor(const QString& hex_color);
+    void _setIntervalColor(QString const & hex_color);
     void _setIntervalAlpha(int alpha);
+    void _setLayoutMode(int index);
 
 private:
     void _updateColorDisplay(QString const & hex_color);
-    
+
     Ui::IntervalViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
@@ -46,4 +47,4 @@ private:
     bool _selection_enabled = false;
 };
 
-#endif// INTERVALVIEWER_WIDGET_HPP 
+#endif// INTERVALVIEWER_WIDGET_HPP

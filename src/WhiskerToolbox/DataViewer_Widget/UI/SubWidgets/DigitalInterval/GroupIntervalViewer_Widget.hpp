@@ -51,6 +51,7 @@ signals:
 private slots:
     void _openColorDialog();
     void _onAlphaChanged(int value);
+    void _onLayoutModeChanged(int index);
 
     /**
      * @brief Assign a distinct color to each series in `_active_keys` using a random hue wheel offset
@@ -76,6 +77,7 @@ private:
     class QPushButton * _random_unique_colors_button{nullptr};
     class QSlider * _alpha_slider{nullptr};
     class QLabel * _alpha_value_label{nullptr};
+    class QComboBox * _layout_mode_combo{nullptr};
 
     bool _updating{false};
 };

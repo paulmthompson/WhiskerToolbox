@@ -164,9 +164,14 @@ struct DigitalIntervalSeriesOptionsData {
     rfl::Flatten<CorePlotting::SeriesStyle> style;///< Visual style (flattened in JSON)
 
     // Interval-specific settings
-    bool extend_full_canvas = true;///< Whether intervals extend full canvas
-    float margin_factor = 0.95f;   ///< Margin factor
-    float interval_height = 1.0f;  ///< Height of interval (1.0 = full)
+    /// When true, intervals span the full viewport height (overlay). When false, each series
+    /// participates in lane stacking; rectangles fill the lane vertically and use each interval's
+    /// start/end times horizontally (same geometry as event boxes, with data-driven width).
+    bool extend_full_canvas = true;
+    /// Lane inset for rectangle height (same role as DigitalEventSeriesOptionsData::margin_factor).
+    /// Not modified by auto-fill canvas; reserved for future per-series UI (global layout margin is separate).
+    float margin_factor = 0.95f;
+    float interval_height = 1.0f;///< Reserved for optional fractional lane fill (not yet used in GPU path)
 
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }

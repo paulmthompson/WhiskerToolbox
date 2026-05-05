@@ -12,9 +12,11 @@
 #include "../GroupViewerUniqueRandomColors.hpp"
 
 #include <QColorDialog>
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QSlider>
 #include <QVBoxLayout>
 
@@ -77,12 +79,25 @@ GroupIntervalViewer_Widget::GroupIntervalViewer_Widget(std::shared_ptr<DataManag
     alpha_row->addWidget(_alpha_value_label);
     main_layout->addLayout(alpha_row);
 
+    auto * layout_row = new QHBoxLayout();
+    layout_row->addWidget(new QLabel(QStringLiteral("Layout:"), this));
+    _layout_mode_combo = new QComboBox(this);
+    _layout_mode_combo->addItem(QStringLiteral("Full viewport (overlay)"));
+    _layout_mode_combo->addItem(QStringLiteral("Stacked lanes"));
+    _layout_mode_combo->setToolTip(
+            QStringLiteral("Overlay spans the full plot height. Stacked assigns each series its own lane; "
+                           "rectangle width follows interval duration."));
+    layout_row->addWidget(_layout_mode_combo);
+    main_layout->addLayout(layout_row);
+
     main_layout->addStretch();
 
     connect(_color_button, &QPushButton::clicked, this, &GroupIntervalViewer_Widget::_openColorDialog);
     connect(_random_unique_colors_button, &QPushButton::clicked, this,
             &GroupIntervalViewer_Widget::_assignRandomUniqueColors);
     connect(_alpha_slider, &QSlider::valueChanged, this, &GroupIntervalViewer_Widget::_onAlphaChanged);
+    connect(_layout_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &GroupIntervalViewer_Widget::_onLayoutModeChanged);
 }
 
 GroupIntervalViewer_Widget::~GroupIntervalViewer_Widget() = default;
@@ -97,6 +112,9 @@ void GroupIntervalViewer_Widget::setActiveKeys(std::string const & group_name,
     bool const can_edit = !keys.empty() && (_opengl_widget != nullptr);
     _color_button->setEnabled(can_edit);
     _random_unique_colors_button->setEnabled(can_edit);
+    if (_layout_mode_combo != nullptr) {
+        _layout_mode_combo->setEnabled(can_edit);
+    }
 
     if (keys.empty() || !_opengl_widget) {
         return;
@@ -111,6 +129,10 @@ void GroupIntervalViewer_Widget::setActiveKeys(std::string const & group_name,
                         .arg(QString::fromStdString(opts->hex_color())));
         _alpha_slider->setValue(static_cast<int>(opts->get_alpha() * 100.0f));
         _alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
+        if (_layout_mode_combo != nullptr) {
+            QSignalBlocker const layout_block{_layout_mode_combo};
+            _layout_mode_combo->setCurrentIndex(opts->extend_full_canvas ? 0 : 1);
+        }
     }
     _updating = false;
 }
@@ -200,6 +222,22 @@ void GroupIntervalViewer_Widget::_onAlphaChanged(int value) {
         }
     });
     _opengl_widget->update();
+}
+
+void GroupIntervalViewer_Widget::_onLayoutModeChanged(int index) {
+    if (_updating || _active_keys.empty() || !_opengl_widget) {
+        return;
+    }
+    bool const full_viewport = (index == 0);
+    _applyToAllKeys([this, full_viewport](std::string const & key) {
+        auto * mutable_opts =
+                _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(
+                        QString::fromStdString(key));
+        if (mutable_opts) {
+            mutable_opts->extend_full_canvas = full_viewport;
+        }
+    });
+    _opengl_widget->updateCanvas();
 }
 
 void GroupIntervalViewer_Widget::_applyToAllKeys(std::function<void(std::string const &)> const & fn) {

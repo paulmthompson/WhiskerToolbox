@@ -94,6 +94,9 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
         if (!interval_opts || !interval_opts->get_is_visible()) {
             continue;
         }
+        if (!interval_opts->extend_full_canvas) {
+            continue;
+        }
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
     }
 }
@@ -107,7 +110,7 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
 [[nodiscard]] std::vector<StackableSeriesCandidate> collectStackableCandidates(LayoutRequestBuildContext const & context,
                                                                                std::vector<std::string> & visible_analog_keys) {
     std::vector<StackableSeriesCandidate> candidates;
-    candidates.reserve(context.data_store.analogSeries().size() + context.data_store.eventSeries().size());
+    candidates.reserve(context.data_store.analogSeries().size() + context.data_store.eventSeries().size() + context.data_store.intervalSeries().size());
     visible_analog_keys.clear();
     visible_analog_keys.reserve(context.data_store.analogSeries().size());
 
@@ -138,6 +141,19 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
                 context,
                 key,
                 CorePlotting::SeriesType::DigitalEvent,
+                insertion_index++));
+    }
+
+    for (auto const & [key, data]: context.data_store.intervalSeries()) {
+        auto const * interval_opts = context.state.seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (!interval_opts || !interval_opts->get_is_visible() || interval_opts->extend_full_canvas) {
+            continue;
+        }
+
+        candidates.push_back(makeStackableCandidate(
+                context,
+                key,
+                CorePlotting::SeriesType::DigitalInterval,
                 insertion_index++));
     }
 

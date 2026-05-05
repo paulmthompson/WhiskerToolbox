@@ -1295,6 +1295,9 @@ bool OpenGLWidget::hasNewVisibleSeries() const {
     for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
         auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
         if (!opts || !opts->get_is_visible()) continue;
+        if (opts->extend_full_canvas) {
+            continue;
+        }
         if (_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
             return true;
         }
@@ -1559,10 +1562,9 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 
         if (!opts->get_is_visible()) continue;
 
-        // Additive viewport culling: build if in viewport OR previously in scene.
-        // Intervals are typically non-stackable (full-canvas) and will always pass,
-        // but the test is cheap and correct for any future stackable interval series.
-        if (!_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+        // Additive viewport culling for stacked lane intervals; full-viewport overlays span the camera.
+        bool const lane_stacked = !opts->extend_full_canvas;
+        if (lane_stacked && !_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
             continue;
         }
         _cache_state.series_in_scene.insert(key);
