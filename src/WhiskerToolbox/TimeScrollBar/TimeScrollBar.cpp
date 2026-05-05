@@ -124,7 +124,8 @@ TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager,
     if (_data_manager) {
         _data_manager_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        }, "TimeScrollBar - DataManager Changed from constructor");
+        },
+                                                               "TimeScrollBar - DataManager Changed from constructor");
         _populateTimeKeySelector();
     }
 }
@@ -248,6 +249,7 @@ void TimeScrollBar::PlayButton() {
         _timer->stop();
         ui->play_button->setText(QString("Play"));
         _play_mode = false;
+        _playback_frame_accum = 0.0;
 
         auto current_pos = _editor_registry->currentPosition();
         if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
@@ -259,7 +261,8 @@ void TimeScrollBar::PlayButton() {
 
     } else {
         ui->play_button->setText(QString("Pause"));
-        int const period_ms = time_scroll_bar::timerPeriodMsForTargetFps(_target_fps);
+        _playback_frame_accum = 0.0;
+        int const period_ms = time_scroll_bar::timerPeriodMsForPlayback(_target_fps);
         _timer->setInterval(period_ms);
         _timer->start(period_ms);
         _play_mode = true;
@@ -274,7 +277,7 @@ void TimeScrollBar::_updatePlaybackTimerInterval() {
     if (!_play_mode) {
         return;
     }
-    int const period_ms = time_scroll_bar::timerPeriodMsForTargetFps(_target_fps);
+    int const period_ms = time_scroll_bar::timerPeriodMsForPlayback(_target_fps);
     _timer->setInterval(period_ms);
     if (!_timer->isActive()) {
         _timer->start(period_ms);
@@ -292,6 +295,7 @@ void TimeScrollBar::RewindButton() {
     if (_state) {
         _state->setTargetFps(_target_fps);
     }
+    _playback_frame_accum = 0.0;
     _updatePlaybackTimerInterval();
 }
 
@@ -306,37 +310,59 @@ void TimeScrollBar::FastForwardButton() {
     if (_state) {
         _state->setTargetFps(_target_fps);
     }
+    _playback_frame_accum = 0.0;
     _updatePlaybackTimerInterval();
 }
 
 void TimeScrollBar::_vidLoop() {
-    // Get current time from EditorRegistry if available, otherwise from DataManager
-    int current_time = 0;
+    int displayed_frame = 0;
     auto current_pos = _editor_registry->currentPosition();
     if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-        current_time = static_cast<int>(current_pos.index.getValue()) + 1;
+        displayed_frame = static_cast<int>(current_pos.index.getValue());
     }
 
-    // Apply frame filter: scan forward until a non-skipped frame is found.
+    float const ui_refresh_fps = time_scroll_bar::playbackUiRefreshFps(_target_fps);
+    _playback_frame_accum += static_cast<double>(_target_fps) / static_cast<double>(ui_refresh_fps);
+    int const steps = static_cast<int>(std::floor(_playback_frame_accum));
+    if (steps < 1) {
+        return;
+    }
+    _playback_frame_accum -= static_cast<double>(steps);
+
+    int const min_value = ui->horizontalScrollBar->minimum();
+    int const max_value = ui->horizontalScrollBar->maximum();
+
+    int target_frame = displayed_frame;
+
     if (_frame_filter) {
-        int const max_value = ui->horizontalScrollBar->maximum();
-        int const candidate = frame_filter::scanToNextNonSkipped(
-                *_frame_filter, current_time, /*direction=*/1,
-                ui->horizontalScrollBar->minimum(), max_value);
-        if (candidate < 0) {
-            // All remaining frames are skipped — stop playback.
-            _timer->stop();
-            ui->play_button->setText(QStringLiteral("Play"));
-            _play_mode = false;
-            if (_state) {
-                _state->setIsPlaying(false);
+        for (int i = 0; i < steps; ++i) {
+            int const candidate = target_frame + 1;
+            int const next = frame_filter::scanToNextNonSkipped(
+                    *_frame_filter, candidate, /*direction=*/1, min_value, max_value);
+            if (next < 0) {
+                _timer->stop();
+                ui->play_button->setText(QStringLiteral("Play"));
+                _play_mode = false;
+                _playback_frame_accum = 0.0;
+                if (_state) {
+                    _state->setIsPlaying(false);
+                }
+                return;
             }
-            return;
+            target_frame = next;
         }
-        current_time = candidate;
+    } else {
+        long const next_index = static_cast<long>(displayed_frame) + static_cast<long>(steps);
+        if (next_index > static_cast<long>(max_value)) {
+            target_frame = max_value;
+        } else if (next_index < static_cast<long>(min_value)) {
+            target_frame = min_value;
+        } else {
+            target_frame = static_cast<int>(next_index);
+        }
     }
 
-    ui->horizontalScrollBar->setSliderPosition(current_time);
+    ui->horizontalScrollBar->setSliderPosition(target_frame);
 }
 
 void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
@@ -589,7 +615,7 @@ void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition const & position) 
         return;
     }
 
-    int const frame_value = position.convertTo(_current_time_frame.get()).getValue();
+    int const frame_value = static_cast<int>(position.convertTo(_current_time_frame.get()).getValue());
     ui->horizontalScrollBar->blockSignals(true);
     ui->horizontalScrollBar->setSliderPosition(frame_value);
     ui->horizontalScrollBar->blockSignals(false);
@@ -611,7 +637,8 @@ void TimeScrollBar::setDataManager(std::shared_ptr<DataManager> data_manager) {
     if (_data_manager) {
         _data_manager_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        }, "TimeScrollBar - DataManager Changed from setDataManager");
+        },
+                                                               "TimeScrollBar - DataManager Changed from setDataManager");
         _populateTimeKeySelector();
     }
 }

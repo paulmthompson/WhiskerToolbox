@@ -46,6 +46,7 @@ add_executable(test_coreplotting
     LineBatch/LineBatchBuilder.test.cpp
     # FeatureColor
     FeatureColor.test.cpp
+    MinMaxPolylineDecimation.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

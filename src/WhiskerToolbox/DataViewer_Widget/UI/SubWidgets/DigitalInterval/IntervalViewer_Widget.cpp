@@ -9,6 +9,7 @@
 #include <QColorDialog>
 #include <QHideEvent>
 #include <QShowEvent>
+#include <QSignalBlocker>
 #include <iostream>
 
 IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_manager, OpenGLWidget * opengl_widget, QWidget * parent)
@@ -26,6 +27,8 @@ IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_m
             this, &IntervalViewer_Widget::_openColorDialog);
     connect(ui->alpha_slider, &QSlider::valueChanged,
             this, &IntervalViewer_Widget::_setIntervalAlpha);
+    connect(ui->layout_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &IntervalViewer_Widget::_setLayoutMode);
 }
 
 IntervalViewer_Widget::~IntervalViewer_Widget() {
@@ -68,8 +71,13 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
             auto const alpha_int = static_cast<int>(opts->get_alpha() * 100.0f);
             ui->alpha_slider->setValue(alpha_int);
             ui->alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
+
+            QSignalBlocker const layout_block{ui->layout_mode_combo};
+            ui->layout_mode_combo->setCurrentIndex(opts->extend_full_canvas ? 0 : 1);
         } else {
             _updateColorDisplay("#00FF00");// Default green
+            QSignalBlocker const layout_block{ui->layout_mode_combo};
+            ui->layout_mode_combo->setCurrentIndex(0);
         }
     }
 
@@ -134,4 +142,17 @@ void IntervalViewer_Widget::_setIntervalAlpha(int alpha) {
             _opengl_widget->update();
         }
     }
+}
+
+void IntervalViewer_Widget::_setLayoutMode(int index) {
+    if (_active_key.empty()) {
+        return;
+    }
+    auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(
+            QString::fromStdString(_active_key));
+    if (!opts) {
+        return;
+    }
+    opts->extend_full_canvas = (index == 0);
+    _opengl_widget->updateCanvas();
 }

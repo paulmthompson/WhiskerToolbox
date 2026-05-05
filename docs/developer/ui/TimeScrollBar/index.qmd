@@ -8,7 +8,7 @@ The timeline widget (`TimeScrollBar`) drives the active `TimeFrame` and syncs wi
 
 ## Playback (Phase 3)
 
-Playback advances **one frame per timer tick**. The tick interval is `1000 / target_fps` milliseconds, so rates below 25 FPS (for example **0.5 FPS**, one frame every two seconds) are supported for slow manual triage.
+Playback advances at the selected **logical** `target_fps` (frames of time per second). The QTimer tick rate is capped at **30 Hz** (`time_scroll_bar::kMaxPlaybackUiRefreshFps`): when `target_fps` exceeds that cap, each tick advances multiple frames so average speed matches `target_fps`, while UI callbacks stay bounded. For rates at or below the cap, the timer interval is `1000 / target_fps` milliseconds (for example **0.5 FPS**, one frame every two seconds).
 
 ### Discrete FPS presets
 
@@ -16,7 +16,7 @@ Rewind and fast-forward step through this ladder (also used when persisting `tar
 
 `0.5 → 1 → 2 → 5 → 10 → 25 → 50 → 100 → 200`
 
-Shared helpers live in `TimeScrollBarPlayback.hpp` (`time_scroll_bar::kFpsPresets`, `snapTargetFpsToPreset`, `timerPeriodMsForTargetFps`).
+Shared helpers live in `TimeScrollBarPlayback.hpp` (`time_scroll_bar::kFpsPresets`, `snapTargetFpsToPreset`, `timerPeriodMsForTargetFps`, `playbackUiRefreshFps`, `timerPeriodMsForPlayback`).
 
 ### Workspace JSON
 

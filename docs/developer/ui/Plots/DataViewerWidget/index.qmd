@@ -37,6 +37,7 @@ DataViewer_Widget/
 |-----------|---------------|
 | `DataViewer_Widget` (UI) | Top-level Qt widget — owns state, manages feature add/remove, time scroll |
 | `DataViewerPropertiesWidget` (UI) | Properties panel — feature tree, per-series controls, theme/grid/export |
+| `AdaptiveStackedWidget` (UI) | Feature Controls `QStackedWidget` — vertical size tracks the active editor page only |
 | `OpenGLWidget` (Rendering) | OpenGL canvas — builds scene, renders batches, handles mouse events |
 | `DataViewerState` (Core) | Serializable state — view window, theme, grid, per-series options |
 | `TimeSeriesDataStore` (Core) | Runtime data — series pointers, layout transforms, vertex caches |

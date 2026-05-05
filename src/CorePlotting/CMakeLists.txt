@@ -66,6 +66,9 @@ set(COREPLOTTING_SOURCES
     # Transformers
     Transformers/GapDetector.hpp
     Transformers/GapDetector.cpp
+    # LineDecimation
+    LineDecimation/MinMaxPolylineDecimation.hpp
+    LineDecimation/MinMaxPolylineDecimation.cpp
 
     # Interaction
     Interaction/GlyphPreview.hpp

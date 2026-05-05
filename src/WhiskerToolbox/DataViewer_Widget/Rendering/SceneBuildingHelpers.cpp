@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/Layout/SeriesLayout.hpp"
+#include "CorePlotting/LineDecimation/MinMaxPolylineDecimation.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/Transformers/GapDetector.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -95,6 +96,12 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchSimplified(
             batch.line_vertex_counts.push_back(vertex_count);
             batch.vertices = std::move(all_vertices);
         }
+    }
+
+    if (params.min_max_decimation_bucket_count > 0 && !batch.vertices.empty()) {
+        batch = CorePlotting::decimatePolyLineBatchMinMax(
+                batch,
+                CorePlotting::MinMaxDecimationParams{params.min_max_decimation_bucket_count});
     }
 
     return batch;
@@ -319,7 +326,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
             missing_ranges[0].end == cache_end) {
 
             spdlog::debug("AnalogVertexCache: Complete cache miss for range [{}, {}]", cache_start.getValue(), cache_end.getValue());
-        
+
             // Complete cache miss - regenerate all vertices
             // Note: generateVerticesForRange takes master timeframe indices and converts internally
             auto vertices = generateVerticesForRange(series, master_time_frame,
@@ -327,9 +334,9 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
             cache.setVertices(vertices, cache_start, cache_end);
         } else {
             for (auto const & missing_range: missing_ranges) {
-                //spdlog::debug("AnalogVertexCache: Incremental generation [{}, {}] prepending: {}", 
+                //spdlog::debug("AnalogVertexCache: Incremental generation [{}, {}] prepending: {}",
                 //              missing_range.start.getValue(), missing_range.end.getValue(), missing_range.prepend);
-    
+
                 TimeFrameIndex master_start = missing_range.start;
                 TimeFrameIndex master_end = missing_range.end;
                 if (series_tf && series_tf != master_time_frame.get()) {
@@ -338,7 +345,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
                 }
                 auto vertices = generateVerticesForRange(series, master_time_frame,
                                                          master_start, master_end, params.x_origin_master_absolute_time);
-                
+
                 // FIX: Pass the explicitly requested boundaries to the cache modifiers
                 if (missing_range.prepend) {
                     cache.prependVertices(vertices, missing_range.start);
@@ -359,6 +366,12 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         batch.line_start_indices.push_back(0);
         batch.line_vertex_counts.push_back(vertex_count);
         batch.vertices = std::move(flat_vertices);
+    }
+
+    if (params.min_max_decimation_bucket_count > 0 && !batch.vertices.empty()) {
+        batch = CorePlotting::decimatePolyLineBatchMinMax(
+                batch,
+                CorePlotting::MinMaxDecimationParams{params.min_max_decimation_bucket_count});
     }
 
     return batch;

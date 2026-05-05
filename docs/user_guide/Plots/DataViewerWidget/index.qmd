@@ -5,3 +5,9 @@ title: "DataViewerWidget"
 # DataViewerWidget
 
 This section provides user guidance on the DataViewerWidget.
+
+## Analog series: min–max decimation
+
+In **Feature Controls**, pick a **single analog channel** (leaf) for the full editor (including gap handling), or an **analog group** (folder) for the compact group editor; both include **Min–max decimation (dense traces)** when you want fewer vertices sent to the GPU while preserving the time-wise envelope.
+
+Turn decimation off if you need every sample drawn (for example when verifying sample-accurate alignment at extreme zoom). The Feature Controls stack sizes itself to the current editor so shorter panels do not leave a large empty gap.

@@ -110,6 +110,11 @@ std::string extractGroupName(std::string const & key) {
         return opts != nullptr && opts->get_is_visible() && opts->plotting_mode == EventPlottingModeData::Stacked;
     }
 
+    if (type == DM_DataType::DigitalInterval) {
+        auto const * opts = state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(series_id));
+        return opts != nullptr && opts->get_is_visible() && !opts->extend_full_canvas;
+    }
+
     return false;
 }
 
@@ -229,7 +234,8 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         QMetaObject::invokeMethod(self, [self]() {
             if (!self) return;
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
-    }, "DataViewer_Widget");
+    },
+                               "DataViewer_Widget");
 
     // We should always get the master clock because we plot
     // Check for master clock
@@ -1641,7 +1647,6 @@ void DataViewer_Widget::_autoFillCanvas() {
     // Collect visible keys
     std::vector<std::string> analog_keys;
     std::vector<std::string> event_keys;
-    std::vector<std::string> interval_keys;
 
     for (auto const & [key, data]: analog_map) {
         auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
@@ -1655,16 +1660,16 @@ void DataViewer_Widget::_autoFillCanvas() {
             event_keys.push_back(key);
         }
     }
+    int visible_interval_count = 0;
     for (auto const & [key, data]: interval_map) {
         auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
         if (opts && opts->get_is_visible()) {
-            interval_keys.push_back(key);
+            ++visible_interval_count;
         }
     }
 
     int const visible_analog_count = static_cast<int>(analog_keys.size());
     int const visible_event_count = static_cast<int>(event_keys.size());
-    int const visible_interval_count = static_cast<int>(interval_keys.size());
 
     int const total_visible = visible_analog_count + visible_event_count + visible_interval_count;
     std::cout << "Visible series: " << visible_analog_count << " analog, "
@@ -1712,24 +1717,10 @@ void DataViewer_Widget::_autoFillCanvas() {
         }
     }
 
-    // Calculate and apply optimal interval heights for digital interval series
-    if (visible_interval_count > 0) {
-        // Calculate optimal interval height to fill most of the allocated space
-        // Use 80% of the spacing to leave some visual separation between intervals
-        float const optimal_interval_height = final_spacing * 0.8f;
-
-        std::cout << "Calculated optimal interval height: " << optimal_interval_height << " normalized units" << std::endl;
-
-        // Apply optimal height to all visible digital interval series
-        for (auto const & key: interval_keys) {
-            auto * opts = _state->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
-            if (opts && opts->get_is_visible()) {
-                opts->margin_factor = optimal_interval_height;
-                std::cout << "  Applied interval height " << optimal_interval_height
-                          << " to series '" << key << "'" << std::endl;
-            }
-        }
-    }
+    // Digital intervals: same as digital events — lane fill uses each series'
+    // DigitalIntervalSeriesOptionsData::margin_factor only (no auto-fill mutation).
+    // Global margin spin box (_state->marginFactor()) drives layout/analog scaling separately;
+    // wiring per-series interval margin in the UI can reuse margin_factor later.
 
     // Calculate optimal global scale for analog series to use their allocated space effectively
     if (visible_analog_count > 0) {

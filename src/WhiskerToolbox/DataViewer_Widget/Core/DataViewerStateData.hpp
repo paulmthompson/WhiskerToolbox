@@ -94,6 +94,9 @@ struct AnalogSeriesOptionsData {
     bool enable_gap_detection = false;///< Enable automatic gap detection
     float gap_threshold = 5.0f;       ///< Threshold for gap detection (in samples)
 
+    /// When true, analog polylines are min–max decimated to ~viewport resolution before GPU/SVG.
+    bool enable_min_max_line_decimation = false;
+
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }
     [[nodiscard]] float get_alpha() const { return style.get().alpha; }
@@ -161,9 +164,14 @@ struct DigitalIntervalSeriesOptionsData {
     rfl::Flatten<CorePlotting::SeriesStyle> style;///< Visual style (flattened in JSON)
 
     // Interval-specific settings
-    bool extend_full_canvas = true;///< Whether intervals extend full canvas
-    float margin_factor = 0.95f;   ///< Margin factor
-    float interval_height = 1.0f;  ///< Height of interval (1.0 = full)
+    /// When true, intervals span the full viewport height (overlay). When false, each series
+    /// participates in lane stacking; rectangles fill the lane vertically and use each interval's
+    /// start/end times horizontally (same geometry as event boxes, with data-driven width).
+    bool extend_full_canvas = true;
+    /// Lane inset for rectangle height (same role as DigitalEventSeriesOptionsData::margin_factor).
+    /// Not modified by auto-fill canvas; reserved for future per-series UI (global layout margin is separate).
+    float margin_factor = 0.95f;
+    float interval_height = 1.0f;///< Reserved for optional fractional lane fill (not yet used in GPU path)
 
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }

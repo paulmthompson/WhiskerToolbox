@@ -45,7 +45,7 @@ This plan optimizes the manual triage workflow across five phases:
 | Tests: frame commands + sequences | `src/Commands/SetEventAtTime.test.cpp`, `src/Commands/AdvanceFrame.test.cpp` |
 | Tests: keymap command bridge | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` — `registerCommandAction`, `executeCommandSequenceFromRegistry` |
 | Timeline arrow keys (±1, ±N jump) | `TimeScrollBar` + `KeymapSystem` |
-| Playback 0.5–200 FPS (preset ladder) | `TimeScrollBar` + `time_scroll_bar::timerPeriodMsForTargetFps()` — QTimer interval `1000/target_fps` ms (clamped), **one frame per tick**; rewind / fast-forward step discrete presets (`TimeScrollBarPlayback.hpp`) |
+| Playback 0.5–200 FPS (preset ladder) | `TimeScrollBar` + `time_scroll_bar::timerPeriodMsForPlayback()` / `playbackUiRefreshFps()` — QTimer capped at **30 Hz**; when `target_fps` is higher, multiple frames advance per tick so logical speed matches `target_fps`; rewind / fast-forward step discrete presets (`TimeScrollBarPlayback.hpp`) |
 | Persisted playback rate | `TimeScrollBarStateData::target_fps` (`float`); `TimeScrollBarState::setTargetFps()` snaps to presets; workspace JSON migration from legacy `play_speed` (`25 × multiplier`) in `TimeScrollBarState::fromJson()` |
 | Doc: timeline playback | [TimeScrollBar developer note](../ui/TimeScrollBar/index.qmd) |
 
@@ -170,10 +170,14 @@ Registration: `TriageSessionWidgetRegistration.cpp` (alongside Mark/Commit/Recal
 ### 3.1 Variable Timer Period (implemented)
 
 - `TimeScrollBar` keeps `float _target_fps` (default 25). Playback uses
-  `time_scroll_bar::timerPeriodMsForTargetFps(_target_fps)` for the QTimer
-  interval (milliseconds rounded from `1000 / target_fps`, clamped to a 1 ms minimum and a large upper bound for safety).
-- Each timer tick advances **exactly one frame** (`_vidLoop()`), regardless of
-  target FPS. Rates above ~1000 FPS are limited by the 1 ms minimum interval.
+  `time_scroll_bar::timerPeriodMsForPlayback(_target_fps)` for the QTimer
+  interval (milliseconds from `1000 / playbackUiRefreshFps(target_fps)`,
+  clamped to a 1 ms minimum and a large upper bound for safety). The UI refresh
+  rate is capped at `kMaxPlaybackUiRefreshFps` (30 Hz); when `target_fps` exceeds
+  that cap, `_vidLoop()` advances multiple frames per tick using a fractional
+  accumulator so average playback speed still matches `target_fps`.
+- For `target_fps` at or below the cap, each timer tick still advances one frame
+  (same as one timer tick per frame at low rates).
 
 ### 3.2 Discrete FPS Presets (implemented)
 

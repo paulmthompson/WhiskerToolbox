@@ -245,6 +245,12 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     batch_params.detect_gaps = (options.gap_handling == AnalogGapHandlingMode::DetectGaps);
     batch_params.gap_threshold = options.gap_threshold;
 
+    batch_params.min_max_decimation_bucket_count = 0;
+    if (options.enable_min_max_line_decimation) {
+        int const w = std::max(1, getCanvasWidth());
+        batch_params.min_max_decimation_bucket_count = std::clamp(w * 2, 512, 8192);
+    }
+
     // Use simplified API (takes pre-composed model matrix)
     return DataViewerHelpers::buildAnalogSeriesBatchSimplified(
             *series,

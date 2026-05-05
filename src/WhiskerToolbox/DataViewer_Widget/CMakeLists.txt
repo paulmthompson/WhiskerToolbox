@@ -58,6 +58,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/DataViewerPropertiesWidget.cpp
         UI/DataViewerPropertiesWidget.hpp
         UI/DataViewerPropertiesWidget.ui
+        UI/AdaptiveStackedWidget.cpp
+        UI/AdaptiveStackedWidget.hpp
         UI/Feature_Tree_Model.hpp
         UI/Feature_Tree_Model.cpp
         UI/SeriesOrderingDialog.cpp
@@ -69,9 +71,15 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui
         UI/SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.cpp
         UI/SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.hpp
+        UI/SubWidgets/GroupViewerUniqueRandomColors.cpp
+        UI/SubWidgets/GroupViewerUniqueRandomColors.hpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.cpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.hpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.ui
+        UI/SubWidgets/DigitalEvent/GroupEventViewer_Widget.cpp
+        UI/SubWidgets/DigitalEvent/GroupEventViewer_Widget.hpp
+        UI/SubWidgets/DigitalInterval/GroupIntervalViewer_Widget.cpp
+        UI/SubWidgets/DigitalInterval/GroupIntervalViewer_Widget.hpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.cpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp
         UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.ui

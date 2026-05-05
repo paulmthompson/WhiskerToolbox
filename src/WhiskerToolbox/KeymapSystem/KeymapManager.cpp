@@ -87,12 +87,10 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
         return false;
     }
 
-    // EditorFocused actions defer to text-input widgets so that typing
-    // in QLineEdits, QComboBoxes, QSpinBoxes, etc. is not stolen.
-    // AlwaysRouted and Global actions bypass this — they are meant to
-    // fire regardless of where focus happens to be.
-    if (in_text_input && desc->scope.kind == KeyActionScopeKind::EditorFocused) {
-        spdlog::debug("[KeymapManager] Blocked: EditorFocused action '{}' deferred to text input",
+    // When focus is in a text-input widget, defer all matched shortcuts (every
+    // scope) so typing—including Space and keys bound as Global—is not stolen.
+    if (in_text_input) {
+        spdlog::debug("[KeymapManager] Blocked: action '{}' deferred to text input",
                       action_id->toStdString());
         return false;
     }

@@ -156,6 +156,31 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="layout_mode_row">
+     <item>
+      <widget class="QLabel" name="layout_mode_label">
+       <property name="text">
+        <string>Layout:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="layout_mode_combo">
+       <item>
+        <property name="text">
+         <string>Full viewport (overlay)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Stacked lanes</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
