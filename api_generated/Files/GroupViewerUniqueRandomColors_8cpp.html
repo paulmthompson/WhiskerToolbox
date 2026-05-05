@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>KeybindingEditorModule – Neuralyzer</title>
+<title>src/WhiskerToolbox/DataViewer_Widget/UI/SubWidgets/GroupViewerUniqueRandomColors.cpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,6 +22,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -310,7 +345,15 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#keybindingeditormodule" id="toc-keybindingeditormodule" class="nav-link active" data-scroll-target="#keybindingeditormodule">KeybindingEditorModule</a></li>
+  <li><a href="#srcwhiskertoolboxdataviewer_widgetuisubwidgetsgroupvieweruniquerandomcolors.cpp" id="toc-srcwhiskertoolboxdataviewer_widgetuisubwidgetsgroupvieweruniquerandomcolors.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxdataviewer_widgetuisubwidgetsgroupvieweruniquerandomcolors.cpp">src/WhiskerToolbox/DataViewer_Widget/UI/SubWidgets/GroupViewerUniqueRandomColors.cpp</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-uniquerandomhuewheelhexcolors" id="toc-function-uniquerandomhuewheelhexcolors" class="nav-link" data-scroll-target="#function-uniquerandomhuewheelhexcolors">function uniqueRandomHueWheelHexColors</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -320,7 +363,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">KeybindingEditorModule</h1>
+<h1 class="title">src/WhiskerToolbox/DataViewer_Widget/UI/SubWidgets/GroupViewerUniqueRandomColors.cpp</h1>
 </div>
 
 
@@ -337,12 +380,77 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="keybindingeditormodule" class="level1">
-<h1>KeybindingEditorModule</h1>
+<section id="srcwhiskertoolboxdataviewer_widgetuisubwidgetsgroupvieweruniquerandomcolors.cpp" class="level1">
+<h1>src/WhiskerToolbox/DataViewer_Widget/UI/SubWidgets/GroupViewerUniqueRandomColors.cpp</h1>
+<p>Shared hue-wheel color generation for <a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> group property widgets.</p>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::vector&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Files/GroupViewerUniqueRandomColors_8cpp.html#function-uniquerandomhuewheelhexcolors">uniqueRandomHueWheelHexColors</a></strong>(std::size_t series_count)<br>Generate distinct saturated hex colors evenly spaced on the hue wheel.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-uniquerandomhuewheelhexcolors" class="level3">
+<h3 class="anchored" data-anchor-id="function-uniquerandomhuewheelhexcolors">function uniqueRandomHueWheelHexColors</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> uniqueRandomHueWheelHexColors<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t series_count</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Generate distinct saturated hex colors evenly spaced on the hue wheel.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>series_count</strong> Number of colors to generate</li>
+</ul>
+<p><strong>Return</strong>: Hex strings (e.g.&nbsp;“#RRGGBB”); empty if <code>series_count</code> is zero</p>
+<p>Uses a random starting hue so repeated calls produce different palettes.</p>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"GroupViewerUniqueRandomColors.hpp"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QColor&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QRandomGenerator&gt;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> uniqueRandomHueWheelHexColors<span class="op">(</span><span class="bu">std::</span>size_t <span class="at">const</span> series_count<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>series_count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> n <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>series_count<span class="op">);</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> hue0 <span class="op">=</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span><span class="ex">QRandomGenerator::global</span><span class="op">()-&gt;</span>bounded<span class="op">(</span><span class="dv">10'000</span><span class="op">))</span> <span class="op">/</span> <span class="fl">10'000.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="kw">constexpr</span> saturation <span class="op">=</span> <span class="fl">0.82</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="kw">constexpr</span> value <span class="op">=</span> <span class="fl">0.92</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> out<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    out<span class="op">.</span>reserve<span class="op">(</span>series_count<span class="op">);</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> <span class="at">const</span> hue <span class="op">=</span> <span class="bu">std::</span>fmod<span class="op">(</span>hue0 <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>n<span class="op">),</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QColor</span> <span class="at">const</span> color <span class="op">=</span> <span class="ex">QColor::fromHsvF</span><span class="op">(</span>hue<span class="op">,</span> saturation<span class="op">,</span> value<span class="op">);</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        out<span class="op">.</span>push_back<span class="op">(</span>color<span class="op">.</span>name<span class="op">().</span>toStdString<span class="op">());</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out<span class="op">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-03 at 19:43:01 +0000</p>
+<p>Updated on 2026-05-05 at 19:43:54 +0000</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

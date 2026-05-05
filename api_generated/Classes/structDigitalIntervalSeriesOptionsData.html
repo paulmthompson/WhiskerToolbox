@@ -459,15 +459,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-extend-full-canvas">extend_full_canvas</a></strong> <br>Whether intervals extend full canvas.</td>
+<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-extend-full-canvas">extend_full_canvas</a></strong></td>
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-margin-factor">margin_factor</a></strong> <br>Margin factor.</td>
+<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-margin-factor">margin_factor</a></strong></td>
 </tr>
 <tr class="even">
 <td>float</td>
-<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-interval-height">interval_height</a></strong> <br>Height of interval (1.0 = full)</td>
+<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeriesOptionsData.html#variable-interval-height">interval_height</a></strong> <br>Reserved for optional fractional lane fill (not yet used in GPU path)</td>
 </tr>
 </tbody>
 </table>
@@ -517,19 +517,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-extend_full_canvas" class="level3">
 <h3 class="anchored" data-anchor-id="variable-extend_full_canvas">variable extend_full_canvas</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> extend_full_canvas <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Whether intervals extend full canvas.</p>
+<p>When true, intervals span the full viewport height (overlay). When false, each series participates in lane stacking; rectangles fill the lane vertically and use each interval’s start/end times horizontally (same geometry as event boxes, with data-driven width).</p>
 </section>
 <section id="variable-margin_factor" class="level3">
 <h3 class="anchored" data-anchor-id="variable-margin_factor">variable margin_factor</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> margin_factor <span class="op">=</span> <span class="fl">0.95</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Margin factor.</p>
+<p>Lane inset for rectangle height (same role as <a href="../../api_generated/Classes/structDigitalEventSeriesOptionsData.html#variable-margin-factor">DigitalEventSeriesOptionsData::margin_factor</a>). Not modified by auto-fill canvas; reserved for future per-series UI (global layout margin is separate).</p>
 </section>
 <section id="variable-interval_height" class="level3">
 <h3 class="anchored" data-anchor-id="variable-interval_height">variable interval_height</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> interval_height <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Height of interval (1.0 = full)</p>
+<p>Reserved for optional fractional lane fill (not yet used in GPU path)</p>
 <hr>
-<p>Updated on 2026-05-03 at 19:42:58 +0000</p>
+<p>Updated on 2026-05-05 at 19:43:48 +0000</p>
 
 
 </section>
