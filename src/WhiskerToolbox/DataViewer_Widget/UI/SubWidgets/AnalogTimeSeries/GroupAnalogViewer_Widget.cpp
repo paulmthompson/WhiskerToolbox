@@ -9,6 +9,8 @@
 #include "DataViewer_Widget/Core/DataViewerStateData.hpp"
 #include "DataViewer_Widget/Rendering/OpenGLWidget.hpp"
 
+#include "../GroupViewerUniqueRandomColors.hpp"
+
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QDoubleSpinBox>
@@ -64,6 +66,12 @@ GroupAnalogViewer_Widget::GroupAnalogViewer_Widget(std::shared_ptr<DataManager> 
     color_row->addStretch();
     main_layout->addLayout(color_row);
 
+    _random_unique_colors_button =
+            new QPushButton(QStringLiteral("Unique random colors"), this);
+    _random_unique_colors_button->setToolTip(
+            QStringLiteral("Assign a different color to each channel in this group (evenly spaced hues)"));
+    main_layout->addWidget(_random_unique_colors_button);
+
     // Alpha row
     auto * alpha_row = new QHBoxLayout();
     alpha_row->addWidget(new QLabel("Alpha:", this));
@@ -110,6 +118,8 @@ GroupAnalogViewer_Widget::GroupAnalogViewer_Widget(std::shared_ptr<DataManager> 
 
     // Connections
     connect(_color_button, &QPushButton::clicked, this, &GroupAnalogViewer_Widget::_openColorDialog);
+    connect(_random_unique_colors_button, &QPushButton::clicked, this,
+            &GroupAnalogViewer_Widget::_assignRandomUniqueColors);
     connect(_alpha_slider, &QSlider::valueChanged, this, &GroupAnalogViewer_Widget::_onAlphaChanged);
     connect(_scale_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &GroupAnalogViewer_Widget::_onScaleChanged);
@@ -127,6 +137,10 @@ void GroupAnalogViewer_Widget::setActiveKeys(std::string const & group_name,
     _active_keys = keys;
     _name_label->setText(QString::fromStdString(group_name));
     _count_label->setText(QString::number(static_cast<int>(keys.size())));
+
+    bool const can_edit = !keys.empty() && (_opengl_widget != nullptr);
+    _color_button->setEnabled(can_edit);
+    _random_unique_colors_button->setEnabled(can_edit);
 
     if (keys.empty() || !_opengl_widget) {
         if (_min_max_decimation_checkbox != nullptr) {
@@ -180,6 +194,35 @@ void GroupAnalogViewer_Widget::_openColorDialog() {
             emit colorChanged(key, hex);
         }
     });
+    _opengl_widget->update();
+}
+
+/**
+ * @brief Pick distinct saturated colors on the hue wheel (random rotation) and apply per key
+ */
+void GroupAnalogViewer_Widget::_assignRandomUniqueColors() {
+    if (_active_keys.empty() || !_opengl_widget) {
+        return;
+    }
+
+    std::vector<std::string> const hex_colors = uniqueRandomHueWheelHexColors(_active_keys.size());
+    for (std::size_t i = 0; i < _active_keys.size(); ++i) {
+        std::string const & key = _active_keys[i];
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
+                QString::fromStdString(key));
+        if (opts) {
+            std::string const & hex = hex_colors[i];
+            opts->hex_color() = hex;
+            emit colorChanged(key, hex);
+        }
+    }
+
+    if (auto const * first_opts = _opengl_widget->state()->seriesOptions().get<AnalogSeriesOptionsData>(
+                QString::fromStdString(_active_keys.front()))) {
+        _color_display_button->setStyleSheet(
+                QStringLiteral("QPushButton { background-color: %1; border: 1px solid #808080; }")
+                        .arg(QString::fromStdString(first_opts->hex_color())));
+    }
     _opengl_widget->update();
 }
 

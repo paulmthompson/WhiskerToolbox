@@ -8,6 +8,8 @@
 
 #include <QWidget>
 
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,6 +32,10 @@ signals:
 
 private slots:
     void _openColorDialog();
+    /**
+     * @brief Assign a distinct color to each series in `_active_keys` using a random hue wheel offset
+     */
+    void _assignRandomUniqueColors();
     void _onAlphaChanged(int value);
     void _onScaleChanged(double value);
     void _onThicknessChanged(double value);
@@ -48,6 +54,7 @@ private:
     class QLabel * _count_label{nullptr};
     class QPushButton * _color_display_button{nullptr};
     class QPushButton * _color_button{nullptr};
+    class QPushButton * _random_unique_colors_button{nullptr};
     class QSlider * _alpha_slider{nullptr};
     class QLabel * _alpha_value_label{nullptr};
     class QDoubleSpinBox * _scale_spinbox{nullptr};

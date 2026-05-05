@@ -1,9 +1,9 @@
 /**
- * @file GroupEventViewer_Widget.cpp
- * @brief Batch property editor for a group of digital event series in DataViewer.
+ * @file GroupIntervalViewer_Widget.cpp
+ * @brief Batch property editor for a group of digital interval series in DataViewer.
  */
 
-#include "GroupEventViewer_Widget.hpp"
+#include "GroupIntervalViewer_Widget.hpp"
 
 #include "DataViewer_Widget/Core/DataViewerState.hpp"
 #include "DataViewer_Widget/Core/DataViewerStateData.hpp"
@@ -18,9 +18,9 @@
 #include <QSlider>
 #include <QVBoxLayout>
 
-GroupEventViewer_Widget::GroupEventViewer_Widget(std::shared_ptr<DataManager> data_manager,
-                                                 OpenGLWidget * opengl_widget,
-                                                 QWidget * parent)
+GroupIntervalViewer_Widget::GroupIntervalViewer_Widget(std::shared_ptr<DataManager> data_manager,
+                                                       OpenGLWidget * opengl_widget,
+                                                       QWidget * parent)
     : QWidget(parent),
       _data_manager{std::move(data_manager)},
       _opengl_widget{opengl_widget} {
@@ -28,7 +28,7 @@ GroupEventViewer_Widget::GroupEventViewer_Widget(std::shared_ptr<DataManager> da
 
     auto * type_row = new QHBoxLayout();
     type_row->addWidget(new QLabel("Type:", this));
-    auto * type_value = new QLabel("Event Group", this);
+    auto * type_value = new QLabel("Interval Group", this);
     type_value->setAlignment(Qt::AlignCenter);
     type_row->addWidget(type_value);
     main_layout->addLayout(type_row);
@@ -79,16 +79,16 @@ GroupEventViewer_Widget::GroupEventViewer_Widget(std::shared_ptr<DataManager> da
 
     main_layout->addStretch();
 
-    connect(_color_button, &QPushButton::clicked, this, &GroupEventViewer_Widget::_openColorDialog);
+    connect(_color_button, &QPushButton::clicked, this, &GroupIntervalViewer_Widget::_openColorDialog);
     connect(_random_unique_colors_button, &QPushButton::clicked, this,
-            &GroupEventViewer_Widget::_assignRandomUniqueColors);
-    connect(_alpha_slider, &QSlider::valueChanged, this, &GroupEventViewer_Widget::_onAlphaChanged);
+            &GroupIntervalViewer_Widget::_assignRandomUniqueColors);
+    connect(_alpha_slider, &QSlider::valueChanged, this, &GroupIntervalViewer_Widget::_onAlphaChanged);
 }
 
-GroupEventViewer_Widget::~GroupEventViewer_Widget() = default;
+GroupIntervalViewer_Widget::~GroupIntervalViewer_Widget() = default;
 
-void GroupEventViewer_Widget::setActiveKeys(std::string const & group_name,
-                                            std::vector<std::string> const & keys) {
+void GroupIntervalViewer_Widget::setActiveKeys(std::string const & group_name,
+                                               std::vector<std::string> const & keys) {
     _group_name = group_name;
     _active_keys = keys;
     _name_label->setText(QString::fromStdString(group_name));
@@ -103,7 +103,7 @@ void GroupEventViewer_Widget::setActiveKeys(std::string const & group_name,
     }
 
     _updating = true;
-    auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalEventSeriesOptionsData>(
+    auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(
             QString::fromStdString(keys.front()));
     if (opts) {
         _color_display_button->setStyleSheet(
@@ -118,13 +118,13 @@ void GroupEventViewer_Widget::setActiveKeys(std::string const & group_name,
 /**
  * @brief Prompt for a color and assign it to every key in `_active_keys`
  */
-void GroupEventViewer_Widget::_openColorDialog() {
+void GroupIntervalViewer_Widget::_openColorDialog() {
     if (_active_keys.empty()) {
         return;
     }
 
     QColor current_color(QStringLiteral("#FF0000"));
-    auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalEventSeriesOptionsData>(
+    auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(
             QString::fromStdString(_active_keys.front()));
     if (opts) {
         current_color = QColor(QString::fromStdString(opts->hex_color()));
@@ -141,7 +141,7 @@ void GroupEventViewer_Widget::_openColorDialog() {
 
     _applyToAllKeys([this, &hex](std::string const & key) {
         auto * mutable_opts =
-                _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(
+                _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(
                         QString::fromStdString(key));
         if (mutable_opts) {
             mutable_opts->hex_color() = hex;
@@ -154,7 +154,7 @@ void GroupEventViewer_Widget::_openColorDialog() {
 /**
  * @brief Pick distinct saturated colors on the hue wheel (random rotation) and apply per key
  */
-void GroupEventViewer_Widget::_assignRandomUniqueColors() {
+void GroupIntervalViewer_Widget::_assignRandomUniqueColors() {
     if (_active_keys.empty() || !_opengl_widget) {
         return;
     }
@@ -163,7 +163,7 @@ void GroupEventViewer_Widget::_assignRandomUniqueColors() {
     for (std::size_t i = 0; i < _active_keys.size(); ++i) {
         std::string const & key = _active_keys[i];
         auto * mutable_opts =
-                _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(
+                _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(
                         QString::fromStdString(key));
         if (mutable_opts) {
             std::string const & hex = hex_colors[i];
@@ -172,7 +172,7 @@ void GroupEventViewer_Widget::_assignRandomUniqueColors() {
         }
     }
 
-    if (auto const * first_opts = _opengl_widget->state()->seriesOptions().get<DigitalEventSeriesOptionsData>(
+    if (auto const * first_opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(
                 QString::fromStdString(_active_keys.front()))) {
         _color_display_button->setStyleSheet(
                 QStringLiteral("QPushButton { background-color: %1; border: 1px solid #808080; }")
@@ -184,7 +184,7 @@ void GroupEventViewer_Widget::_assignRandomUniqueColors() {
 /**
  * @brief Apply slider alpha to all keys in the group
  */
-void GroupEventViewer_Widget::_onAlphaChanged(int value) {
+void GroupIntervalViewer_Widget::_onAlphaChanged(int value) {
     if (_updating || _active_keys.empty()) {
         return;
     }
@@ -193,7 +193,7 @@ void GroupEventViewer_Widget::_onAlphaChanged(int value) {
 
     _applyToAllKeys([this, alpha](std::string const & key) {
         auto * mutable_opts =
-                _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(
+                _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(
                         QString::fromStdString(key));
         if (mutable_opts) {
             mutable_opts->alpha() = alpha;
@@ -202,7 +202,7 @@ void GroupEventViewer_Widget::_onAlphaChanged(int value) {
     _opengl_widget->update();
 }
 
-void GroupEventViewer_Widget::_applyToAllKeys(std::function<void(std::string const &)> const & fn) {
+void GroupIntervalViewer_Widget::_applyToAllKeys(std::function<void(std::string const &)> const & fn) {
     for (auto const & key: _active_keys) {
         fn(key);
     }
