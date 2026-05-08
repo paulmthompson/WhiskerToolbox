@@ -510,7 +510,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classScatterPlotState.html#function-~scatterplotstate">~ScatterPlotState</a></strong>() override =default</td>
+<td><strong><a href="../../api_generated/Classes/classScatterPlotState.html#function-~scatterplotstate">~ScatterPlotState</a></strong>() override</td>
 </tr>
 <tr class="odd">
 <td>virtual QString</td>
@@ -809,7 +809,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-scatterplotstate-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-scatterplotstate-1">function ~ScatterPlotState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>ScatterPlotState<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>ScatterPlotState<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-gettypename" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettypename">function getTypeName</h3>
@@ -858,11 +858,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-horizontalaxisstate" class="level3">
 <h3 class="anchored" data-anchor-id="function-horizontalaxisstate">function horizontalAxisState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> HorizontalAxisState <span class="op">*</span> horizontalAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>HorizontalAxisState <span class="op">*</span> horizontalAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-verticalaxisstate" class="level3">
 <h3 class="anchored" data-anchor-id="function-verticalaxisstate">function verticalAxisState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> VerticalAxisState <span class="op">*</span> verticalAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>VerticalAxisState <span class="op">*</span> verticalAxisState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-viewstate" class="level3">
 <h3 class="anchored" data-anchor-id="function-viewstate">function viewState</h3>
@@ -998,7 +998,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-glyphstylestate" class="level3">
 <h3 class="anchored" data-anchor-id="function-glyphstylestate">function glyphStyleState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> GlyphStyleState <span class="op">*</span> glyphStyleState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>GlyphStyleState <span class="op">*</span> glyphStyleState<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get glyph style state (for <a href="">GlyphStyleControls</a> binding)</p>
 </section>
 <section id="function-colorconfig" class="level3">
@@ -1037,7 +1037,7 @@ virtual bool fromJson(
 <p>Subclasses should use reflect-cpp for deserialization: ```cpp</p>
 <p>bool fromJson(std::string const&amp; json) override { auto result = rfl::json::read<mywidgetstatedata>(json); if (result) { _data = *result; emit stateChanged(); return true; } return false; } ```</mywidgetstatedata></p>
 <hr>
-<p>Updated on 2026-05-05 at 19:43:48 +0000</p>
+<p>Updated on 2026-05-08 at 14:06:10 +0000</p>
 
 
 </section>
