@@ -58,6 +58,12 @@ QString ScatterPlotState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
+ScatterPlotState::~ScatterPlotState() = default;
+
+HorizontalAxisState * ScatterPlotState::horizontalAxisState() { return _horizontal_axis_state.get(); }
+
+VerticalAxisState * ScatterPlotState::verticalAxisState() { return _vertical_axis_state.get(); }
+
 void ScatterPlotState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
@@ -224,6 +230,8 @@ bool ScatterPlotState::isSelected(std::size_t index) const {
     auto const & sel = _data.selected_indices.value();
     return std::find(sel.begin(), sel.end(), index) != sel.end();
 }
+
+GlyphStyleState * ScatterPlotState::glyphStyleState() { return _glyph_style_state.get(); }
 
 void ScatterPlotState::setColorConfig(ScatterColorConfigData config) {
     _data.color_config = std::move(config);

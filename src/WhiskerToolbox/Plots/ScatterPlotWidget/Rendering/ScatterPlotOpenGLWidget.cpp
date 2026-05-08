@@ -27,6 +27,7 @@
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "KeymapSystem/KeyActionAdapter.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
