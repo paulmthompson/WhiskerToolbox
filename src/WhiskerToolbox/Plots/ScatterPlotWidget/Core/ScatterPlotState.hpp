@@ -17,12 +17,10 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
-#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
-#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
+
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
-#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
-#include "ScatterAxisSource.hpp"
+#include "ScatterAxisSource.hpp" 
 #include "ScatterColorConfig.hpp"
 
 #include <rfl.hpp>
@@ -33,6 +31,10 @@
 #include <optional>
 #include <string>
 #include <vector>
+
+class GlyphStyleState;
+class HorizontalAxisState;
+class VerticalAxisState;
 
 /**
  * @brief Selection interaction mode for the scatter plot
@@ -85,7 +87,7 @@ class ScatterPlotState : public EditorState {
 
 public:
     explicit ScatterPlotState(QObject * parent = nullptr);
-    ~ScatterPlotState() override = default;
+    ~ScatterPlotState() override;
 
     [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ScatterPlotWidget"); }
     [[nodiscard]] QString getDisplayName() const override;
@@ -97,8 +99,8 @@ public:
     void setBackgroundColor(QString const & hex_color);
 
     // === Axis state access (for widgets and serialization) ===
-    [[nodiscard]] HorizontalAxisState * horizontalAxisState() { return _horizontal_axis_state.get(); }
-    [[nodiscard]] VerticalAxisState * verticalAxisState() { return _vertical_axis_state.get(); }
+    [[nodiscard]] HorizontalAxisState * horizontalAxisState();
+    [[nodiscard]] VerticalAxisState * verticalAxisState();
 
     // === View state (zoom / pan / bounds) ===
     /** @brief Get the current view state (zoom, pan, data bounds). */
@@ -143,7 +145,7 @@ public:
 
     // === Glyph style ===
     /** @brief Get glyph style state (for GlyphStyleControls binding) */
-    [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
+    [[nodiscard]] GlyphStyleState * glyphStyleState();
 
     // === Feature color config ===
     [[nodiscard]] ScatterColorConfigData const & colorConfig() const { return _data.color_config; }
