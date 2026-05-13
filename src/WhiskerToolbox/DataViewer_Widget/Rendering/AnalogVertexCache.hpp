@@ -304,9 +304,11 @@ public:
     /**
      * @brief Extract vertices for a specific time range
      *
-     * Returns a flat float array suitable for GPU upload: [x0, y0, x1, y1, ...]
-     * Uses binary search to locate @p start in the buffer, then linearly
-     * scans forward until a vertex with @c time_idx >= @p end is encountered.
+     * Returns a flat float array suitable for GPU upload: [x0, y0, x1, y1, ...].
+     * Each @c x is taken from @c CachedAnalogVertex::x (view-relative physical time
+     * from @c TimeSeriesMapper); @c y from @c CachedAnalogVertex::y. Uses binary
+     * search to locate @p start in the buffer, then linearly scans forward until a
+     * vertex with @c time_idx >= @p end is encountered.
      *
      * Returns an empty vector (without crashing) when:
      * - The cache is invalid or empty
@@ -330,7 +332,7 @@ public:
      * @post Return value size is even (pairs of x,y floats)
      * @post Return value is empty when cache is invalid or start is not found
      */
-    [[nodiscard]] std::vector<float> getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end, TimeFrameIndex x_origin = TimeFrameIndex{0}) const;
+    [[nodiscard]] std::vector<float> getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end) const;
 
     /**
      * @brief Get statistics about cache usage

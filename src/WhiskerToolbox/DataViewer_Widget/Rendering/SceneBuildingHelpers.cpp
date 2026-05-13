@@ -249,7 +249,7 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         std::shared_ptr<TimeFrame> const & master_time_frame,
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
-        int64_t /* x_origin_master_absolute_time */) {
+        int64_t x_origin_master_absolute_time) {
 
     std::vector<DataViewer::CachedAnalogVertex> result;
 
@@ -260,9 +260,10 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
     // Use local-space layout (Y=raw value, model matrix handles positioning)
     auto const local_layout = makeLocalSpaceLayout();
 
-    // Use range-based mapper with indices
+    // Use range-based mapper with indices (same x-origin as non-cached path so X is
+    // view-relative physical time in [0, master_visible_span] for orthographic projection).
     auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
-            series, local_layout, *master_time_frame, 1.0f, start_time, end_time, 0);
+            series, local_layout, *master_time_frame, 1.0f, start_time, end_time, x_origin_master_absolute_time);
 
     // Materialize into CachedAnalogVertex format
     for (auto const & vertex: mapped_range) {
@@ -357,7 +358,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     }
 
     // Extract vertices for the requested range (using series timeframe indices)
-    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end, TimeFrameIndex{params.x_origin_master_absolute_time});
+    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end);
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)

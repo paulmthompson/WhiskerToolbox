@@ -106,7 +106,7 @@ void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & v
 
     // Always update to the requested boundary so we don't infinitely query empty gaps
     m_cached_end = requested_end;
-    
+
     if (!m_valid) {
         m_cached_start = was_empty ? requested_end : vertices.front().time_idx;
     }
@@ -150,7 +150,7 @@ void AnalogVertexCache::setVertices(std::vector<CachedAnalogVertex> const & vert
     m_valid = true;
 }
 
-std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end, TimeFrameIndex x_origin) const {
+std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end) const {
     std::vector<float> result;
 
     if (!m_valid || m_vertices.empty()) {
@@ -171,8 +171,7 @@ std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start, 
         if (v.time_idx >= end) {
             break;
         }
-        int64_t exact_distance = v.time_idx.getValue() - x_origin.getValue();
-        result.push_back(static_cast<float>(exact_distance));
+        result.push_back(v.x);
         result.push_back(v.y);
     }
 
