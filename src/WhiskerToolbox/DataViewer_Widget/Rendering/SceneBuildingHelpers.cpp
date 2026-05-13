@@ -248,8 +248,7 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         AnalogTimeSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         TimeFrameIndex start_time,
-        TimeFrameIndex end_time,
-        int64_t x_origin_master_absolute_time) {
+        TimeFrameIndex end_time) {
 
     std::vector<DataViewer::CachedAnalogVertex> result;
 
@@ -260,10 +259,11 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
     // Use local-space layout (Y=raw value, model matrix handles positioning)
     auto const local_layout = makeLocalSpaceLayout();
 
-    // Use range-based mapper with indices (same x-origin as non-cached path so X is
-    // view-relative physical time in [0, master_visible_span] for orthographic projection).
+    // Store absolute physical time in x (mapper origin 0); view origin is applied in
+    // AnalogVertexCache::getVerticesForRange so incremental cache stays valid when the
+    // view slides ("play") and x_origin_master_absolute_time changes each frame.
     auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
-            series, local_layout, *master_time_frame, 1.0f, start_time, end_time, x_origin_master_absolute_time);
+            series, local_layout, *master_time_frame, 1.0f, start_time, end_time, 0);
 
     // Materialize into CachedAnalogVertex format
     for (auto const & vertex: mapped_range) {
@@ -331,7 +331,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
             // Complete cache miss - regenerate all vertices
             // Note: generateVerticesForRange takes master timeframe indices and converts internally
             auto vertices = generateVerticesForRange(series, master_time_frame,
-                                                     params.start_time, params.end_time, params.x_origin_master_absolute_time);
+                                                     params.start_time, params.end_time);
             cache.setVertices(vertices, cache_start, cache_end);
         } else {
             for (auto const & missing_range: missing_ranges) {
@@ -345,7 +345,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
                             missing_range.start, missing_range.end, *series_tf, *master_time_frame);
                 }
                 auto vertices = generateVerticesForRange(series, master_time_frame,
-                                                         master_start, master_end, params.x_origin_master_absolute_time);
+                                                         master_start, master_end);
 
                 // FIX: Pass the explicitly requested boundaries to the cache modifiers
                 if (missing_range.prepend) {
@@ -358,7 +358,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     }
 
     // Extract vertices for the requested range (using series timeframe indices)
-    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end);
+    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end, params.x_origin_master_absolute_time);
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)

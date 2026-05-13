@@ -207,7 +207,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{10});
 
     SECTION("Extract full range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10}, 0);
         REQUIRE(flat.size() == 20);// 10 vertices * 2 floats each
 
         // Check first vertex
@@ -220,7 +220,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Extract partial range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5}, 0);
         REQUIRE(flat.size() == 6);// 3 vertices * 2 floats
 
         // Check first vertex (index 2)
@@ -233,7 +233,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Uncached range returns empty") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200}, 0);
         CHECK(flat.empty());
     }
 
@@ -247,11 +247,11 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
         }
         cache.setVertices(mapped, TimeFrameIndex{0}, TimeFrameIndex{5});
 
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5}, 1000);
         REQUIRE(flat.size() == 10);
-        CHECK_THAT(flat[0], WithinAbs(1000.0f, 0.001f));
+        CHECK_THAT(flat[0], WithinAbs(0.0f, 0.001f));
         CHECK_THAT(flat[1], WithinAbs(1.0f, 0.001f));
-        CHECK_THAT(flat[8], WithinAbs(1002.0f, 0.001f));
+        CHECK_THAT(flat[8], WithinAbs(2.0f, 0.001f));
         CHECK_THAT(flat[9], WithinAbs(5.0f, 0.001f));
     }
 }
