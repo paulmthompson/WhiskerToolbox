@@ -28,6 +28,8 @@ TEST_CASE("snakeCaseToDisplay - basic conversions", "[transforms][v2][schema][he
     CHECK(snakeCaseToDisplay("x") == "X");
     CHECK(snakeCaseToDisplay("polynomial_order") == "Polynomial Order");
     CHECK(snakeCaseToDisplay("reference_x") == "Reference X");
+    CHECK(snakeCaseToDisplay("axis_x_x") == "Axis X X");
+    CHECK(snakeCaseToDisplay("axis_y_y") == "Axis Y Y");
 }
 
 // ============================================================================
@@ -132,32 +134,42 @@ TEST_CASE("extractParameterSchema - MaskAreaParams", "[transforms][v2][schema][e
 TEST_CASE("extractParameterSchema - LineAngleParams", "[transforms][v2][schema][extraction]") {
     auto schema = extractParameterSchema<LineAngleParams>();
 
-    CHECK(schema.fields.size() == 5);
+    CHECK(schema.fields.size() == 8);
 
     auto * position = schema.field("position");
     REQUIRE(position != nullptr);
     CHECK(position->display_name == "Position");
     CHECK(position->type_name == "float");
 
+    auto * window = schema.field("window");
+    REQUIRE(window != nullptr);
+    CHECK(window->display_name == "Window");
+    CHECK(window->type_name == "float");
+
     auto * method = schema.field("method");
     REQUIRE(method != nullptr);
     CHECK(method->display_name == "Method");
-
 
     auto * poly_order = schema.field("polynomial_order");
     REQUIRE(poly_order != nullptr);
     CHECK(poly_order->display_name == "Polynomial Order");
     CHECK(poly_order->type_name == "int");
 
-    auto * ref_x = schema.field("reference_x");
-    REQUIRE(ref_x != nullptr);
-    CHECK(ref_x->display_name == "Reference X");
-    CHECK(ref_x->type_name == "float");
+    auto * ax_x = schema.field("axis_x_x");
+    REQUIRE(ax_x != nullptr);
+    CHECK(ax_x->type_name == "float");
 
-    auto * ref_y = schema.field("reference_y");
-    REQUIRE(ref_y != nullptr);
-    CHECK(ref_y->display_name == "Reference Y");
-    CHECK(ref_y->type_name == "float");
+    auto * ax_y = schema.field("axis_x_y");
+    REQUIRE(ax_y != nullptr);
+    CHECK(ax_y->type_name == "float");
+
+    auto * ay_x = schema.field("axis_y_x");
+    REQUIRE(ay_x != nullptr);
+    CHECK(ay_x->type_name == "float");
+
+    auto * ay_y = schema.field("axis_y_y");
+    REQUIRE(ay_y != nullptr);
+    CHECK(ay_y->type_name == "float");
 }
 
 TEST_CASE("extractParameterSchema - AnalogEventThresholdParams", "[transforms][v2][schema][extraction]") {

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>380</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,11 +25,11 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_midpoint">
      <item>
       <widget class="QLabel" name="positionLabel">
        <property name="text">
-        <string>Position along line (%):</string>
+        <string>Midpoint along line (%):</string>
        </property>
       </widget>
      </item>
@@ -49,30 +49,56 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_window">
      <item>
-      <widget class="QLabel" name="referenceLabel">
+      <widget class="QLabel" name="windowLabel">
        <property name="text">
-        <string>Reference Vector:</string>
+        <string>Window width (% of arc length):</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="windowSpinBox">
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>100.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>20.000000000000000</double>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <widget class="QLabel" name="axesHeaderLabel">
+     <property name="text">
+      <string>Measured coordinate axes (world units; Y is orthogonalized to X)</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_posX">
      <item>
-      <widget class="QLabel" name="xLabel">
+      <widget class="QLabel" name="positiveXLabel">
        <property name="text">
-        <string>X:</string>
+        <string>Positive X (X, Y):</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+       <property name="minimumSize">
+        <size>
+         <width>140</width>
+         <height>0</height>
+        </size>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="referenceXSpinBox">
+      <widget class="QDoubleSpinBox" name="axisPositiveXXSpinBox">
        <property name="minimum">
         <double>-1000.000000000000000</double>
        </property>
@@ -85,17 +111,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="yLabel">
-       <property name="text">
-        <string>Y:</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="referenceYSpinBox">
+      <widget class="QDoubleSpinBox" name="axisPositiveXYSpinBox">
        <property name="minimum">
         <double>-1000.000000000000000</double>
        </property>
@@ -110,9 +126,52 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="referenceDescription">
+    <layout class="QHBoxLayout" name="horizontalLayout_posY">
+     <item>
+      <widget class="QLabel" name="positiveYLabel">
+       <property name="text">
+        <string>Positive Y (X, Y):</string>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>140</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="axisPositiveYXSpinBox">
+       <property name="minimum">
+        <double>-1000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="axisPositiveYYSpinBox">
+       <property name="minimum">
+        <double>-1000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="axesDescription">
      <property name="text">
-      <string>Angles will be measured counter-clockwise from this reference direction. Default (1,0) corresponds to the positive x-axis.</string>
+      <string>Angles use atan2 in this frame: 0° aligns with positive measured X, increasing toward positive measured Y.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -179,7 +238,7 @@
        <item>
         <widget class="QLabel" name="polynomialDescription">
          <property name="text">
-          <string>Fits polynomials to x and y coordinates and calculates angle using derivatives.</string>
+          <string>Fits polynomials to samples inside the arc-length window around the midpoint; tangent uses coefficient derivatives at the midpoint.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -193,7 +252,7 @@
    <item>
     <widget class="QLabel" name="descriptionLabel">
      <property name="text">
-      <string>Calculates the angle from base point (0%) to the specified position along the line</string>
+      <string>Direct points: secant across the window (slid to stay on the polyline). Polynomial: local fit in the same window. Points at fractional arc length use linear interpolation between vertices.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

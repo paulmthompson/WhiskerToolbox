@@ -62,6 +62,7 @@ website:
         - section: "Core Libraries"
           contents:
             - developer/CoreGeometry/index.qmd
+            - developer/CoreGeometry/angle.qmd
             - section: "CorePlotting"
               href: developer/coreplotting/index.qmd
               contents:

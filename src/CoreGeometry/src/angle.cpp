@@ -7,6 +7,23 @@
 #include <cmath>
 #include <numbers>
 
+namespace {
+
+constexpr float kEpsilonLength = 1e-8f;
+constexpr float kDegenerateSpanEps = 1e-4f;
+
+[[nodiscard]] float wrap_degrees_open_interval_pm180(float degrees) {
+    while (degrees > 180.0f) {
+        degrees -= 360.0f;
+    }
+    while (degrees <= -180.0f) {
+        degrees += 360.0f;
+    }
+    return degrees;
+}
+
+}// namespace
+
 float normalize_angle(float raw_angle, float reference_x, float reference_y) {
     // Calculate the angle of the reference vector (if not the default x-axis)
     float reference_angle = 0.0f;
@@ -19,46 +36,110 @@ float normalize_angle(float raw_angle, float reference_x, float reference_y) {
     // Adjust the raw angle by subtracting the reference angle
     float normalized_angle = raw_angle - reference_angle;
 
-    // Normalize to range [-180, 180]
-    while (normalized_angle > 180.0f) normalized_angle -= 360.0f;
-    while (normalized_angle <= -180.0f) normalized_angle += 360.0f;
-
-    return normalized_angle;
+    return wrap_degrees_open_interval_pm180(normalized_angle);
 }
 
+ArcLengthFractionSpan compute_sliding_secant_span(float position, float window) {
+    position = std::clamp(position, 0.0f, 1.0f);
+    window = std::clamp(window, 0.0f, 1.0f);
 
-// Calculate angle using direct point comparison with interpolated position
-float calculate_direct_angle(Line2D const & line, float position, float reference_x, float reference_y) {
+    if (window >= 1.0f - kEpsilonLength) {
+        return {0.0f, 1.0f};
+    }
+
+    float const half = window * 0.5f;
+    float low = position - half;
+    float high = position + half;
+
+    if (low < 0.0f) {
+        high -= low;
+        low = 0.0f;
+    }
+    if (high > 1.0f) {
+        float const delta = high - 1.0f;
+        low -= delta;
+        high = 1.0f;
+    }
+    low = std::max(0.0f, low);
+    high = std::min(1.0f, high);
+
+    if (high <= low) {
+        low = std::clamp(position - kDegenerateSpanEps, 0.0f, 1.0f - kDegenerateSpanEps);
+        high = std::clamp(position + kDegenerateSpanEps, low + kDegenerateSpanEps, 1.0f);
+        if (high <= low) {
+            return {0.0f, 1.0f};
+        }
+    }
+
+    return {low, high};
+}
+
+PlanarOrthonormalBasis2D make_planar_orthonormal_basis(float axis_positive_x_x,
+                                                      float axis_positive_x_y,
+                                                      float axis_positive_y_x,
+                                                      float axis_positive_y_y) {
+    float len_x = std::hypot(axis_positive_x_x, axis_positive_x_y);
+    float ex_x = 1.0f;
+    float ex_y = 0.0f;
+    if (len_x > kEpsilonLength) {
+        ex_x = axis_positive_x_x / len_x;
+        ex_y = axis_positive_x_y / len_x;
+    }
+
+    float const dot = axis_positive_y_x * ex_x + axis_positive_y_y * ex_y;
+    float y_ortho_x = axis_positive_y_x - dot * ex_x;
+    float y_ortho_y = axis_positive_y_y - dot * ex_y;
+    float len_y = std::hypot(y_ortho_x, y_ortho_y);
+
+    float ey_x = -ex_y;
+    float ey_y = ex_x;
+    if (len_y > kEpsilonLength) {
+        ey_x = y_ortho_x / len_y;
+        ey_y = y_ortho_y / len_y;
+    }
+
+    float const cross_z = ex_x * ey_y - ex_y * ey_x;
+    if (cross_z < 0.0f) {
+        ey_x = -ey_x;
+        ey_y = -ey_y;
+    }
+
+    return {ex_x, ex_y, ey_x, ey_y};
+}
+
+float angle_degrees_vector_in_basis(float vx, float vy, PlanarOrthonormalBasis2D const & basis) {
+    float const tx = vx * basis.ex_x + vy * basis.ex_y;
+    float const ty = vx * basis.ey_x + vy * basis.ey_y;
+    float const radians = std::atan2(ty, tx);
+    float const degrees = radians * 180.0f / static_cast<float>(std::numbers::pi);
+    return wrap_degrees_open_interval_pm180(degrees);
+}
+
+float calculate_direct_angle_secant(Line2D const & line,
+                                    float t_low,
+                                    float t_high,
+                                    PlanarOrthonormalBasis2D const & basis) {
     if (line.size() < 2) {
         return 0.0f;
     }
 
-    // Clamp position to valid range
-    position = std::clamp(position, 0.0f, 1.0f);
+    t_low = std::clamp(t_low, 0.0f, 1.0f);
+    t_high = std::clamp(t_high, 0.0f, 1.0f);
+    if (t_high < t_low) {
+        std::swap(t_low, t_high);
+    }
 
-    // Interpolate the target point along the line's cumulative arc length.
-    // This gives a smooth, evenly-parameterized result regardless of vertex spacing.
-    auto interpolated = point_at_fractional_position(line, position);
-    if (!interpolated.has_value()) {
+    auto const p_lo = point_at_fractional_position(line, t_low, true);
+    auto const p_hi = point_at_fractional_position(line, t_high, true);
+    if (!p_lo.has_value() || !p_hi.has_value()) {
         return 0.0f;
     }
 
-    Point2D<float> const base = line[0];
-    Point2D<float> const pos = interpolated.value();
-
-    // Guard against zero-length vector (position very close to start)
-    float const dx = pos.x - base.x;
-    float const dy = pos.y - base.y;
-    if (dx == 0.0f && dy == 0.0f) {
+    float const vx = p_hi->x - p_lo->x;
+    float const vy = p_hi->y - p_lo->y;
+    if (vx * vx + vy * vy < 1e-20f) {
         return 0.0f;
     }
 
-    // Calculate angle in radians (atan2 returns value in range [-π, π])
-    float const raw_angle = std::atan2(dy, dx);
-
-    // Convert to degrees
-    float const angle_degrees = raw_angle * 180.0f / static_cast<float>(std::numbers::pi);
-
-    // Normalize with respect to the reference vector
-    return normalize_angle(angle_degrees, reference_x, reference_y);
+    return angle_degrees_vector_in_basis(vx, vy, basis);
 }

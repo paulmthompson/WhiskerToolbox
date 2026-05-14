@@ -239,11 +239,11 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         CHECK_THAT(output_json, Catch::Matchers::ContainsSubstring("polynomial_order"));
     }
 
-    SECTION("Five-field schema generates correct number of rows") {
-        // LineAngleParams has 5 fields: position, method, polynomial_order, reference_x, reference_y
+    SECTION("Eight-field schema generates correct number of rows") {
+        // LineAngleParams has 8 fields: position, window, method, polynomial_order, axis_x_x, axis_x_y, axis_y_x, axis_y_y
         auto const * schema = ElementRegistry::instance().getParameterSchema("CalculateLineAngle");
         REQUIRE(schema != nullptr);
-        CHECK(schema->fields.size() == 5);
+        CHECK(schema->fields.size() == 8);
 
     }
 }
@@ -443,7 +443,7 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
         CHECK_FALSE(auto_widgets.isEmpty());
     }
 
-    SECTION("showStepConfig for LineAngle creates parameters with 5 fields") {
+    SECTION("showStepConfig for LineAngle creates parameters with 8 fields") {
         StepConfigPanel panel;
         panel.showStepConfig("CalculateLineAngle", "{}");
 

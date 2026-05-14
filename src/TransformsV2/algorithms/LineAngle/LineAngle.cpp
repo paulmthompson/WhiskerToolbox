@@ -11,69 +11,48 @@
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
-// ============================================================================
-// LineAngleParams::validate() Implementation
-// ============================================================================
-
 void LineAngleParams::validate() {
-    // Clamp position to [0, 1]
-    position = std::max(0.0f, std::min(position, 1.0f));
-
-    // Normalize reference vector
-    float ref_x = reference_x;
-    float ref_y = reference_y;
-    
-    if (ref_x != 0.0f || ref_y != 0.0f) {
-        float length = std::sqrt(ref_x * ref_x + ref_y * ref_y);
-        if (length > 0.0f) {
-            reference_x = ref_x / length;
-            reference_y = ref_y / length;
-        }
-    } else {
-        // Default to x-axis if zero vector
-        reference_x = 1.0f;
-        reference_y = 0.0f;
-    }
+    position = std::clamp(position, 0.0f, 1.0f);
+    window = std::clamp(window, 0.0f, 1.0f);
 }
-
-// ============================================================================
-// Transform Implementation
-// ============================================================================
 
 float calculateLineAngle(
         Line2D const & line,
         LineAngleParams const & params) {
-    
+
     if (line.size() < 2) {
         return std::numeric_limits<float>::quiet_NaN();
     }
 
+    PlanarOrthonormalBasis2D const basis = make_planar_orthonormal_basis(
+            params.axis_x_x,
+            params.axis_x_y,
+            params.axis_y_x,
+            params.axis_y_y);
+
+    ArcLengthFractionSpan const span = compute_sliding_secant_span(params.position, params.window);
+
     if (params.method == LineAngleMethod::DirectPoints) {
-        return calculate_direct_angle(
-            line, 
-            params.position, 
-            params.reference_x, 
-            params.reference_y);
-    } else {
-        return calculate_polynomial_angle(
-            line, 
-            params.position, 
-            params.polynomial_order, 
-            params.reference_x, 
-            params.reference_y);
+        return calculate_direct_angle_secant(line, span.t_low, span.t_high, basis);
     }
+    return calculate_polynomial_angle(
+            line,
+            params.position,
+            params.window,
+            params.polynomial_order,
+            basis);
 }
 
 float calculateLineAngleWithContext(
         Line2D const & line,
         LineAngleParams const & params,
         ComputeContext const & ctx) {
-    
+
     if (ctx.shouldCancel()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    auto result = calculateLineAngle(line, params);
+    float const result = calculateLineAngle(line, params);
     ctx.reportProgress(1.0f);
 
     return result;

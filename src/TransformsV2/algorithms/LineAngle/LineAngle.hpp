@@ -13,47 +13,45 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * @brief Angle calculation method
  */
 enum class LineAngleMethod {
-    DirectPoints,   // Calculate angle directly between two points on the line
-    PolynomialFit   // Fit a polynomial and calculate angle from derivative
+    DirectPoints,  // Secant over a sliding arc-length window around the midpoint
+    PolynomialFit  // Local polynomial in the window; tangent at midpoint from coefficients
 };
 
 /**
  * @brief Parameters for line angle calculation
- * 
- * This transform computes the angle at a specified position along a line.
- * The angle can be calculated relative to a configurable reference vector.
- * 
+ *
  * Example JSON:
  * ```json
  * {
  *   "position": 0.2,
+ *   "window": 0.2,
  *   "method": "DirectPoints",
  *   "polynomial_order": 3,
- *   "reference_x": 1.0,
- *   "reference_y": 0.0
+ *   "axis_x_x": 1.0,
+ *   "axis_x_y": 0.0,
+ *   "axis_y_x": 0.0,
+ *   "axis_y_y": 1.0
  * }
  * ```
  */
 struct LineAngleParams {
-    // Position along the line (0.0-1.0) where 0 is start, 1 is end
+    /// Midpoint along cumulative arc length (0 = start, 1 = end).
     float position = 0.2f;
 
-    // Angle calculation method: "DirectPoints" or "PolynomialFit"
+    /// Full width of arc-length window (0–1), shared by direct and polynomial paths.
+    float window = 0.2f;
+
     LineAngleMethod method = LineAngleMethod::DirectPoints;
 
-    // Polynomial order for PolynomialFit method (1-9)
     int polynomial_order = 3;
 
-    // Reference vector components (angle is measured from this direction)
-    float reference_x = 1.0f;
-    float reference_y = 0.0f;
+    float axis_x_x = 1.0f;
+    float axis_x_y = 0.0f;
+    float axis_y_x = 0.0f;
+    float axis_y_y = 1.0f;
 
     /**
-     * @brief Normalize and clamp parameters in-place
-     * 
-     * Call once before batch processing to:
-     * - Clamp position to [0, 1]
-     * - Normalize reference vector (defaults to x-axis if zero)
+     * @brief Clamp numeric parameters in-place before batch processing.
      */
     void validate();
 };
@@ -64,28 +62,12 @@ struct LineAngleParams {
 
 /**
  * @brief Calculate the angle at a specified position along a line
- * 
- * This is a **unary** element-level transform that takes a Line2D as input
- * and returns the angle in degrees at the specified position along the line.
- * 
- * The angle is measured relative to the reference vector (default: positive x-axis).
- * Positive angles are counter-clockwise from the reference.
- * 
- * Two calculation methods are supported:
- * - DirectPoints: Calculate angle from tangent vector between adjacent points
- * - PolynomialFit: Fit a polynomial to the line and calculate angle from derivative
- * 
- * When applied to containers:
- * - LineData → AnalogTimeSeries (one angle per timestamp)
- * 
- * For batch processing, call params.validate() once before processing
- * to pre-compute normalized reference vectors and clamped positions.
- * 
+ *
  * @param line The line to calculate angle from
  * @param params Parameters controlling the calculation (call validate() first for batch)
- * @return float Angle in degrees (-180 to 180)
+ * @return float Angle in degrees (-180 to 180), or NaN if line has fewer than 2 points
  *
- * @pre When method is PolynomialFit, params.getPolynomialOrder() >= 0 (enforcement: none)
+ * @pre When method is PolynomialFit, polynomial_order >= 0 (enforcement: none)
  */
 float calculateLineAngle(
         Line2D const & line,

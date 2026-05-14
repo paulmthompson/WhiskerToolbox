@@ -151,21 +151,27 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         auto line_data = line_scenarios::smooth_curve();
 
         auto position = 0.5f;
+        // Use the full polyline for fitting so low vs high order are not constrained
+        // to the same nearly-linear local window (default window would often agree within 1°).
+        float constexpr full_line_window = 1.0f;
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = position;
+        params1->window = full_line_window;
         params1->method = AngleCalculationMethod::PolynomialFit;
         params1->polynomial_order = 1;
         auto result1 = line_angle(line_data.get(), params1.get());
 
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = position;
+        params3->window = full_line_window;
         params3->method = AngleCalculationMethod::PolynomialFit;
         params3->polynomial_order = 3;
         auto result3 = line_angle(line_data.get(), params3.get());
 
         auto params5 = std::make_unique<LineAngleParameters>();
         params5->position = position;
+        params5->window = full_line_window;
         params5->method = AngleCalculationMethod::PolynomialFit;
         params5->polynomial_order = 5;
         auto result5 = line_angle(line_data.get(), params5.get());
@@ -205,43 +211,45 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(calculate_max(*result.get()) == angle);
     }
 
-    SECTION("Reference vector - Horizontal reference") {
+    SECTION("Coordinate frame - default world axes") {
         auto line_data = line_scenarios::diagonal_for_reference();
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
-        params1->reference_x = 1.0f;
-        params1->reference_y = 0.0f;
         auto result1 = line_angle(line_data.get(), params1.get());
 
         REQUIRE_THAT(result1->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
-    SECTION("Reference vector - Vertical reference") {
+    SECTION("Coordinate frame - measured +X along world +Y") {
         auto line_data = line_scenarios::diagonal_for_reference();
 
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
-        params2->reference_x = 0.0f;
-        params2->reference_y = 1.0f;
+        params2->axis_x_x = 0.0f;
+        params2->axis_x_y = 1.0f;
+        params2->axis_y_x = -1.0f;
+        params2->axis_y_y = 0.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
         REQUIRE_THAT(result2->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(-45.0f, 0.001f));
     }
 
-    SECTION("Reference vector - 45-degree reference") {
+    SECTION("Coordinate frame - measured +X along diagonal") {
         auto line_data = line_scenarios::horizontal_for_reference();
 
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = 0.5f;
-        params3->reference_x = 1.0f;
-        params3->reference_y = 1.0f;
+        params3->axis_x_x = 1.0f;
+        params3->axis_x_y = 1.0f;
+        params3->axis_y_x = 0.0f;
+        params3->axis_y_y = 1.0f;
         auto result3 = line_angle(line_data.get(), params3.get());
 
         REQUIRE_THAT(result3->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(-45.0f, 0.001f));
     }
 
-    SECTION("Reference vector with polynomial fit") {
+    SECTION("Coordinate frame with polynomial fit") {
         auto line_data = line_scenarios::parabola_for_reference();
 
         auto params1 = std::make_unique<LineAngleParameters>();
@@ -254,8 +262,10 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         params2->position = 0.5f;
         params2->method = AngleCalculationMethod::PolynomialFit;
         params2->polynomial_order = 2;
-        params2->reference_x = 0.0f;
-        params2->reference_y = 1.0f;
+        params2->axis_x_x = 0.0f;
+        params2->axis_x_y = 1.0f;
+        params2->axis_y_x = -1.0f;
+        params2->axis_y_y = 0.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
         float angle1 = result1->getAnalogTimeSeries()[0];
@@ -368,37 +378,39 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         REQUIRE_THAT(result_poly->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 1.0f));
     }
 
-    SECTION("Zero reference vector") {
+    SECTION("Degenerate axis directions use fallback basis") {
         auto line_data = line_scenarios::diagonal_45_degrees();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
-        params->reference_x = 0.0f;
-        params->reference_y = 0.0f;
+        params->axis_x_x = 0.0f;
+        params->axis_x_y = 0.0f;
+        params->axis_y_x = 0.0f;
+        params->axis_y_y = 0.0f;
         auto result = line_angle(line_data.get(), params.get());
 
         REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
-    SECTION("Normalizing reference vector") {
+    SECTION("Scaling measured +Y direction does not change angle") {
         auto line_data = line_scenarios::horizontal_for_normalization();
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
-        params1->reference_x = 0.0f;
-        params1->reference_y = 2.0f;
+        params1->axis_y_x = 0.0f;
+        params1->axis_y_y = 2.0f;
         auto result1 = line_angle(line_data.get(), params1.get());
 
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
-        params2->reference_x = 0.0f;
-        params2->reference_y = 1.0f;
+        params2->axis_y_x = 0.0f;
+        params2->axis_y_y = 1.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
         REQUIRE_THAT(result1->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(result2->getAnalogTimeSeries()[0], 0.001f));
     }
 
-    SECTION("Specific problematic 2-point lines with negative reference vector") {
+    SECTION("Specific problematic 2-point lines with measured +X to the left") {
         auto line_data1 = line_scenarios::problematic_line_1();
         auto line_data2 = line_scenarios::problematic_line_2();
         
@@ -425,15 +437,15 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
 
         auto params_80 = std::make_unique<LineAngleParameters>();
         params_80->position = 0.8f;
-        params_80->reference_x = -1.0f;
-        params_80->reference_y = 0.0f;
+        params_80->axis_x_x = -1.0f;
+        params_80->axis_x_y = 0.0f;
         params_80->method = AngleCalculationMethod::DirectPoints;
         auto result_80 = line_angle(combined_line_data.get(), params_80.get());
 
         auto params_100 = std::make_unique<LineAngleParameters>();
         params_100->position = 1.0f;
-        params_100->reference_x = -1.0f;
-        params_100->reference_y = 0.0f;
+        params_100->axis_x_x = -1.0f;
+        params_100->axis_x_y = 0.0f;
         params_100->method = AngleCalculationMethod::DirectPoints;
         auto result_100 = line_angle(combined_line_data.get(), params_100.get());
 
@@ -468,8 +480,8 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Test with polynomial fit method as well
         auto params_poly_80 = std::make_unique<LineAngleParameters>();
         params_poly_80->position = 0.8f;
-        params_poly_80->reference_x = -1.0f;
-        params_poly_80->reference_y = 0.0f;
+        params_poly_80->axis_x_x = -1.0f;
+        params_poly_80->axis_x_y = 0.0f;
         params_poly_80->method = AngleCalculationMethod::PolynomialFit;
         params_poly_80->polynomial_order = 1; // Linear fit for 2 points
         auto result_poly_80 = line_angle(combined_line_data.get(), params_poly_80.get());
@@ -503,10 +515,13 @@ TEST_CASE("Data Transform: Line Angle - JSON pipeline", "[transforms][line_angle
             {"output_key", "LineAngles"},
             {"parameters", {
                 {"position", 0.5},
+                {"window", 0.2},
                 {"method", "Direct Points"},
                 {"polynomial_order", 3},
-                {"reference_x", 1.0},
-                {"reference_y", 0.0}
+                {"axis_x_x", 1.0},
+                {"axis_x_y", 0.0},
+                {"axis_y_x", 0.0},
+                {"axis_y_y", 1.0}
             }}
         }}}
     };
@@ -551,10 +566,13 @@ TEST_CASE("Data Transform: Line Angle - Parameter Factory", "[transforms][line_a
 
     const nlohmann::json params_json = {
         {"position", 0.75},
+        {"window", 0.1},
         {"method", "Polynomial Fit"},
         {"polynomial_order", 5},
-        {"reference_x", 0.0},
-        {"reference_y", 1.0}
+        {"axis_x_x", 0.0},
+        {"axis_x_y", 1.0},
+        {"axis_y_x", -1.0},
+        {"axis_y_y", 0.0}
     };
 
     for (auto const& [key, val] : params_json.items()) {
@@ -565,10 +583,13 @@ TEST_CASE("Data Transform: Line Angle - Parameter Factory", "[transforms][line_a
     REQUIRE(params != nullptr);
 
     REQUIRE(params->position == 0.75f);
+    REQUIRE(params->window == 0.1f);
     REQUIRE(params->method == AngleCalculationMethod::PolynomialFit);
     REQUIRE(params->polynomial_order == 5);
-    REQUIRE(params->reference_x == 0.0f);
-    REQUIRE(params->reference_y == 1.0f);
+    REQUIRE(params->axis_x_x == 0.0f);
+    REQUIRE(params->axis_x_y == 1.0f);
+    REQUIRE(params->axis_y_x == -1.0f);
+    REQUIRE(params->axis_y_y == 0.0f);
 }
 
 TEST_CASE("Data Transform: Line Angle - load_data_from_json_config", "[transforms][line_angle][json_config]") {
@@ -608,10 +629,13 @@ TEST_CASE("Data Transform: Line Angle - load_data_from_json_config", "[transform
         "                \"output_key\": \"line_angles\",\n"
         "                \"parameters\": {\n"
         "                    \"position\": 0.5,\n"
+        "                    \"window\": 0.2,\n"
         "                    \"method\": \"Direct Points\",\n"
         "                    \"polynomial_order\": 3,\n"
-        "                    \"reference_x\": 1.0,\n"
-        "                    \"reference_y\": 0.0\n"
+        "                    \"axis_x_x\": 1.0,\n"
+        "                    \"axis_x_y\": 0.0,\n"
+        "                    \"axis_y_x\": 0.0,\n"
+        "                    \"axis_y_y\": 1.0\n"
         "                }\n"
         "            }\n"
         "        ]\n"
@@ -663,10 +687,13 @@ TEST_CASE("Data Transform: Line Angle - load_data_from_json_config", "[transform
         "                \"output_key\": \"line_angles_poly\",\n"
         "                \"parameters\": {\n"
         "                    \"position\": 0.5,\n"
+        "                    \"window\": 0.2,\n"
         "                    \"method\": \"Polynomial Fit\",\n"
         "                    \"polynomial_order\": 2,\n"
-        "                    \"reference_x\": 1.0,\n"
-        "                    \"reference_y\": 0.0\n"
+        "                    \"axis_x_x\": 1.0,\n"
+        "                    \"axis_x_y\": 0.0,\n"
+        "                    \"axis_y_x\": 0.0,\n"
+        "                    \"axis_y_y\": 1.0\n"
         "                }\n"
         "            }\n"
         "        ]\n"
@@ -713,10 +740,13 @@ TEST_CASE("Data Transform: Line Angle - load_data_from_json_config", "[transform
         "                \"output_key\": \"line_angles_ref\",\n"
         "                \"parameters\": {\n"
         "                    \"position\": 0.5,\n"
+        "                    \"window\": 0.2,\n"
         "                    \"method\": \"Direct Points\",\n"
         "                    \"polynomial_order\": 3,\n"
-        "                    \"reference_x\": 0.0,\n"
-        "                    \"reference_y\": 1.0\n"
+        "                    \"axis_x_x\": 0.0,\n"
+        "                    \"axis_x_y\": 1.0,\n"
+        "                    \"axis_y_x\": -1.0,\n"
+        "                    \"axis_y_y\": 0.0\n"
         "                }\n"
         "            }\n"
         "        ]\n"

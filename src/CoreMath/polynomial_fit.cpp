@@ -1,13 +1,13 @@
 
 #include "polynomial_fit.hpp"
 
-#include "CoreGeometry/angle.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "parametric_polynomial_utils.hpp"
 
 #include <armadillo>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -71,60 +71,73 @@ double evaluate_polynomial_second_derivative(std::vector<double> const & coeffs,
 }
 
 
-// Calculate angle using polynomial parameterization
+// Calculate angle using polynomial parameterization on a local arc-length window
 float calculate_polynomial_angle(Line2D const & line,
                                  float position,
+                                 float window,
                                  int polynomial_order,
-                                 float reference_x,
-                                 float reference_y) {
-    if (line.size() < static_cast<size_t>(polynomial_order + 1)) {
-        // Fall back to direct method if not enough points
-        return calculate_direct_angle(line, position, reference_x, reference_y);
+                                 PlanarOrthonormalBasis2D const & basis) {
+    if (line.size() < 2) {
+        return 0.0f;
+    }
+    if (polynomial_order < 0) {
+        return 0.0f;
     }
 
-    // Extract x and y coordinates
+    ArcLengthFractionSpan const span = compute_sliding_secant_span(position, window);
+    float const span_width = span.t_high - span.t_low;
+    if (span_width <= 1e-10f) {
+        return calculate_direct_angle_secant(line, span.t_low, span.t_high, basis);
+    }
+
+    int const min_samples = polynomial_order + 2;
+    int const sample_count = std::clamp(
+            std::max(min_samples, static_cast<int>(line.size()) * 2),
+            min_samples,
+            128);
+
+    std::vector<double> u_values;
     std::vector<double> x_coords;
     std::vector<double> y_coords;
+    u_values.reserve(static_cast<size_t>(sample_count));
+    x_coords.reserve(static_cast<size_t>(sample_count));
+    y_coords.reserve(static_cast<size_t>(sample_count));
 
-    auto length = calc_length(line);
-
-    x_coords.reserve(line.size());
-    y_coords.reserve(line.size());
-    auto t_values_f = calc_cumulative_length_vector(line);
-    for (size_t i = 0; i < line.size(); ++i) {
-        // Normalize t_values to [0, 1]
-        t_values_f[i] /= length;
+    for (int i = 0; i < sample_count; ++i) {
+        double const u = sample_count == 1 ? 0.0 : static_cast<double>(i) / static_cast<double>(sample_count - 1);
+        float const t_global = span.t_low + static_cast<float>(u) * span_width;
+        auto const pt = point_at_fractional_position(line, t_global, true);
+        if (!pt.has_value()) {
+            continue;
+        }
+        u_values.push_back(u);
+        x_coords.push_back(static_cast<double>(pt->x));
+        y_coords.push_back(static_cast<double>(pt->y));
     }
 
-    std::vector<double> t_values(t_values_f.begin(), t_values_f.end());
-
-    for (size_t i = 0; i < line.size(); ++i) {
-        x_coords.push_back(static_cast<double>(line[i].x));
-        y_coords.push_back(static_cast<double>(line[i].y));
+    if (u_values.size() < static_cast<size_t>(polynomial_order + 1)) {
+        return calculate_direct_angle_secant(line, span.t_low, span.t_high, basis);
     }
 
-    // Fit polynomials to x(t) and y(t)
-    std::vector<double> x_coeffs = fit_polynomial(t_values, x_coords, polynomial_order);
-    std::vector<double> y_coeffs = fit_polynomial(t_values, y_coords, polynomial_order);
-
-    if (x_coeffs.empty() || y_coeffs.empty()) {
-        // Fall back to direct method if fitting failed
-        return calculate_direct_angle(line, position, reference_x, reference_y);
+    int order = polynomial_order;
+    while (order >= 0) {
+        if (u_values.size() <= static_cast<size_t>(order)) {
+            --order;
+            continue;
+        }
+        std::vector<double> const x_coeffs = fit_polynomial(u_values, x_coords, order);
+        std::vector<double> const y_coeffs = fit_polynomial(u_values, y_coords, order);
+        if (!x_coeffs.empty() && !y_coeffs.empty()) {
+            double const u_mid = static_cast<double>((position - span.t_low) / span_width);
+            double const u_clamped = std::clamp(u_mid, 0.0, 1.0);
+            double const dx_du = evaluate_polynomial_derivative(x_coeffs, u_clamped);
+            double const dy_du = evaluate_polynomial_derivative(y_coeffs, u_clamped);
+            return angle_degrees_vector_in_basis(static_cast<float>(dx_du), static_cast<float>(dy_du), basis);
+        }
+        --order;
     }
 
-    // Evaluate derivatives at the specified position
-    double t = static_cast<double>(position);
-    double dx_dt = evaluate_polynomial_derivative(x_coeffs, t);
-    double dy_dt = evaluate_polynomial_derivative(y_coeffs, t);
-
-    // Calculate angle using the derivatives
-    double raw_angle = std::atan2(dy_dt, dx_dt);
-
-    // Convert to degrees
-    float angle_degrees = static_cast<float>(raw_angle * 180.0 / std::numbers::pi);
-
-    // Normalize with respect to the reference vector
-    return normalize_angle(angle_degrees, reference_x, reference_y);
+    return calculate_direct_angle_secant(line, span.t_low, span.t_high, basis);
 }
 
 std::vector<Point2D<float>> extract_parametric_subsegment(
