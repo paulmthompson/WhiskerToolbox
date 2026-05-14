@@ -357,8 +357,12 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         }
     }
 
-    // Extract vertices for the requested range (using series timeframe indices)
-    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end, params.x_origin_master_absolute_time);
+    // Extract vertices for the requested range (using series timeframe indices).
+    // AnalogTimeSeries / TimeSeriesMapper treat the batch end index as inclusive, while
+    // AnalogVertexCache::getVerticesForRange uses a half-open upper bound.
+    TimeFrameIndex const extract_end_exclusive = cache_end + TimeFrameIndex{1};
+    auto flat_vertices = cache.getVerticesForRange(
+            cache_start, extract_end_exclusive, params.x_origin_master_absolute_time);
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)
