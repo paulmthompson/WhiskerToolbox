@@ -98,22 +98,27 @@ void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & 
 }
 
 void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_end) {
-    bool const was_empty = vertices.empty();
+    if (vertices.empty()) {
+        // Preserve prior behavior: advance the exclusive end even when no geometry arrives,
+        // so callers do not repeatedly query the same empty tail.
+        if (m_valid) {
+            m_cached_end = requested_end;
+        }
+        return;
+    }
 
     for (auto const & v: vertices) {
         m_vertices.push_back(v);
     }
 
-    // Always update to the requested boundary so we don't infinitely query empty gaps
-    m_cached_end = requested_end;
-    
     if (!m_valid) {
-        m_cached_start = was_empty ? requested_end : vertices.front().time_idx;
+        m_cached_start = vertices.front().time_idx;
     }
     m_valid = true;
 
     if (!m_vertices.empty()) {
         m_cached_start = m_vertices.front().time_idx;
+        m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
     }
 }
 
@@ -137,20 +142,22 @@ void AnalogVertexCache::setVertices(std::vector<CachedAnalogVertex> const & vert
         return;
     }
 
-    // If we had to truncate, adjust the range
-    if (m_vertices.size() < vertices.size()) {
-        // Data was truncated - adjust start to match what we actually have
-        m_cached_start = m_vertices.front().time_idx;
-        m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
-    } else {
-        m_cached_start = start;
-        m_cached_end = end;
-    }
+    // AnalogTimeSeries range queries treat end_time as inclusive, but cache
+    // bookkeeping and getVerticesForRange() use half-open [cached_start, cached_end).
+    // Always record the actual stored vertex extent so incremental missing ranges do not
+    // regenerate the trailing sample (duplicate time_idx corrupts extraction vs. mapper).
+    m_cached_start = m_vertices.front().time_idx;
+    m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
+
+    static_cast<void>(start);
+    static_cast<void>(end);
 
     m_valid = true;
 }
 
-std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start, TimeFrameIndex end, TimeFrameIndex x_origin) const {
+std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
+                                                          TimeFrameIndex end,
+                                                          int64_t x_origin_master_absolute_time) const {
     std::vector<float> result;
 
     if (!m_valid || m_vertices.empty()) {
@@ -171,8 +178,9 @@ std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start, 
         if (v.time_idx >= end) {
             break;
         }
-        int64_t exact_distance = v.time_idx.getValue() - x_origin.getValue();
-        result.push_back(static_cast<float>(exact_distance));
+        double const rel_x =
+                static_cast<double>(v.x) - static_cast<double>(x_origin_master_absolute_time);
+        result.push_back(static_cast<float>(rel_x));
         result.push_back(v.y);
     }
 

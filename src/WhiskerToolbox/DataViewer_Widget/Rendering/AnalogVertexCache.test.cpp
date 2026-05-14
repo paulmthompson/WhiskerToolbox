@@ -36,6 +36,7 @@ TEST_CASE("AnalogVertexCache: setVertices", "[AnalogVertexCache]") {
 
     // Create test vertices
     std::vector<CachedAnalogVertex> vertices;
+    vertices.reserve(50);
     for (int i = 0; i < 50; ++i) {
         vertices.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
@@ -53,6 +54,7 @@ TEST_CASE("AnalogVertexCache: covers", "[AnalogVertexCache]") {
     cache.initialize(100);
 
     std::vector<CachedAnalogVertex> vertices;
+    vertices.reserve(50);
     for (int i = 10; i < 60; ++i) {
         vertices.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
@@ -151,6 +153,7 @@ TEST_CASE("AnalogVertexCache: appendVertices", "[AnalogVertexCache]") {
 
     // Initial vertices
     std::vector<CachedAnalogVertex> initial;
+    initial.reserve(50);
     for (int i = 0; i < 50; ++i) {
         initial.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
@@ -197,13 +200,14 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     cache.initialize(100);
 
     std::vector<CachedAnalogVertex> vertices;
+    vertices.reserve(10);
     for (int i = 0; i < 10; ++i) {
         vertices.push_back({static_cast<float>(i), static_cast<float>(i * 10), TimeFrameIndex{i}});
     }
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{10});
 
     SECTION("Extract full range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10}, 0);
         REQUIRE(flat.size() == 20);// 10 vertices * 2 floats each
 
         // Check first vertex
@@ -216,7 +220,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Extract partial range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5}, 0);
         REQUIRE(flat.size() == 6);// 3 vertices * 2 floats
 
         // Check first vertex (index 2)
@@ -229,8 +233,26 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Uncached range returns empty") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200});
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200}, 0);
         CHECK(flat.empty());
+    }
+
+    SECTION("X uses mapper physical coordinate, not series TimeFrameIndex") {
+        // Simulates cross-TimeFrame mapping: time_idx (series index) differs from view-x.
+        std::vector<CachedAnalogVertex> mapped;
+        mapped.reserve(5);
+        for (int i = 0; i < 5; ++i) {
+            float const physical_x = 1000.0f + static_cast<float>(i) * 0.5f;
+            mapped.push_back({physical_x, static_cast<float>(i + 1), TimeFrameIndex{i}});
+        }
+        cache.setVertices(mapped, TimeFrameIndex{0}, TimeFrameIndex{5});
+
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5}, 1000);
+        REQUIRE(flat.size() == 10);
+        CHECK_THAT(flat[0], WithinAbs(0.0f, 0.001f));
+        CHECK_THAT(flat[1], WithinAbs(1.0f, 0.001f));
+        CHECK_THAT(flat[8], WithinAbs(2.0f, 0.001f));
+        CHECK_THAT(flat[9], WithinAbs(5.0f, 0.001f));
     }
 }
 
@@ -239,6 +261,7 @@ TEST_CASE("AnalogVertexCache: invalidate", "[AnalogVertexCache]") {
     cache.initialize(100);
 
     std::vector<CachedAnalogVertex> vertices;
+    vertices.reserve(50);
     for (int i = 0; i < 50; ++i) {
         vertices.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
@@ -260,6 +283,7 @@ TEST_CASE("AnalogVertexCache: capacity overflow", "[AnalogVertexCache]") {
 
     // Set initial vertices at capacity
     std::vector<CachedAnalogVertex> initial;
+    initial.reserve(50);
     for (int i = 0; i < 50; ++i) {
         initial.push_back({static_cast<float>(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }

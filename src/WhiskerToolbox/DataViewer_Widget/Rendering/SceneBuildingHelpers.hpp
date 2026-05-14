@@ -223,21 +223,21 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
 
 /**
  * @brief Generate vertices for a specific time range (helper for cache population)
- * 
+ *
  * This is the core vertex generation logic extracted for use by the cache.
- * 
+ *
  * @param series The analog time series data
  * @param master_time_frame The master time frame for coordinate conversion
- * @param start_time Start of range to generate
- * @param end_time End of range to generate
- * @return Vector of CachedAnalogVertex ready for cache insertion
+ * @param start_time Start of range to generate (master @c TimeFrameIndex)
+ * @param end_time End of range to generate (master @c TimeFrameIndex)
+ * @return Vector of @c CachedAnalogVertex with @c x = absolute physical time (mapper
+ *         origin 0); @c AnalogVertexCache::getVerticesForRange subtracts the live view origin.
  */
 std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         AnalogTimeSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         TimeFrameIndex start_time,
-        TimeFrameIndex end_time,
-        int64_t x_origin_master_absolute_time);
+        TimeFrameIndex end_time);
 
 }// namespace DataViewerHelpers
 
