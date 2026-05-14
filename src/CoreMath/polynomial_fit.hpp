@@ -1,7 +1,9 @@
 #ifndef POLYNOMIAL_FIT_HPP
 #define POLYNOMIAL_FIT_HPP
 
-#include "CoreGeometry/points.hpp" // For Point2D
+#include "CoreGeometry/angle.hpp"
+
+#include "CoreGeometry/points.hpp"// For Point2D
 
 #include <vector>
 
@@ -59,25 +61,26 @@ double evaluate_polynomial_second_derivative(std::vector<double> const & coeffs,
 
 
 /**
- * @brief Calculate angle at a position along a line using polynomial fit derivative
+ * @brief Calculate angle using a polynomial fit on samples within a sliding arc-length window.
  *
- * Fits parametric polynomials x(t) and y(t) to the line, then returns the angle of the
- * tangent (dx/dt, dy/dt) at the given position, normalized with respect to the reference
- * vector. Falls back to direct angle calculation if the line has too few points.
+ * Samples (u in [0,1]) are taken along [t_low, t_high] via point_at_fractional_position with
+ * interpolation. Fits x(u), y(u), then uses tangent (dx/du, dy/du) at u corresponding to
+ * position. Falls back to calculate_direct_angle_secant on the same window if fitting fails.
  *
  * @param line The line to evaluate
- * @param position Fractional position along the line (0.0 to 1.0)
+ * @param position Fractional midpoint along full line (0.0 to 1.0)
+ * @param window Full width of arc-length window (0.0 to 1.0), same semantics as direct secant
  * @param polynomial_order Order of polynomial to fit
- * @param reference_x X component of reference direction for angle zero
- * @param reference_y Y component of reference direction for angle zero
- * @return Angle in degrees relative to the reference vector
+ * @param basis Orthonormal basis for angle measurement
+ * @return Angle in degrees in (-180, 180]
  *
- * @pre line.size() >= 2 for polynomial fit path; otherwise falls back (enforcement: none)
- * @pre polynomial_order >= 0 (enforcement: none; propagates to fit_polynomial)
- * @pre line.size() > polynomial_order for polynomial fit; otherwise falls back to direct angle
+ * @pre polynomial_order >= 0 (enforcement: returns 0.0f if negative)
  */
-float calculate_polynomial_angle(Line2D const & line, float position, int polynomial_order,
-                                 float reference_x, float reference_y);
+float calculate_polynomial_angle(Line2D const & line,
+                                 float position,
+                                 float window,
+                                 int polynomial_order,
+                                 PlanarOrthonormalBasis2D const & basis);
 
 /**
  * @brief Extract a subsegment of a line using parametric polynomial interpolation

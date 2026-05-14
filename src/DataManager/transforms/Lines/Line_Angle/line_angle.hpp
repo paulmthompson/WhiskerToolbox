@@ -16,14 +16,19 @@ enum class AngleCalculationMethod {
 };
 
 struct LineAngleParameters : public TransformParametersBase {
-    float position = 0.2f;                                               // Default 20% along the line
+    /// Fractional arc-length midpoint along the line (0 = base, 1 = tip).
+    float position = 0.2f;
+    /// Full width of the arc-length window used for direct secant and for polynomial fitting (0–1).
+    float window = 0.2f;
     AngleCalculationMethod method = AngleCalculationMethod::DirectPoints;// Default method
     int polynomial_order = 3;  // Default; must be >= 0 when method is PolynomialFit (enforcement: none)
 
-    // Reference vector parameters (what direction is 0 degrees)
-    // Default is (1,0) which corresponds to the positive x-axis
-    float reference_x = 1.0f;
-    float reference_y = 0.0f;
+    /// World direction of positive measured X (orthogonalized with Y to form an orthonormal basis).
+    float axis_x_x = 1.0f;
+    float axis_x_y = 0.0f;
+    /// World direction of positive measured Y.
+    float axis_y_x = 0.0f;
+    float axis_y_y = 1.0f;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

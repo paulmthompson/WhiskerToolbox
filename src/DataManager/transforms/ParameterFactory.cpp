@@ -266,6 +266,9 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<LineAngleParameters, float>(
             "Calculate Line Angle", "position", &LineAngleParameters::position);
 
+    registerBasicParameter<LineAngleParameters, float>(
+            "Calculate Line Angle", "window", &LineAngleParameters::window);
+
     std::unordered_map<std::string, AngleCalculationMethod> angle_calculation_method_map = {
             {"Direct Points", AngleCalculationMethod::DirectPoints},
             {"Polynomial Fit", AngleCalculationMethod::PolynomialFit}};
@@ -277,10 +280,16 @@ void ParameterFactory::initializeDefaultSetters() {
             "Calculate Line Angle", "polynomial_order", &LineAngleParameters::polynomial_order);
 
     registerBasicParameter<LineAngleParameters, float>(
-            "Calculate Line Angle", "reference_x", &LineAngleParameters::reference_x);
+            "Calculate Line Angle", "axis_x_x", &LineAngleParameters::axis_x_x);
 
     registerBasicParameter<LineAngleParameters, float>(
-            "Calculate Line Angle", "reference_y", &LineAngleParameters::reference_y);
+            "Calculate Line Angle", "axis_x_y", &LineAngleParameters::axis_x_y);
+
+    registerBasicParameter<LineAngleParameters, float>(
+            "Calculate Line Angle", "axis_y_x", &LineAngleParameters::axis_y_x);
+
+    registerBasicParameter<LineAngleParameters, float>(
+            "Calculate Line Angle", "axis_y_y", &LineAngleParameters::axis_y_y);
 
     // ==================== Line Clip ===============
 

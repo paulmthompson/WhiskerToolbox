@@ -112,19 +112,24 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         auto line_data = line_scenarios::smooth_curve();
         TimeFrameIndex timestamp(80);
         auto line = getLineAt(line_data.get(), timestamp);
-        
+
+        float constexpr full_line_window = 1.0f;
+
         LineAngleParams params1;
         params1.position = 0.5f;
+        params1.window = full_line_window;
         params1.method = LineAngleMethod::PolynomialFit;
         params1.polynomial_order = 1;
-        
+
         LineAngleParams params3;
         params3.position = 0.5f;
+        params3.window = full_line_window;
         params3.method = LineAngleMethod::PolynomialFit;
         params3.polynomial_order = 3;
-        
+
         LineAngleParams params5;
         params5.position = 0.5f;
+        params5.window = full_line_window;
         params5.method = LineAngleMethod::PolynomialFit;
         params5.polynomial_order = 5;
         
@@ -145,79 +150,75 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
     }
 }
 
-TEST_CASE("V2 Element Transform: LineAngle - Reference Vector",
+TEST_CASE("V2 Element Transform: LineAngle - Coordinate frame",
           "[transforms][v2][element][line_angle]") {
     
-    SECTION("Horizontal reference (default)") {
+    SECTION("Default axes (world X right, Y up)") {
         auto line_data = line_scenarios::diagonal_for_reference();
         TimeFrameIndex timestamp(110);
         auto line = getLineAt(line_data.get(), timestamp);
         
         LineAngleParams params;
         params.position = 0.5f;
-        params.reference_x = 1.0f;
-        params.reference_y = 0.0f;
         
         float angle = calculateLineAngle(line, params);
         
         REQUIRE_THAT(angle, WithinAbs(45.0f, 0.001f));
     }
     
-    SECTION("Vertical reference") {
+    SECTION("Measured positive X along world +Y") {
         auto line_data = line_scenarios::diagonal_for_reference();
         TimeFrameIndex timestamp(110);
         auto line = getLineAt(line_data.get(), timestamp);
         
         LineAngleParams params;
         params.position = 0.5f;
-        params.reference_x = 0.0f;
-        params.reference_y = 1.0f;
+        params.axis_x_x = 0.0f;
+        params.axis_x_y = 1.0f;
+        params.axis_y_x = -1.0f;
+        params.axis_y_y = 0.0f;
         
         float angle = calculateLineAngle(line, params);
         
         REQUIRE_THAT(angle, WithinAbs(-45.0f, 0.001f));
     }
     
-    SECTION("45-degree reference") {
+    SECTION("Measured positive X along diagonal") {
         auto line_data = line_scenarios::horizontal_for_reference();
         TimeFrameIndex timestamp(130);
         auto line = getLineAt(line_data.get(), timestamp);
         
         LineAngleParams params;
         params.position = 0.5f;
-        params.reference_x = 1.0f;
-        params.reference_y = 1.0f;
+        params.axis_x_x = 1.0f;
+        params.axis_x_y = 1.0f;
+        params.axis_y_x = 0.0f;
+        params.axis_y_y = 1.0f;
         
         float angle = calculateLineAngle(line, params);
         
         REQUIRE_THAT(angle, WithinAbs(-45.0f, 0.001f));
     }
     
-    SECTION("Reference vector with polynomial fit - 90 degree difference") {
+    SECTION("Axis frame with polynomial fit - 90 degree difference") {
         auto line_data = line_scenarios::parabola_for_reference();
         TimeFrameIndex timestamp(140);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        // Horizontal reference
         LineAngleParams params1;
         params1.position = 0.5f;
         params1.method = LineAngleMethod::PolynomialFit;
         params1.polynomial_order = 2;
-        params1.reference_x = 1.0f;
-        params1.reference_y = 0.0f;
         
-        // Vertical reference
-        LineAngleParams params2;
-        params2.position = 0.5f;
-        params2.method = LineAngleMethod::PolynomialFit;
-        params2.polynomial_order = 2;
-        params2.reference_x = 0.0f;
-        params2.reference_y = 1.0f;
+        LineAngleParams params2 = params1;
+        params2.axis_x_x = 0.0f;
+        params2.axis_x_y = 1.0f;
+        params2.axis_y_x = -1.0f;
+        params2.axis_y_y = 0.0f;
         
         float angle1 = calculateLineAngle(line, params1);
         float angle2 = calculateLineAngle(line, params2);
         
-        // The difference should be approximately 90 degrees
         float angle_diff = angle1 - angle2;
         if (angle_diff > 180.0f) angle_diff -= 360.0f;
         if (angle_diff <= -180.0f) angle_diff += 360.0f;
@@ -288,13 +289,15 @@ TEST_CASE("V2 Element Transform: LineAngle - Edge Cases",
         REQUIRE(((angle > 80.0f && angle < 100.0f) || (angle < -80.0f && angle > -100.0f)));
     }
     
-    SECTION("Zero reference vector defaults to x-axis") {
+    SECTION("Degenerate axis X direction uses default basis") {
         auto line_data = line_scenarios::diagonal_45_degrees();
         TimeFrameIndex timestamp(30);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.reference_x = 0.0f;
-        params.reference_y = 0.0f;
+        params.axis_x_x = 0.0f;
+        params.axis_x_y = 0.0f;
+        params.axis_y_x = 0.0f;
+        params.axis_y_y = 0.0f;
         
         float angle = calculateLineAngle(line, params);
         
@@ -335,10 +338,13 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
     SECTION("Load valid JSON with all fields") {
         std::string json = R"({
             "position": 0.5,
+            "window": 0.15,
             "method": "PolynomialFit",
             "polynomial_order": 5,
-            "reference_x": 0.0,
-            "reference_y": 1.0
+            "axis_x_x": 0.0,
+            "axis_x_y": 1.0,
+            "axis_y_x": -1.0,
+            "axis_y_y": 0.0
         })";
         
         auto result = loadParametersFromJson<LineAngleParams>(json);
@@ -347,10 +353,13 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         auto params = result.value();
         
         REQUIRE_THAT(params.position, WithinAbs(0.5f, 0.001f));
+        REQUIRE_THAT(params.window, WithinAbs(0.15f, 0.001f));
         REQUIRE(params.method == LineAngleMethod::PolynomialFit);
         REQUIRE(params.polynomial_order == 5);
-        REQUIRE_THAT(params.reference_x, WithinAbs(0.0f, 0.001f));
-        REQUIRE_THAT(params.reference_y, WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.axis_x_x, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.axis_x_y, WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.axis_y_x, WithinAbs(-1.0f, 0.001f));
+        REQUIRE_THAT(params.axis_y_y, WithinAbs(0.0f, 0.001f));
     }
     
     SECTION("Load empty JSON (uses defaults)") {
@@ -362,19 +371,25 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         auto params = result.value();
         
         REQUIRE_THAT(params.position, WithinAbs(0.2f, 0.001f));
+        REQUIRE_THAT(params.window, WithinAbs(0.2f, 0.001f));
         REQUIRE(params.method == LineAngleMethod::DirectPoints);
         REQUIRE(params.polynomial_order == 3);
-        REQUIRE_THAT(params.reference_x, WithinAbs(1.0f, 0.001f));
-        REQUIRE_THAT(params.reference_y, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.axis_x_x, WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.axis_x_y, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.axis_y_x, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.axis_y_y, WithinAbs(1.0f, 0.001f));
     }
     
     SECTION("JSON round-trip preserves values") {
         LineAngleParams original;
         original.position = 0.75f;
+        original.window = 0.1f;
         original.method = LineAngleMethod::PolynomialFit;
         original.polynomial_order = 4;
-        original.reference_x = 0.707f;
-        original.reference_y = 0.707f;
+        original.axis_x_x = 0.707f;
+        original.axis_x_y = 0.707f;
+        original.axis_y_x = -0.707f;
+        original.axis_y_y = 0.707f;
         
         // Serialize
         std::string json = saveParametersToJson(original);
@@ -386,10 +401,13 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         
         // Verify values match
         REQUIRE_THAT(recovered.position, WithinAbs(0.75f, 0.001f));
+        REQUIRE_THAT(recovered.window, WithinAbs(0.1f, 0.001f));
         REQUIRE(recovered.method == LineAngleMethod::PolynomialFit);
         REQUIRE(recovered.polynomial_order == 4);
-        REQUIRE_THAT(recovered.reference_x, WithinAbs(0.707f, 0.001f));
-        REQUIRE_THAT(recovered.reference_y, WithinAbs(0.707f, 0.001f));
+        REQUIRE_THAT(recovered.axis_x_x, WithinAbs(0.707f, 0.001f));
+        REQUIRE_THAT(recovered.axis_x_y, WithinAbs(0.707f, 0.001f));
+        REQUIRE_THAT(recovered.axis_y_x, WithinAbs(-0.707f, 0.001f));
+        REQUIRE_THAT(recovered.axis_y_y, WithinAbs(0.707f, 0.001f));
     }
 }
 
@@ -621,12 +639,12 @@ TEST_CASE("V2 DataManager Integration: LineAngle via load_data_from_json_config_
         }
     }
     
-    SECTION("Custom reference vector pipeline") {
+    SECTION("Custom coordinate frame pipeline") {
         const char* json_config = R"([
         {
             "transformations": {
                 "metadata": {
-                    "name": "Reference Vector Pipeline",
+                    "name": "Coordinate frame pipeline",
                     "version": "2.0"
                 },
                 "steps": [
@@ -638,8 +656,10 @@ TEST_CASE("V2 DataManager Integration: LineAngle via load_data_from_json_config_
                         "parameters": {
                             "position": 0.5,
                             "method": "DirectPoints",
-                            "reference_x": 0.0,
-                            "reference_y": 1.0
+                            "axis_x_x": 0.0,
+                            "axis_x_y": 1.0,
+                            "axis_y_x": -1.0,
+                            "axis_y_y": 0.0
                         }
                     }
                 ]
@@ -662,7 +682,7 @@ TEST_CASE("V2 DataManager Integration: LineAngle via load_data_from_json_config_
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 2);
         
-        // With vertical reference (0,1):
+        // With measured +X along world +Y:
         // t=100: horizontal line - angle = -90 degrees
         // t=200: 45-degree line - angle = -45 degrees
         auto values_t100 = result_angles->getDataAtTime(TimeFrameIndex(100));

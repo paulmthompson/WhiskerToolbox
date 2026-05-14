@@ -1,0 +1,15 @@
+---
+title: "Planar angles and line tangents"
+format: html
+---
+
+## Overview
+
+`CoreGeometry/angle.hpp` provides helpers used by line-angle transforms and polynomial fitting:
+
+- `compute_sliding_secant_span` — symmetric arc-length window around a midpoint, translated to stay inside \([0,1]\) in fractional polyline length.
+- `make_planar_orthonormal_basis` — builds a right-handed orthonormal \((\hat{e}_x, \hat{e}_y)\) from user-supplied “positive X” and “positive Y” directions (Gram–Schmidt on Y, with safe fallbacks).
+- `calculate_direct_angle_secant` — chord angle between `point_at_fractional_position` samples at the span ends, expressed in the basis via `angle_degrees_vector_in_basis`.
+- `normalize_angle` — legacy subtraction from a single reference direction (still used where a scalar reference angle is appropriate).
+
+Fractional positions always resolve through cumulative arc length and linear edge interpolation (`point_at_fractional_position` with interpolation enabled).
