@@ -467,7 +467,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html">DataViewer::CachedAnalogVertex</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-generateverticesforrange">generateVerticesForRange</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time, int64_t x_origin_master_absolute_time)<br>Generate vertices for a specific time range (helper for cache population)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-generateverticesforrange">generateVerticesForRange</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_time, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end_time)<br>Generate vertices for a specific time range (helper for cache population)</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a></td>
@@ -608,18 +608,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> series<span class="op">,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_time<span class="op">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time<span class="op">,</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> x_origin_master_absolute_time</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end_time</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Generate vertices for a specific time range (helper for cache population)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>series</strong> The analog time series data</li>
 <li><strong>master_time_frame</strong> The master time frame for coordinate conversion</li>
-<li><strong>start_time</strong> Start of range to generate</li>
-<li><strong>end_time</strong> End of range to generate</li>
+<li><strong>start_time</strong> Start of range to generate (master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>)</li>
+<li><strong>end_time</strong> End of range to generate (master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>)</li>
 </ul>
-<p><strong>Return</strong>: Vector of CachedAnalogVertex ready for cache insertion</p>
+<p><strong>Return</strong>: Vector of <code>CachedAnalogVertex</code> with <code>x</code> = absolute physical time (mapper origin 0); <code>AnalogVertexCache::getVerticesForRange</code> subtracts the live view origin.</p>
 <p>This is the core vertex generation logic extracted for use by the cache.</p>
 </section>
 <section id="function-buildanalogseriesbatchcached" class="level3">
@@ -650,7 +649,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>For typical scrolling (scroll by 10-100 points out of 100K visible), this is ~26-130x faster than regenerating all vertices.</p>
 <hr>
-<p>Updated on 2026-05-08 at 14:06:12 +0000</p>
+<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
 
 
 </section>

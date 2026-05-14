@@ -397,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html#variable-x">x</a></strong> <br>Time coordinate (in master time frame units)</td>
+<td><strong><a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html#variable-x">x</a></strong> <br>Absolute physical time (same scalar space as <code>[TimeFrame::getTimeAtIndex](/api_generated/Classes/classTimeFrame.md#function-gettimeatindex)</code>); view-relative X is computed on extract.</td>
 </tr>
 <tr class="even">
 <td>float</td>
@@ -405,7 +405,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
-<td><strong><a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html#variable-time-idx">time_idx</a></strong> <br>Original time index for range tracking.</td>
+<td><strong><a href="../../api_generated/Classes/structDataViewer_1_1CachedAnalogVertex.html#variable-time-idx">time_idx</a></strong> <br>Series <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> for cache range bookkeeping.</td>
 </tr>
 </tbody>
 </table>
@@ -415,7 +415,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-x" class="level3">
 <h3 class="anchored" data-anchor-id="variable-x">variable x</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> x<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Time coordinate (in master time frame units)</p>
+<p>Absolute physical time (same scalar space as <code>[TimeFrame::getTimeAtIndex](/api_generated/Classes/classTimeFrame.md#function-gettimeatindex)</code>); view-relative X is computed on extract.</p>
 </section>
 <section id="variable-y" class="level3">
 <h3 class="anchored" data-anchor-id="variable-y">variable y</h3>
@@ -425,9 +425,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-time_idx" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_idx">variable time_idx</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TimeFrameIndex time_idx<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Original time index for range tracking.</p>
+<p>Series <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> for cache range bookkeeping.</p>
 <hr>
-<p>Updated on 2026-05-08 at 14:06:12 +0000</p>
+<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
 
 
 </section>
