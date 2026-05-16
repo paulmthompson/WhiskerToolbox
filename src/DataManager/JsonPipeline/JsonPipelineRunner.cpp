@@ -98,6 +98,7 @@ JsonPipelineResult runJsonPipeline(
         nlohmann::json const & config,
         std::string const & base_path,
         JsonPipelineOptions const & options) {
+    assert(&data_manager != nullptr && "DataManager reference must be valid");
 
     nlohmann::json normalized;
     try {

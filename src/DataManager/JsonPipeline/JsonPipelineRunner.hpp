@@ -61,6 +61,7 @@ struct JsonPipelineResult {
  * @return Structured success/failure result.
  * @pre The DataManager object must remain valid for the duration of the call.
  * @post On success, all enabled phases have completed.
+ * @note Not thread-safe — caller must synchronize if accessing DataManager from multiple threads.
  */
 [[nodiscard]] JsonPipelineResult runJsonPipeline(
         DataManager & data_manager,
@@ -77,6 +78,7 @@ struct JsonPipelineResult {
  * @pre The DataManager object must remain valid for the duration of the call.
  * @pre json_filepath must name a readable JSON file.
  * @post On success, all enabled phases have completed.
+ * @note Not thread-safe — caller must synchronize if accessing DataManager from multiple threads.
  */
 [[nodiscard]] JsonPipelineResult runJsonPipelineFile(
         DataManager & data_manager,
