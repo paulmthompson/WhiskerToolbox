@@ -1,3 +1,8 @@
+/**
+ * @file polynomial_fit.cpp
+ * @brief Implementation of polynomial fitting utilities for line parameterization
+ */
+
 
 #include "polynomial_fit.hpp"
 
