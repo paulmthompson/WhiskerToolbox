@@ -113,6 +113,67 @@ TEST_CASE("JsonPipelineRunner loads object-root data config",
     REQUIRE(points_at_zero.front().y == Catch::Approx(2.5f));
 }
 
+TEST_CASE("JsonPipelineRunner executes root-level saves",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    auto const csv_path = temp_dir.path() / "points.csv";
+    auto const json_path = temp_dir.path() / "pipeline_with_save.json";
+    auto const save_path = temp_dir.path() / "saved_points.csv";
+    writeSimplePointCsv(csv_path);
+
+    nlohmann::json const config = {
+            {"variables", {{"root", temp_dir.path().string()}, {"output_name", "saved_points.csv"}}},
+            {"data",
+             nlohmann::json::array({{{"data_type", "points"},
+                                     {"name", "tracked_points"},
+                                     {"filepath", "${root}/points.csv"},
+                                     {"format", "csv"},
+                                     {"csv_layout", "simple"},
+                                     {"frame_column", 0},
+                                     {"x_column", 1},
+                                     {"y_column", 2},
+                                     {"column_delim", ","}}})},
+            {"saves",
+             nlohmann::json::array({{{"data_key", "tracked_points"},
+                                     {"format", "csv"},
+                                     {"path", "${output_name}"}}})}};
+
+    {
+        std::ofstream output(json_path);
+        output << config.dump(2);
+    }
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+            data_manager,
+            json_path.string());
+
+    REQUIRE(result.m_success);
+    REQUIRE(result.m_saved_paths.size() == 1);
+    REQUIRE(result.m_saved_paths.front() == save_path.lexically_normal().string());
+    REQUIRE(std::filesystem::exists(save_path));
+}
+
+TEST_CASE("JsonPipelineRunner reports save command failures",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    nlohmann::json const config = {
+            {"saves",
+             nlohmann::json::array({{{"data_key", "missing_points"},
+                                     {"format", "csv"},
+                                     {"path", "missing.csv"}}})}};
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+            data_manager,
+            config,
+            temp_dir.path().string());
+
+    REQUIRE_FALSE(result.m_success);
+    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::Save);
+    REQUIRE(result.m_error_message.find("missing_points") != std::string::npos);
+}
+
 TEST_CASE("JsonPipelineRunner reports normalize errors",
           "[DataManager][JsonPipelineRunner]") {
     DataManager data_manager;
