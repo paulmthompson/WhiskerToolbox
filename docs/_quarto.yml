@@ -358,6 +358,7 @@ website:
         - section: "Data Manager"
           contents:
             - user_guide/data_manager/overview.qmd
+            - user_guide/data_manager/json_pipeline_runner.qmd
         - section: "Data Transformations"
           contents:
             - user_guide/data_transformations/overview.qmd

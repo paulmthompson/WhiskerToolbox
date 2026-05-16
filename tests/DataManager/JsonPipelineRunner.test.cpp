@@ -114,6 +114,50 @@ TEST_CASE("JsonPipelineRunner loads object-root data config",
     REQUIRE(points_at_zero.front().y == Catch::Approx(2.5f));
 }
 
+TEST_CASE("JsonPipelineRunner preserves legacy array config loading",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    auto const csv_path = temp_dir.path() / "legacy_points.csv";
+    writeSimplePointCsv(csv_path);
+
+    nlohmann::json const config = nlohmann::json::array({{{"data_type", "points"},
+                                                          {"name", "legacy_points"},
+                                                          {"filepath", csv_path.string()},
+                                                          {"format", "csv"},
+                                                          {"csv_layout", "simple"},
+                                                          {"frame_column", 0},
+                                                          {"x_column", 1},
+                                                          {"y_column", 2},
+                                                          {"column_delim", ","}}});
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+            data_manager,
+            config,
+            temp_dir.path().string());
+
+    REQUIRE(result.m_success);
+    auto loaded = data_manager.getData<PointData>("legacy_points");
+    REQUIRE(loaded != nullptr);
+    REQUIRE(loaded->getTimeCount() == 2);
+}
+
+TEST_CASE("JsonPipelineRunner accepts root-level transformations section",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    nlohmann::json const config = {
+            {"transformations", {{"steps", nlohmann::json::array()}}}};
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+            data_manager,
+            config,
+            temp_dir.path().string());
+
+    REQUIRE(result.m_success);
+    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::None);
+}
+
 TEST_CASE("JsonPipelineRunner executes root-level saves",
           "[DataManager][JsonPipelineRunner]") {
     TempPipelineDirectory temp_dir;
