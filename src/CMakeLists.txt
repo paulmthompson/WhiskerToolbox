@@ -41,6 +41,7 @@ add_subdirectory(PlottingSVG)
 add_subdirectory(DeepLearning)
 
 add_subdirectory(Commands)
+add_subdirectory(DataManagerPipelineRunner)
 if (ENABLE_UI)
     add_subdirectory(PlottingOpenGL)
     add_subdirectory(WhiskerToolbox)
