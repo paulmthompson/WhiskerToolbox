@@ -6,6 +6,7 @@
 #include "JsonPipelineRunner.hpp"
 
 #include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/Core/VariableSubstitution.hpp"
 #include "Commands/Core/register_core_commands.hpp"
@@ -13,6 +14,8 @@
 #include "DataManager.hpp"
 
 #include "nlohmann/json.hpp"
+
+#include <rfl/json.hpp>
 
 #include <cassert>
 #include <cstddef>
@@ -44,8 +47,11 @@ namespace {
         throw std::invalid_argument("Pipeline config root must be an object or array");
     }
 
-    if (!config.contains("data") && !config.contains("transformations") && !config.contains("saves")) {
-        throw std::invalid_argument("Pipeline config object must contain 'data', 'transformations', or 'saves'");
+    if (!config.contains("data") &&
+        !config.contains("transformations") &&
+        !config.contains("commands") &&
+        !config.contains("saves")) {
+        throw std::invalid_argument("Pipeline config object must contain 'data', 'transformations', 'commands', or 'saves'");
     }
 
     nlohmann::json normalized = nlohmann::json::object();
@@ -137,6 +143,71 @@ namespace {
 }
 
 /**
+ * @brief Create the command runtime context for the active DataManager.
+ * @param data_manager DataManager reference to expose to commands.
+ * @return CommandContext containing a non-owning DataManager shared pointer.
+ * @pre The DataManager object must outlive commands using this context.
+ * @post The returned context does not own the DataManager.
+ */
+[[nodiscard]] commands::CommandContext makeCommandContext(DataManager & data_manager) {
+    commands::CommandContext context;
+    context.data_manager = makeNonOwningDataManagerPtr(data_manager);
+    return context;
+}
+
+/**
+ * @brief Execute root-level command descriptors as a command sequence.
+ * @param data_manager DataManager used by command execution.
+ * @param config Parsed root pipeline config.
+ * @param variables Static variables for sequence substitution.
+ * @param stop_on_error If true, stop at the first failed command.
+ * @return Success result containing affected keys, or a failed result.
+ * @pre The DataManager object must remain valid for the duration of the call.
+ * @post On success, m_command_affected_keys contains keys reported by commands.
+ */
+[[nodiscard]] JsonPipelineResult executeCommands(
+        DataManager & data_manager,
+        nlohmann::json const & config,
+        std::map<std::string, std::string> const & variables,
+        bool const stop_on_error) {
+    JsonPipelineResult result;
+    result.m_success = true;
+
+    if (!config.is_object() || !config.contains("commands")) {
+        return result;
+    }
+
+    if (!config["commands"].is_array()) {
+        return makeFailure(JsonPipelinePhase::Command, "'commands' must be an array when present");
+    }
+
+    nlohmann::json sequence_json = nlohmann::json::object();
+    sequence_json["commands"] = config["commands"];
+    if (!variables.empty()) {
+        sequence_json["variables"] = variables;
+    }
+
+    auto sequence = rfl::json::read<commands::CommandSequenceDescriptor>(sequence_json.dump());
+    if (!sequence) {
+        return makeFailure(JsonPipelinePhase::Command, "Failed to parse root-level command sequence");
+    }
+
+    commands::register_core_commands();
+    auto sequence_result = commands::executeSequence(*sequence, makeCommandContext(data_manager), stop_on_error);
+    result.m_command_affected_keys = std::move(sequence_result.result.affected_keys);
+    result.m_failed_command_index = sequence_result.failed_index;
+
+    if (!sequence_result.result.success) {
+        result.m_success = false;
+        result.m_failed_phase = JsonPipelinePhase::Command;
+        result.m_error_message = sequence_result.result.error_message;
+        return result;
+    }
+
+    return result;
+}
+
+/**
  * @brief Execute root-level SaveData descriptors.
  * @param data_manager DataManager containing objects to save.
  * @param config Parsed root pipeline config.
@@ -166,8 +237,7 @@ namespace {
 
     commands::register_core_commands();
 
-    commands::CommandContext context;
-    context.data_manager = makeNonOwningDataManagerPtr(data_manager);
+    auto context = makeCommandContext(data_manager);
 
     for (std::size_t index = 0; index < config["saves"].size(); ++index) {
         auto const & save_descriptor = config["saves"][index];
@@ -233,6 +303,8 @@ std::string phaseToString(JsonPipelinePhase const phase) {
             return "normalize";
         case JsonPipelinePhase::LoadAndTransform:
             return "load_and_transform";
+        case JsonPipelinePhase::Command:
+            return "command";
         case JsonPipelinePhase::Save:
             return "save";
     }
@@ -261,6 +333,20 @@ JsonPipelineResult runJsonPipeline(
         }
     }
 
+    if (options.m_run_command_phase) {
+        auto command_result = executeCommands(
+                data_manager,
+                config,
+                extractVariables(config),
+                options.m_stop_on_command_error);
+        result.m_command_affected_keys = std::move(command_result.m_command_affected_keys);
+        result.m_failed_command_index = command_result.m_failed_command_index;
+        if (!command_result.m_success) {
+            command_result.m_loaded_data = std::move(result.m_loaded_data);
+            return command_result;
+        }
+    }
+
     if (options.m_run_save_phase) {
         auto save_result = executeSaves(
                 data_manager,
@@ -270,6 +356,9 @@ JsonPipelineResult runJsonPipeline(
                 options.m_stop_on_save_error);
         result.m_saved_paths = std::move(save_result.m_saved_paths);
         if (!save_result.m_success) {
+            save_result.m_loaded_data = std::move(result.m_loaded_data);
+            save_result.m_command_affected_keys = std::move(result.m_command_affected_keys);
+            save_result.m_failed_command_index = result.m_failed_command_index;
             return save_result;
         }
     }

@@ -25,6 +25,7 @@ enum class JsonPipelinePhase {
     Parse,
     Normalize,
     LoadAndTransform,
+    Command,
     Save
 };
 
@@ -33,6 +34,8 @@ enum class JsonPipelinePhase {
  */
 struct JsonPipelineOptions {
     bool m_run_load_and_transform_phase = true;///< Execute legacy load/transform processing.
+    bool m_run_command_phase = true;           ///< Execute root-level command sequences.
+    bool m_stop_on_command_error = true;       ///< Stop on the first failed root command.
     bool m_run_save_phase = true;              ///< Execute root-level saves after loading/transforms.
     bool m_stop_on_save_error = true;          ///< Stop on the first failed save command.
 };
@@ -45,6 +48,8 @@ struct JsonPipelineResult {
     JsonPipelinePhase m_failed_phase = JsonPipelinePhase::None;///< Phase where execution failed.
     std::string m_error_message;                               ///< Human-readable failure message.
     std::vector<DataInfo> m_loaded_data;                       ///< Data reported by the load/transform phase.
+    std::vector<std::string> m_command_affected_keys;          ///< Keys reported by the command phase.
+    int m_failed_command_index = -1;                           ///< Failed command index, or -1 if none.
     std::vector<std::string> m_saved_paths;                    ///< Output paths successfully saved.
 };
 

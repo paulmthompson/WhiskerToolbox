@@ -6,6 +6,7 @@
 #include "JsonPipeline/JsonPipelineRunner.hpp"
 
 #include "DataManager.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Points/Point_Data.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -152,6 +153,54 @@ TEST_CASE("JsonPipelineRunner executes root-level saves",
     REQUIRE(result.m_saved_paths.size() == 1);
     REQUIRE(result.m_saved_paths.front() == save_path.lexically_normal().string());
     REQUIRE(std::filesystem::exists(save_path));
+}
+
+TEST_CASE("JsonPipelineRunner executes root-level command sequences",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    nlohmann::json const config = {
+            {"variables", {{"interval_key", "review_intervals"}}},
+            {"commands",
+             nlohmann::json::array({{{"command_name", "AddInterval"},
+                                     {"parameters",
+                                      {{"interval_key", "${interval_key}"},
+                                       {"start_frame", 3},
+                                       {"end_frame", 7},
+                                       {"create_if_missing", true}}}}})}};
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+            data_manager,
+            config,
+            temp_dir.path().string());
+
+    REQUIRE(result.m_success);
+    REQUIRE(result.m_command_affected_keys.size() == 1);
+    REQUIRE(result.m_command_affected_keys.front() == "review_intervals");
+
+    auto intervals = data_manager.getData<DigitalIntervalSeries>("review_intervals");
+    REQUIRE(intervals != nullptr);
+    REQUIRE(intervals->size() == 1);
+}
+
+TEST_CASE("JsonPipelineRunner reports command sequence failures",
+          "[DataManager][JsonPipelineRunner]") {
+    TempPipelineDirectory temp_dir;
+    nlohmann::json const config = {
+            {"commands",
+             nlohmann::json::array({{{"command_name", "UnknownCommand"},
+                                     {"parameters", nlohmann::json::object()}}})}};
+
+    DataManager data_manager;
+    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+            data_manager,
+            config,
+            temp_dir.path().string());
+
+    REQUIRE_FALSE(result.m_success);
+    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::Command);
+    REQUIRE(result.m_failed_command_index == 0);
+    REQUIRE(result.m_error_message.find("UnknownCommand") != std::string::npos);
 }
 
 TEST_CASE("JsonPipelineRunner reports save command failures",
