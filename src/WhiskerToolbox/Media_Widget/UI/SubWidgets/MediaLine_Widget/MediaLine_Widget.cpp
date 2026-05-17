@@ -31,8 +31,10 @@
 #include <QSpinBox>
 #include <QVBoxLayout>
 #include <armadillo>
-#include <iostream>
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
+
+#include <cmath>
 
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
     : QWidget(parent),
@@ -131,7 +133,7 @@ void MediaLine_Widget::_setupSelectionModePages() {
     connect(_selectSelectionWidget, &line_widget::LineSelectSelectionWidget::selectionThresholdChanged,
             this, [this](float threshold) {
                 _line_selection_threshold = threshold;
-                std::cout << "Line selection threshold set to: " << threshold << std::endl;
+                spdlog::debug("Line selection threshold set to: {}", threshold);
             });
 
     _drawAllFramesSelectionWidget = new line_widget::LineDrawAllFramesSelectionWidget();
@@ -139,11 +141,11 @@ void MediaLine_Widget::_setupSelectionModePages() {
 
     connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::lineDrawingStarted,
             this, [this]() {
-                std::cout << "Line drawing started for all frames mode" << std::endl;
+                spdlog::debug("Line drawing started for all frames mode");
             });
     connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::lineDrawingCompleted,
             this, [this]() {
-                std::cout << "Line drawing completed for all frames mode" << std::endl;
+                spdlog::debug("Line drawing completed for all frames mode");
             });
     connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::applyToAllFrames,
             this, &MediaLine_Widget::_applyLineToAllFrames);
@@ -161,11 +163,11 @@ void MediaLine_Widget::showEvent(QShowEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "Show Event" << std::endl;
+    spdlog::debug("MediaLine_Widget: showEvent");
 
     // Debug: Check initial selection state
     auto initial_selections = _scene->getSelectedEntities();
-    std::cout << "Debug: Initial selected entities on show: " << initial_selections.size() << std::endl;
+    spdlog::debug("MediaLine_Widget: initial selected entities on show: {}", initial_selections.size());
 
     connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
@@ -178,7 +180,7 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "Hide Event" << std::endl;
+    spdlog::debug("MediaLine_Widget: hideEvent");
 
     // Guard against _scene being destroyed before hideEvent is called
     if (!_scene) {
@@ -251,13 +253,13 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
 
 void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canvas, Qt::KeyboardModifiers modifiers) {
     if (_active_key.empty()) {
-        std::cout << "No active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: no active key");
         return;
     }
 
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
-        std::cout << "No line data for active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line data for active key");
         return;
     }
 
@@ -268,20 +270,20 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
 
     switch (_selection_mode) {
         case Selection_Mode::None: {
-            std::cout << "Selection mode is None" << std::endl;
+            spdlog::debug("MediaLine_Widget: selection mode is None");
             break;
         }
         case Selection_Mode::Select: {
-            std::cout << "Selection mode is Select" << std::endl;
+            spdlog::debug("MediaLine_Widget: selection mode is Select");
 
             // Check for modifier keys to determine action
             if (modifiers & Qt::ControlModifier) {
                 // Ctrl+click: Add points to selected line
-                std::cout << "Ctrl+click: Adding points to selected line" << std::endl;
+                spdlog::debug("MediaLine_Widget: Ctrl+click - adding points to selected line");
                 _addPointToLine(x_media, y_media, current_time);
             } else if (modifiers & Qt::AltModifier) {
                 // Alt+click: Erase points from selected line
-                std::cout << "Alt+click: Erasing points from selected line" << std::endl;
+                spdlog::debug("MediaLine_Widget: Alt+click - erasing points from selected line");
                 _erasePointsFromLine(x_media, y_media, current_time);
             } else {
                 // Normal click: Select/deselect lines
@@ -292,17 +294,17 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
                 if (entity_id != EntityId(0) && data_type == "line" && data_key == _active_key) {
                     // Use the group-based selection system for consistency
                     _scene->selectEntity(entity_id, data_key, data_type);
-                    std::cout << "Selected line entity " << entity_id.id << " in group system" << std::endl;
+                    spdlog::debug("MediaLine_Widget: selected line entity {} in group system", entity_id.id);
                 } else {
                     // Clear selections if no line found
                     _scene->clearAllSelections();
-                    std::cout << "No line found within threshold - cleared selections" << std::endl;
+                    spdlog::debug("MediaLine_Widget: no line found within threshold - cleared selections");
                 }
             }
             break;
         }
         case Selection_Mode::DrawAllFrames: {
-            std::cout << "Selection mode is DrawAllFrames" << std::endl;
+            spdlog::debug("MediaLine_Widget: selection mode is DrawAllFrames");
             _addPointToDrawAllFrames(x_media, y_media);
             break;
         }
@@ -336,13 +338,13 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     // Get the EntityID for the selected line from the group system
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
-        std::cout << "No line selected - cannot add points" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line selected - cannot add points");
         return;
     }
 
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
-        std::cout << "No line data for active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line data for active key");
         return;
     }
 
@@ -350,7 +352,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
-        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id.id << std::endl;
+        spdlog::debug("MediaLine_Widget: could not get mutable reference to line with EntityID {}", selected_entity_id.id);
         return;
     }
 
@@ -409,21 +411,20 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         }
     }
 
-    std::cout << "Added point (" << x_media << ", " << y_media << ") to line "
-              << _active_key << " (EntityID: " << selected_entity_id.id << ")" << std::endl;
+    spdlog::debug("MediaLine_Widget: added point ({}, {}) to line {} (EntityID: {})", x_media, y_media, _active_key, selected_entity_id.id);
 }
 
 void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
     // Get the EntityID for the selected line from the group system
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
-        std::cout << "No line selected - cannot erase points" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line selected - cannot erase points");
         return;
     }
 
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
-        std::cout << "No line data for active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line data for active key");
         return;
     }
 
@@ -431,14 +432,14 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
-        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id.id << std::endl;
+        spdlog::debug("MediaLine_Widget: could not get mutable reference to line with EntityID {}", selected_entity_id.id);
         return;
     }
 
     Line2D & line = line_ref.value().get();
 
     if (line.empty()) {
-        std::cout << "Selected line is empty - nothing to erase" << std::endl;
+        spdlog::debug("MediaLine_Widget: selected line is empty - nothing to erase");
         return;
     }
 
@@ -466,8 +467,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
     line_data->notifyObservers();
 
     _scene->UpdateCanvas();
-    std::cout << "Erased points near (" << x_media << ", " << y_media << ") from line "
-              << _active_key << " (EntityID: " << selected_entity_id.id << ")" << std::endl;
+    spdlog::debug("MediaLine_Widget: erased points near ({}, {}) from line {} (EntityID: {})", x_media, y_media, _active_key, selected_entity_id.id);
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
@@ -519,18 +519,18 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
 
 void MediaLine_Widget::_setSmoothingMode(int index) {
     _smoothing_mode = static_cast<Smoothing_Mode>(index);
-    std::cout << "Smoothing mode set to: " << index << std::endl;
+    spdlog::debug("MediaLine_Widget: smoothing mode set to {}", index);
 }
 
 void MediaLine_Widget::_setPolynomialOrder(int order) {
     _polynomial_order = order;
-    std::cout << "Polynomial order set to: " << order << std::endl;
+    spdlog::debug("MediaLine_Widget: polynomial order set to {}", order);
 }
 
-void MediaLine_Widget::_toggleSelectionMode(const QString& text) {
+void MediaLine_Widget::_toggleSelectionMode(QString const & text) {
     _selection_mode = _selection_modes[text];
-    std::cout << "MediaLine_Widget: Selection mode changed to: " << text.toStdString()
-              << " (enum value: " << static_cast<int>(_selection_mode) << ")" << std::endl;
+    spdlog::debug("MediaLine_Widget: selection mode changed to: {} (enum value: {})", text.toStdString(),
+                  static_cast<int>(_selection_mode));
 
     // Switch to the appropriate page in the stacked widget
     int const pageIndex = static_cast<int>(_selection_mode);
@@ -546,11 +546,11 @@ void MediaLine_Widget::_toggleSelectionMode(const QString& text) {
     // Always enable group selection for line operations
     // This prevents selections from being cleared when switching modes
     _scene->setGroupSelectionEnabled(true);
-    std::cout << "MediaLine_Widget: Group selection enabled for line operations" << std::endl;
+    spdlog::debug("MediaLine_Widget: group selection enabled for line operations");
 
     // Debug: Check if we have any selections after mode change
     auto selected_entities = _scene->getSelectedEntities();
-    std::cout << "Debug: Selected entities after mode change: " << selected_entities.size() << std::endl;
+    spdlog::debug("MediaLine_Widget: selected entities after mode change: {}", selected_entities.size());
 
     if (_selection_mode == Selection_Mode::Select) {
         // Show hover circle for eraser when in Select mode (will be controlled by Shift key)
@@ -601,7 +601,7 @@ void MediaLine_Widget::_toggleEdgeSnapping(bool checked) {
         _scene->UpdateCanvas();
     }
 
-    std::cout << "Edge snapping " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaLine_Widget: edge snapping {}", checked ? "enabled" : "disabled");
 }
 
 void MediaLine_Widget::LoadFrame(int frame_id) {
@@ -617,7 +617,7 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
             auto lines = line_data->getAtTime(TimeFrameIndex(frame_id));
             int const num_lines = static_cast<int>(lines.size());
 
-            std::cout << "Frame " << frame_id << ": " << num_lines << " lines in " << _active_key << std::endl;
+            spdlog::debug("MediaLine_Widget: frame {}: {} lines in {}", frame_id, num_lines, _active_key);
         }
     }
 }
@@ -625,19 +625,19 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
 
 void MediaLine_Widget::_setEdgeThreshold(int threshold) {
     _edge_threshold = threshold;
-    std::cout << "Edge threshold set to: " << threshold << std::endl;
+    spdlog::debug("MediaLine_Widget: edge threshold set to {}", threshold);
 }
 
 void MediaLine_Widget::_setEdgeSearchRadius(int radius) {
     _edge_search_radius = radius;
-    std::cout << "Edge search radius set to: " << radius << std::endl;
+    spdlog::debug("MediaLine_Widget: edge search radius set to {}", radius);
 }
 
 void MediaLine_Widget::_detectEdges() {
 
     auto media = _data_manager->getData<MediaData>("media");
     if (!media) {
-        std::cout << "No media data available for edge detection" << std::endl;
+        spdlog::debug("MediaLine_Widget: no media data available for edge detection");
         return;
     }
 
@@ -673,8 +673,9 @@ void MediaLine_Widget::_detectEdges() {
 
     cv::Canny(gray_image, _current_edges, _edge_threshold / 2, _edge_threshold);
 
-    std::cout << "Edge detection completed for frame " << current_time.getValue() << std::endl;
-    std::cout << "Edges detected: " << _current_edges.size() << std::endl;
+    spdlog::debug("MediaLine_Widget: edge detection completed for frame {}", current_time.getValue());
+    spdlog::debug("MediaLine_Widget: edges mask {}x{} ({} elements)", _current_edges.cols, _current_edges.rows,
+                  static_cast<std::size_t>(_current_edges.total()));
 }
 
 std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
@@ -697,7 +698,7 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
 
     // Check if the point is within image bounds
     if (x_int < 0 || x_int >= width || y_int < 0 || y_int >= height) {
-        std::cout << "Click point outside image bounds" << std::endl;
+        spdlog::debug("MediaLine_Widget: click point outside image bounds");
         return {x, y};
     }
 
@@ -727,10 +728,10 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
     }
 
     if (min_distance < radius * radius + 1) {
-        std::cout << "Found edge point at (" << nearest_edge.first << ", "
-                  << nearest_edge.second << "), distance: " << std::sqrt(min_distance) << std::endl;
+        spdlog::debug("MediaLine_Widget: found edge point at ({}, {}), distance: {}", nearest_edge.first,
+                      nearest_edge.second, std::sqrt(min_distance));
     } else {
-        std::cout << "No edge found within radius " << radius << std::endl;
+        spdlog::debug("MediaLine_Widget: no edge found within radius {}", radius);
         cv::imwrite("edges.png", _current_edges);
     }
 
@@ -741,12 +742,12 @@ void MediaLine_Widget::_setEraserRadius(int radius) {
     if (_selection_mode == Selection_Mode::Erase) {
         _scene->setHoverCircleRadius(static_cast<double>(radius));
     }
-    std::cout << "Eraser radius set to: " << radius << std::endl;
+    spdlog::debug("MediaLine_Widget: eraser radius set to {}", radius);
 }
 
 void MediaLine_Widget::_toggleShowHoverCircle(bool checked) {
     _scene->setShowHoverCircle(checked);
-    std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaLine_Widget: show hover circle {}", checked ? "enabled" : "disabled");
 }
 
 void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
@@ -759,7 +760,7 @@ void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
         }
         _scene->UpdateCanvas();
     }
-    std::cout << "Show position marker " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaLine_Widget: show position marker {}", checked ? "enabled" : "disabled");
 }
 
 void MediaLine_Widget::_setPositionPercentage(int percentage) {
@@ -785,7 +786,7 @@ void MediaLine_Widget::_setPositionPercentage(int percentage) {
         ui->position_percentage_slider->blockSignals(false);
     }
 
-    std::cout << "Position percentage set to: " << percentage << std::endl;
+    spdlog::debug("MediaLine_Widget: position percentage set to {}", percentage);
 }
 
 void MediaLine_Widget::_toggleShowSegment(bool checked) {
@@ -798,7 +799,7 @@ void MediaLine_Widget::_toggleShowSegment(bool checked) {
         }
         _scene->UpdateCanvas();
     }
-    std::cout << "Show segment " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaLine_Widget: show segment {}", checked ? "enabled" : "disabled");
 }
 
 void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
@@ -844,7 +845,7 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
         ui->segment_start_slider->blockSignals(false);
     }
 
-    std::cout << "Segment start percentage set to: " << percentage << std::endl;
+    spdlog::debug("MediaLine_Widget: segment start percentage set to {}", percentage);
     _is_updating_percentages = false;
 }
 
@@ -891,7 +892,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
         ui->segment_end_slider->blockSignals(false);
     }
 
-    std::cout << "Segment end percentage set to: " << percentage << std::endl;
+    spdlog::debug("MediaLine_Widget: segment end percentage set to {}", percentage);
     _is_updating_percentages = false;
 }
 
@@ -1007,7 +1008,7 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
         if (line_distance < min_distance) {
             min_distance = line_distance;
             nearest_entity_id = entity_id;
-            std::cout << "  -> New closest line with EntityID: " << entity_id.id << std::endl;
+            spdlog::debug("MediaLine_Widget: new closest line with EntityID {}", entity_id.id);
         }
     }
 
@@ -1100,14 +1101,14 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     auto target_line_data = _data_manager->getData<LineData>(target_key);
 
     if (!source_line_data || !target_line_data) {
-        std::cerr << "Could not retrieve source or target LineData" << std::endl;
+        spdlog::warn("MediaLine_Widget: could not retrieve source or target LineData");
         return;
     }
 
     // Get the selected line data by EntityID
     auto selected_line_opt = source_line_data->getDataByEntityId(selected_entity_id);
     if (!selected_line_opt.has_value()) {
-        std::cerr << "Could not find line with EntityID " << selected_entity_id.id << std::endl;
+        spdlog::warn("MediaLine_Widget: could not find line with EntityID {}", selected_entity_id.id);
         return;
     }
 
@@ -1121,7 +1122,7 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
 
     // Remove from source using clearByEntityId
     if (!source_line_data->clearByEntityId(selected_entity_id, NotifyObservers::No)) {
-        std::cerr << "Could not clear line with EntityID " << selected_entity_id.id << std::endl;
+        spdlog::warn("MediaLine_Widget: could not clear line with EntityID {}", selected_entity_id.id);
         return;
     }
 
@@ -1130,8 +1131,8 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     source_line_data->notifyObservers();
     target_line_data->notifyObservers();
 
-    std::cout << "Moved line with EntityID " << selected_entity_id.id
-              << " from " << _active_key << " to " << target_key << std::endl;
+    spdlog::debug("MediaLine_Widget: moved line with EntityID {} from {} to {}", selected_entity_id.id, _active_key,
+                  target_key);
 }
 
 void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
@@ -1151,14 +1152,14 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
     auto target_line_data = _data_manager->getData<LineData>(target_key);
 
     if (!source_line_data || !target_line_data) {
-        std::cerr << "Could not retrieve source or target LineData" << std::endl;
+        spdlog::warn("MediaLine_Widget: could not retrieve source or target LineData");
         return;
     }
 
     // Get the selected line data by EntityID
     auto selected_line_opt = source_line_data->getDataByEntityId(selected_entity_id);
     if (!selected_line_opt.has_value()) {
-        std::cerr << "Could not find line with EntityID " << selected_entity_id.id << std::endl;
+        spdlog::warn("MediaLine_Widget: could not find line with EntityID {}", selected_entity_id.id);
         return;
     }
 
@@ -1185,26 +1186,26 @@ void MediaLine_Widget::_addPointToDrawAllFrames(float x_media, float y_media) {
 
 void MediaLine_Widget::_applyLineToAllFrames() {
     if (!_drawAllFramesSelectionWidget || _active_key.empty()) {
-        std::cout << "Cannot apply line to all frames: widget not available or no active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: cannot apply line to all frames: widget not available or no active key");
         return;
     }
 
     auto line_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
     if (line_points.empty()) {
-        std::cout << "No line points to apply to all frames" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line points to apply to all frames");
         return;
     }
 
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
-        std::cout << "No line data available for active key" << std::endl;
+        spdlog::debug("MediaLine_Widget: no line data available for active key");
         return;
     }
 
     // Get all frame times
     auto frame_times = _getAllFrameTimes();
     if (frame_times.empty()) {
-        std::cout << "No frame times available" << std::endl;
+        spdlog::debug("MediaLine_Widget: no frame times available");
         return;
     }
 
@@ -1265,13 +1266,13 @@ std::vector<TimeFrameIndex> MediaLine_Widget::_getAllFrameTimes() {
     // Get media data to determine total frame count
     auto media_data = _data_manager->getData<MediaData>("media");
     if (!media_data) {
-        std::cout << "No media data available" << std::endl;
+        spdlog::debug("MediaLine_Widget: no media data available");
         return frame_times;
     }
 
     int const total_frames = media_data->getTotalFrameCount();
     if (total_frames <= 0) {
-        std::cout << "Invalid frame count: " << total_frames << std::endl;
+        spdlog::debug("MediaLine_Widget: invalid frame count: {}", total_frames);
         return frame_times;
     }
 
@@ -1288,17 +1289,17 @@ std::optional<EntityId> MediaLine_Widget::_getSelectedEntityIdFromGroupSystem() 
     // Get the selected entities from the group system
     auto selected_entities = _scene->getSelectedEntities();
 
-    std::cout << "Debug: Selected entities count: " << selected_entities.size() << std::endl;
+    spdlog::debug("MediaLine_Widget: selected entities count: {}", selected_entities.size());
 
     // If no entities are selected, return nullopt
     if (selected_entities.empty()) {
-        std::cout << "Debug: No entities selected" << std::endl;
+        spdlog::debug("MediaLine_Widget: no entities selected");
         return std::nullopt;
     }
 
     // Return the first selected entity ID
     EntityId first_selected = *selected_entities.begin();
-    std::cout << "Debug: First selected entity ID: " << first_selected.id << std::endl;
+    spdlog::debug("MediaLine_Widget: first selected entity ID: {}", first_selected.id);
     return first_selected;
 }
 

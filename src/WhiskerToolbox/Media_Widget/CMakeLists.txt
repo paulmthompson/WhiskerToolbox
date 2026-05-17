@@ -3,6 +3,8 @@ find_package(OpenCV CONFIG REQUIRED)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
+find_package(spdlog CONFIG REQUIRED)
+
 
 set(MEDIA_WIDGET_SOURCES
 
@@ -121,6 +123,7 @@ target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MediaProcessingPipeli
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
 target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
 target_link_libraries(Media_Widget PRIVATE KeymapSystem)
+target_link_libraries(Media_Widget PRIVATE spdlog::spdlog_header_only)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
 target_link_libraries(Media_Widget PUBLIC CoreUtilities) # Color in header

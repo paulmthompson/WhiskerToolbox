@@ -98,7 +98,7 @@ private:
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
 
     /// @pre order >= 0 (enforcement: runtime_check via caller UI). @pre line.size() > order for fit (enforcement: runtime_check)
-    void _applyPolynomialFit(Line2D & line, int order);
+    static void _applyPolynomialFit(Line2D & line, int order);
 
     void _detectEdges();
     std::pair<float, float> _findNearestEdge(float x, float y);
