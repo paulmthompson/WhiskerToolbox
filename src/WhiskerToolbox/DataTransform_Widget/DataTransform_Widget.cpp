@@ -3,6 +3,7 @@
 #include "ui_DataTransform_Widget.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/transforms/data_transforms.hpp"
 #include "DataManager/transforms/ParameterFactory.hpp"
 #include "DataManager/transforms/TransformPipeline.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
@@ -465,11 +466,10 @@ void DataTransform_Widget::_doTransform() {
 
     std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
 
-    // Create a progress callback - use direct connection for immediate updates
-    auto progressCallback = [this](int progress) {
-        // Update directly from the UI thread to ensure immediate updates
+    // Throttle to whole-percent steps at the UI boundary (transforms may report very frequently).
+    auto progressCallback = throttleProgressCallbackToWholePercents([this](int progress) {
         _updateProgress(progress);
-    };
+    });
 
     // Pass non-owning raw pointer to the Qt-agnostic execute method with progress callback
     auto result_any = _currentSelectedOperation->execute(

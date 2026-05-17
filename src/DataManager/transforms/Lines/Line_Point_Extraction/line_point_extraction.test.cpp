@@ -47,7 +47,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         result_points = extract_line_point(line_data.get(), params, cb);
         REQUIRE(result_points != nullptr);
         REQUIRE(progress_val == 100);
-        REQUIRE(call_count == 3); // Called with 0, then 100 in loop, then final 100
+        REQUIRE(call_count == 2); // 0 at start, 100 when finished
     }
 
     SECTION("Direct method - start position") {
@@ -142,10 +142,10 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
 
         result_points = extract_line_point(line_data.get(), params, detailed_cb);
         REQUIRE(progress_val == 100);
-        REQUIRE(call_count == 3); // Called with 0, then 100 in loop, then final 100
+        REQUIRE(call_count == 2); // 0 at start, 100 when finished
 
         // Check progress sequence
-        std::vector<int> expected_progress_sequence = {0, 100, 100};
+        std::vector<int> expected_progress_sequence = {0, 100};
         REQUIRE_THAT(progress_values_seen, Catch::Matchers::Equals(expected_progress_sequence));
     }
 }
