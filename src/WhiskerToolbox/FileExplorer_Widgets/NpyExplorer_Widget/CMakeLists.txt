@@ -10,10 +10,12 @@
 # Dependencies:
 # - Qt6: Widgets, Core, Gui
 # - libnpy: Header-only library for reading .npy format
+# - spdlog: debug logging in registration
 # - DataImport_Widget: For type registry integration
 # - DataManager: For future data import integration
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(spdlog CONFIG REQUIRED)
 
 set(NPY_EXPLORER_WIDGET_SOURCES
     NpyExplorer_Widget.cpp
@@ -35,6 +37,7 @@ target_link_libraries(NpyExplorer_Widget
     PRIVATE
         DataImport_Widget  # For DataImportTypeRegistry
         DataManager        # For future data import
+        spdlog::spdlog_header_only
         WhiskerToolbox::StateManagement
 )
 

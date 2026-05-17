@@ -11,11 +11,13 @@
 # Dependencies:
 # - Qt6: Widgets, Core, Gui
 # - HDF5: C++ bindings for HDF5 file access
+# - spdlog: debug logging in registration
 # - DataImport_Widget: For type registry integration
 # - DataManager: For future data import integration
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 find_package(HDF5 COMPONENTS CXX REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 set(HDF5_EXPLORER_WIDGET_SOURCES
     HDF5Explorer_Widget.cpp
@@ -37,6 +39,7 @@ target_link_libraries(HDF5Explorer_Widget
     PRIVATE
         DataImport_Widget  # For DataImportTypeRegistry
         DataManager        # For future data import
+        spdlog::spdlog_header_only
         WhiskerToolbox::StateManagement
 )
 
