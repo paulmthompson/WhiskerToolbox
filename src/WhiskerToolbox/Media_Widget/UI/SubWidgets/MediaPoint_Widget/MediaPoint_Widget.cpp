@@ -12,8 +12,10 @@
 #include "GlyphStyleControls.hpp"
 
 #include <QPointF>
+
+#include <spdlog/spdlog.h>
+
 #include <cmath>
-#include <iostream>
 
 MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
     : QWidget(parent),
@@ -43,7 +45,7 @@ void MediaPoint_Widget::showEvent(QShowEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "Show Event" << std::endl;
+    spdlog::debug("MediaPoint_Widget: showEvent");
     // Connect to the new signal that provides modifier information
     connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaPoint_Widget::_handlePointClickWithModifiers);
 }
@@ -52,7 +54,7 @@ void MediaPoint_Widget::hideEvent(QHideEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "Hide Event" << std::endl;
+    spdlog::debug("MediaPoint_Widget: hideEvent");
 
     // Guard against _scene being destroyed before hideEvent is called
     if (!_scene) {
@@ -145,7 +147,7 @@ void MediaPoint_Widget::_selectPoint(EntityId point_id) {
 
     // Use Media_Window's selection system for visual feedback
     _scene->selectEntity(point_id, _active_key, "point");
-    std::cout << "Selected point with ID: " << point_id.id << std::endl;
+    spdlog::debug("MediaPoint_Widget: selected point EntityID {}", point_id.id);
 }
 
 void MediaPoint_Widget::_clearPointSelection() {
@@ -153,7 +155,7 @@ void MediaPoint_Widget::_clearPointSelection() {
         _selected_point_id = EntityId(0);
         _scene->clearAllSelections();// Clear all selections in scene
         _scene->UpdateCanvas();      // Refresh to remove selection highlight
-        std::cout << "Cleared point selection" << std::endl;
+        spdlog::debug("MediaPoint_Widget: cleared point selection");
     }
 }
 
@@ -169,7 +171,7 @@ void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
     // Modify the selected point via EntityId using the PointData modification handle
     auto point_handle_opt = point_data->getMutableData(_selected_point_id, NotifyObservers::Yes);
     if (!point_handle_opt.has_value()) {
-        std::cout << "Could not get mutable reference to point with EntityID " << _selected_point_id.id << std::endl;
+        spdlog::debug("MediaPoint_Widget: could not get mutable point for EntityID {}", _selected_point_id.id);
         return;
     }
 
@@ -178,7 +180,7 @@ void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
     point_ref.y = static_cast<float>(y_media);
 
     _scene->UpdateCanvas();
-    std::cout << "Moved point (EntityID: " << _selected_point_id.id << ") to: (" << x_media << ", " << y_media << ")" << std::endl;
+    spdlog::debug("MediaPoint_Widget: moved point EntityID {} to ({}, {})", _selected_point_id.id, x_media, y_media);
 }
 
 void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
@@ -198,8 +200,7 @@ void MediaPoint_Widget::_addPointAtCurrentTime(qreal x_media, qreal y_media) {
     if (point_data) {
         Point2D<float> const new_point(static_cast<float>(x_media), static_cast<float>(y_media));
         point_data->addAtTime(point_time_index, new_point, NotifyObservers::No);
-        std::cout << "Added new point at: (" << x_media << ", " << y_media << ") at time "
-                  << point_time_index.getValue() << std::endl;
+        spdlog::debug("MediaPoint_Widget: added point at ({}, {}) at time {}", x_media, y_media, point_time_index.getValue());
         point_data->notifyObservers();
     }
 }

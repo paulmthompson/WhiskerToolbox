@@ -10,7 +10,8 @@
 #include <QHideEvent>
 #include <QShowEvent>
 #include <QSignalBlocker>
-#include <iostream>
+
+#include <spdlog/spdlog.h>
 
 IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_manager, OpenGLWidget * opengl_widget, QWidget * parent)
     : QWidget(parent),
@@ -36,14 +37,14 @@ IntervalViewer_Widget::~IntervalViewer_Widget() {
 }
 
 void IntervalViewer_Widget::showEvent(QShowEvent * event) {
-    std::cout << "IntervalViewer_Widget: Show Event" << std::endl;
+    spdlog::debug("IntervalViewer_Widget: showEvent");
     // Selection is now handled directly in OpenGLWidget::mousePressEvent via hit testing
     // No need to connect to signals here - EntityId-based selection is automatic
     QWidget::showEvent(event);
 }
 
 void IntervalViewer_Widget::hideEvent(QHideEvent * event) {
-    std::cout << "IntervalViewer_Widget: Hide Event" << std::endl;
+    spdlog::debug("IntervalViewer_Widget: hideEvent");
 
     // Clear all selected entities when widget is hidden
     _opengl_widget->clearEntitySelection();
@@ -81,7 +82,7 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
         }
     }
 
-    std::cout << "IntervalViewer_Widget: Active key set to " << key << std::endl;
+    spdlog::debug("IntervalViewer_Widget: active key set to {}", key);
 }
 
 // Note: _selectInterval has been removed - interval selection is now handled

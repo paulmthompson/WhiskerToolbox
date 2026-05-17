@@ -8,9 +8,6 @@
 #include "CoreMath/parametric_polynomial_utils.hpp"
 #include "CoreMath/polynomial_fit.hpp"
 
-
-#include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <optional>
 #include <vector>
@@ -48,8 +45,7 @@ std::shared_ptr<PointData> extract_line_point(
     }
     
     progressCallback(0);
-    
-    size_t processed_times = 0;
+
     for (auto time : times_with_data) {
         auto const & lines_at_time = line_data->getAtTime(time);
         
@@ -79,14 +75,8 @@ std::shared_ptr<PointData> extract_line_point(
                 }
             }
         }
-        
-        processed_times++;
-        int progress = static_cast<int>(
-            std::round(static_cast<double>(processed_times) / static_cast<double>(times_with_data.size()) * 100.0)
-        );
-        progressCallback(progress);
     }
-    
+
     progressCallback(100);
     return result_point_data;
 }

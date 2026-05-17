@@ -160,6 +160,7 @@ website:
         - section: "Data Management"
           contents:
             - developer/DataManager/data_manager.qmd
+            - developer/DataManager/transforms/data_transforms.qmd
             - developer/DataManager/file_io.qmd
             - developer/DataManager/IO/mask_csv_rle.qmd
             - developer/DataManager/IO/csv_line_data.qmd

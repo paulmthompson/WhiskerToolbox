@@ -6,8 +6,8 @@
 #include "transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
-#include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Boolean/digital_interval_boolean.hpp"
+#include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "transforms/Lines/Line_Angle/line_angle.hpp"
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
@@ -15,14 +15,13 @@
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
 #include "transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.hpp"
 #include "transforms/Lines/Line_Index_Grouping/line_index_grouping.hpp"
+#include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
+#include "transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp"
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
-#include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
-#include "transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
-#include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
@@ -32,8 +31,10 @@
 #include "transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp"
 #include "transforms/Masks/Mask_To_Line/mask_to_line.hpp"
 #include "transforms/Media/whisker_tracing.hpp"
+#include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 
-#include <iostream>// For init messages
+#include <spdlog/spdlog.h>
+
 #include <map>
 #include <memory>// unique_ptr
 #include <string>
@@ -44,7 +45,7 @@
 
 TransformRegistry::TransformRegistry() {
 
-    std::cout << "Initializing Operation Registry..." << std::endl;
+    spdlog::debug("Initializing Operation Registry...");
 
     _registerOperation(std::make_unique<MaskAreaOperation>());
     _registerOperation(std::make_unique<MaskCentroidOperation>());
@@ -80,7 +81,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<WhiskerTracingOperation>());
 
     _computeApplicableOperations();
-    std::cout << "Operation Registry Initialized." << std::endl;
+    spdlog::debug("Operation Registry Initialized.");
 }
 
 std::vector<std::string> TransformRegistry::getOperationNamesForVariant(DataTypeVariant const & dataVariant) const {
@@ -115,18 +116,16 @@ void TransformRegistry::_registerOperation(std::unique_ptr<TransformOperation> o
     if (!op) return;
     std::string op_name = op->getName();
     if (name_to_operation_.count(op_name)) {
-        std::cerr << "Warning: Operation with name '" << op_name << "' already registered." << std::endl;
+        spdlog::warn("Operation with name '{}' already registered.", op_name);
         return;
     }
-    std::cout << "Registering operation: " << op_name
-              << " (Targets type index: " << op->getTargetInputTypeIndex().name() << ")"// Debug info
-              << std::endl;
+    spdlog::debug("Registering operation: {} (Targets type index: {})", op_name, op->getTargetInputTypeIndex().name());
     name_to_operation_[op_name] = op.get();
     all_operations_.push_back(std::move(op));
 }
 
 void TransformRegistry::_computeApplicableOperations() {
-    std::cout << "Computing applicable operations based on registered operations..." << std::endl;
+    spdlog::debug("Computing applicable operations based on registered operations...");
     type_index_to_op_names_.clear();// Start fresh
 
     for (auto const & op_ptr: all_operations_) {
@@ -140,14 +139,17 @@ void TransformRegistry::_computeApplicableOperations() {
         type_index_to_op_names_[target_type_index].push_back(op_name);
     }
 
-    std::cout << "Finished computing applicable operations." << std::endl;
-// Debug print (optional): shows mangled names for type_index keys internally
-#ifndef NDEBUG// Example: Only print in debug builds
+    spdlog::debug("Finished computing applicable operations.");
     for (auto const & pair: type_index_to_op_names_) {
-        std::cout << "  TypeIndex Hash(" << pair.first.hash_code()
-                  << ", Name=" << pair.first.name() << ") supports: ";
-        for (auto const & name: pair.second) std::cout << "'" << name << "' ";
-        std::cout << std::endl;
+        std::string names_joined;
+        for (auto const & name: pair.second) {
+            if (!names_joined.empty()) {
+                names_joined += ' ';
+            }
+            names_joined += '\'';
+            names_joined += name;
+            names_joined += '\'';
+        }
+        spdlog::debug("  TypeIndex Hash({}, Name={}) supports: {}", pair.first.hash_code(), pair.first.name(), names_joined);
     }
-#endif
 }

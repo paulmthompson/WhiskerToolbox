@@ -14,12 +14,14 @@ namespace NpyExplorerRegistration {
 
 /**
  * @brief Register NpyExplorer with the DataImportTypeRegistry
- * 
- * This function is called during application initialization to make
- * the NumPy Explorer available in the Data Import widget.
+ *
+ * Called from application startup (for example `WhiskerToolbox` `main`) after
+ * optional `spdlog` level configuration. Do not rely on static initialization to
+ * register this type: `main` already references this function so the static
+ * library object is linked, and a second static registrar would double-register.
  */
 void registerNpyExplorer();
 
-} // namespace NpyExplorerRegistration
+}// namespace NpyExplorerRegistration
 
-#endif // NPY_EXPLORER_WIDGET_REGISTRATION_HPP
+#endif// NPY_EXPLORER_WIDGET_REGISTRATION_HPP

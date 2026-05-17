@@ -17,8 +17,9 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include <spdlog/spdlog.h>
+
 #include <cmath>
-#include <iostream>
 #include <set>
 
 MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
@@ -72,7 +73,7 @@ void MediaMask_Widget::showEvent(QShowEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "MediaMask_Widget Show Event" << std::endl;
+    spdlog::debug("MediaMask_Widget: showEvent");
     connect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
     connect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
     connect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
@@ -84,7 +85,7 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
 
     static_cast<void>(event);
 
-    std::cout << "MediaMask_Widget Hide Event" << std::endl;
+    spdlog::debug("MediaMask_Widget: hideEvent");
 
     // Guard against _scene being destroyed before hideEvent is called
     if (!_scene) {
@@ -192,17 +193,17 @@ void MediaMask_Widget::_toggleSelectionMode(const QString& text) {
         _scene->setShowHoverCircle(false);
     }
 
-    std::cout << "MediaMask_Widget selection mode changed to: " << text.toStdString() << std::endl;
+    spdlog::debug("MediaMask_Widget: selection mode changed to {}", text.toStdString());
 }
 
 void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) {
     if (_active_key.empty()) {
-        std::cout << "No active mask key" << std::endl;
+        spdlog::debug("MediaMask_Widget: no active mask key");
         return;
     }
 
-    std::cout << "Left clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y
-              << ") with selection mode: " << static_cast<int>(_selection_mode) << std::endl;
+    spdlog::debug("MediaMask_Widget: left click at canvas ({}, {}) selection mode {}", canvas_coords.x, canvas_coords.y,
+                  static_cast<int>(_selection_mode));
 
     // Process the click based on selection mode
     switch (_selection_mode) {
@@ -222,7 +223,7 @@ void MediaMask_Widget::_rightClickedInVideo(CanvasCoordinates const & canvas_coo
         return;
     }
 
-    std::cout << "Right clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y << ")" << std::endl;
+    spdlog::debug("MediaMask_Widget: right click at canvas ({}, {})", canvas_coords.x, canvas_coords.y);
 
     _is_dragging = true;
     _is_adding_mode = false;
@@ -233,14 +234,14 @@ void MediaMask_Widget::_setBrushSize(int size) {
     if (_selection_mode == Selection_Mode::Brush) {
         _scene->setHoverCircleRadius(static_cast<double>(size));
     }
-    std::cout << "Brush size set to: " << size << std::endl;
+    spdlog::debug("MediaMask_Widget: brush size set to {}", size);
 }
 
 void MediaMask_Widget::_toggleShowHoverCircle(bool checked) {
     if (_selection_mode == Selection_Mode::Brush) {
         _scene->setShowHoverCircle(checked);
     }
-    std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaMask_Widget: show hover circle {}", checked ? "enabled" : "disabled");
 }
 
 void MediaMask_Widget::_toggleShowBoundingBox(bool checked) {
@@ -253,7 +254,7 @@ void MediaMask_Widget::_toggleShowBoundingBox(bool checked) {
         }
         _scene->UpdateCanvas();
     }
-    std::cout << "Show bounding box " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaMask_Widget: show bounding box {}", checked ? "enabled" : "disabled");
 }
 
 void MediaMask_Widget::_toggleShowOutline(bool checked) {
@@ -266,11 +267,11 @@ void MediaMask_Widget::_toggleShowOutline(bool checked) {
         }
         _scene->UpdateCanvas();
     }
-    std::cout << "Show outline " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaMask_Widget: show outline {}", checked ? "enabled" : "disabled");
 }
 
 void MediaMask_Widget::_toggleUseAsTransparency(bool checked) {
-    std::cout << "Transparency checkbox toggled: " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaMask_Widget: use-as-transparency checkbox {}", checked ? "enabled" : "disabled");
 
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
@@ -278,15 +279,15 @@ void MediaMask_Widget::_toggleUseAsTransparency(bool checked) {
         if (mask_opts) {
             mask_opts->use_as_transparency = checked;
             _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
-            std::cout << "Updated mask config for key: " << _active_key << std::endl;
+            spdlog::debug("MediaMask_Widget: updated mask display options for key {}", _active_key);
         } else {
-            std::cout << "No mask config found for key: " << _active_key << std::endl;
+            spdlog::debug("MediaMask_Widget: no mask display options for key {}", _active_key);
         }
         _scene->UpdateCanvas();
     } else {
-        std::cout << "No active key set or no state available" << std::endl;
+        spdlog::debug("MediaMask_Widget: use-as-transparency toggle skipped (no active key or state)");
     }
-    std::cout << "Use as transparency " << (checked ? "enabled" : "disabled") << std::endl;
+    spdlog::debug("MediaMask_Widget: use as transparency {}", checked ? "enabled" : "disabled");
 }
 
 void MediaMask_Widget::_setupDilationWidget() {
@@ -405,7 +406,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
     MaskDilationOptions const default_options;
     _dilation_widget->setOptions(default_options);
 
-    std::cout << "Mask dilation applied permanently" << std::endl;
+    spdlog::debug("MediaMask_Widget: mask dilation applied permanently");
 }
 
 void MediaMask_Widget::_storeOriginalMaskData() {
@@ -444,7 +445,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
         if (_debug_performance) {
-            std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+            spdlog::warn("MediaMask_Widget: could not retrieve mask data for key {}", _active_key);
         }
         return;
     }
@@ -453,7 +454,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto mask_image_size = mask_data->getImageSize();
     if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
         if (_debug_performance) {
-            std::cout << "Error: Invalid mask image size" << std::endl;
+            spdlog::warn("MediaMask_Widget: invalid mask image size");
         }
         return;
     }
@@ -462,7 +463,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto [canvas_width, canvas_height] = _scene->getCanvasSize();
     if (canvas_width <= 0 || canvas_height <= 0) {
         if (_debug_performance) {
-            std::cout << "Error: Invalid canvas size" << std::endl;
+            spdlog::warn("MediaMask_Widget: invalid canvas size");
         }
         return;
     }
@@ -531,9 +532,9 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     }
 
     if (_debug_performance) {
-        std::cout << "BRUSH ADD: Added " << added_count << " new pixels (out of " << brush_pixels.size()
-                  << " generated) to primary mask at index 0. Total mask size: "
-                  << (primary_mask.size() - added_count + added_count) << " pixels" << std::endl;
+        spdlog::debug(
+                "MediaMask_Widget: brush add - {} new pixels ({} generated brush pixels), primary mask size {}",
+                added_count, brush_pixels.size(), primary_mask.size());
     }
 }
 
@@ -541,7 +542,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
         if (_debug_performance) {
-            std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+            spdlog::warn("MediaMask_Widget: could not retrieve mask data for key {}", _active_key);
         }
         return;
     }
@@ -550,7 +551,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     auto mask_image_size = mask_data->getImageSize();
     if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
         if (_debug_performance) {
-            std::cout << "Error: Invalid mask image size" << std::endl;
+            spdlog::warn("MediaMask_Widget: invalid mask image size");
         }
         return;
     }
@@ -559,7 +560,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     auto [canvas_width, canvas_height] = _scene->getCanvasSize();
     if (canvas_width <= 0 || canvas_height <= 0) {
         if (_debug_performance) {
-            std::cout << "Error: Invalid canvas size" << std::endl;
+            spdlog::warn("MediaMask_Widget: invalid canvas size");
         }
         return;
     }
@@ -591,7 +592,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     // Check if there's a primary mask (index 0) to remove from
     if (existing_masks.empty()) {
         if (_debug_performance) {
-            std::cout << "BRUSH REMOVE: No mask exists to remove from" << std::endl;
+            spdlog::debug("MediaMask_Widget: brush remove - no mask at current time");
         }
         return;
     }
@@ -634,8 +635,8 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     }
 
     if (_debug_performance) {
-        std::cout << "BRUSH REMOVE: Removed " << removed_count << " pixels from primary mask at index 0. "
-                  << "Remaining mask size: " << filtered_mask.size() << " pixels" << std::endl;
+        spdlog::debug("MediaMask_Widget: brush remove - removed {} pixels, remaining {}", removed_count,
+                      filtered_mask.size());
     }
 }
 
@@ -662,7 +663,7 @@ void MediaMask_Widget::_mouseReleased() {
     if (_selection_mode == Selection_Mode::Brush && was_dragging) {
         _scene->UpdateCanvas();
         if (_debug_performance) {
-            std::cout << "Brush drag operation completed, canvas updated" << std::endl;
+            spdlog::debug("MediaMask_Widget: brush drag finished, canvas updated");
         }
     }
 }
@@ -670,7 +671,7 @@ void MediaMask_Widget::_mouseReleased() {
 void MediaMask_Widget::_onAllowEmptyMaskChanged(bool allow) {
     _allow_empty_mask = allow;
     if (_debug_performance) {
-        std::cout << "Allow empty mask setting changed to: " << (allow ? "enabled" : "disabled") << std::endl;
+        spdlog::debug("MediaMask_Widget: allow empty mask {}", allow ? "enabled" : "disabled");
     }
 }
 

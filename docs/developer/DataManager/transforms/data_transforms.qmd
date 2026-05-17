@@ -1,0 +1,7 @@
+---
+title: "Legacy transform progress (`data_transforms.hpp`)"
+---
+
+`ProgressCallback` is the integer 0–100 progress channel used by legacy `TransformOperation` implementations.
+
+Pipeline execution and the Data Transform widget wrap user-visible callbacks with `throttleProgressCallbackToWholePercents`, which forwards at most one update per distinct integer percent and logs at debug level when a large burst of raw callbacks was coalesced (see `data_transforms.cpp`).

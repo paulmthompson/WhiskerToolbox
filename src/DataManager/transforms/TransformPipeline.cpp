@@ -3,8 +3,9 @@
 #include "DataManager.hpp"
 #include "ParameterFactory.hpp"
 #include "TransformRegistry.hpp"
-#include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
+#include "transforms/data_transforms.hpp"
 #include "transforms/grouping_transforms.hpp"
+#include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -203,7 +204,9 @@ StepResult TransformPipeline::executeStep(PipelineStep const& step, ProgressCall
         // Execute the transform
         DataTypeVariant output_data;
         if (progress_callback) {
-            output_data = operation->execute(input_data, parameters.get(), progress_callback);
+            ProgressCallback const throttled =
+                    throttleProgressCallbackToWholePercents(std::move(progress_callback));
+            output_data = operation->execute(input_data, parameters.get(), throttled);
         } else {
             output_data = operation->execute(input_data, parameters.get());
         }
