@@ -24,6 +24,7 @@ set(MAIN_TARGETS
     DataManagerIO
     StateEstimation
     WhiskerToolbox
+    DataManagerPipelineRunner
 )
 
 if(ENABLE_OPENCV)
