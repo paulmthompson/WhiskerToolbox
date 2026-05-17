@@ -1,0 +1,136 @@
+---
+title: "JSON Pipeline Runner"
+format: html
+---
+
+The JSON Pipeline Runner is a headless DataManager workflow for batch processing. It loads data,
+runs DataManager commands or transformations, and saves outputs from one JSON file.
+
+## Basic Usage
+
+Run the executable with a pipeline file:
+
+```bash
+DataManagerPipelineRunner pipeline.json
+```
+
+The process exits with `0` when the pipeline succeeds. It exits nonzero when parsing, loading,
+command execution, or saving fails.
+
+## Minimal Load And Save
+
+This example loads point data from CSV and saves it back out through the DataManagerIO saver
+system.
+
+```json
+{
+  "variables": {
+    "session": "/data/session_001"
+  },
+  "data": [
+    {
+      "data_type": "points",
+      "name": "nose",
+      "format": "csv",
+      "filepath": "${session}/nose.csv",
+      "csv_layout": "simple",
+      "frame_column": 0,
+      "x_column": 1,
+      "y_column": 2,
+      "column_delim": ","
+    }
+  ],
+  "saves": [
+    {
+      "data_key": "nose",
+      "format": "csv",
+      "path": "${session}/outputs/nose.csv"
+    }
+  ]
+}
+```
+
+## Commands
+
+Use `commands` to run command architecture operations between loading and saving:
+
+```json
+{
+  "variables": {
+    "label_key": "manual_contact"
+  },
+  "commands": [
+    {
+      "command_name": "AddInterval",
+      "parameters": {
+        "interval_key": "${label_key}",
+        "start_frame": 100,
+        "end_frame": 125,
+        "create_if_missing": true
+      }
+    }
+  ],
+  "saves": [
+    {
+      "data_key": "${label_key}",
+      "format": "csv",
+      "path": "manual_contact.csv"
+    }
+  ]
+}
+```
+
+## Transformations
+
+Use the same `transformations` shape used by DataManager JSON loading:
+
+```json
+{
+  "data": [
+    {
+      "data_type": "mask",
+      "name": "whisker_mask",
+      "format": "csv",
+      "filepath": "masks.csv"
+    }
+  ],
+  "transformations": {
+    "steps": [
+      {
+        "step_id": "area",
+        "transform_name": "CalculateMaskArea",
+        "input_key": "whisker_mask",
+        "output_key": "mask_area",
+        "parameters": {}
+      }
+    ]
+  },
+  "saves": [
+    {
+      "data_key": "mask_area",
+      "format": "csv",
+      "path": "mask_area.csv"
+    }
+  ]
+}
+```
+
+## Paths And Variables
+
+Paths in `data[].filepath` are resolved by the existing DataManager JSON loading system.
+Relative `saves[].path` values are resolved against the directory containing the pipeline JSON
+file. String variables in the top-level `variables` object can be referenced as `${name}` in
+load entries, commands, and saves.
+
+## Useful Options
+
+```bash
+DataManagerPipelineRunner --no-load-transform pipeline.json
+DataManagerPipelineRunner --no-commands pipeline.json
+DataManagerPipelineRunner --no-saves pipeline.json
+DataManagerPipelineRunner --continue-on-command-error pipeline.json
+DataManagerPipelineRunner --continue-on-save-error pipeline.json
+```
+
+Use these options when debugging one phase of a pipeline or when intentionally collecting
+multiple command/save failures in one run.

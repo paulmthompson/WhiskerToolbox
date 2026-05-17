@@ -1,3 +1,7 @@
+/**
+ * @file polynomial_fit.hpp
+ * @brief Polynomial fitting utilities for line parameterization and angle calculation
+ */
 #ifndef POLYNOMIAL_FIT_HPP
 #define POLYNOMIAL_FIT_HPP
 

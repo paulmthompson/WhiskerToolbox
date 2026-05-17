@@ -22,6 +22,9 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 
+        JsonPipeline/JsonPipelineRunner.hpp
+        JsonPipeline/JsonPipelineRunner.cpp
+
         Commands/MutationGuard.hpp
         Commands/MutationGuard.cpp
 
