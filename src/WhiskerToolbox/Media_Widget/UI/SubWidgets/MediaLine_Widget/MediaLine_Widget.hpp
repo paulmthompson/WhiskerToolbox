@@ -97,7 +97,13 @@ private:
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
 
-    /// @pre order >= 0 (enforcement: runtime_check via caller UI). @pre line.size() > order for fit (enforcement: runtime_check)
+    /**
+     * @brief Apply polynomial fit to a line
+     * @param line The line to fit
+     * @param order The order of the polynomial to fit
+     * @pre order >= 0 (enforcement: runtime_check via caller UI). 
+     * @pre line.size() > order for successful fit (enforcement: runtime_check)
+     */
     static void _applyPolynomialFit(Line2D & line, int order);
 
     void _detectEdges();

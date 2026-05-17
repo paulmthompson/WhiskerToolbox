@@ -471,6 +471,9 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
+
+    assert(order >= 0 && "Order must be non-negative");
+    
     if (line.size() < static_cast<size_t>(order + 1)) {
         // Not enough points for the requested polynomial order
         return;
