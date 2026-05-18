@@ -147,7 +147,8 @@ void LineInspector::_connectSignals() {
         } else {
             // Update config with full path
             std::string parent_dir = config.value("parent_dir", ".");
-            if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
+            std::filesystem::path const parent_path(parent_dir);
+            if (parent_dir == "." || !parent_path.is_absolute()) {
                 if (parent_dir == ".") {
                     config["parent_dir"] = dataManager()->getOutputPath();
                 } else {

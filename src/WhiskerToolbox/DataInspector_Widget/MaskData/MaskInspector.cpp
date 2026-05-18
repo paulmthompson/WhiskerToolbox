@@ -138,7 +138,8 @@ void MaskInspector::_connectSignals() {
         } else {
             // Update config with full path (don't prepend if already absolute)
             std::string const parent_dir_raw = config.value("parent_dir", ".");
-            parent_dir = (!parent_dir_raw.empty() && parent_dir_raw[0] == '/')
+            std::filesystem::path const raw_path(parent_dir_raw);
+            parent_dir = raw_path.is_absolute()
                                  ? parent_dir_raw
                                  : (dataManager()->getOutputPath() + "/" + parent_dir_raw);
             updated_config["parent_dir"] = parent_dir;
