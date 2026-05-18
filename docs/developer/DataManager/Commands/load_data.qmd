@@ -59,7 +59,10 @@ Undoable. `undo()` calls `DataManager::deleteData(data_key)` to remove the loade
 3. Dispatch through `LoaderRegistry::getInstance().tryLoad()`.
 4. Convert the `LoadedDataVariant` in the result to a `DataTypeVariant`.
 5. Store in `DataManager` under `data_key` via `setData()`.
-6. Return `CommandResult::ok({data_key})` on success with the data key as an affected key.
+6. Record source lineage with `FileOrigin` metadata on the session `LineageRegistry`.
+7. Return `CommandResult::ok({data_key})` on success with the data key as an affected key.
+
+The recorded `FileOrigin` stores the resolved path, format, data type, and serialized command parameters. Data inspector save handlers use this metadata to default a matching save format back to the original load file.
 
 ## Error Cases
 

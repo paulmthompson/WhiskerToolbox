@@ -82,6 +82,19 @@ public:
     static void recordSource(
             LineageRegistry & registry,
             std::string const & data_key);
+
+    /**
+     * @brief Record source lineage with filesystem provenance.
+     *
+     * @param registry The LineageRegistry to record to.
+     * @param data_key Key of the loaded source container.
+     * @param file_origin Filesystem provenance for the load event.
+     * @post The data key is marked as source data with file-origin metadata.
+     */
+    static void recordFileSource(
+            LineageRegistry & registry,
+            std::string const & data_key,
+            FileOrigin file_origin);
 };
 
 }// namespace WhiskerToolbox::Entity::Lineage

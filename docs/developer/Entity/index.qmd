@@ -135,6 +135,7 @@ The Lineage subsystem tracks data provenance—how derived data relates to sourc
 -   Tracing computed values back to original entities
 -   Invalidating derived data when sources change
 -   Visualizing data relationships in the UI
+-   Remembering filesystem provenance for loaded source data
 
 ### Container Classification
 
@@ -251,6 +252,19 @@ registry.markStale("mask_areas");
 bool stale = registry.isStale("mask_areas");  // true
 registry.propagateStale("masks");  // Marks masks and all dependents stale
 registry.markValid("mask_areas");  // After recomputation
+```
+
+`LineageEntry` can also carry optional `FileOrigin` metadata for source data loaded from disk. This metadata is not used by `LineageResolver`; it records where a source key entered the session so save workflows can default back to the original file when the output format matches.
+
+``` cpp
+FileOrigin origin{
+    .m_path = "/data/session/points.csv",
+    .m_format = "csv",
+    .m_data_type = "PointData"
+};
+
+registry.setLineageWithFileOrigin("points", Source{}, origin);
+auto loaded_from = registry.getFileOrigin("points");
 ```
 
 **Thread Safety**: `LineageRegistry` is **not** thread-safe. Callers must synchronize access.
@@ -421,6 +435,9 @@ LineageRecorder::recordMultiInput(
 
 // For original/loaded data:
 LineageRecorder::recordSource(*dm->getLineageRegistry(), "masks");
+
+// For source data loaded from disk:
+LineageRecorder::recordFileSource(*dm->getLineageRegistry(), "masks", origin);
 ```
 
 Every v2 transform registered in `TransformsV2/core/RegisteredTransforms.cpp` carries a `lineage_type` field in its `TransformMetadata`. Callers can query this field and pass it directly to `LineageRecorder::record()` to avoid hard-coding the lineage type at call sites.

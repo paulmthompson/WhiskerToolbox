@@ -4,6 +4,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
@@ -30,7 +31,6 @@
 #include <QStackedWidget>
 
 #include <algorithm>
-#include <filesystem>
 #include <iostream>
 #include <unordered_set>
 
@@ -168,18 +168,17 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
             this, &DigitalIntervalSeriesInspector::_onExportTypeChanged);
     connect(ui->csv_interval_saver_widget, &CSVIntervalSaver_Widget::saveIntervalCSVRequested,
             this, [this](CSVIntervalSaverOptions options) {
-                auto output_path = dataManager()->getOutputPath();
-                if (output_path.empty()) {
+                auto filename = ui->filename_edit->text().toStdString();
+                auto const resolution = commands::resolveDefaultSavePath(
+                        *dataManager(), _active_key, "csv", filename);
+                if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
                     QMessageBox::warning(this, "Warning",
                                          "Please set an output directory in the Data Manager settings");
                     return;
                 }
 
-                auto filename = ui->filename_edit->text().toStdString();
-                auto const filepath = (std::filesystem::path(output_path) / filename).string();
-
-                options.parent_dir = output_path;
-                options.filename = filename;
+                options.parent_dir = resolution.m_parent_dir;
+                options.filename = resolution.m_filename;
 
                 auto const opts_json = rfl::json::write(options);
                 auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
@@ -187,7 +186,8 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
                 commands::SaveDataParams params{
                         .data_key = _active_key,
                         .format = "csv",
-                        .path = filepath,
+                        .path = resolution.m_path,
+                        .backup_existing = resolution.m_using_file_origin,
                 };
                 if (format_opts) {
                     params.format_options = format_opts.value();

@@ -7,6 +7,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataExport_Widget/Masks/CSV/CSVMaskSaver_Widget.hpp"
 #include "DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp"
@@ -46,7 +47,8 @@ MaskInspector::MaskInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        }, "MaskInspector");
+        },
+                                                     "MaskInspector");
     }
 
     // Initialize group filter combo box
@@ -111,22 +113,36 @@ void MaskInspector::_connectSignals() {
             return;
         }
 
-        // Update config with full path (don't prepend if already absolute)
-        std::string const parent_dir_raw = config.value("parent_dir", ".");
-        std::string const parent_dir = (!parent_dir_raw.empty() && parent_dir_raw[0] == '/')
-                                               ? parent_dir_raw
-                                               : (dataManager()->getOutputPath() + "/" + parent_dir_raw);
-
         nlohmann::json updated_config = config;
-        updated_config["parent_dir"] = parent_dir;
 
         // Build path for SaveData: CSV uses full file path, Image uses directory
         std::string path;
         std::string const format_str = format.toStdString();
+        bool backup_existing = false;
+        std::string parent_dir;
         if (format_str == "csv") {
             std::string const filename = config.value("filename", "mask_output.csv");
-            path = (std::filesystem::path(parent_dir) / filename).string();
+            auto const resolution = commands::resolveDefaultSavePath(
+                    *dataManager(), _active_key, format_str, filename);
+            if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
+                QMessageBox::warning(this, "Warning",
+                                     "Please set an output directory in the Data Manager settings");
+                return;
+            }
+
+            parent_dir = resolution.m_parent_dir;
+            path = resolution.m_path;
+            backup_existing = resolution.m_using_file_origin;
+            updated_config["parent_dir"] = resolution.m_parent_dir;
+            updated_config["filename"] = resolution.m_filename;
         } else {
+            // Update config with full path (don't prepend if already absolute)
+            std::string const parent_dir_raw = config.value("parent_dir", ".");
+            std::filesystem::path const raw_path(parent_dir_raw);
+            parent_dir = raw_path.is_absolute()
+                                 ? parent_dir_raw
+                                 : (dataManager()->getOutputPath() + "/" + parent_dir_raw);
+            updated_config["parent_dir"] = parent_dir;
             path = parent_dir;
         }
 
@@ -138,6 +154,7 @@ void MaskInspector::_connectSignals() {
                 .data_key = _active_key,
                 .format = format_str,
                 .path = path,
+                .backup_existing = backup_existing,
         };
         if (format_opts) {
             params.format_options = format_opts.value();

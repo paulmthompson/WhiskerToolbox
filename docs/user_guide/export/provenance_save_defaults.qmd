@@ -1,0 +1,12 @@
+---
+title: "Saving Back to Loaded Files"
+format: html
+---
+
+## Overview
+
+When data is loaded from disk, WhiskerToolbox records the resolved source file path for that data key. If you later save the same key with the same format from a Data Inspector, the save target defaults to the original file instead of the global output directory.
+
+Before writing, the existing file is moved to the same path with a `.bak` suffix. For example, saving back to `points.csv` first moves the previous file to `points.csv.bak`, then writes the new `points.csv`.
+
+This behavior is currently applied to single-file exports. Directory-based exports still use the selected/export directory.

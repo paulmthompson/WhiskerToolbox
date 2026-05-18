@@ -1,0 +1,32 @@
+---
+title: "Save Path Resolver"
+format: html
+---
+
+## Overview
+
+`SavePathResolver` provides a Qt-free helper for choosing the default single-file save target for a `DataManager` key. It first checks `LineageRegistry` for matching `FileOrigin` metadata and falls back to `DataManager::getOutputPath()` plus the UI-provided filename.
+
+This keeps provenance-aware save defaults out of the inspector widgets and leaves overwrite policy in `SaveData`.
+
+## API
+
+```cpp
+commands::SavePathResolution resolveDefaultSavePath(
+    DataManager const& data_manager,
+    std::string const& data_key,
+    std::string const& requested_format,
+    std::string const& fallback_filename);
+```
+
+`SavePathResolution` returns the full path, parent directory, filename, and a `m_using_file_origin` flag. Callers use that flag to enable backup-on-overwrite only when saving back to the loaded source file.
+
+## Behavior
+
+- If the key has `FileOrigin` metadata and its format matches the requested saver format, the resolver returns the original load path.
+- If no matching origin exists, the resolver returns `DataManager::getOutputPath() / fallback_filename`.
+- The resolver does not modify `DataManager`, lineage metadata, or the filesystem.
+
+## Call Sites
+
+Data inspector save handlers use this helper before constructing `SaveDataParams`. `SaveData` remains responsible for the actual write and optional `.bak` backup.

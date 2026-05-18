@@ -43,6 +43,8 @@ set(COMMAND_SOURCES
 
         IO/SaveData.hpp
         IO/SaveData.cpp
+        IO/SavePathResolver.hpp
+        IO/SavePathResolver.cpp
         IO/LoadData.hpp
         IO/LoadData.cpp
 

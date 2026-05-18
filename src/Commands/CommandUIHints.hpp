@@ -10,8 +10,8 @@
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"
-#include "MoveByTimeRange.hpp"
 #include "IO/SaveData.hpp"
+#include "MoveByTimeRange.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -100,6 +100,14 @@ struct ParameterUIHints<commands::SaveDataParams> {
         }
         if (auto * f = schema.field("format_options")) {
             f->tooltip = "Format-specific options passed to the saver (optional)";
+            f->is_advanced = true;
+        }
+        if (auto * f = schema.field("backup_existing")) {
+            f->tooltip = "Move an existing target file to a backup before saving";
+            f->is_advanced = true;
+        }
+        if (auto * f = schema.field("backup_suffix")) {
+            f->tooltip = "Suffix appended to the previous target file when backing up";
             f->is_advanced = true;
         }
     }
