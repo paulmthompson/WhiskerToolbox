@@ -38,6 +38,7 @@
 #include "Entity/EntityRegistry.hpp"
 
 #include "Entity/Lineage/LineageRegistry.hpp"
+#include "Lineage/LineageRecorder.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -47,6 +48,38 @@
 #include <utility>
 
 using namespace nlohmann;
+
+namespace {
+
+/**
+ * @brief Record filesystem provenance for a successfully loaded data key.
+ * @param dm DataManager owning the session lineage registry.
+ * @param data_key Key that was loaded into the DataManager.
+ * @param file_path Resolved load path.
+ * @param item JSON load descriptor.
+ * @pre dm must not be null.
+ * @post The data key has source lineage with optional file-origin metadata.
+ */
+void recordLoadedFileSource(
+        DataManager * dm,
+        std::string const & data_key,
+        std::string const & file_path,
+        json const & item) {
+    if (dm == nullptr || dm->getLineageRegistry() == nullptr) {
+        return;
+    }
+
+    WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+            .m_path = file_path,
+            .m_format = item.value("format", std::string{}),
+            .m_data_type = item.value("data_type", std::string{}),
+            .m_source_config_json = item.dump()};
+
+    WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+            *dm->getLineageRegistry(), data_key, std::move(origin));
+}
+
+}// namespace
 
 /**
  * @brief Try loading data using new registry system first, fallback to legacy if needed
@@ -77,6 +110,7 @@ bool tryRegistryThenLegacyLoad(
                             auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
 
                             dm->setData<LineData>(name, line_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "LineData", color});
@@ -89,6 +123,7 @@ bool tryRegistryThenLegacyLoad(
                             auto mask_data = std::get<std::shared_ptr<MaskData>>(result.data);
 
                             dm->setData<MaskData>(name, mask_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "MaskData", color});
@@ -107,6 +142,7 @@ bool tryRegistryThenLegacyLoad(
                             //std::string const channel_name = name + "_0";
                             std::string const & channel_name = name;
                             dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, channel_name, file_path, item);
 
                             if (item.contains("clock")) {
                                 std::string const clock_str = item["clock"];
@@ -126,6 +162,7 @@ bool tryRegistryThenLegacyLoad(
                             //std::string const channel_name = name + "_0";
                             std::string const & channel_name = name;
                             dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, channel_name, file_path, item);
 
                             if (item.contains("clock")) {
                                 std::string const clock_str = item["clock"];
@@ -141,6 +178,7 @@ bool tryRegistryThenLegacyLoad(
                             auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
 
                             dm->setData<DigitalIntervalSeries>(name, interval_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, name, file_path, item);
                         }
                         break;
                     }
@@ -152,6 +190,7 @@ bool tryRegistryThenLegacyLoad(
                             auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
 
                             dm->setData<PointData>(name, point_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "#0000FF");
                             data_info_list.push_back({name, "PointData", color});
@@ -164,6 +203,7 @@ bool tryRegistryThenLegacyLoad(
                             auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
 
                             dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
+                            recordLoadedFileSource(dm, name, file_path, item);
                         }
                         break;
                     }
@@ -266,6 +306,7 @@ bool tryBatchLoadFromRegistry(
                     // Tensor-backed batch: register the TensorData under base name
                     auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
                     dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, name, file_path, item);
 
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
@@ -275,6 +316,7 @@ bool tryBatchLoadFromRegistry(
                 } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
                     auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
                     dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, channel_name, file_path, item);
 
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
@@ -288,6 +330,7 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
                     auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
                     dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, channel_name, file_path, item);
 
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
@@ -301,6 +344,7 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
                     auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
                     dm->setData<PointData>(channel_name, point_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, channel_name, file_path, item);
                 }
                 break;
             }
@@ -308,6 +352,7 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
                     auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
                     dm->setData<DigitalIntervalSeries>(channel_name, interval_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, channel_name, file_path, item);
 
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
@@ -399,6 +444,10 @@ void DataManager::reset() {
     // Reset entity group manager for a new session context
     if (_entity_group_manager) {
         _entity_group_manager->clear();
+    }
+
+    if (_lineage_registry) {
+        _lineage_registry->clear();
     }
 }
 
@@ -553,6 +602,12 @@ void DataManager::_notifyObservers() {
     _manager_observers.notifyObservers();
 }
 
+void DataManager::_removeLineageForKey(std::string const & key) {
+    if (_lineage_registry) {
+        _lineage_registry->removeLineage(key);
+    }
+}
+
 // ===== Table Registry accessors =====
 TableRegistry * DataManager::getTableRegistry() {
     return _table_registry.get();
@@ -631,6 +686,7 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
     // detach per-object callbacks and reset any raw pointers they hold.
     if (_data.contains(key)) {
         _time_frames.erase(key);
+        _removeLineageForKey(key);
         _data.erase(key);
         _notifyObservers();
     }
@@ -668,6 +724,7 @@ bool DataManager::deleteData(std::string const & key) {
 
     // Remove the time frame mapping if it exists
     _time_frames.erase(key);
+    _removeLineageForKey(key);
 
     // Remove the data from storage
     _data.erase(key);
@@ -1181,6 +1238,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 if (media_data) {
                     auto item_key = item.value("name", "media");
                     dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, item_key, file_path, item);
                     data_info_list.push_back({name, "VideoData", ""});
                 } else {
                     std::cerr << "Failed to load video data: " << file_path << std::endl;
@@ -1193,6 +1251,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 if (media_data) {
                     auto item_key = item.value("name", "media");
                     dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
+                    recordLoadedFileSource(dm, item_key, file_path, item);
                     data_info_list.push_back({name, "ImageData", ""});
                 } else {
                     std::cerr << "Failed to load image data: " << file_path << std::endl;
@@ -1213,6 +1272,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                         std::string const bodypart_name = name + "_" + bodypart;
 
                         dm->setData<PointData>(bodypart_name, point_data, TimeKey("time"));
+                        recordLoadedFileSource(dm, bodypart_name, file_path, item);
                         // Use empty color string to let Media_Window auto-assign colors
                         data_info_list.push_back({bodypart_name, "PointData", ""});
                     }

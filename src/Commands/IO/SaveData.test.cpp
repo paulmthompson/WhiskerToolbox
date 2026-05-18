@@ -6,8 +6,10 @@
 #include "Commands/IO/SaveData.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandFactory.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/Lineage/LineageRecorder.hpp"
 #include "Points/Point_Data.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
@@ -23,6 +25,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <utility>
 
 using namespace commands;
 
@@ -185,6 +188,63 @@ TEST_CASE("SaveData round-trips PointData through CSV",
     REQUIRE(loaded.count(TimeFrameIndex(0)) == 1);
     REQUIRE(loaded.count(TimeFrameIndex(5)) == 1);
     REQUIRE(loaded.count(TimeFrameIndex(10)) == 1);
+
+    cleanupTempDir(temp_dir);
+}
+
+TEST_CASE("SaveData backs up existing single-file target when requested",
+          "[commands][SaveData][backup]") {
+    auto temp_dir = makeTempDir();
+    auto ctx = makeContextWithPoints("pts");
+
+    auto const filepath = temp_dir / "points_with_backup.csv";
+    {
+        std::ofstream existing(filepath);
+        existing << "original file\n";
+    }
+
+    SaveData cmd(SaveDataParams{
+            .data_key = "pts",
+            .format = "csv",
+            .path = filepath.string(),
+            .backup_existing = true,
+    });
+
+    auto result = cmd.execute(ctx);
+    REQUIRE(result.success);
+
+    auto const backup_path = std::filesystem::path(filepath.string() + ".bak");
+    REQUIRE(std::filesystem::exists(filepath));
+    REQUIRE(std::filesystem::exists(backup_path));
+
+    std::ifstream backup_stream(backup_path);
+    std::string const backup_content(
+            (std::istreambuf_iterator<char>(backup_stream)),
+            std::istreambuf_iterator<char>());
+    REQUIRE(backup_content == "original file\n");
+
+    cleanupTempDir(temp_dir);
+}
+
+TEST_CASE("SavePathResolver prefers matching file origin",
+          "[commands][SaveData][resolver]") {
+    auto temp_dir = makeTempDir();
+    auto ctx = makeContextWithPoints("pts");
+    auto const origin_path = (temp_dir / "source_points.csv").string();
+
+    WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+            .m_path = origin_path,
+            .m_format = "csv",
+            .m_data_type = "PointData"};
+    WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+            *ctx.data_manager->getLineageRegistry(), "pts", std::move(origin));
+
+    auto const resolution = resolveDefaultSavePath(
+            *ctx.data_manager, "pts", "csv", "fallback.csv");
+
+    REQUIRE(resolution.m_using_file_origin);
+    REQUIRE(resolution.m_path == origin_path);
+    REQUIRE(resolution.m_filename == "source_points.csv");
 
     cleanupTempDir(temp_dir);
 }

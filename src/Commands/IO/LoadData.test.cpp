@@ -9,6 +9,7 @@
 #include "Commands/IO/SaveData.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
 #include "Points/Point_Data.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
@@ -145,6 +146,12 @@ TEST_CASE("LoadData loads PointData from CSV file",
 
     // Verify the data content
     REQUIRE(pts->getTimeCount() == 3);
+
+    auto const origin = dm->getLineageRegistry()->getFileOrigin("loaded_pts");
+    REQUIRE(origin.has_value());
+    REQUIRE(origin->m_path == std::filesystem::absolute(filepath).lexically_normal().string());
+    REQUIRE(origin->m_format == "csv");
+    REQUIRE(origin->m_data_type == "PointData");
 
     cleanupTempDir(temp_dir);
 }

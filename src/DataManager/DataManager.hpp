@@ -275,6 +275,7 @@ public:
         // can detach per-object callbacks before the object is replaced.
         if (_data.contains(key)) {
             _time_frames.erase(key);
+            _removeLineageForKey(key);
             _data.erase(key);
             _notifyObservers();
         }
@@ -320,6 +321,7 @@ public:
         // entry and notify so consumers can detach per-object callbacks.
         if (_data.contains(key)) {
             _time_frames.erase(key);
+            _removeLineageForKey(key);
             _data.erase(key);
             _notifyObservers();
         }
@@ -467,6 +469,7 @@ private:
     std::string _output_path;
 
     void _notifyObservers();
+    void _removeLineageForKey(std::string const & key);
 
     // ======= Table Registry and observer internals =======
     std::unique_ptr<TableRegistry> _table_registry;

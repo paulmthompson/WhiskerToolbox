@@ -19,6 +19,7 @@
 
 #include "Entity/EntityTypes.hpp"
 
+#include <chrono>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -35,6 +36,20 @@ namespace WhiskerToolbox::Entity::Lineage {
  * not derived from any other container.
  */
 struct Source {};
+
+/**
+ * @brief Filesystem provenance for data loaded from disk.
+ *
+ * FileOrigin records where a source container entered the session. It is
+ * metadata about the load event, not a parent-child lineage relationship.
+ */
+struct FileOrigin {
+    std::string m_path;                             ///< Resolved path used for loading.
+    std::string m_format;                           ///< Loader format key, e.g. "csv".
+    std::string m_data_type;                        ///< Data type string from the load descriptor.
+    std::optional<std::string> m_source_config_json;///< Original load config, if available.
+    std::chrono::system_clock::time_point m_loaded_at = std::chrono::system_clock::now();
+};
 
 /**
  * @brief One-to-one mapping by time 

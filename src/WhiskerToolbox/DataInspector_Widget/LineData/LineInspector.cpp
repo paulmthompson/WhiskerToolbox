@@ -8,6 +8,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -64,7 +65,8 @@ LineInspector::LineInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        }, "LineInspector");
+        },
+                                                     "LineInspector");
     }
 
     // Initialize group filter combo box
@@ -124,25 +126,35 @@ void LineInspector::_connectSignals() {
             return;
         }
 
-        // Update config with full path
-        std::string parent_dir = config.value("parent_dir", ".");
-        if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
-            if (parent_dir == ".") {
-                config["parent_dir"] = dataManager()->getOutputPath();
-            } else {
-                config["parent_dir"] =
-                        dataManager()->getOutputPath() + "/" + parent_dir;
-            }
-        }
-
         // Build filepath for SaveData
         std::string filepath;
         std::string const save_type = config.value("save_type", "single");
+        bool backup_existing = false;
         if (save_type == "single") {
-            std::string const dir = config.value("parent_dir", ".");
             std::string const filename = config.value("filename", "line_data.csv");
-            filepath = dir + "/" + filename;
+            auto const resolution = commands::resolveDefaultSavePath(
+                    *dataManager(), _active_key, format.toStdString(), filename);
+            if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
+                QMessageBox::warning(this, "Warning",
+                                     "Please set an output directory in the Data Manager settings");
+                return;
+            }
+
+            config["parent_dir"] = resolution.m_parent_dir;
+            config["filename"] = resolution.m_filename;
+            filepath = resolution.m_path;
+            backup_existing = resolution.m_using_file_origin;
         } else {
+            // Update config with full path
+            std::string parent_dir = config.value("parent_dir", ".");
+            if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
+                if (parent_dir == ".") {
+                    config["parent_dir"] = dataManager()->getOutputPath();
+                } else {
+                    config["parent_dir"] =
+                            dataManager()->getOutputPath() + "/" + parent_dir;
+                }
+            }
             filepath = config.value("parent_dir", ".");
         }
 
@@ -160,6 +172,7 @@ void LineInspector::_connectSignals() {
                 .data_key = _active_key,
                 .format = format.toStdString(),
                 .path = filepath,
+                .backup_existing = backup_existing,
         };
         if (format_opts) {
             params.format_options = std::move(*format_opts);

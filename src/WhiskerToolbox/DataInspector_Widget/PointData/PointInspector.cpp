@@ -6,6 +6,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "DataManager.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -49,18 +50,17 @@ PointInspector::PointInspector(
                     return;
                 }
 
-                auto output_path = dataManager()->getOutputPath();
-                if (output_path.empty()) {
+                auto filename = options.filename;
+                auto const resolution = commands::resolveDefaultSavePath(
+                        *dataManager(), _active_key, "csv", filename);
+                if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
                     QMessageBox::warning(this, "Warning",
                                          "Please set an output directory in the Data Manager settings");
                     return;
                 }
 
-                auto filename = options.filename;
-                auto const filepath = (std::filesystem::path(output_path) / filename).string();
-
-                options.parent_dir = output_path;
-                options.filename = filename;
+                options.parent_dir = resolution.m_parent_dir;
+                options.filename = resolution.m_filename;
 
                 auto const opts_json = rfl::json::write(options);
                 auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
@@ -68,7 +68,8 @@ PointInspector::PointInspector(
                 commands::SaveDataParams params{
                         .data_key = _active_key,
                         .format = "csv",
-                        .path = filepath,
+                        .path = resolution.m_path,
+                        .backup_existing = resolution.m_using_file_origin,
                 };
                 if (format_opts) {
                     params.format_options = format_opts.value();
@@ -88,7 +89,7 @@ PointInspector::PointInspector(
                 }
 
                 QMessageBox::information(this, "Save Successful",
-                                         QString::fromStdString("Points data saved to " + output_path + "/" + filename));
+                                         QString::fromStdString("Points data saved to " + resolution.m_path));
 
                 if (ui->export_media_frames_checkbox->isChecked()) {
                     auto point_data_ptr = dataManager()->getData<PointData>(_active_key);
@@ -107,7 +108,7 @@ PointInspector::PointInspector(
                                                      "Could not access media for exporting frames.");
                             } else {
                                 MediaExportOptions media_opts = ui->media_export_options_widget->getOptions();
-                                media_opts.image_save_dir = output_path;
+                                media_opts.image_save_dir = resolution.m_parent_dir;
 
                                 try {
                                     std::filesystem::create_directories(media_opts.image_save_dir);
@@ -163,7 +164,8 @@ PointInspector::PointInspector(
     if (dataManager()) {
         _dm_observer_id = dataManager()->addObserver([this]() {
             _populateMediaComboBox();
-        }, "PointInspector");
+        },
+                                                     "PointInspector");
     }
 
     // Initialize group filter combo box (always populate, even without group manager)

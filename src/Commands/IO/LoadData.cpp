@@ -9,8 +9,10 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/Lineage/LineageRecorder.hpp"
 #include "IO/core/LoaderRegistry.hpp"
 
+#include <filesystem>
 #include <nlohmann/json.hpp>
 
 namespace commands {
@@ -92,6 +94,16 @@ CommandResult LoadData::execute(CommandContext const & ctx) {
 
     // Store in DataManager
     ctx.data_manager->setData(_params.data_key, std::move(*dm_variant), TimeKey("time"));
+    if (auto * registry = ctx.data_manager->getLineageRegistry()) {
+        auto const resolved_path = std::filesystem::absolute(_params.filepath).lexically_normal().string();
+        WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+                .m_path = resolved_path,
+                .m_format = _params.format,
+                .m_data_type = _params.data_type,
+                .m_source_config_json = toJson()};
+        WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+                *registry, _params.data_key, std::move(origin));
+    }
 
     _data_was_loaded = true;
 

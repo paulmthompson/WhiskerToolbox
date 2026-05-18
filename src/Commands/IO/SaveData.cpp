@@ -11,9 +11,42 @@
 #include "DataManager/DataManagerTypes.hpp"
 #include "IO/core/LoaderRegistry.hpp"
 
+#include <filesystem>
 #include <nlohmann/json.hpp>
 
 namespace commands {
+
+namespace {
+
+/**
+ * @brief Rename an existing single-file target to a backup path.
+ * @param target_path Path that will be overwritten by the saver.
+ * @param suffix Suffix appended to target_path for the backup.
+ * @return Empty string on success, otherwise an explanatory error.
+ * @post If target_path existed as a regular file, it is moved to target_path + suffix.
+ */
+[[nodiscard]] std::string backupExistingFile(
+        std::filesystem::path const & target_path,
+        std::string const & suffix) {
+    if (suffix.empty() || !std::filesystem::exists(target_path) ||
+        !std::filesystem::is_regular_file(target_path)) {
+        return {};
+    }
+
+    std::error_code ec;
+    auto const backup_path = std::filesystem::path(target_path.string() + suffix);
+    std::filesystem::remove(backup_path, ec);
+    ec.clear();
+    std::filesystem::rename(target_path, backup_path, ec);
+    if (ec) {
+        return "Failed to back up existing file '" + target_path.string() +
+               "' to '" + backup_path.string() + "': " + ec.message();
+    }
+
+    return {};
+}
+
+}// namespace
 
 SaveData::SaveData(SaveDataParams p)
     : _params(std::move(p)) {}
@@ -61,6 +94,20 @@ CommandResult SaveData::execute(CommandContext const & ctx) {
 
     // Dispatch through the registry
     auto & registry = LoaderRegistry::getInstance();
+    if (!registry.isFormatSupported(_params.format, io_type)) {
+        return CommandResult::error(
+                "No registered saver supports format '" + _params.format +
+                "' for data type " + std::to_string(static_cast<int>(io_type)));
+    }
+
+    if (_params.backup_existing.value_or(false)) {
+        if (auto const backup_error = backupExistingFile(
+                    _params.path, _params.backup_suffix.value_or(".bak"));
+            !backup_error.empty()) {
+            return CommandResult::error(backup_error);
+        }
+    }
+
     auto result = registry.trySave(_params.format, io_type, _params.path, config, data_ptr);
 
     if (!result.success) {

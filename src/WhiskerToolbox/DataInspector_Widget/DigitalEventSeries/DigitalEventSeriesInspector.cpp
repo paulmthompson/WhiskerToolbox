@@ -4,14 +4,13 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
-#include "Commands/Core/CommandContext.hpp"
-#include "Commands/IO/SaveData.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalEventSeriesDataView.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <QComboBox>
@@ -24,7 +23,6 @@
 
 #include <rfl/json.hpp>
 
-#include <filesystem>
 #include <iostream>
 #include <unordered_set>
 
@@ -140,19 +138,18 @@ void DigitalEventSeriesInspector::_connectSignals() {
             this, &DigitalEventSeriesInspector::_onExportTypeChanged);
     connect(ui->csv_event_saver_widget, &CSVEventSaver_Widget::saveEventCSVRequested,
             this, [this](CSVEventSaverOptions options) {
-                auto output_path = dataManager()->getOutputPath();
-                if (output_path.empty()) {
+                auto filename = ui->filename_edit->text().toStdString();
+                auto const resolution = commands::resolveDefaultSavePath(
+                        *dataManager(), _active_key, "csv", filename);
+                if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
                     QMessageBox::warning(this, "Warning",
                                          "Please set an output directory in the Data Manager settings");
                     return;
                 }
 
-                auto filename = ui->filename_edit->text().toStdString();
-                auto const filepath = (std::filesystem::path(output_path) / filename).string();
-
                 // Populate path fields so the registry saver has them
-                options.parent_dir = output_path;
-                options.filename = filename;
+                options.parent_dir = resolution.m_parent_dir;
+                options.filename = resolution.m_filename;
 
                 // Serialize the CSV options to rfl::Generic for format_options
                 auto const opts_json = rfl::json::write(options);
@@ -161,7 +158,8 @@ void DigitalEventSeriesInspector::_connectSignals() {
                 commands::SaveDataParams params{
                         .data_key = _active_key,
                         .format = "csv",
-                        .path = filepath,
+                        .path = resolution.m_path,
+                        .backup_existing = resolution.m_using_file_origin,
                 };
                 if (format_opts) {
                     params.format_options = format_opts.value();

@@ -22,6 +22,8 @@ struct SaveDataParams {
     std::string format;                        ///< e.g., "csv", "capnproto", "opencv"
     std::string path;                          ///< Output file/directory path
     std::optional<rfl::Generic> format_options;///< Format-specific options (optional)
+    std::optional<bool> backup_existing;        ///< Rename an existing target file before saving
+    std::optional<std::string> backup_suffix;   ///< Suffix appended to the previous target path
 };
 
 class SaveData : public ICommand {

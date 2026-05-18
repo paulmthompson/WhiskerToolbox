@@ -2,6 +2,7 @@
 #include "Entity/Lineage/LineageTypes.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace WhiskerToolbox::Entity::Lineage {
 
@@ -87,6 +88,14 @@ void LineageRecorder::recordSource(
         std::string const & data_key) {
 
     registry.setLineage(data_key, Source{});
+}
+
+void LineageRecorder::recordFileSource(
+        LineageRegistry & registry,
+        std::string const & data_key,
+        FileOrigin file_origin) {
+
+    registry.setLineageWithFileOrigin(data_key, Source{}, std::move(file_origin));
 }
 
 }// namespace WhiskerToolbox::Entity::Lineage

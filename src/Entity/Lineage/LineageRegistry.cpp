@@ -1,6 +1,7 @@
 #include "Entity/Lineage/LineageRegistry.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <queue>
 #include <unordered_set>
 
@@ -8,6 +9,17 @@ namespace WhiskerToolbox::Entity::Lineage {
 
 void LineageRegistry::setLineage(std::string const & data_key, Descriptor lineage) {
     _lineages[data_key] = LineageEntry(std::move(lineage));
+}
+
+void LineageRegistry::setLineageWithFileOrigin(
+        std::string const & data_key,
+        Descriptor lineage,
+        FileOrigin file_origin) {
+    assert(Lineage::isSource(lineage) && "setLineageWithFileOrigin: lineage must be Source");
+
+    LineageEntry entry(std::move(lineage));
+    entry.file_origin = std::move(file_origin);
+    _lineages[data_key] = std::move(entry);
 }
 
 void LineageRegistry::removeLineage(std::string const & data_key) {
@@ -30,6 +42,14 @@ std::optional<LineageEntry> LineageRegistry::getLineageEntry(std::string const &
     auto it = _lineages.find(data_key);
     if (it != _lineages.end()) {
         return it->second;
+    }
+    return std::nullopt;
+}
+
+std::optional<FileOrigin> LineageRegistry::getFileOrigin(std::string const & data_key) const {
+    auto it = _lineages.find(data_key);
+    if (it != _lineages.end()) {
+        return it->second.file_origin;
     }
     return std::nullopt;
 }

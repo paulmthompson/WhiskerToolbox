@@ -192,6 +192,7 @@ website:
                 - developer/DataManager/Commands/commands.qmd
                 - developer/DataManager/Commands/save_data.qmd
                 - developer/DataManager/Commands/load_data.qmd
+                - developer/Commands/IO/SavePathResolver.qmd
                 - developer/DataManager/Commands/synthesize_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
@@ -411,6 +412,7 @@ website:
           contents:
             - user_guide/export/video_export.qmd
             - user_guide/export/csv_plot_export.qmd
+            - user_guide/export/provenance_save_defaults.qmd
         - section: "Behavioral Modules"
           contents:
             - user_guide/behaviors/whisker.qmd

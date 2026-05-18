@@ -27,6 +27,9 @@ namespace WhiskerToolbox::Entity::Lineage {
 struct LineageEntry {
     Descriptor descriptor;
 
+    /// Optional filesystem provenance for source data loaded from disk
+    std::optional<FileOrigin> file_origin;
+
     /// Whether this lineage may be out of sync with source data
     bool is_stale = false;
 
@@ -37,6 +40,7 @@ struct LineageEntry {
 
     explicit LineageEntry(Descriptor desc)
         : descriptor(std::move(desc)),
+          file_origin(std::nullopt),
           is_stale(false),
           last_validated(std::chrono::steady_clock::now()) {}
 };
@@ -94,6 +98,20 @@ public:
     void setLineage(std::string const & data_key, Descriptor lineage);
 
     /**
+     * @brief Register lineage and file-origin metadata for source data.
+     *
+     * @param data_key Key of the loaded source container.
+     * @param lineage The source lineage descriptor.
+     * @param file_origin Filesystem provenance for the load event.
+     * @pre lineage must describe source data.
+     * @post The registry contains lineage and file-origin metadata for data_key.
+     */
+    void setLineageWithFileOrigin(
+            std::string const & data_key,
+            Descriptor lineage,
+            FileOrigin file_origin);
+
+    /**
      * @brief Remove lineage for a data container
      * 
      * @param data_key Key of the container
@@ -122,6 +140,15 @@ public:
      * @return Lineage entry if found, std::nullopt otherwise
      */
     [[nodiscard]] std::optional<LineageEntry> getLineageEntry(std::string const & data_key) const;
+
+    /**
+     * @brief Get file-origin metadata for a loaded source container.
+     *
+     * @param data_key Key of the container.
+     * @return File origin if known, std::nullopt otherwise.
+     * @post The registry is not modified.
+     */
+    [[nodiscard]] std::optional<FileOrigin> getFileOrigin(std::string const & data_key) const;
 
     /**
      * @brief Check if a container has registered lineage

@@ -1,13 +1,12 @@
 #include "AnalogTimeSeriesInspector.hpp"
 #include "ui_AnalogTimeSeriesInspector.h"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "Commands/IO/SavePathResolver.hpp"
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Commands/Core/CommandContext.hpp"
-#include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
@@ -16,7 +15,6 @@
 #include <QMessageBox>
 #include <QStackedWidget>
 
-#include <filesystem>
 #include <rfl/json.hpp>
 
 AnalogTimeSeriesInspector::AnalogTimeSeriesInspector(
@@ -67,17 +65,16 @@ void AnalogTimeSeriesInspector::_connectSignals() {
                     return;
                 }
 
-                auto output_path = dataManager()->getOutputPath();
-                if (output_path.empty()) {
+                auto const resolution = commands::resolveDefaultSavePath(
+                        *dataManager(), _active_key, "csv", filename);
+                if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
                     QMessageBox::warning(this, "Warning",
                                          "Please set an output directory in the Data Manager settings");
                     return;
                 }
 
-                auto const filepath = (std::filesystem::path(output_path) / filename).string();
-
-                options.parent_dir = output_path;
-                options.filename = filename;
+                options.parent_dir = resolution.m_parent_dir;
+                options.filename = resolution.m_filename;
 
                 auto const opts_json = rfl::json::write(options);
                 auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
@@ -85,7 +82,8 @@ void AnalogTimeSeriesInspector::_connectSignals() {
                 commands::SaveDataParams params{
                         .data_key = _active_key,
                         .format = "csv",
-                        .path = filepath,
+                        .path = resolution.m_path,
+                        .backup_existing = resolution.m_using_file_origin,
                 };
                 if (format_opts) {
                     params.format_options = format_opts.value();

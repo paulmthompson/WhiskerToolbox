@@ -24,6 +24,8 @@ struct SaveDataParams {
     std::string format;                            // e.g., "csv", "capnproto", "opencv"
     std::string path;                              // Output file/directory path
     std::optional<rfl::Generic> format_options;    // Format-specific options (optional)
+    std::optional<bool> backup_existing;           // Move existing target to backup first
+    std::optional<std::string> backup_suffix;      // Backup suffix
 };
 ```
 
@@ -33,6 +35,8 @@ struct SaveDataParams {
 | `format` | Output format identifier matching a registered `IFormatLoader` (e.g., `"csv"`, `"capnproto"`, `"opencv"`) |
 | `path` | Full output file path (or directory, depending on saver) |
 | `format_options` | Optional JSON object with format-specific saver options (delimiter, header, etc.) |
+| `backup_existing` | Optional. If true, move an existing regular-file target to `path + backup_suffix` before saving |
+| `backup_suffix` | Optional. Suffix for the backup path, defaulting to `.bak` |
 
 ## Supported Types
 
@@ -55,8 +59,9 @@ Not undoable (`isUndoable()` returns `false`). File writes cannot be reversed.
 2. Convert to `DM_DataType` via `toDM_DataType()`.
 3. Extract the raw `void const *` pointer from `DataManager::getDataVariant()`.
 4. Convert `format_options` (if present) from `rfl::Generic` to `nlohmann::json`.
-5. Dispatch through `LoaderRegistry::getInstance().trySave()`.
-6. Return `CommandResult::ok()` on success, `CommandResult::error()` on failure.
+5. If `backup_existing` is true and `path` names an existing regular file, rename it to `path + backup_suffix`.
+6. Dispatch through `LoaderRegistry::getInstance().trySave()`.
+7. Return `CommandResult::ok()` on success, `CommandResult::error()` on failure.
 
 ## Error Cases
 
@@ -65,6 +70,7 @@ Not undoable (`isUndoable()` returns `false`). File writes cannot be reversed.
 | `data_key` not found | `"Data key '<key>' not found in DataManager"` |
 | Data variant is null | `"Data pointer for key '<key>' is null"` |
 | `format_options` fails to parse | `"Failed to parse format_options as JSON"` |
+| Backup rename fails | `"Failed to back up existing file ..."` |
 | No registered saver for format/type | Error from `LoaderRegistry::trySave()` |
 
 ## JSON Example
