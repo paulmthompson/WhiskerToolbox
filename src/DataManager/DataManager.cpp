@@ -921,6 +921,8 @@ static std::string substituteVariablesInJsonString(
             }
         }
         if (resolved) {
+            // Convert all '\' to '/' in the resolved value before injection
+            std::replace(value.begin(), value.end(), '\\', '/');
             result.replace(pos, end - pos + 1, value);
             pos += value.size();
         } else {
@@ -996,6 +998,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     }
 
     int current_item = 0;
+
+    std::cout << "getting ready to iterate through " << total_items << " items" << std::endl;
 
     // Iterate through JSON array
     for (auto const & item: working) {
@@ -1226,7 +1230,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
         auto file_exists = processFilePath(item["filepath"], base_path);
         if (!file_exists) {
-            std::cerr << "File does not exist: " << item["filepath"] << std::endl;
+            std::cout << "File does not exist: " << item["filepath"] << std::endl;
             continue;
         }
 
