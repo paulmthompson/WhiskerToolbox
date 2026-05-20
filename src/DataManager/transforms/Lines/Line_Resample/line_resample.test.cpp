@@ -48,6 +48,24 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
         REQUIRE(call_count > 0);
     }
 
+    SECTION("PolynomialSmooth algorithm") {
+        auto line_data = resample_scenarios::dense_nearly_straight_line();
+
+        params.algorithm = LineSimplificationAlgorithm::PolynomialSmooth;
+        params.target_spacing = 5.0f;
+        params.polynomial_order = 3;
+        params.epsilon = 2.0f;
+
+        result_data = line_resample(line_data.get(), params);
+        REQUIRE(result_data != nullptr);
+        REQUIRE(result_data->getImageSize() == line_data->getImageSize());
+
+        auto original_lines = line_data->getAtTime(TimeFrameIndex(100));
+        auto result_lines = result_data->getAtTime(TimeFrameIndex(100));
+        REQUIRE(original_lines.size() == result_lines.size());
+        REQUIRE(result_lines[0].size() >= 2);
+    }
+
     SECTION("DouglasPeucker algorithm") {
         auto line_data = resample_scenarios::dense_nearly_straight_line();
 
@@ -212,6 +230,22 @@ TEST_CASE("Data Transform: Line Resample - Parameter Factory", "[transforms][lin
     REQUIRE(params->algorithm == LineSimplificationAlgorithm::DouglasPeucker);
     REQUIRE(params->target_spacing == 25.0f);
     REQUIRE(params->epsilon == 5.0f);
+
+    nlohmann::json const poly_json = {
+            {"algorithm", "Polynomial Smooth"},
+            {"target_spacing", 8.0},
+            {"polynomial_order", 5}};
+
+    auto poly_params_base = std::make_unique<LineResampleParameters>();
+    for (auto const & [key, val]: poly_json.items()) {
+        factory.setParameter("Resample Line", poly_params_base.get(), key, val, nullptr);
+    }
+
+    auto * poly_params = dynamic_cast<LineResampleParameters *>(poly_params_base.get());
+    REQUIRE(poly_params != nullptr);
+    REQUIRE(poly_params->algorithm == LineSimplificationAlgorithm::PolynomialSmooth);
+    REQUIRE(poly_params->target_spacing == 8.0f);
+    REQUIRE(poly_params->polynomial_order == 5);
 }
 
 TEST_CASE("Data Transform: Line Resample - load_data_from_json_config", "[transforms][line_resample][json_config]") {

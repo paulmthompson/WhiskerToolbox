@@ -120,6 +120,40 @@ TEST_CASE("V2 Element Transform: LineResample - DouglasPeucker Algorithm",
     }
 }
 
+TEST_CASE("V2 Element Transform: LineResample - PolynomialSmooth Algorithm",
+          "[transforms][v2][element][line_resample]") {
+
+    LineResampleParams params;
+    params.method = "PolynomialSmooth";
+    params.polynomial_order = 3;
+    params.target_spacing = rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>(5.0f);
+
+    SECTION("Noisy polyline is smoothed and resampled") {
+        Line2D noisy;
+        for (int i = 0; i <= 20; ++i) {
+            float const t = static_cast<float>(i) / 20.0f;
+            float const x = t * 100.0f;
+            float const y = t * 50.0f + ((i % 2 == 0) ? 5.0f : -5.0f);
+            noisy.push_back(Point2D<float>{x, y});
+        }
+
+        auto const smoothed = resampleLine(noisy, params);
+        REQUIRE(smoothed.size() >= 2);
+        REQUIRE(smoothed.size() < noisy.size());
+    }
+
+    SECTION("Too few points for order returns unchanged") {
+        Line2D short_line;
+        short_line.push_back(Point2D<float>{0.0f, 0.0f});
+        short_line.push_back(Point2D<float>{10.0f, 10.0f});
+        short_line.push_back(Point2D<float>{20.0f, 5.0f});
+
+        params.polynomial_order = 3;
+        auto const result = resampleLine(short_line, params);
+        REQUIRE(result.size() == short_line.size());
+    }
+}
+
 TEST_CASE("V2 Element Transform: LineResample - Edge Cases",
           "[transforms][v2][element][line_resample][edge]") {
     
@@ -236,6 +270,24 @@ TEST_CASE("V2 Element Transform: LineResampleParams - JSON Loading",
         
         REQUIRE(params.getMethod() == LineResampleMethod::DouglasPeucker);
     }
+
+    SECTION("PolynomialSmooth method and polynomial_order") {
+        std::string json = R"({
+            "method": "PolynomialSmooth",
+            "target_spacing": 5.0,
+            "polynomial_order": 4
+        })";
+
+        auto result = loadParametersFromJson<LineResampleParams>(json);
+
+        REQUIRE(result);
+        auto params = result.value();
+
+        REQUIRE(params.getMethod() == LineResampleMethod::PolynomialSmooth);
+        REQUIRE_THAT(params.getTargetSpacing(), WithinAbs(5.0f, 0.001f));
+        REQUIRE(params.getPolynomialOrder() == 4);
+    }
+
     
     SECTION("Reject negative target_spacing") {
         std::string json = R"({

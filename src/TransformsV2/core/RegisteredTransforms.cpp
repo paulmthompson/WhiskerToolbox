@@ -424,7 +424,7 @@ auto const register_line_resample = RegisterTransform<Line2D, Line2D, LineResamp
         resampleLine,
         TransformMetadata{
                 .name = "ResampleLine",
-                .description = "Resample or simplify a line using FixedSpacing or Douglas-Peucker algorithm",
+                .description = "Resample, simplify, or polynomial-smooth a line",
                 .category = "Geometry",
                 .input_type = typeid(Line2D),
                 .output_type = typeid(Line2D),
@@ -443,7 +443,7 @@ auto const register_line_resample_ctx = RegisterContextTransform<Line2D, Line2D,
         resampleLineWithContext,
         TransformMetadata{
                 .name = "ResampleLineWithContext",
-                .description = "Resample or simplify a line with progress reporting",
+                .description = "Resample, simplify, or polynomial-smooth a line with progress reporting",
                 .category = "Geometry",
                 .input_type = typeid(Line2D),
                 .output_type = typeid(Line2D),

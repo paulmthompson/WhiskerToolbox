@@ -9,10 +9,11 @@ This transform resamples a line to either simplify its geometry or to ensure it 
 
 ### Detailed Description
 
-Line resampling is a common operation in data processing, used to either reduce the number of points in a line (simplification) or to create a new line with a specific number of points or spacing. This transform provides two different algorithms for resampling:
+Line resampling is a common operation in data processing, used to either reduce the number of points in a line (simplification), smooth noisy geometry, or create a new line with a specific spacing between points. This transform provides three algorithms:
 
 -   **Fixed Spacing**: This algorithm creates a new line with points that are a fixed distance apart. This is useful for standardizing the number of points in a line, or for preparing a line for further analysis that requires a uniform distribution of points.
 -   **Douglas-Peucker**: This algorithm simplifies a line by removing points that are close to the line segment. This is useful for reducing the complexity of a line while preserving its overall shape.
+-   **Polynomial Smooth**: Fits arc-length parametric polynomials to the line, then resamples the smoothed curve at the target spacing. Useful when the input line is noisy (for example from skeletonization or edge detection) but the overall shape should be preserved.
 
 ![](images/clipboard-2524368921.png)
 
@@ -29,14 +30,16 @@ In neuroscience, line resampling can be used in a variety of applications:
 This transform has the following parameters:
 
 -   `algorithm`: The resampling algorithm to use. This can be one of the following:
-    -   `FixedSpacing`: Resamples the line to have points that are a fixed distance apart.
-    -   `DouglasPeucker`: Simplifies the line using the Douglas-Peucker algorithm.
--   `target_spacing`: The desired distance between points in the resampled line. This parameter is only used when the `algorithm` is set to `FixedSpacing`.
--   `epsilon`: The tolerance for the Douglas-Peucker algorithm. This parameter is only used when the `algorithm` is set to `DouglasPeucker`. A larger value of epsilon will result in a more simplified line.
+    -   `FixedSpacing` (V1 UI: `Fixed Spacing`): Resamples the line to have points that are a fixed distance apart.
+    -   `DouglasPeucker` (V1 UI: `Douglas-Peucker`): Simplifies the line using the Douglas-Peucker algorithm.
+    -   `PolynomialSmooth` (V1 UI: `Polynomial Smooth`; V2 JSON: `PolynomialSmooth`): Smooths via parametric polynomial fitting, then resamples.
+-   `target_spacing`: The desired distance between points in the resampled line. Used for `FixedSpacing` and `PolynomialSmooth`.
+-   `epsilon`: The tolerance for the Douglas-Peucker algorithm. Used only when the `algorithm` is set to `DouglasPeucker`. A larger value of epsilon will result in a more simplified line.
+-   `polynomial_order`: Polynomial order for `PolynomialSmooth` (typically 1–9, default 3). Requires at least `polynomial_order + 1` input points for fitting.
 
 ## Example Configuration
 
-Here is a complete example of a JSON configuration file that could be used to run this transformation. This example resamples a line to have points that are 15 pixels apart.
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example smooths a noisy line with polynomial fitting and resamples at 5 pixel spacing (Transforms V2 / pipeline JSON uses `method`; V1 DataManager transform uses `algorithm` with display strings such as `Polynomial Smooth`).
 
 ``` json
 [
@@ -55,8 +58,9 @@ Here is a complete example of a JSON configuration file that could be used to ru
                     "input_key": "test_lines",
                     "output_key": "resampled_lines",
                     "parameters": {
-                        "algorithm": "FixedSpacing",
-                        "target_spacing": 15.0,
+                        "algorithm": "Polynomial Smooth",
+                        "target_spacing": 5.0,
+                        "polynomial_order": 3,
                         "epsilon": 2.0
                     }
                 }

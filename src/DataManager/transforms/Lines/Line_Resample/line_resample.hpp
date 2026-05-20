@@ -9,13 +9,15 @@
 
 enum class LineSimplificationAlgorithm {
     FixedSpacing,
-    DouglasPeucker
+    DouglasPeucker,
+    PolynomialSmooth
 };
 
 struct LineResampleParameters : public TransformParametersBase {
     LineSimplificationAlgorithm algorithm = LineSimplificationAlgorithm::FixedSpacing;
-    float target_spacing = 5.0f;// Default desired spacing in pixels (for FixedSpacing)
-    float epsilon = 2.0f;       // Default epsilon for Douglas-Peucker algorithm
+    float target_spacing = 5.0f; // Default desired spacing in pixels (for FixedSpacing / PolynomialSmooth)
+    float epsilon = 2.0f;        // Default epsilon for Douglas-Peucker algorithm
+    int polynomial_order = 3;    // Polynomial order for PolynomialSmooth (1-9)
     // Min/Max values will be handled by the UI widget
 };
 

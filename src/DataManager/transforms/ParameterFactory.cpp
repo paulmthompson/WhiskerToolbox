@@ -351,7 +351,8 @@ void ParameterFactory::initializeDefaultSetters() {
 
     std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {
             {"Fixed Spacing", LineSimplificationAlgorithm::FixedSpacing},
-            {"Douglas-Peucker", LineSimplificationAlgorithm::DouglasPeucker}};
+            {"Douglas-Peucker", LineSimplificationAlgorithm::DouglasPeucker},
+            {"Polynomial Smooth", LineSimplificationAlgorithm::PolynomialSmooth}};
     registerEnumParameter<LineResampleParameters, LineSimplificationAlgorithm>(
             "Resample Line", "algorithm", &LineResampleParameters::algorithm, line_simplification_map);
 
@@ -360,6 +361,9 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineResampleParameters, float>(
             "Resample Line", "epsilon", &LineResampleParameters::epsilon);
+
+    registerBasicParameter<LineResampleParameters, int>(
+            "Resample Line", "polynomial_order", &LineResampleParameters::polynomial_order);
 
     // ==================== Line Subsegment ===============
 

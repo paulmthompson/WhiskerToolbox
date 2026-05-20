@@ -55,6 +55,11 @@
           <string>Douglas-Peucker</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>Polynomial Smooth</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>
@@ -118,7 +123,33 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="polynomialOrderLabel">
+        <property name="text">
+         <string>Polynomial Order:</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="polynomialOrderSpinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>9</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
        <widget class="QLabel" name="descriptionLabel">
         <property name="text">
          <string>Fixed Spacing: Resamples the line by creating new points along the line segments to achieve the desired approximate spacing. First and last points are preserved.</string>
@@ -148,4 +179,4 @@
  </widget>
  <resources/>
  <connections/>
-</ui> 
+</ui>
