@@ -526,18 +526,12 @@ public:
             }
         }
 
-        // Add to target (preserving EntityIds)
-        for (auto const & [time, data, eid]: to_move) {
-            target.addEntryAtTime(time, data, eid, NotifyObservers::No);
-        }
+        // Add to target (preserving EntityIds) in one cache-update pass
+        target._appendPreservedEntries(to_move, NotifyObservers::No);
 
-        // Remove from source
+        // Bulk-remove from source: O(n + k), not O(n * k) per-entry removal
         _invalidateStorageCache();
-        for (auto const & [time, data, eid]: to_move) {
-            (void) time;
-            (void) data;
-            _storage.removeByEntityId(eid);
-        }
+        _storage.removeByEntityIds(entity_ids);
         _updateStorageCache();
 
         if (notify == NotifyObservers::Yes && !to_move.empty()) {
@@ -1281,6 +1275,30 @@ protected:
                                   std::is_same_v<TData, Point2D<float>>,
                           "TData must be Line2D, Mask2D, or Point2D<float>");
             return EntityKind::LineEntity;// Never reached, but needed for compilation
+        }
+    }
+
+    /**
+     * @brief Append multiple entries preserving EntityIds with a single cache update
+     *
+     * Used by moveByEntityIds to avoid per-entry cache invalidation on the target.
+     *
+     * @param entries Entries to append in storage order
+     * @param notify If true, observers are notified after all entries are appended
+     */
+    void _appendPreservedEntries(
+            std::vector<std::tuple<TimeFrameIndex, TData, EntityId>> const & entries,
+            NotifyObservers notify) {
+        if (entries.empty()) {
+            return;
+        }
+        _invalidateStorageCache();
+        for (auto const & [time, data, eid]: entries) {
+            _storage.append(time, data, eid);
+        }
+        _updateStorageCache();
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
         }
     }
 

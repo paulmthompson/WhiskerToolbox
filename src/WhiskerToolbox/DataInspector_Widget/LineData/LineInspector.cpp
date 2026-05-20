@@ -636,9 +636,7 @@ void LineInspector::_onMoveLinesRequested(std::string const & target_key) {
     std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids_set, NotifyObservers::Yes);
 
     if (total_lines_moved > 0) {
-        // Update the view to reflect changes
-        _data_view->updateView();
-
+        // Source observer on LineTableView refreshes the table; no full rebuild here
         std::cout << "LineInspector: Successfully moved " << total_lines_moved
                   << " selected lines." << std::endl;
     } else {
