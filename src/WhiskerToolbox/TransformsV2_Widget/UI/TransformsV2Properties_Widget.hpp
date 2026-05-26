@@ -115,6 +115,8 @@ private slots:
     void onCopyJsonClicked();
     void onLoadJsonClicked();
     void onSaveJsonClicked();
+    void onLibraryClicked();
+    void onSaveToLibraryClicked();
     void onApplyJsonClicked();
 
     // Execution slots
@@ -270,8 +272,10 @@ private:
     Section * _json_section = nullptr;
     QTextEdit * _json_panel = nullptr;
     QPushButton * _copy_json_button = nullptr;
+    QPushButton * _library_button = nullptr;
     QPushButton * _load_json_button = nullptr;
     QPushButton * _save_json_button = nullptr;
+    QPushButton * _save_to_library_button = nullptr;
     QPushButton * _apply_json_button = nullptr;
 
     // Output & Execution

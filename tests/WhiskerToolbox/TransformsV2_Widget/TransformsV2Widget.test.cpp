@@ -30,7 +30,10 @@
 #include "Core/TransformsV2State.hpp"
 #include "UI/PipelineStepListWidget.hpp"
 #include "UI/StepConfigPanel.hpp"
+#include "UI/PipelineLibraryDialog.hpp"
 #include "UI/TransformsV2Properties_Widget.hpp"
+
+#include "TransformsV2/core/PipelineLibrary.hpp"
 
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/StrongTypes.hpp"
@@ -50,6 +53,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
 // Test Fixture
@@ -756,6 +760,79 @@ TEST_CASE("TransformsV2Properties_Widget preserves pre_reductions after Apply an
     CHECK(after_step_add.find("pre_reductions") != std::string::npos);
     CHECK(after_step_add.find("AnalogEventThreshold") != std::string::npos);
     CHECK(after_step_add.find("ZScoreNormalizeV2") != std::string::npos);
+}
+
+// ============================================================================
+// Section 4c: PipelineLibraryDialog
+// ============================================================================
+
+TEST_CASE("PipelineLibraryDialog lists and previews saved pipelines",
+          "[TransformsV2Widget][PipelineLibraryDialog]") {
+
+    QtAppFixture const qt;
+
+    auto const config_dir =
+            QDir::temp().filePath(QStringLiteral("wt_tv2_library_%1").arg(
+                    QDateTime::currentMSecsSinceEpoch()));
+
+    auto const dir_result = WhiskerToolbox::Transforms::V2::Examples::ensureUserPipelineDirectory(
+            config_dir.toStdString());
+    REQUIRE(dir_result);
+
+    PipelineDescriptor descriptor;
+    descriptor.metadata = PipelineMetadata{.name = "Catalog Test"};
+    descriptor.steps = {PipelineStepDescriptor{
+            .step_id = "area", .transform_name = "CalculateMaskArea"}};
+
+    auto const library_path = dir_result.value() / "catalog_test.json";
+    REQUIRE(WhiskerToolbox::Transforms::V2::Examples::savePipelineDescriptorToFile(
+            library_path, descriptor));
+
+    PipelineLibraryDialog dialog(QString::fromStdString(dir_result.value().string()));
+    dialog.show();
+    QApplication::processEvents();
+
+    CHECK(dialog.catalogEntryCount() == 1);
+
+    auto * list = dialog.findChild<QListWidget *>();
+    REQUIRE(list != nullptr);
+    CHECK(list->item(0)->text() == QStringLiteral("Catalog Test"));
+
+    auto * preview = dialog.findChild<QTextEdit *>();
+    REQUIRE(preview != nullptr);
+    list->setCurrentRow(0);
+    QApplication::processEvents();
+    CHECK(preview->toPlainText().contains(QStringLiteral("CalculateMaskArea")));
+}
+
+TEST_CASE("TransformsV2Properties_Widget has library controls when config dir is set",
+          "[TransformsV2Widget][PropertiesWidget][library]") {
+
+    QtAppFixture const qt;
+
+    auto data_manager = std::make_shared<DataManager>();
+    auto state = std::make_shared<TransformsV2State>(data_manager);
+    auto selection_context = std::make_unique<SelectionContext>();
+
+    auto const config_dir =
+            QDir::temp().filePath(QStringLiteral("wt_tv2_props_lib_%1").arg(
+                    QDateTime::currentMSecsSinceEpoch()));
+
+    TransformsV2Properties_Widget widget(state, selection_context.get(), config_dir);
+    QApplication::processEvents();
+
+    bool found_library = false;
+    bool found_save_to_library = false;
+    for (auto * button: widget.findChildren<QPushButton *>()) {
+        if (button->text() == QStringLiteral("Library...")) {
+            found_library = true;
+        }
+        if (button->text() == QStringLiteral("Save to Library")) {
+            found_save_to_library = true;
+        }
+    }
+    CHECK(found_library);
+    CHECK(found_save_to_library);
 }
 
 // ============================================================================

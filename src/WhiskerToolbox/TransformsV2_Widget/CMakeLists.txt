@@ -9,6 +9,9 @@ set(TRANSFORMS_V2_WIDGET_SOURCES
         UI/PipelineStepListWidget.cpp
         UI/StepConfigPanel.hpp
         UI/StepConfigPanel.cpp
+        UI/PipelineLibraryDialog.hpp
+        UI/PipelineLibraryDialog.cpp
+        UI/PipelineLibraryDialog.ui
         UI/TransformsV2Properties_Widget.hpp
         UI/TransformsV2Properties_Widget.cpp
         UI/TransformsV2Properties_Widget.ui

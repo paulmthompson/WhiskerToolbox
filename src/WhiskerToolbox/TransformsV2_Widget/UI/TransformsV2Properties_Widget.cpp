@@ -1,6 +1,7 @@
 #include "TransformsV2Properties_Widget.hpp"
 #include "ui_TransformsV2Properties_Widget.h"
 
+#include "PipelineLibraryDialog.hpp"
 #include "PipelineStepListWidget.hpp"
 #include "StepConfigPanel.hpp"
 
@@ -26,6 +27,7 @@
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
@@ -36,6 +38,7 @@
 #include <QVBoxLayout>
 
 #include <chrono>
+#include <filesystem>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -364,6 +367,10 @@ void TransformsV2Properties_Widget::setupUI() {
     _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
     json_button_layout->addWidget(_apply_json_button);
 
+    _library_button = new QPushButton(tr("Library..."));
+    _library_button->setToolTip(tr("Browse saved pipelines in the library folder"));
+    json_button_layout->addWidget(_library_button);
+
     _load_json_button = new QPushButton(tr("Load..."));
     _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
     json_button_layout->addWidget(_load_json_button);
@@ -371,6 +378,11 @@ void TransformsV2Properties_Widget::setupUI() {
     _save_json_button = new QPushButton(tr("Save..."));
     _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
     json_button_layout->addWidget(_save_json_button);
+
+    _save_to_library_button = new QPushButton(tr("Save to Library"));
+    _save_to_library_button->setToolTip(
+            tr("Save the current pipeline to the library with a name"));
+    json_button_layout->addWidget(_save_to_library_button);
 
     json_button_layout->addStretch();
     json_content_layout->addLayout(json_button_layout);
@@ -414,10 +426,14 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onCopyJsonClicked);
     connect(_apply_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onApplyJsonClicked);
+    connect(_library_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onLibraryClicked);
     connect(_load_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onLoadJsonClicked);
     connect(_save_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onSaveJsonClicked);
+    connect(_save_to_library_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onSaveToLibraryClicked);
     // Output & Execution connections
     connect(_execute_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onExecuteClicked);
@@ -673,6 +689,82 @@ void TransformsV2Properties_Widget::onLoadJsonClicked() {
     if (!loadUIFromJson(savePipelineToJson(load_result.value()))) {
         QMessageBox::warning(this, tr("Invalid JSON"),
                              tr("The file does not contain a valid PipelineDescriptor JSON."));
+    }
+}
+
+void TransformsV2Properties_Widget::onLibraryClicked() {
+    if (_pipeline_library_dir.isEmpty()) {
+        QMessageBox::warning(this, tr("Library Unavailable"),
+                             tr("The pipeline library directory is not configured."));
+        return;
+    }
+
+    syncJsonFromUI();
+
+    PipelineLibraryDialog dialog(_pipeline_library_dir, this);
+    dialog.setDescriptorSupplier([this]() { return currentPipelineDescriptor(); });
+
+    if (dialog.exec() != QDialog::Accepted || !dialog.hasLoadedPipeline()) {
+        return;
+    }
+
+    if (!loadUIFromJson(dialog.loadedPipelineJson())) {
+        QMessageBox::warning(this, tr("Invalid JSON"),
+                             tr("The library entry could not be loaded into the pipeline UI."));
+    }
+}
+
+void TransformsV2Properties_Widget::onSaveToLibraryClicked() {
+    if (_pipeline_library_dir.isEmpty()) {
+        QMessageBox::warning(this, tr("Library Unavailable"),
+                             tr("The pipeline library directory is not configured."));
+        return;
+    }
+
+    syncJsonFromUI();
+
+    auto descriptor = currentPipelineDescriptor();
+
+    auto const default_name =
+            descriptor.metadata.has_value() && descriptor.metadata->name.has_value()
+                    ? QString::fromStdString(*descriptor.metadata->name)
+                    : tr("Untitled Pipeline");
+
+    bool ok = false;
+    auto const name = QInputDialog::getText(
+            this, tr("Save to Library"), tr("Pipeline name:"), QLineEdit::Normal, default_name, &ok);
+    if (!ok || name.trimmed().isEmpty()) {
+        return;
+    }
+
+    if (!descriptor.metadata.has_value()) {
+        descriptor.metadata = PipelineMetadata{};
+    }
+    descriptor.metadata->name = name.trimmed().toStdString();
+
+    auto const filename =
+            QString::fromStdString(sanitizePipelineFilename(descriptor.metadata->name.value())) +
+            QStringLiteral(".json");
+    auto const dest_path =
+            std::filesystem::path(_pipeline_library_dir.toStdString()) / filename.toStdString();
+
+    if (std::filesystem::exists(dest_path)) {
+        auto const overwrite = QMessageBox::question(
+                this,
+                tr("Overwrite Pipeline"),
+                tr("'%1' already exists in the library. Overwrite?").arg(filename),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No);
+        if (overwrite != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    auto const save_result = savePipelineDescriptorToFile(dest_path, descriptor);
+    if (!save_result) {
+        QMessageBox::warning(this, tr("Save Failed"),
+                             tr("Could not save to library:\n%1")
+                                     .arg(QString::fromStdString(save_result.error()->what())));
     }
 }
 
