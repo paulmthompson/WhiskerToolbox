@@ -23,6 +23,7 @@ add_executable(test_commands
         ${CMAKE_SOURCE_DIR}/src/Commands/Commands.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/AdvanceFrame.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/SetEventAtTime.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/ClearLineDataAtTime.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalEvent.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalInterval.test.cpp

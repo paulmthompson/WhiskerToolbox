@@ -141,6 +141,40 @@ struct SetEventAtTimeParams {
 
 Not undoable (default).
 
+## ClearLineDataAtTime
+
+Removes all `LineData` entries at one time index by calling `LineData::clearAtTime()`. Use this
+to clear predictions or annotations at a single frame (for example before or after a
+`MoveByTimeRange` step in a triage pipeline).
+
+### Parameters
+
+```cpp
+struct ClearLineDataAtTimeParams {
+    std::string data_key;
+    int64_t time = 0;
+};
+```
+
+`time` accepts `${current_frame}` and `${mark_frame}` when the sequence executor fills
+`CommandContext::runtime_variables` (see [Sequence Execution](sequence_execution.qmd)).
+
+### Example
+
+```json
+{
+  "command_name": "ClearLineDataAtTime",
+  "parameters": {
+    "data_key": "pred_w0",
+    "time": "${current_frame}"
+  }
+}
+```
+
+### Undo
+
+Not undoable (default).
+
 ## FlipEventAtTime
 
 Toggles membership at one index: reads `hasIntervalAtTime()` then `setEventAtTime()` with the

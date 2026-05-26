@@ -370,7 +370,7 @@ This phase is ongoing — each widget migrates its keyboard handling at its own 
 | Widget | Actions | Priority |
 |--------|---------|----------|
 | `DataViewer_Widget` | Wheel zoom sensitivity, any future keys | Low |
-| `Whisker_Widget` | "T" key (currently commented out) | Low |
+| `Whisker_Widget` | `whisker_widget.trace` (T, AlwaysRouted) | Done |
 | `LinePlotWidget` | Ctrl-release for line selection cancel | Medium |
 | Future widgets | Define actions at creation time | N/A |
 

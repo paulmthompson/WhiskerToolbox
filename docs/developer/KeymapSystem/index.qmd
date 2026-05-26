@@ -18,7 +18,7 @@ There is no way for users to reconfigure bindings, no way for a widget to advert
 ## Use Cases
 
 1. **Focus switching** — Assign a hotkey (e.g., F2) to raise and focus a specific editor, regardless of which widget currently has keyboard focus.
-2. **Per-editor shortcuts** — When a particular editor is focused, its registered actions take priority (e.g., Media_Widget's group-assignment keys).
+2. **Per-editor shortcuts** — When a particular editor is the **active editor**, its `EditorFocused` actions take priority (e.g., Media Viewer group assignment on Alt+1–9).
 3. **Always-routed commands** — Certain actions always dispatch to a specific widget even when it is not focused (e.g., arrow keys always control the timeline scrollbar).
 
 ## Design Overview
@@ -28,7 +28,7 @@ There is no way for users to reconfigure bindings, no way for a widget to advert
 When a key is pressed, the system resolves bindings in this order (first match wins):
 
 1. **Text/input bypass** — If the focused widget is a `QLineEdit`, `QTextEdit`, `QComboBox`, or similar input widget, the key event passes through to Qt normally. This preserves standard text editing.
-2. **Focused-editor keymap** — Actions registered by the editor type that currently has keyboard focus (e.g., Media_Widget's group-assignment keys only fire when Media_Widget is focused).
+2. **Focused-editor keymap** — Actions registered for the editor type that is the **active editor** in `SelectionContext` (e.g., `media.assign_group_1` only when `MediaWidget` is active). This is **not** the same as Qt widget focus: clicking the media canvas or focusing a media dock tab updates the active editor via `EditorCreationController` and `Media_Widget`.
 3. **Always-routed keymap** — Actions that always dispatch to a specific widget regardless of focus (e.g., Space → play/pause via TimeScrollBar).
 4. **Global keymap** — Actions not tied to any editor (e.g., focus-switching hotkeys).
 
@@ -46,7 +46,7 @@ A named, bindable action. Pure metadata — no callback stored.
 | `display_name` | `QString` | `"Assign to Group 1"` |
 | `category` | `QString` | `"Media Viewer"` |
 | `scope` | `KeyActionScope` | `EditorFocused("MediaWidget")` |
-| `default_binding` | `QKeySequence` | `Qt::Key_1` |
+| `default_binding` | `QKeySequence` | `Alt+1` (media group assign) |
 
 #### `KeyActionScope`
 
@@ -55,7 +55,7 @@ Determines when an action is eligible for dispatch.
 | Variant | Meaning |
 |---------|---------|
 | `Global` | Always available, no target widget |
-| `EditorFocused(EditorTypeId)` | Only when this editor type has keyboard focus |
+| `EditorFocused(EditorTypeId)` | Only when this editor type is the active editor (`SelectionContext::activeEditorId`) |
 | `AlwaysRouted(EditorTypeId)` | Always available; dispatched to this editor type regardless of focus |
 
 #### `KeymapEntry`

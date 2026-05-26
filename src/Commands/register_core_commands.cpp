@@ -10,6 +10,7 @@
 
 #include "AddInterval.hpp"
 #include "AdvanceFrame.hpp"
+#include "ClearLineDataAtTime.hpp"
 #include "CopyByTimeRange.hpp"
 #include "FlipEventAtTime.hpp"
 #include "ForEachKey.hpp"
@@ -73,6 +74,15 @@ void register_core_commands() {
              .category = "data_mutation",
              .supports_undo = false,
              .supported_data_types = {"DigitalIntervalSeries"}});
+
+    registerTypedCommand<ClearLineDataAtTime, ClearLineDataAtTimeParams>(
+            reg,
+            "ClearLineDataAtTime",
+            {.name = "ClearLineDataAtTime",
+             .description = "Remove all LineData entries at a single time index",
+             .category = "data_mutation",
+             .supports_undo = false,
+             .supported_data_types = {"LineData"}});
 
     registerTypedCommand<FlipEventAtTime, FlipEventAtTimeParams>(
             reg,

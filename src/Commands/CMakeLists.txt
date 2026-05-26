@@ -36,6 +36,8 @@ set(COMMAND_SOURCES
         FlipEventAtTime.cpp
         SetEventAtTime.hpp
         SetEventAtTime.cpp
+        ClearLineDataAtTime.hpp
+        ClearLineDataAtTime.cpp
         ForEachKey.hpp
         ForEachKey.cpp
         SynthesizeData.hpp

@@ -43,32 +43,35 @@ void registerEditorActions(KeymapSystem::KeymapManager * km) {
         return;
     }
 
-    auto const scope = KeymapSystem::KeyActionScope::editorFocused(
+    // AlwaysRouted so sequence slots fire while reviewing media (MediaWidget focused).
+    auto const mark_commit_scope = KeymapSystem::KeyActionScope::editorFocused(
+            EditorLib::EditorTypeId(QStringLiteral("TriageSessionWidget")));
+    auto const sequence_slot_scope = KeymapSystem::KeyActionScope::alwaysRouted(
             EditorLib::EditorTypeId(QStringLiteral("TriageSessionWidget")));
     QString const category = QStringLiteral("Triage Session");
 
     km->registerAction({.action_id = QStringLiteral("triage.mark"),
                         .display_name = QStringLiteral("Mark"),
                         .category = category,
-                        .scope = scope,
+                        .scope = mark_commit_scope,
                         .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M),
                         .command_sequence = std::nullopt});
 
     km->registerAction({.action_id = QStringLiteral("triage.commit"),
                         .display_name = QStringLiteral("Commit"),
                         .category = category,
-                        .scope = scope,
+                        .scope = mark_commit_scope,
                         .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C),
                         .command_sequence = std::nullopt});
 
     km->registerAction({.action_id = QStringLiteral("triage.recall"),
                         .display_name = QStringLiteral("Recall"),
                         .category = category,
-                        .scope = scope,
+                        .scope = mark_commit_scope,
                         .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R),
                         .command_sequence = std::nullopt});
 
-    registerSequenceSlotActions(km, scope, category);
+    registerSequenceSlotActions(km, sequence_slot_scope, category);
 }
 
 }// namespace

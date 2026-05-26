@@ -628,10 +628,12 @@ TEST_CASE("media group actions resolve only when MediaWidget is focused") {
                         .scope = media_scope,
                         .default_binding = QKeySequence(Qt::ALT | Qt::Key_1)});
 
+    auto const triage_sequence_scope = KeyActionScope::alwaysRouted(
+            EditorTypeId(QStringLiteral("TriageSessionWidget")));
     mgr.registerAction({.action_id = QStringLiteral("triage.sequence_slot_1"),
                         .display_name = QStringLiteral("Execute Sequence Slot 1"),
                         .category = QStringLiteral("Triage Session"),
-                        .scope = triage_scope,
+                        .scope = triage_sequence_scope,
                         .default_binding = QKeySequence(Qt::Key_1)});
 
     // Alt+1 resolves when MediaWidget is focused
@@ -653,6 +655,13 @@ TEST_CASE("media group actions resolve only when MediaWidget is focused") {
             EditorTypeId("TriageSessionWidget"));
     REQUIRE(triage_result.has_value());
     CHECK(*triage_result == "triage.sequence_slot_1");
+
+    // Plain 1 also resolves to triage sequence slots when Media is focused (AlwaysRouted)
+    auto media_focused_triage = mgr.resolveKeyPress(
+            QKeySequence(Qt::Key_1),
+            EditorTypeId("MediaWidget"));
+    REQUIRE(media_focused_triage.has_value());
+    CHECK(*media_focused_triage == "triage.sequence_slot_1");
 
     // Alt+1 does not resolve when Triage is focused
     CHECK_FALSE(mgr.resolveKeyPress(

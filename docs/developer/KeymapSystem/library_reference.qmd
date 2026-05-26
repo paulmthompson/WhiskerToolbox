@@ -82,7 +82,7 @@ Central manager class (owned by MainWindow). Inherits `QObject`.
 
 | Action ID | Display Name | Category | Scope | Default Key |
 |---|---|---|---|---|
-| `media.assign_group_1`–`9` | Assign to Group 1–9 | Media Viewer | EditorFocused (`MediaWidget`) | 1–9 |
+| `media.assign_group_1`–`9` | Assign to Group 1–9 | Media Viewer | EditorFocused (`MediaWidget`) | Alt+1–9 |
 | `timeline.play_pause` | Play / Pause | Timeline | AlwaysRouted (`TimeScrollBar`) | Space |
 | `timeline.next_frame` | Next Frame | Timeline | AlwaysRouted (`TimeScrollBar`) | Right |
 | `timeline.prev_frame` | Previous Frame | Timeline | AlwaysRouted (`TimeScrollBar`) | Left |
@@ -94,6 +94,8 @@ Central manager class (owned by MainWindow). Inherits `QObject`.
 | `digital_interval_series.mark_contact_start` | Mark Contact Start | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
 | `digital_interval_series.mark_contact_end` | Mark Contact End | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
 | `digital_interval_series.flip_current_frame` | Flip Current Frame | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
+| `whisker_widget.trace` | Trace | Whisker Tracking | AlwaysRouted (`WhiskerWidget`) | T |
+| `deep_learning.predict_current` | Predict Current Frame | Deep Learning | AlwaysRouted (`DeepLearningWidget`) | Ctrl+R |
 
 ## Dependencies
 

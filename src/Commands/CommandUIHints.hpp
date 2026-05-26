@@ -7,6 +7,7 @@
 #define COMMAND_UI_HINTS_HPP
 
 #include "AddInterval.hpp"
+#include "ClearLineDataAtTime.hpp"
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"
@@ -48,6 +49,18 @@ struct ParameterUIHints<commands::CopyByTimeRangeParams> {
         }
         if (auto * f = schema.field("end_frame")) {
             f->tooltip = "End of the time range (inclusive)";
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<commands::ClearLineDataAtTimeParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("data_key")) {
+            f->tooltip = "Data key of the LineData object to clear";
+        }
+        if (auto * f = schema.field("time")) {
+            f->tooltip = "Frame index to clear (supports ${current_frame} and ${mark_frame})";
         }
     }
 };
