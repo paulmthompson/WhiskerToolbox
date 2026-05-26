@@ -17,6 +17,8 @@
 #include "PointData/PointTableView.hpp"
 #include "TensorData/TensorDesigner.hpp"
 #include "TensorData/TensorInspector.hpp"
+
+#include "TransformsV2/core/PipelineLibrary.hpp"
 #include "TimeFrameData/TimeFrameDataView.hpp"
 #include "TimeFrameData/TimeFrameInspector.hpp"
 
@@ -105,6 +107,21 @@ void DataInspectorPropertiesWidget::setSelectionContext(SelectionContext * conte
 
 void DataInspectorPropertiesWidget::setOperationContext(EditorLib::OperationContext * context) {
     _operation_context = context;
+}
+
+void DataInspectorPropertiesWidget::setPipelineLibraryConfigDir(QString const & config_dir) {
+    if (config_dir.isEmpty()) {
+        _pipeline_library_dir.clear();
+        return;
+    }
+
+    auto const dir_result = WhiskerToolbox::Transforms::V2::Examples::ensureUserPipelineDirectory(
+            config_dir.toStdString());
+    if (dir_result) {
+        _pipeline_library_dir = QString::fromStdString(dir_result.value().string());
+    } else {
+        _pipeline_library_dir.clear();
+    }
 }
 
 void DataInspectorPropertiesWidget::setCommandRecorder(commands::CommandRecorder * recorder) {
@@ -448,6 +465,9 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         }
         if (_operation_context) {
             tensor_inspector->setOperationContext(_operation_context);
+        }
+        if (!_pipeline_library_dir.isEmpty()) {
+            tensor_inspector->setPipelineLibraryDir(_pipeline_library_dir);
         }
         // Pass inspector state to designer for auto-pinning during dialog interaction
         if (tensor_inspector->designer() && _state) {

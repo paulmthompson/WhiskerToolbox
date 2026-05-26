@@ -98,6 +98,12 @@ public:
     void setOperationContext(EditorLib::OperationContext * context);
 
     /**
+     * @brief Set the TransformsV2 pipeline library directory for column configuration
+     * @param library_dir Path to pipelines/transforms_v2 under the app config root
+     */
+    void setPipelineLibraryDir(QString const & library_dir);
+
+    /**
      * @brief Set the DataInspectorState for auto-pinning during dialog interaction
      * @param state Shared state pointer (can be nullptr)
      *
@@ -191,6 +197,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context{nullptr};
     EditorLib::OperationContext * _operation_context{nullptr};
+    QString _pipeline_library_dir;
     std::shared_ptr<DataInspectorState> _inspector_state;
     std::string _tensor_key;
 

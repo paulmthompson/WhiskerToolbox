@@ -17,6 +17,7 @@
 #define slots Q_SLOTS
 
 #include "EditorState/OperationContext.hpp"
+#include "TransformsV2_Widget/UI/PipelineLibraryDialog.hpp"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -39,12 +40,14 @@ ColumnConfigDialog::ColumnConfigDialog(
         std::shared_ptr<DataManager> data_manager,
         DesignerRowType row_type,
         EditorLib::OperationContext * operation_context,
+        QString pipeline_library_dir,
         QWidget * parent)
     : QDialog(parent),
       _data_manager(std::move(data_manager)),
       _row_type(row_type),
       _operation_context(operation_context),
-      _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
+      _requester_id(EditorLib::EditorInstanceId::generate().toString()),
+      _pipeline_library_dir(std::move(pipeline_library_dir)) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
@@ -55,12 +58,14 @@ ColumnConfigDialog::ColumnConfigDialog(
         DesignerRowType row_type,
         ColumnRecipe const & recipe,
         EditorLib::OperationContext * operation_context,
+        QString pipeline_library_dir,
         QWidget * parent)
     : QDialog(parent),
       _data_manager(std::move(data_manager)),
       _row_type(row_type),
       _operation_context(operation_context),
-      _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
+      _requester_id(EditorLib::EditorInstanceId::generate().toString()),
+      _pipeline_library_dir(std::move(pipeline_library_dir)) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
@@ -163,6 +168,9 @@ void ColumnConfigDialog::_onIntervalPropertyToggled(bool checked) {
     _source_combo->setEnabled(!checked);
     _pipeline_json_edit->setEnabled(!checked);
     _validate_btn->setEnabled(!checked);
+    if (_load_from_library_btn) {
+        _load_from_library_btn->setEnabled(!checked && !_pipeline_library_dir.isEmpty());
+    }
     _request_tv2_btn->setEnabled(!checked && _operation_context != nullptr);
     _edit_in_tv2_btn->setEnabled(
             !checked && _operation_context != nullptr &&
@@ -220,6 +228,13 @@ void ColumnConfigDialog::_setupUi() {
     pipeline_layout->addWidget(_pipeline_json_edit);
 
     auto * btn_layout = new QHBoxLayout();
+
+    _load_from_library_btn = new QPushButton(QStringLiteral("Load from Library..."), pipeline_group);
+    _load_from_library_btn->setToolTip(
+            QStringLiteral("Choose a saved TransformsV2 pipeline from the library folder."));
+    _load_from_library_btn->setEnabled(!_pipeline_library_dir.isEmpty());
+    btn_layout->addWidget(_load_from_library_btn);
+
     _request_tv2_btn = new QPushButton(
             QStringLiteral("Request from Transforms V2"), pipeline_group);
     _request_tv2_btn->setToolTip(
@@ -294,6 +309,8 @@ void ColumnConfigDialog::_connectSignals() {
             this, &ColumnConfigDialog::_onColumnNameEdited);
     connect(_validate_btn, &QPushButton::clicked,
             this, &ColumnConfigDialog::_onValidateClicked);
+    connect(_load_from_library_btn, &QPushButton::clicked,
+            this, &ColumnConfigDialog::_onLoadFromLibraryClicked);
     connect(_request_tv2_btn, &QPushButton::clicked,
             this, &ColumnConfigDialog::_onRequestTV2Clicked);
     connect(_edit_in_tv2_btn, &QPushButton::clicked,
@@ -450,6 +467,29 @@ void ColumnConfigDialog::_onValidateClicked() {
                 QStringLiteral("Pipeline load error: ") +
                 QString::fromStdString(result.error()->what()));
     }
+}
+
+// =============================================================================
+// Pipeline library
+// =============================================================================
+
+void ColumnConfigDialog::_onLoadFromLibraryClicked() {
+    if (_pipeline_library_dir.isEmpty()) {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+                QStringLiteral("Pipeline library directory is not configured."));
+        return;
+    }
+
+    PipelineLibraryDialog dialog(_pipeline_library_dir, this);
+    if (dialog.exec() != QDialog::Accepted || !dialog.hasLoadedPipeline()) {
+        return;
+    }
+
+    _pipeline_json_edit->setPlainText(QString::fromStdString(dialog.loadedPipelineJson()));
+    _edit_in_tv2_btn->setEnabled(true);
+    _onValidateClicked();
+    _updateAutoName();
 }
 
 // =============================================================================

@@ -103,6 +103,12 @@ public:
     void setOperationContext(EditorLib::OperationContext * context);
 
     /**
+     * @brief Set the application config directory for the TransformsV2 pipeline library
+     * @param config_dir StateManager::configDir() (used to resolve pipelines/transforms_v2/)
+     */
+    void setPipelineLibraryConfigDir(QString const & config_dir);
+
+    /**
      * @brief Set the CommandRecorder for recording command executions
      * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
      *
@@ -170,6 +176,7 @@ private:
     GroupManager * _group_manager{nullptr};
     commands::CommandRecorder * _command_recorder{nullptr};
     KeymapSystem::KeymapManager * _keymap_manager{nullptr};
+    QString _pipeline_library_dir;
 
     // Current inspector (type-specific, created by InspectorFactory)
     std::unique_ptr<class BaseInspector> _current_inspector;

@@ -929,7 +929,12 @@ void MainWindow::_registerEditorTypes() {
 
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), _keymap_manager);
 
-    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), commandRecorder(), _keymap_manager);
+    DataInspectorModule::registerTypes(_editor_registry.get(),
+                                       _data_manager,
+                                       _group_manager.get(),
+                                       commandRecorder(),
+                                       _keymap_manager,
+                                       _state_manager->configDir());
 
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

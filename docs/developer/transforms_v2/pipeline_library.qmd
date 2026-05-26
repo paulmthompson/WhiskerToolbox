@@ -39,6 +39,29 @@ To execute a saved file, use `loadPipelineFromFile` (builds a `TransformPipeline
 
 Files use the `PipelineDescriptor` schema documented in [`PipelineLoader.hpp`](../../../src/TransformsV2/core/PipelineLoader.hpp): `metadata`, optional `pre_reductions`, `steps`, optional `range_reduction`.
 
+## Pipeline library dialog (Phase 3)
+
+[`PipelineLibraryDialog`](../../../src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineLibraryDialog.hpp) provides:
+
+- Browse saved pipelines with JSON preview
+- **Load** (closes dialog and applies to TransformsV2 widget)
+- **Save to Library**, **Delete**, **Import...**, **Export...**, **Open Folder**
+
+The TransformsV2 JSON panel adds **Library...** and **Save to Library** shortcuts that use the same directory.
+
+## Tensor column configuration (Phase 4)
+
+[`ColumnConfigDialog`](../../../src/WhiskerToolbox/DataInspector_Widget/TensorData/ColumnConfigDialog.cpp) adds **Load from Library...**, which opens the same `PipelineLibraryDialog`. The library directory is resolved from `StateManager::configDir()` when the Data Inspector is registered and forwarded through `TensorDesigner`.
+
+## Widget integration (Phase 2)
+
+[`TransformsV2Properties_Widget`](../../../src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.cpp):
+
+- `currentPipelineDescriptor()` merges UI steps with `metadata` / `pre_reductions` / `range_reduction` from the JSON panel.
+- Load/Save use `AppFileDialog` with IDs `transformv2_pipeline_open` and `transformv2_pipeline_save`, defaulting to the user library directory.
+- `TransformsV2WidgetModule::registerTypes` receives `StateManager::configDir()` and ensures `pipelines/transforms_v2/` exists at widget construction.
+
 ## Tests
 
-[`test_pipeline_library.test.cpp`](../../../tests/TransformsV2/test_pipeline_library.test.cpp) covers path helpers, sanitization, catalog listing, and round-trip I/O including `pre_reductions` and `range_reduction`.
+- [`test_pipeline_library.test.cpp`](../../../tests/TransformsV2/test_pipeline_library.test.cpp) — path helpers, sanitization, catalog listing, file I/O.
+- [`TransformsV2Widget.test.cpp`](../../../tests/WhiskerToolbox/TransformsV2_Widget/TransformsV2Widget.test.cpp) — widget JSON round-trip with `pre_reductions` preserved after Apply and step-list edits.

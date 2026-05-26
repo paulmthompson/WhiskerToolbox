@@ -19,6 +19,7 @@
  */
 
 #include <QDialog>
+#include <QString>
 
 #include <memory>
 #include <string>
@@ -70,6 +71,7 @@ public:
             std::shared_ptr<DataManager> data_manager,
             DesignerRowType row_type,
             EditorLib::OperationContext * operation_context = nullptr,
+            QString pipeline_library_dir = {},
             QWidget * parent = nullptr);
 
     /**
@@ -85,6 +87,7 @@ public:
             DesignerRowType row_type,
             WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe,
             EditorLib::OperationContext * operation_context = nullptr,
+            QString pipeline_library_dir = {},
             QWidget * parent = nullptr);
 
     ~ColumnConfigDialog() override;
@@ -102,6 +105,7 @@ private slots:
     void _onValidateClicked();
     void _onRequestTV2Clicked();
     void _onEditInTV2Clicked();
+    void _onLoadFromLibraryClicked();
     void _onOperationDelivered(EditorLib::PendingOperation const & op,
                                EditorLib::OperationResult const & result);
     void _onOperationClosed(EditorLib::OperationId const & id);
@@ -136,9 +140,12 @@ private:
     // Pipeline JSON (primary column configuration)
     QTextEdit * _pipeline_json_edit{nullptr};
     QPushButton * _validate_btn{nullptr};
+    QPushButton * _load_from_library_btn{nullptr};
     QPushButton * _request_tv2_btn{nullptr};
     QPushButton * _edit_in_tv2_btn{nullptr};
     QLabel * _validation_label{nullptr};
+
+    QString _pipeline_library_dir;
 
     // Interval property (visible only for interval row type)
     QGroupBox * _interval_property_group{nullptr};

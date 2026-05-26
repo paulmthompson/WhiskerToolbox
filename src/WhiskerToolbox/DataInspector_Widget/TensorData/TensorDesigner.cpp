@@ -74,6 +74,10 @@ void TensorDesigner::setOperationContext(EditorLib::OperationContext * context) 
     _operation_context = context;
 }
 
+void TensorDesigner::setPipelineLibraryDir(QString const & library_dir) {
+    _pipeline_library_dir = library_dir;
+}
+
 void TensorDesigner::setInspectorState(std::shared_ptr<DataInspectorState> state) {
     _inspector_state = std::move(state);
 }
@@ -286,7 +290,8 @@ void TensorDesigner::_onAddColumnClicked() {
 
     _pinInspectorForDialog();
 
-    auto * dialog = new ColumnConfigDialog(_data_manager, _row_type, _operation_context, this);
+    auto * dialog = new ColumnConfigDialog(
+            _data_manager, _row_type, _operation_context, _pipeline_library_dir, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::NonModal);
     _active_dialog = dialog;
@@ -335,7 +340,12 @@ void TensorDesigner::_onEditColumnClicked() {
 
     _pinInspectorForDialog();
 
-    auto * dialog = new ColumnConfigDialog(_data_manager, _row_type, _column_recipes[row], _operation_context, this);
+    auto * dialog = new ColumnConfigDialog(_data_manager,
+                                           _row_type,
+                                           _column_recipes[row],
+                                           _operation_context,
+                                           _pipeline_library_dir,
+                                           this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::NonModal);
     _active_dialog = dialog;

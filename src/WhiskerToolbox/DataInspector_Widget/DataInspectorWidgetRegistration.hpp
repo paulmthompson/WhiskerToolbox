@@ -32,6 +32,8 @@
  * @see DataInspectorState for the shared state class
  */
 
+#include <QString>
+
 #include <memory>
 
 class EditorRegistry;
@@ -69,7 +71,8 @@ void registerTypes(EditorRegistry * registry,
                    const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager = nullptr,
                    commands::CommandRecorder * recorder = nullptr,
-                   KeymapSystem::KeymapManager * keymap_manager = nullptr);
+                   KeymapSystem::KeymapManager * keymap_manager = nullptr,
+                   QString const & pipeline_config_dir = {});
 
 }// namespace DataInspectorModule
 

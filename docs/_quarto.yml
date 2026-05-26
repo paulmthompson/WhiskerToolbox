@@ -368,6 +368,7 @@ website:
             - user_guide/data_transformations/overview.qmd
             - text: "Transform Widget"
               href: user_guide/data_transformations/transforms_v2_widget.qmd
+            - user_guide/data_transformations/pipeline_library.qmd
             - user_guide/data_transformations/tensor_whitening.qmd
         - section: "Data Inspectors"
           contents:

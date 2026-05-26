@@ -80,7 +80,8 @@ void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> const & data_manager,
                    GroupManager * group_manager,
                    commands::CommandRecorder * recorder,
-                   KeymapSystem::KeymapManager * keymap_manager) {
+                   KeymapSystem::KeymapManager * keymap_manager,
+                   QString const & pipeline_config_dir) {
 
     if (!registry) {
         std::cerr << "DataInspectorModule::registerTypes: registry is null" << std::endl;
@@ -95,6 +96,7 @@ void registerTypes(EditorRegistry * registry,
     auto gm = group_manager;
     auto cr = recorder;
     auto * km = keymap_manager;
+    auto const pipeline_dir = pipeline_config_dir;
 
     registry->registerType({.type_id = QStringLiteral("DataInspector"),
                             .display_name = QStringLiteral("Data Inspector"),
@@ -124,7 +126,8 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates DataInspectorPropertiesWidget (Right zone)
-                            .create_properties = [dm, gm, cr, km](std::shared_ptr<EditorState> const & state) -> QWidget * {
+                            .create_properties = [dm, gm, cr, km, pipeline_dir](
+                                                           std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
                                 if (!inspector_state) {
                                     std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState for properties" << std::endl;
@@ -135,12 +138,13 @@ void registerTypes(EditorRegistry * registry,
                                 widget->setState(inspector_state);
                                 widget->setCommandRecorder(cr);
                                 widget->setKeymapManager(km);
+                                widget->setPipelineLibraryConfigDir(pipeline_dir);
                                 return widget;
                             },
 
                             // Custom editor creation for complex view/properties coupling
                             // Ensures both widgets share the same state and SelectionContext
-                            .create_editor_custom = [dm, gm, cr, km](EditorRegistry * reg)
+                            .create_editor_custom = [dm, gm, cr, km, pipeline_dir](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<DataInspectorState>();
@@ -154,6 +158,7 @@ void registerTypes(EditorRegistry * registry,
                                 props->setState(state);
                                 props->setCommandRecorder(cr);
                                 props->setKeymapManager(km);
+                                props->setPipelineLibraryConfigDir(pipeline_dir);
 
                                 // Connect properties to selection context from registry
                                 if (reg) {

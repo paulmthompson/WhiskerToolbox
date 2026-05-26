@@ -83,6 +83,12 @@ void TensorInspector::setOperationContext(EditorLib::OperationContext * context)
     }
 }
 
+void TensorInspector::setPipelineLibraryDir(QString const & library_dir) {
+    if (_designer) {
+        _designer->setPipelineLibraryDir(library_dir);
+    }
+}
+
 // =============================================================================
 // Private slots
 // =============================================================================

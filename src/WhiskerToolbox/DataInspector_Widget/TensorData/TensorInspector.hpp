@@ -93,6 +93,12 @@ public:
     void setOperationContext(EditorLib::OperationContext * context);
 
     /**
+     * @brief Set the resolved TransformsV2 pipeline library directory
+     * @param library_dir Path to pipelines/transforms_v2 under the app config root
+     */
+    void setPipelineLibraryDir(QString const & library_dir);
+
+    /**
      * @brief Get the embedded TensorDesigner widget
      * @return Pointer to TensorDesigner, or nullptr if not created
      */

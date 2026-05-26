@@ -59,4 +59,8 @@ Once your pipeline is valid:
 
 The Transform Widget's pipeline definition is portable. You can design a pipeline here and use it in the **Tensor Inspector** to populate columns of a tensor.
 
+## Pipeline library
+
+Save and reload pipelines from a shared folder under your config directory. See [Pipeline Library](pipeline_library.qmd) for storage location, **Library...** / **Save to Library** in this widget, and **Load from Library...** in the Tensor column dialog.
+
 -   See [Tensor Inspector](../data_inspectors/tensor_inspector.qmd) for more details.

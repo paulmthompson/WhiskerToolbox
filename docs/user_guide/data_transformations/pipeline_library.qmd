@@ -1,0 +1,55 @@
+---
+title: "TransformsV2 Pipeline Library"
+format: html
+---
+
+Saved **TransformsV2** pipelines live in a central folder on your machine so you can reuse them across the Transform Widget and Tensor Inspector without copying JSON by hand.
+
+## Where pipelines are stored
+
+WhiskerToolbox stores library files under your application config directory:
+
+```
+{config}/pipelines/transforms_v2/*.json
+```
+
+On Linux this is typically:
+
+```
+~/.config/WhiskerToolbox/pipelines/transforms_v2/
+```
+
+Each file is a [`PipelineDescriptor`](../../developer/transforms_v2/pipeline_library.qmd) JSON document (transform steps, optional pre-reductions, optional range reduction).
+
+## Transform Widget
+
+Open **View → Tools → Transforms V2** and expand the **Pipeline JSON** section.
+
+| Control | Action |
+|---------|--------|
+| **Library...** | Browse, preview, load, save, import, export, or delete library entries |
+| **Save to Library** | Quick-save the current pipeline with a name |
+| **Load...** / **Save...** | Pick any file (defaults to the library folder) |
+
+Use **Library...** to manage your collection. Use **Load** inside the dialog to apply a saved pipeline to the widget.
+
+## Tensor Inspector (column configuration)
+
+When configuring a tensor column in the **Tensor Designer**:
+
+1. Open **Load from Library...** to pick a saved pipeline.
+2. The JSON is copied into the column’s pipeline field and validated automatically.
+3. Alternatively, use **Request from Transforms V2** to design a pipeline interactively and send it back.
+
+Interval-property columns (start/end/duration only) do not use a transform pipeline; the library controls are disabled in that mode.
+
+## Tips
+
+- Give pipelines meaningful names when saving; the name becomes `metadata.name` and the filename stem.
+- Pre-reductions and range reductions in JSON are preserved even though the Transform Widget step list only edits transform steps.
+- Command-sequence JSON used by **Triage Session** is a different format and is not stored in this library.
+
+## See also
+
+- [Transform Widget](transforms_v2_widget.qmd)
+- [Developer: Pipeline library](../../developer/transforms_v2/pipeline_library.qmd)
