@@ -19,8 +19,10 @@
 #include <QWidget>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
+#include <vector>
 
 namespace EditorLib {
 class OperationContext;
@@ -46,6 +48,11 @@ namespace Ui {
 class TransformsV2Properties_Widget;
 }
 
+namespace WhiskerToolbox::Transforms::V2::Examples {
+struct PipelineDescriptor;
+struct PipelineStepDescriptor;
+}// namespace WhiskerToolbox::Transforms::V2::Examples
+
 /**
  * @brief Main properties widget for TransformsV2 pipeline builder
  *
@@ -59,8 +66,17 @@ class TransformsV2Properties_Widget : public QWidget, public DataFocusAware {
     Q_OBJECT
 
 public:
+    /**
+     * @brief Construct the properties widget
+     * @param state Shared TransformsV2 editor state
+     * @param selection_context Selection context for DataFocusAware (may be nullptr)
+     * @param pipeline_config_dir Application config directory for the pipeline library
+     *        (StateManager::configDir()); empty skips library directory setup
+     * @param parent Parent widget
+     */
     explicit TransformsV2Properties_Widget(std::shared_ptr<TransformsV2State> state,
                                            SelectionContext * selection_context,
+                                           QString pipeline_config_dir = {},
                                            QWidget * parent = nullptr);
     ~TransformsV2Properties_Widget() override;
 
@@ -127,10 +143,42 @@ private:
     [[nodiscard]] std::string resolveDataTypeFromManager(std::string const & key) const;
 
     /**
-     * @brief Build a PipelineDescriptor from the current UI state
+     * @brief Build transform step descriptors from the step list widget
+     * @return Step descriptors for the current UI pipeline list
+     */
+    [[nodiscard]] std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor>
+    buildStepDescriptorsFromUI() const;
+
+    /**
+     * @brief Parse the JSON panel into a PipelineDescriptor when valid
+     * @return Parsed descriptor, or empty if the panel text is invalid
+     */
+    [[nodiscard]] std::optional<WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor>
+    parseJsonPanelDescriptor() const;
+
+    /**
+     * @brief Merge UI step list into a base descriptor, preserving non-UI fields
+     * @param base Descriptor supplying metadata, pre_reductions, and range_reduction
+     * @return Descriptor with steps replaced from the UI
+     */
+    [[nodiscard]] WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor mergeStepsIntoDescriptor(
+            WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor base) const;
+
+    /**
+     * @brief Build the full PipelineDescriptor from JSON panel plus UI steps
+     */
+    [[nodiscard]] WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor currentPipelineDescriptor() const;
+
+    /**
+     * @brief Serialize the current pipeline descriptor to JSON
      * @return JSON string representing the PipelineDescriptor
      */
     [[nodiscard]] std::string buildJsonFromUI() const;
+
+    /**
+     * @brief Default directory for pipeline file dialogs
+     */
+    [[nodiscard]] QString pipelineLibraryFallbackDir() const;
 
     /**
      * @brief Sync the JSON panel text from the current UI state
@@ -199,6 +247,8 @@ private:
     std::unique_ptr<Ui::TransformsV2Properties_Widget> ui;
     std::shared_ptr<TransformsV2State> _state;
     SelectionContext * _selection_context = nullptr;
+    QString _config_dir;
+    QString _pipeline_library_dir;
 
     // Input state
     std::string _input_data_key;

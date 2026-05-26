@@ -21,7 +21,10 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
+#include <QDateTime>
+#include <QDir>
 #include <QSpinBox>
+#include <QTextEdit>
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "Core/TransformsV2State.hpp"
@@ -40,6 +43,7 @@
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
 #include <QStackedWidget>
+#include <QTest>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -677,6 +681,81 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         REQUIRE(step_list != nullptr);
         CHECK(step_list->addStep("CalculateMaskArea"));
     }
+}
+
+// ============================================================================
+// Section 4b: Pipeline JSON round-trip (metadata / pre_reductions preserved)
+// ============================================================================
+
+TEST_CASE("TransformsV2Properties_Widget preserves pre_reductions after Apply and UI sync",
+          "[TransformsV2Widget][PropertiesWidget][json]") {
+
+    QtAppFixture const qt;
+
+    auto data_manager = std::make_shared<DataManager>();
+    auto state = std::make_shared<TransformsV2State>(data_manager);
+    auto selection_context = std::make_unique<SelectionContext>();
+
+    auto const config_dir =
+            QDir::temp().filePath(QStringLiteral("wt_tv2_widget_%1").arg(
+                    QDateTime::currentMSecsSinceEpoch()));
+
+    TransformsV2Properties_Widget widget(state, selection_context.get(), config_dir);
+    QApplication::processEvents();
+
+    auto * json_panel = widget.findChild<QTextEdit *>();
+    REQUIRE(json_panel != nullptr);
+
+    QString const pipeline_json = QStringLiteral(R"({
+        "metadata": {"name": "ZScore Test"},
+        "pre_reductions": [
+            {"reduction_name": "MeanValueRaw", "output_key": "computed_mean"},
+            {"reduction_name": "StdValueRaw", "output_key": "computed_std"}
+        ],
+        "steps": [
+            {
+                "step_id": "zscore",
+                "transform_name": "ZScoreNormalizeV2",
+                "param_bindings": {
+                    "mean": "computed_mean",
+                    "std_dev": "computed_std"
+                }
+            }
+        ],
+        "range_reduction": {"reduction_name": "MeanValue"}
+    })");
+
+    json_panel->setPlainText(pipeline_json);
+
+    QPushButton * apply_button = nullptr;
+    for (auto * button: widget.findChildren<QPushButton *>()) {
+        if (button->text() == QStringLiteral("Apply")) {
+            apply_button = button;
+            break;
+        }
+    }
+    REQUIRE(apply_button != nullptr);
+    QTest::mouseClick(apply_button, Qt::LeftButton);
+    QApplication::processEvents();
+
+    auto const after_apply = json_panel->toPlainText().toStdString();
+    CHECK(after_apply.find("pre_reductions") != std::string::npos);
+    CHECK(after_apply.find("computed_mean") != std::string::npos);
+    CHECK(after_apply.find("range_reduction") != std::string::npos);
+    CHECK(after_apply.find("ZScore Test") != std::string::npos);
+
+    widget.onDataFocusChanged(EditorLib::SelectedDataKey("analog_src"), "AnalogTimeSeries");
+    QApplication::processEvents();
+
+    auto * step_list = widget.findChild<PipelineStepListWidget *>();
+    REQUIRE(step_list != nullptr);
+    REQUIRE(step_list->addStep("AnalogEventThreshold"));
+    QApplication::processEvents();
+
+    auto const after_step_add = json_panel->toPlainText().toStdString();
+    CHECK(after_step_add.find("pre_reductions") != std::string::npos);
+    CHECK(after_step_add.find("AnalogEventThreshold") != std::string::npos);
+    CHECK(after_step_add.find("ZScoreNormalizeV2") != std::string::npos);
 }
 
 // ============================================================================

@@ -9,6 +9,8 @@
 #include "DataManager/DataManager.hpp"
 #include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+#include "TransformsV2/core/PipelineLibrary.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
@@ -19,7 +21,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
-#include <QFileDialog>
+#include <QDir>
 #include <QGroupBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -45,11 +47,25 @@ using namespace WhiskerToolbox::Transforms::V2::Examples;
 TransformsV2Properties_Widget::TransformsV2Properties_Widget(
         std::shared_ptr<TransformsV2State> state,
         SelectionContext * selection_context,
+        QString pipeline_config_dir,
         QWidget * parent)
     : QWidget(parent),
       ui(std::make_unique<Ui::TransformsV2Properties_Widget>()),
       _state(std::move(state)),
-      _selection_context(selection_context) {
+      _selection_context(selection_context),
+      _config_dir(std::move(pipeline_config_dir)) {
+
+    if (!_config_dir.isEmpty()) {
+        auto const dir_result =
+                ensureUserPipelineDirectory(_config_dir.toStdString());
+        if (dir_result) {
+            _pipeline_library_dir =
+                    QString::fromStdString(dir_result.value().string());
+        } else {
+            spdlog::warn("[TransformsV2Widget] Failed to create pipeline library directory: {}",
+                         dir_result.error()->what());
+        }
+    }
 
     ui->setupUi(this);
     setupUI();
@@ -500,17 +516,24 @@ void TransformsV2Properties_Widget::resolveInputTypes() {
 // Bidirectional JSON Synchronization
 // ============================================================================
 
-std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
-    PipelineDescriptor descriptor;
+QString TransformsV2Properties_Widget::pipelineLibraryFallbackDir() const {
+    if (!_pipeline_library_dir.isEmpty()) {
+        return _pipeline_library_dir;
+    }
+    return QDir::homePath();
+}
 
-    // Build steps from the step list widget
+std::vector<PipelineStepDescriptor> TransformsV2Properties_Widget::buildStepDescriptorsFromUI() const {
+    std::vector<PipelineStepDescriptor> step_descriptors;
+
     auto const & steps = _step_list->steps();
+    step_descriptors.reserve(steps.size());
+
     for (auto const & step: steps) {
         PipelineStepDescriptor step_desc;
         step_desc.step_id = step.step_id;
         step_desc.transform_name = step.transform_name;
 
-        // Parse the stored JSON params string into rfl::Generic
         if (step.parameters_json != "{}" && !step.parameters_json.empty()) {
             auto params_result = rfl::json::read<rfl::Generic>(step.parameters_json);
             if (params_result) {
@@ -518,10 +541,42 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
             }
         }
 
-        descriptor.steps.push_back(std::move(step_desc));
+        step_descriptors.push_back(std::move(step_desc));
     }
 
-    return savePipelineToJson(descriptor);
+    return step_descriptors;
+}
+
+std::optional<PipelineDescriptor> TransformsV2Properties_Widget::parseJsonPanelDescriptor() const {
+    auto const json_str = _json_panel->toPlainText().toStdString();
+    if (json_str.empty()) {
+        return PipelineDescriptor{};
+    }
+
+    auto const result = rfl::json::read<PipelineDescriptor>(json_str);
+    if (!result) {
+        return std::nullopt;
+    }
+
+    return result.value();
+}
+
+PipelineDescriptor TransformsV2Properties_Widget::mergeStepsIntoDescriptor(
+        PipelineDescriptor base) const {
+    base.steps = buildStepDescriptorsFromUI();
+    return base;
+}
+
+PipelineDescriptor TransformsV2Properties_Widget::currentPipelineDescriptor() const {
+    auto base = parseJsonPanelDescriptor();
+    if (!base.has_value()) {
+        base = PipelineDescriptor{};
+    }
+    return mergeStepsIntoDescriptor(std::move(base.value()));
+}
+
+std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
+    return savePipelineToJson(currentPipelineDescriptor());
 }
 
 void TransformsV2Properties_Widget::syncJsonFromUI() {
@@ -551,15 +606,12 @@ bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str)
 
     _syncing_json = true;
 
-    // Load steps (pre-reductions from JSON are preserved in the descriptor
-    // but not exposed in the UI — they are an implementation detail)
+    // Load steps; metadata / pre_reductions / range_reduction stay in the descriptor
     _step_list->loadFromDescriptors(descriptor.steps);
 
-    // Update the JSON panel text to show the canonical (re-serialized) JSON
-    auto canonical_json = buildJsonFromUI();
+    auto const canonical_json = savePipelineToJson(descriptor);
     _json_panel->setPlainText(QString::fromStdString(canonical_json));
 
-    // Store in state and emit signal
     _state->setPipelineJson(canonical_json);
     emit pipelineDescriptorChanged(canonical_json);
 
@@ -598,48 +650,62 @@ void TransformsV2Properties_Widget::onApplyJsonClicked() {
 }
 
 void TransformsV2Properties_Widget::onLoadJsonClicked() {
-    auto filepath = QFileDialog::getOpenFileName(
-            this, tr("Load Pipeline JSON"),
-            QString(), tr("JSON Files (*.json);;All Files (*)"));
+    auto const filepath = AppFileDialog::getOpenFileName(
+            this,
+            QStringLiteral("transformv2_pipeline_open"),
+            tr("Load Pipeline JSON"),
+            tr("JSON Files (*.json);;All Files (*)"),
+            pipelineLibraryFallbackDir());
 
     if (filepath.isEmpty()) {
         return;
     }
 
-    QFile file(filepath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    auto const load_result =
+            loadPipelineDescriptorFromFile(filepath.toStdString());
+    if (!load_result) {
         QMessageBox::warning(this, tr("Load Failed"),
-                             tr("Could not open file: %1").arg(filepath));
+                             tr("Could not load pipeline: %1")
+                                     .arg(QString::fromStdString(load_result.error()->what())));
         return;
     }
 
-    auto json_str = QString(file.readAll()).toStdString();
-    file.close();
-
-    if (!loadUIFromJson(json_str)) {
+    if (!loadUIFromJson(savePipelineToJson(load_result.value()))) {
         QMessageBox::warning(this, tr("Invalid JSON"),
                              tr("The file does not contain a valid PipelineDescriptor JSON."));
     }
 }
 
 void TransformsV2Properties_Widget::onSaveJsonClicked() {
-    auto filepath = QFileDialog::getSaveFileName(
-            this, tr("Save Pipeline JSON"),
-            QString(), tr("JSON Files (*.json);;All Files (*)"));
+    syncJsonFromUI();
+
+    auto const descriptor = currentPipelineDescriptor();
+    auto suggested_name = QStringLiteral("pipeline.json");
+    if (descriptor.metadata.has_value() && descriptor.metadata->name.has_value() &&
+        !descriptor.metadata->name->empty()) {
+        suggested_name = QString::fromStdString(
+                                     sanitizePipelineFilename(*descriptor.metadata->name)) +
+                         QStringLiteral(".json");
+    }
+
+    auto const filepath = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("transformv2_pipeline_save"),
+            tr("Save Pipeline JSON"),
+            tr("JSON Files (*.json);;All Files (*)"),
+            pipelineLibraryFallbackDir(),
+            suggested_name);
 
     if (filepath.isEmpty()) {
         return;
     }
 
-    QFile file(filepath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    auto const save_result = savePipelineDescriptorToFile(filepath.toStdString(), descriptor);
+    if (!save_result) {
         QMessageBox::warning(this, tr("Save Failed"),
-                             tr("Could not open file for writing: %1").arg(filepath));
-        return;
+                             tr("Could not save pipeline: %1")
+                                     .arg(QString::fromStdString(save_result.error()->what())));
     }
-
-    file.write(_json_panel->toPlainText().toUtf8());
-    file.close();
 }
 
 // ============================================================================
@@ -792,7 +858,8 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
         return;
     }
 
-    // Get the JSON from the panel
+    syncJsonFromUI();
+
     auto json_str = _json_panel->toPlainText().toStdString();
     if (json_str.empty()) {
         _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");

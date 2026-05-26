@@ -23,7 +23,8 @@
  * - Export: "export_svg", "export_csv", "export_dir", "export_mask_dir"
  * - Python: "python_script", "python_working_dir", "python_venv"
  * - Config: "table_json", "zone_config", "spike_sorter_config",
- *           "batch_folder", "batch_json", "transform_json"
+ *           "batch_folder", "batch_json", "transform_json",
+ *           "transformv2_pipeline_open", "transformv2_pipeline_save"
  *
  * Call AppFileDialog::init() once at startup (from MainWindow) to wire in the SessionStore.
  * If init() was never called, the wrappers fall through to plain QFileDialog behavior.

@@ -12,7 +12,8 @@
 namespace TransformsV2WidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   QString const & pipeline_config_dir) {
     if (!registry) {
         return;
     }
@@ -43,14 +44,15 @@ void registerTypes(EditorRegistry * registry,
         .create_properties = nullptr,
 
         // Custom editor creation for SelectionContext access
-        .create_editor_custom = [dm](EditorRegistry * reg)
+        .create_editor_custom = [dm, pipeline_config_dir](EditorRegistry * reg)
             -> EditorRegistry::EditorInstance
         {
             auto state = std::make_shared<TransformsV2State>(dm);
 
             auto * selection_context = reg->selectionContext();
 
-            auto * widget = new TransformsV2Properties_Widget(state, selection_context, nullptr);
+            auto * widget = new TransformsV2Properties_Widget(
+                    state, selection_context, pipeline_config_dir, nullptr);
             widget->setOperationContext(reg->operationContext());
             widget->setMinimumSize(350, 400);
             widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
