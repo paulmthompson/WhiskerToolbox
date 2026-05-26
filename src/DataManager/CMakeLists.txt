@@ -33,6 +33,8 @@ set(DATAMANAGER_SOURCES
         utils/armadillo_wrap/analog_armadillo.cpp
         utils/DataManagerKeys.hpp
         utils/DataManagerKeys.cpp
+        utils/DataManagerTemporalSubset.hpp
+        utils/DataManagerTemporalSubset.cpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp

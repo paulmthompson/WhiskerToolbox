@@ -29,6 +29,7 @@ add_executable(test_data_manager
         utils/TimeSeriesFilters.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TimeIndexExtractor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataManagerTemporalSubset.test.cpp
 
         test_filename_timeframe.cpp
         test_upsampled_timeframe.cpp
