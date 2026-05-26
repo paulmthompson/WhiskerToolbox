@@ -31,7 +31,6 @@
 // Module registration headers - each module defines its own factory functions
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
-#include "KeybindingEditor/KeybindingEditorRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
@@ -41,6 +40,7 @@
 #include "DeepLearning_Widget/DeepLearningWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
+#include "KeybindingEditor/KeybindingEditorRegistration.hpp"
 #include "MLCore_Widget/MLCoreWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 
@@ -247,7 +247,7 @@ MainWindow::MainWindow(QWidget * parent)
                         _keymap_manager->exportOverrides());
             });
 
-    auto* dummyGL = new QOpenGLWidget(this);
+    auto * dummyGL = new QOpenGLWidget(this);
     dummyGL->hide();
 
     _buildInitialLayout();
@@ -945,7 +945,7 @@ void MainWindow::_registerEditorTypes() {
 
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _keymap_manager);
 
     TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager, _keymap_manager);
 

@@ -3,18 +3,20 @@
 #include "ui_Whisker_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/transforms/Media/whisker_tracing.hpp"
+#include "EditorState/StrongTypes.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "DataManager/transforms/Media/whisker_tracing.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "WhiskerWidgetState.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "whiskertracker.hpp"
 
-#include "qevent.h"
 #include <QElapsedTimer>
 
 #include "StateManagement/AppFileDialog.hpp"
@@ -230,7 +232,8 @@ void Whisker_Widget::openWidget() {
     _data_manager->addObserver([this]() {
         _populateWhiskerPadCombo();
         _populateMaskCombo();
-    }, "Whisker_Widget");
+    },
+                               "Whisker_Widget");
 
     _createNewWhiskerPad();
 
@@ -250,7 +253,7 @@ void Whisker_Widget::_populateMaskCombo() {
         if (_selected_mask_key.empty() || std::find(mask_keys.begin(), mask_keys.end(), _selected_mask_key) == mask_keys.end()) {
             _selected_mask_key = mask_keys[0];
         }
-        int idx = ui->mask_key_combo->findText(QString::fromStdString(_selected_mask_key));
+        int const idx = ui->mask_key_combo->findText(QString::fromStdString(_selected_mask_key));
         if (idx >= 0) ui->mask_key_combo->setCurrentIndex(idx);
     }
 
@@ -262,17 +265,27 @@ void Whisker_Widget::closeEvent(QCloseEvent * event) {
     std::cout << "Close event detected" << std::endl;
 }
 
-void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
-
-    //Data manager should be responsible for loading new value of data object
-    //Main window can update displays with new data object position
-    //Frame label is also updated.
-
-    if (event->key() == Qt::Key_T) {
-        _traceButton();
-    } else {
-        //QMainWindow::keyPressEvent(event);
+void Whisker_Widget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager || _key_adapter) {
+        return;
     }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("WhiskerWidget")));
+
+    if (_state) {
+        _key_adapter->setInstanceId(EditorLib::EditorInstanceId(_state->getInstanceId()));
+    }
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (action_id == QStringLiteral("whisker_widget.trace")) {
+            _traceButton();
+            return true;
+        }
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
 }
 
 /////////////////////////////////////////////
@@ -325,9 +338,9 @@ void Whisker_Widget::_traceButton() {
                 auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
                 std::vector<uint8_t> binary_mask;
                 if (mask_ptr) {
-                    binary_mask = convert_mask_to_binary(mask_ptr.get(), 
-                    static_cast<int>(num_to_trace + current_position.convertTo(mask_ptr->getTimeFrame().get()).getValue()), 
-                    media->getImageSize());
+                    binary_mask = convert_mask_to_binary(mask_ptr.get(),
+                                                         static_cast<int>(num_to_trace + current_position.convertTo(mask_ptr->getTimeFrame().get()).getValue()),
+                                                         media->getImageSize());
                 }
                 whiskers = _wt->trace_with_mask(image, binary_mask, height, width);
             } else {
@@ -440,7 +453,7 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
     //labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 
-void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const image_size) {
+void Whisker_Widget::_traceWhiskers(const std::vector<uint8_t>& image, ImageSize const image_size) {
 
 
     auto const current_position = _state->current_position;
@@ -605,7 +618,7 @@ void order_whiskers_by_position(
     std::map<int, Line2D> previous_whiskers;
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
 
-        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
+        std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);
 
         if (dm->getData<LineData>(whisker_name)) {
             auto whisker = dm->getData<LineData>(whisker_name)->getAtTime(current_time - TimeFrameIndex(1));
@@ -618,7 +631,7 @@ void order_whiskers_by_position(
     }
 
     std::map<int, bool> matched_previous;
-    for (auto [key, prev_whisker]: previous_whiskers) {
+    for (const auto& [key, prev_whisker]: previous_whiskers) {
         matched_previous[key] = false;
     }
     std::vector<int> assigned_ids(whiskers.size(), -1);
@@ -715,7 +728,7 @@ void Whisker_Widget::_populateWhiskerPadCombo() {
 }
 
 void Whisker_Widget::_updateWhiskerPadFromSelection() {
-    QString selected_text = ui->whisker_pad_combo->currentText();
+    QString const selected_text = ui->whisker_pad_combo->currentText();
 
     if (selected_text.toStdString() == _current_whisker_pad_key) {
         return;
@@ -777,7 +790,7 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
         return;
     }
 
-    int frame = ui->whisker_pad_frame_spinbox->value();
+    int const frame = ui->whisker_pad_frame_spinbox->value();
     auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
 
     if (points_at_frame.empty()) {
@@ -785,7 +798,7 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
         _current_whisker_pad_point = {0.0f, 0.0f};
     } else {
         // Use the first point if multiple points exist
-        Point2D<float> whisker_pad_point = points_at_frame[0];
+        Point2D<float> const whisker_pad_point = points_at_frame[0];
         _current_whisker_pad_point = whisker_pad_point;
 
         std::string const whisker_pad_label =
@@ -821,7 +834,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
         _populateWhiskerPadCombo();
 
         // Select the newly created whisker_pad
-        int index = ui->whisker_pad_combo->findText("whisker_pad");
+        int const index = ui->whisker_pad_combo->findText("whisker_pad");
         if (index >= 0) {
             ui->whisker_pad_combo->setCurrentIndex(index);
         }

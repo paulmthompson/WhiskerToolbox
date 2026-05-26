@@ -2,8 +2,8 @@
 #define WHISKER_WIDGET_HPP
 
 #include "CoreGeometry/ImageSize.hpp"// for ImageSize
-#include "CoreGeometry/points.hpp"// for Point2D
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"// for Point2D
 
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -17,6 +17,11 @@
 class DataManager;
 class Janelia_Config;
 class WhiskerWidgetState;
+
+namespace KeymapSystem {
+class KeyActionAdapter;
+class KeymapManager;
+}// namespace KeymapSystem
 
 namespace Ui {
 class Whisker_Widget;
@@ -66,14 +71,19 @@ public:
 
     void openWidget();// Call
 
+    /**
+     * @brief Connect this widget to the application keymap for Trace (T) and related actions
+     * @param manager Non-owning KeymapManager; no-op if null
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
 protected:
     void closeEvent(QCloseEvent * event) override;
-    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     std::shared_ptr<DataManager> _data_manager;
-    std::shared_ptr<WhiskerWidgetState> _state;  // EditorState for serialization
+    std::shared_ptr<WhiskerWidgetState> _state;// EditorState for serialization
 
     int _selected_whisker{0};
 
@@ -98,10 +108,10 @@ private:
 
     bool _auto_dl{false};
 
-    int _whisker_pad_callback_id {-1};
-    
-    std::string _current_whisker_pad_key; // Current selected PointData key for whisker pad
-    Point2D<float> _current_whisker_pad_point{0.0f, 0.0f}; // Current whisker pad position
+    int _whisker_pad_callback_id{-1};
+
+    std::string _current_whisker_pad_key;                 // Current selected PointData key for whisker pad
+    Point2D<float> _current_whisker_pad_point{0.0f, 0.0f};// Current whisker pad position
 
     // Mask mode state
     bool _use_mask_mode{false};
@@ -114,9 +124,11 @@ private:
 
     Ui::Whisker_Widget * ui;
 
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
+
     void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
-    void _traceWhiskers(std::vector<uint8_t> image, ImageSize image_size);
+    void _traceWhiskers(const std::vector<uint8_t>& image, ImageSize image_size);
     void _traceWhiskersDL(std::vector<uint8_t> image, ImageSize image_size);
 
     // Whisker pad management methods
@@ -127,7 +139,7 @@ private:
 
     // Mask helpers
     void _populateMaskCombo();
-    
+
     // State management helpers
     void _setupConnections();
     void _initializeFromState();
@@ -150,17 +162,16 @@ private slots:
     void _changeWhiskerClip(int clip_dist);
 
     void _selectWhisker(int whisker_num);
-    
-    // New slots for whisker pad management
-    void _onWhiskerPadComboChanged(const QString& text);
-    void _onWhiskerPadFrameChanged(int frame);
 
+    // New slots for whisker pad management
+    void _onWhiskerPadComboChanged(QString const & text);
+    void _onWhiskerPadFrameChanged(int frame);
 };
 
-void order_whiskers_by_position(DataManager * dm, 
-                                std::string const & whisker_group_name, 
-                                int num_whiskers_to_track, 
-                                TimeFrameIndex current_time, 
+void order_whiskers_by_position(DataManager * dm,
+                                std::string const & whisker_group_name,
+                                int num_whisker_to_track,
+                                TimeFrameIndex current_time,
                                 float similarity_threshold);
 
 void add_whiskers_to_data_manager(

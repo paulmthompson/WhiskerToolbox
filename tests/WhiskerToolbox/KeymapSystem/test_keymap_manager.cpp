@@ -21,6 +21,7 @@
 #include <rfl/json.hpp>
 
 #include <array>
+#include <utility>
 
 using namespace KeymapSystem;
 using EditorLib::EditorInstanceId;
@@ -693,11 +694,104 @@ TEST_CASE("media group actions can be rebound via user override") {
 }
 
 // ============================================================
+// Whisker trace action registration and dispatch
+// ============================================================
+
+TEST_CASE("whisker trace action registers with AlwaysRouted scope and T default") {
+    KeymapManager mgr;
+
+    auto const scope = KeyActionScope::alwaysRouted(
+            EditorTypeId(QStringLiteral("WhiskerWidget")));
+
+    mgr.registerAction({.action_id = QStringLiteral("whisker_widget.trace"),
+                        .display_name = QStringLiteral("Trace"),
+                        .category = QStringLiteral("Whisker Tracking"),
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_T)});
+
+    CHECK(mgr.bindingFor("whisker_widget.trace") == QKeySequence(Qt::Key_T));
+
+    auto desc = mgr.action("whisker_widget.trace");
+    REQUIRE(desc.has_value());
+    CHECK(desc->scope.kind == KeyActionScopeKind::AlwaysRouted);
+    CHECK(desc->scope.editor_type_id == EditorTypeId("WhiskerWidget"));
+    CHECK(desc->category == "Whisker Tracking");
+}
+
+TEST_CASE("whisker trace resolves via AlwaysRouted regardless of focused editor") {
+    KeymapManager mgr;
+
+    auto const scope = KeyActionScope::alwaysRouted(
+            EditorTypeId(QStringLiteral("WhiskerWidget")));
+
+    mgr.registerAction({.action_id = QStringLiteral("whisker_widget.trace"),
+                        .display_name = QStringLiteral("Trace"),
+                        .category = QStringLiteral("Whisker Tracking"),
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_T)});
+
+    auto result = mgr.resolveKeyPress(
+            QKeySequence(Qt::Key_T),
+            EditorTypeId("MediaWidget"));
+    REQUIRE(result.has_value());
+    CHECK(*result == "whisker_widget.trace");
+
+    auto result_no_focus = mgr.resolveKeyPress(
+            QKeySequence(Qt::Key_T),
+            EditorTypeId{});
+    REQUIRE(result_no_focus.has_value());
+    CHECK(*result_no_focus == "whisker_widget.trace");
+}
+
+TEST_CASE("whisker trace adapter dispatches to handler") {
+    KeymapManager mgr;
+
+    auto const whisker_type = EditorTypeId("WhiskerWidget");
+
+    auto * adapter = new KeyActionAdapter(&mgr);
+    adapter->setTypeId(whisker_type);
+
+    bool trace_called = false;
+    adapter->setHandler([&trace_called](QString const & action_id) -> bool {
+        if (action_id == "whisker_widget.trace") {
+            trace_called = true;
+            return true;
+        }
+        return false;
+    });
+    mgr.registerAdapter(adapter);
+
+    REQUIRE(mgr.dispatchAction("whisker_widget.trace", whisker_type));
+    CHECK(trace_called);
+}
+
+TEST_CASE("whisker trace action can be rebound via user override") {
+    KeymapManager mgr;
+
+    auto const scope = KeyActionScope::alwaysRouted(
+            EditorTypeId(QStringLiteral("WhiskerWidget")));
+
+    mgr.registerAction({.action_id = QStringLiteral("whisker_widget.trace"),
+                        .display_name = QStringLiteral("Trace"),
+                        .category = QStringLiteral("Whisker Tracking"),
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_T)});
+
+    mgr.setUserOverride("whisker_widget.trace", QKeySequence(Qt::Key_F2));
+
+    CHECK_FALSE(mgr.resolveKeyPress(QKeySequence(Qt::Key_T), EditorTypeId("MediaWidget")).has_value());
+
+    auto result = mgr.resolveKeyPress(QKeySequence(Qt::Key_F2), EditorTypeId("MediaWidget"));
+    REQUIRE(result.has_value());
+    CHECK(*result == "whisker_widget.trace");
+}
+
+// ============================================================
 // Active target management
 // ============================================================
 
 TEST_CASE("activeTarget returns invalid ID when no target is set") {
-    KeymapManager mgr;
+    KeymapManager const mgr;
     auto const type = EditorTypeId("TestWidget");
     CHECK_FALSE(mgr.activeTarget(type).isValid());
 }
@@ -720,8 +814,8 @@ TEST_CASE("setActiveTarget emits activeTargetChanged") {
     EditorInstanceId received_id;
     QObject::connect(&mgr, &KeymapManager::activeTargetChanged,
                      [&](EditorTypeId t, EditorInstanceId i) {
-                         received_type = t;
-                         received_id = i;
+                         received_type = std::move(t);
+                         received_id = std::move(i);
                      });
 
     mgr.setActiveTarget(type, id);
@@ -997,14 +1091,14 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
         REQUIRE(desc.has_value());
         CHECK(desc->scope.kind == KeyActionScopeKind::AlwaysRouted);
 
-        EditorTypeId target_type = desc->scope.editor_type_id;
-        EditorInstanceId target_instance = mgr.activeTarget(target_type);
+        EditorTypeId const target_type = desc->scope.editor_type_id;
+        EditorInstanceId const target_instance = mgr.activeTarget(target_type);
 
         // No active target set yet — target_instance should be invalid
         CHECK_FALSE(target_instance.isValid());
 
         // Dispatch should go to the FIRST adapter (adapter1)
-        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        bool const handled = mgr.dispatchAction(*resolved, target_type, target_instance);
         REQUIRE(handled);
         CHECK(handler_calls_1 == 1);
         CHECK(handler_calls_2 == 0);
@@ -1020,8 +1114,8 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
         REQUIRE(desc.has_value());
         CHECK(desc->scope.kind == KeyActionScopeKind::Global);
 
-        EditorTypeId target_type{};// Global = empty
-        bool handled = mgr.dispatchAction(*resolved, target_type);
+        EditorTypeId const target_type{};// Global = empty
+        bool const handled = mgr.dispatchAction(*resolved, target_type);
         REQUIRE(handled);
 
         // After cycling once, active target should be inspector1
@@ -1032,7 +1126,7 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
     {
         auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Tab), EditorTypeId{});
         auto const desc = mgr.action(*resolved);
-        bool handled = mgr.dispatchAction(*resolved, EditorTypeId{});
+        bool const handled = mgr.dispatchAction(*resolved, EditorTypeId{});
         REQUIRE(handled);
         CHECK(mgr.activeTarget(inspector_type) == id_inspector2);
     }
@@ -1043,12 +1137,12 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
         REQUIRE(resolved.has_value());
 
         auto const desc = mgr.action(*resolved);
-        EditorTypeId target_type = desc->scope.editor_type_id;
+        EditorTypeId const target_type = desc->scope.editor_type_id;
         EditorInstanceId target_instance = mgr.activeTarget(target_type);
 
         CHECK(target_instance == id_inspector2);
 
-        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        bool const handled = mgr.dispatchAction(*resolved, target_type, target_instance);
         REQUIRE(handled);
         CHECK(handler_calls_1 == 1);// Unchanged
         CHECK(handler_calls_2 == 1);// Got the action
@@ -1064,10 +1158,10 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
     {
         auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Q), EditorTypeId{});
         auto const desc = mgr.action(*resolved);
-        EditorTypeId target_type = desc->scope.editor_type_id;
-        EditorInstanceId target_instance = mgr.activeTarget(target_type);
+        EditorTypeId const target_type = desc->scope.editor_type_id;
+        EditorInstanceId const target_instance = mgr.activeTarget(target_type);
 
-        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        bool const handled = mgr.dispatchAction(*resolved, target_type, target_instance);
         REQUIRE(handled);
         CHECK(handler_calls_1 == 2);// Got the action
         CHECK(handler_calls_2 == 1);// Unchanged
