@@ -1,5 +1,7 @@
 # TransformsV2 Widget — Implementation Roadmap
 
+For the **shared on-disk pipeline library** (save/load/browse `PipelineDescriptor` files under the app config directory), see [pipeline_library_roadmap.md](../../../docs/developer/transforms_v2/pipeline_library_roadmap.md).
+
 ## Overview
 
 The TransformsV2 Widget replaces the V1 `DataTransform_Widget` with a pipeline-centric UI for composing, configuring, executing, and sharing V2 transform pipelines. Key improvements over V1:

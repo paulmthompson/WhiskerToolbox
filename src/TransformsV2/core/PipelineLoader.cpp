@@ -263,5 +263,45 @@ std::string savePipelineToJson(PipelineDescriptor const & descriptor) {
     return rfl::json::write(descriptor);
 }
 
+rfl::Result<rfl::Nothing> savePipelineToFile(std::string const & filepath,
+                                             PipelineDescriptor const & descriptor) {
+    try {
+        std::ofstream file(filepath);
+        if (!file.is_open()) {
+            return rfl::Error("Failed to open file for writing: " + filepath);
+        }
+
+        file << savePipelineToJson(descriptor);
+        if (!file.good()) {
+            return rfl::Error("Failed to write pipeline file: " + filepath);
+        }
+
+        return rfl::Result<rfl::Nothing>(rfl::Nothing{});
+    } catch (std::exception const & e) {
+        return rfl::Error("Exception writing file: " + std::string(e.what()));
+    }
+}
+
+rfl::Result<PipelineDescriptor> loadPipelineDescriptorFromJsonFile(std::string const & filepath) {
+    try {
+        std::ifstream file(filepath);
+        if (!file.is_open()) {
+            return rfl::Error("Failed to open file: " + filepath);
+        }
+
+        std::string const json_str((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
+
+        auto const descriptor_result = rfl::json::read<PipelineDescriptor>(json_str);
+        if (!descriptor_result) {
+            return rfl::Error("Failed to parse pipeline JSON: " +
+                              std::string(descriptor_result.error()->what()));
+        }
+
+        return rfl::Result<PipelineDescriptor>(descriptor_result.value());
+    } catch (std::exception const & e) {
+        return rfl::Error("Exception reading file: " + std::string(e.what()));
+    }
+}
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples

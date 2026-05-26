@@ -1,9 +1,9 @@
 #ifndef WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 #define WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 
-#include "core/TransformPipeline.hpp"       // TransformPipeline
-#include "detail/PipelineStep.hpp"          // PipelineStep
-#include "detail/ReductionStep.hpp"         // ReductionStep
+#include "core/TransformPipeline.hpp"// TransformPipeline
+#include "detail/PipelineStep.hpp"   // PipelineStep
+#include "detail/ReductionStep.hpp"  // ReductionStep
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
-    class ElementRegistry;
+class ElementRegistry;
 }
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
@@ -399,6 +399,22 @@ rfl::Result<TransformPipeline> loadPipelineFromFile(std::string const & filepath
  * @return std::string JSON representation
  */
 std::string savePipelineToJson(PipelineDescriptor const & descriptor);
+
+/**
+ * @brief Save a pipeline descriptor to a JSON file
+ * @param filepath Destination file path (parent directories are not created)
+ * @param descriptor Pipeline descriptor to write
+ * @return Success or error message
+ */
+rfl::Result<rfl::Nothing> savePipelineToFile(std::string const & filepath,
+                                             PipelineDescriptor const & descriptor);
+
+/**
+ * @brief Load a pipeline descriptor from a JSON file (parse only; does not build TransformPipeline)
+ * @param filepath Path to JSON file
+ * @return Parsed descriptor or error
+ */
+rfl::Result<PipelineDescriptor> loadPipelineDescriptorFromJsonFile(std::string const & filepath);
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 

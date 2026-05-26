@@ -15,6 +15,7 @@ add_executable(test_TransformsV2
         #test_zipping_logic.test.cpp
         test_pipeline_adaptors.test.cpp
         test_pipeline_loader.test.cpp
+        test_pipeline_library.test.cpp
         test_pipeline_zipping.test.cpp
         test_mask_to_interval_pipeline.test.cpp
         test_multi_input_pipeline.test.cpp

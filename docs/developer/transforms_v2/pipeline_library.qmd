@@ -1,0 +1,44 @@
+---
+title: "Pipeline Library (TransformsV2)"
+format: html
+---
+
+The **pipeline library** is the on-disk catalog of saved [`PipelineDescriptor`](../../../src/TransformsV2/core/PipelineLoader.hpp) JSON files. It is separate from Triage Session command sequences and from workspace-embedded pipeline provenance.
+
+See [pipeline_library_roadmap.md](pipeline_library_roadmap.md) for the full implementation plan.
+
+## Storage location
+
+Under the application config directory (`StateManager::configDir()`):
+
+```
+{config_dir}/pipelines/transforms_v2/*.json
+```
+
+On Linux this is typically `~/.config/WhiskerToolbox/pipelines/transforms_v2/`.
+
+## Core API (Qt-free)
+
+Headers live in `src/TransformsV2/core/`:
+
+| Function | Purpose |
+|----------|---------|
+| `defaultUserPipelineDirectory(config_dir)` | Resolve the library path |
+| `ensureUserPipelineDirectory(config_dir)` | Create the directory tree |
+| `sanitizePipelineFilename(name)` | Filesystem-safe stem from a display name |
+| `listPipelineFiles(directory)` | List `*.json` entries with display names |
+| `loadPipelineDescriptorFromFile(path)` | Parse descriptor JSON |
+| `savePipelineDescriptorToFile(path, descriptor)` | Write descriptor JSON |
+| `deletePipelineFile(path)` | Remove a library file |
+| `savePipelineToFile(path, descriptor)` | Same write path via `PipelineLoader` |
+| `loadPipelineDescriptorFromJsonFile(path)` | Parse-only load (no `TransformPipeline` build) |
+
+To execute a saved file, use `loadPipelineFromFile` (builds a `TransformPipeline`).
+
+## JSON format
+
+Files use the `PipelineDescriptor` schema documented in [`PipelineLoader.hpp`](../../../src/TransformsV2/core/PipelineLoader.hpp): `metadata`, optional `pre_reductions`, `steps`, optional `range_reduction`.
+
+## Tests
+
+[`test_pipeline_library.test.cpp`](../../../tests/TransformsV2/test_pipeline_library.test.cpp) covers path helpers, sanitization, catalog listing, and round-trip I/O including `pre_reductions` and `range_reduction`.

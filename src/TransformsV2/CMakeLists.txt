@@ -17,6 +17,8 @@ set(TRANSFORM_V2_SOURCES
         core/ParameterIO.cpp
         core/PipelineLoader.hpp
         core/PipelineLoader.cpp
+        core/PipelineLibrary.hpp
+        core/PipelineLibrary.cpp
         core/PipelineValueStore.hpp
         core/PipelineValueStore.cpp
         core/RangeReductionRegistry.hpp
