@@ -576,7 +576,7 @@ TEST_CASE("timeline actions can be rebound via user override") {
 // Media group-assignment action registration and dispatch (Step 2.2)
 // ============================================================
 
-TEST_CASE("media group actions register with EditorFocused scope and digit defaults") {
+TEST_CASE("media group actions register with EditorFocused scope and Alt+digit defaults") {
     KeymapManager mgr;
 
     auto const scope = KeyActionScope::editorFocused(
@@ -593,7 +593,8 @@ TEST_CASE("media group actions register with EditorFocused scope and digit defau
                             .display_name = QStringLiteral("Assign to Group %1").arg(i + 1),
                             .category = category,
                             .scope = scope,
-                            .default_binding = QKeySequence(keys[static_cast<size_t>(i)])});
+                            .default_binding = QKeySequence(
+                                    static_cast<int>(Qt::ALT | keys[static_cast<size_t>(i)]))});
     }
 
     CHECK(mgr.allActions().size() == 9);
@@ -601,7 +602,8 @@ TEST_CASE("media group actions register with EditorFocused scope and digit defau
     // Verify default bindings
     for (int i = 0; i < 9; ++i) {
         auto id = QStringLiteral("media.assign_group_%1").arg(i + 1);
-        CHECK(mgr.bindingFor(id) == QKeySequence(keys[static_cast<size_t>(i)]));
+        CHECK(mgr.bindingFor(id) ==
+              QKeySequence(static_cast<int>(Qt::ALT | keys[static_cast<size_t>(i)])));
     }
 
     // Verify scope and category
@@ -615,31 +617,58 @@ TEST_CASE("media group actions register with EditorFocused scope and digit defau
 TEST_CASE("media group actions resolve only when MediaWidget is focused") {
     KeymapManager mgr;
 
-    auto const scope = KeyActionScope::editorFocused(
+    auto const media_scope = KeyActionScope::editorFocused(
             EditorTypeId(QStringLiteral("MediaWidget")));
+    auto const triage_scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("TriageSessionWidget")));
 
     mgr.registerAction({.action_id = QStringLiteral("media.assign_group_1"),
                         .display_name = QStringLiteral("Assign to Group 1"),
                         .category = QStringLiteral("Media Viewer"),
-                        .scope = scope,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::ALT | Qt::Key_1)});
+
+    mgr.registerAction({.action_id = QStringLiteral("triage.sequence_slot_1"),
+                        .display_name = QStringLiteral("Execute Sequence Slot 1"),
+                        .category = QStringLiteral("Triage Session"),
+                        .scope = triage_scope,
                         .default_binding = QKeySequence(Qt::Key_1)});
 
-    // Resolves when MediaWidget is focused
+    // Alt+1 resolves when MediaWidget is focused
     auto result = mgr.resolveKeyPress(
-            QKeySequence(Qt::Key_1),
+            QKeySequence(Qt::ALT | Qt::Key_1),
             EditorTypeId("MediaWidget"));
     REQUIRE(result.has_value());
     CHECK(*result == "media.assign_group_1");
 
-    // Does NOT resolve when another widget is focused
+    // Plain 1 does not resolve to media when Media is focused
     CHECK_FALSE(mgr.resolveKeyPress(
                            QKeySequence(Qt::Key_1),
+                           EditorTypeId("MediaWidget"))
+                        .has_value());
+
+    // Plain 1 resolves to triage when Triage is focused
+    auto triage_result = mgr.resolveKeyPress(
+            QKeySequence(Qt::Key_1),
+            EditorTypeId("TriageSessionWidget"));
+    REQUIRE(triage_result.has_value());
+    CHECK(*triage_result == "triage.sequence_slot_1");
+
+    // Alt+1 does not resolve when Triage is focused
+    CHECK_FALSE(mgr.resolveKeyPress(
+                           QKeySequence(Qt::ALT | Qt::Key_1),
+                           EditorTypeId("TriageSessionWidget"))
+                        .has_value());
+
+    // Does NOT resolve when another widget is focused
+    CHECK_FALSE(mgr.resolveKeyPress(
+                           QKeySequence(Qt::ALT | Qt::Key_1),
                            EditorTypeId("TimeScrollBar"))
                         .has_value());
 
     // Does NOT resolve with no focus
     CHECK_FALSE(mgr.resolveKeyPress(
-                           QKeySequence(Qt::Key_1),
+                           QKeySequence(Qt::ALT | Qt::Key_1),
                            EditorTypeId{})
                         .has_value());
 }
@@ -677,15 +706,15 @@ TEST_CASE("media group actions can be rebound via user override") {
                         .display_name = QStringLiteral("Assign to Group 1"),
                         .category = QStringLiteral("Media Viewer"),
                         .scope = scope,
-                        .default_binding = QKeySequence(Qt::Key_1)});
+                        .default_binding = QKeySequence(Qt::ALT | Qt::Key_1)});
 
-    // Override Key_1 → Key_F1
+    // Override Alt+1 → Key_F1
     mgr.setUserOverride("media.assign_group_1", QKeySequence(Qt::Key_F1));
 
     auto const media_type = EditorTypeId("MediaWidget");
 
-    // Key_1 no longer resolves
-    CHECK_FALSE(mgr.resolveKeyPress(QKeySequence(Qt::Key_1), media_type).has_value());
+    // Alt+1 no longer resolves
+    CHECK_FALSE(mgr.resolveKeyPress(QKeySequence(Qt::ALT | Qt::Key_1), media_type).has_value());
 
     // Key_F1 resolves instead
     auto result = mgr.resolveKeyPress(QKeySequence(Qt::Key_F1), media_type);

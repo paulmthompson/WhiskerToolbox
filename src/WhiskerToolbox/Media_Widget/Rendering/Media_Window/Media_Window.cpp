@@ -58,7 +58,8 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 
     _data_manager->addObserver([this]() {
         _addRemoveData();
-    }, "Media_Window");
+    },
+                               "Media_Window");
 
     _canvasImage = QImage(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
@@ -1000,9 +1001,11 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                     _selected_data_type = data_type;
                 }
                 UpdateCanvas();// Refresh to show selection
+                emit groupSelectionInteracted();
             } else if (!(event->modifiers() & Qt::ControlModifier)) {
                 // Clear selection if clicking on empty area without Ctrl
                 clearAllSelections();
+                emit groupSelectionInteracted();
             }
         }
 

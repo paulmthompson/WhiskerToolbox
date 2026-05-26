@@ -31,8 +31,8 @@
  * @see EditorTypeInfo for zone preference configuration
  */
 
-#include "EditorState/ZoneTypes.hpp"
 #include "EditorState/StrongTypes.hpp"
+#include "EditorState/ZoneTypes.hpp"
 
 #include <QObject>
 
@@ -42,7 +42,7 @@
 namespace ads {
 class CDockManager;
 class CDockWidget;
-}
+}// namespace ads
 
 class EditorRegistry;
 class EditorState;
@@ -81,10 +81,10 @@ public:
      * (e.g., no properties factory for the editor type).
      */
     struct PlacedEditor {
-        ads::CDockWidget * view_dock = nullptr;       ///< Dock widget containing the view
-        ads::CDockWidget * properties_dock = nullptr; ///< Dock widget containing properties (may be null)
-        std::shared_ptr<EditorState> state;           ///< The editor state (registered with registry)
-        
+        ads::CDockWidget * view_dock = nullptr;      ///< Dock widget containing the view
+        ads::CDockWidget * properties_dock = nullptr;///< Dock widget containing properties (may be null)
+        std::shared_ptr<EditorState> state;          ///< The editor state (registered with registry)
+
         /**
          * @brief Check if the editor was successfully created
          * @return true if state and view_dock are valid
@@ -101,9 +101,9 @@ public:
      * @param parent Parent QObject (typically MainWindow)
      */
     explicit EditorCreationController(EditorRegistry * registry,
-                                       ZoneManager * zone_manager,
-                                       ads::CDockManager * dock_manager,
-                                       QObject * parent = nullptr);
+                                      ZoneManager * zone_manager,
+                                      ads::CDockManager * dock_manager,
+                                      QObject * parent = nullptr);
 
     ~EditorCreationController() override = default;
 
@@ -124,7 +124,7 @@ public:
      * @return PlacedEditor containing the created components
      */
     [[nodiscard]] PlacedEditor createAndPlace(EditorLib::EditorTypeId const & type_id,
-                                               bool raise_view = true);
+                                              bool raise_view = true);
 
     /**
      * @brief Create an editor with a custom dock title
@@ -138,8 +138,8 @@ public:
      * @return PlacedEditor containing the created components
      */
     [[nodiscard]] PlacedEditor createAndPlaceWithTitle(EditorLib::EditorTypeId const & type_id,
-                                                        QString const & view_title,
-                                                        bool raise_view = true);
+                                                       QString const & view_title,
+                                                       bool raise_view = true);
 
     /**
      * @brief Get the number of editors created by this controller
@@ -176,7 +176,7 @@ signals:
      * @param instance_id The instance ID of the created editor
      * @param type_id The type of the created editor
      */
-    void editorPlaced(EditorLib::EditorInstanceId instance_id, 
+    void editorPlaced(EditorLib::EditorInstanceId instance_id,
                       EditorLib::EditorTypeId type_id);
 
     /**
@@ -190,7 +190,7 @@ private:
     EditorRegistry * _registry;
     ZoneManager * _zone_manager;
     ads::CDockManager * _dock_manager;
-    
+
     /// Counter for generating unique dock titles per type
     std::map<EditorLib::EditorTypeId, int> _creation_counters;
 
@@ -203,10 +203,10 @@ private:
      * @param closable Whether the dock can be closed by the user
      * @return The created dock widget
      */
-    ads::CDockWidget * createDockWidget(QWidget * widget, 
-                                         QString const & title,
-                                         QString const & object_name,
-                                         bool closable = true);
+    ads::CDockWidget * createDockWidget(QWidget * widget,
+                                        QString const & title,
+                                        QString const & object_name,
+                                        bool closable = true);
 
     /**
      * @brief Connect cleanup signals for an editor
@@ -215,7 +215,17 @@ private:
      * from the EditorRegistry.
      */
     void connectCleanupSignals(PlacedEditor const & editor,
-                                EditorLib::EditorInstanceId const & instance_id);
+                               EditorLib::EditorInstanceId const & instance_id);
+
+    /**
+     * @brief Tag a dock widget with its editor instance id for focus routing
+     */
+    void tagDockWithInstanceId(ads::CDockWidget * dock, QString const & instance_id);
+
+    /**
+     * @brief Connect dock focus changes to SelectionContext::setActiveEditor
+     */
+    void connectActiveEditorOnDockFocus();
 
     /**
      * @brief Generate a unique title for a dock widget
@@ -225,7 +235,7 @@ private:
      * @return Unique title (e.g., "Media Viewer 2")
      */
     QString generateUniqueTitle(QString const & base_name,
-                                 EditorLib::EditorTypeId const & type_id);
+                                EditorLib::EditorTypeId const & type_id);
 };
 
-#endif  // EDITOR_CREATION_CONTROLLER_HPP
+#endif// EDITOR_CREATION_CONTROLLER_HPP

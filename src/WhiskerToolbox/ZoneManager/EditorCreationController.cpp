@@ -2,62 +2,68 @@
 
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/EditorState.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "ZoneManager.hpp"
 
-#include <DockWidget.h>
 #include <DockManager.h>
+#include <DockWidget.h>
 
 #include <QPointer>
 
 #include <iostream>
 
+namespace {
+
+constexpr char kEditorInstanceIdProperty[] = "editor_instance_id";
+
+}// namespace
+
 EditorCreationController::EditorCreationController(EditorRegistry * registry,
-                                                     ZoneManager * zone_manager,
-                                                     ads::CDockManager * dock_manager,
-                                                     QObject * parent)
-    : QObject(parent)
-    , _registry(registry)
-    , _zone_manager(zone_manager)
-    , _dock_manager(dock_manager)
-{
+                                                   ZoneManager * zone_manager,
+                                                   ads::CDockManager * dock_manager,
+                                                   QObject * parent)
+    : QObject(parent),
+      _registry(registry),
+      _zone_manager(zone_manager),
+      _dock_manager(dock_manager) {
     Q_ASSERT(registry != nullptr);
     Q_ASSERT(zone_manager != nullptr);
     Q_ASSERT(dock_manager != nullptr);
+
+    connectActiveEditorOnDockFocus();
 }
 
-EditorCreationController::PlacedEditor 
+EditorCreationController::PlacedEditor
 EditorCreationController::createAndPlace(EditorLib::EditorTypeId const & type_id,
-                                          bool raise_view)
-{
+                                         bool raise_view) {
     // Get type info to determine zone preferences
     auto const type_info = _registry->typeInfo(type_id);
     if (type_info.type_id.isEmpty()) {
-        std::cerr << "EditorCreationController: Unknown type_id: " 
+        std::cerr << "EditorCreationController: Unknown type_id: "
                   << type_id.toString().toStdString() << std::endl;
         return {};
     }
-    
+
     // Generate unique title based on display name
     QString const view_title = generateUniqueTitle(type_info.display_name, type_id);
-    
+
     return createAndPlaceWithTitle(type_id, view_title, raise_view);
 }
 
-EditorCreationController::PlacedEditor 
+EditorCreationController::PlacedEditor
 EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const & type_id,
-                                                   QString const & view_title,
-                                                   bool raise_view)
-{
+                                                  QString const & view_title,
+                                                  bool raise_view) {
     PlacedEditor result;
-    
+
     // Get type info for zone preferences
     auto const type_info = _registry->typeInfo(type_id);
     if (type_info.type_id.isEmpty()) {
-        std::cerr << "EditorCreationController: Unknown type_id: " 
+        std::cerr << "EditorCreationController: Unknown type_id: "
                   << type_id.toString().toStdString() << std::endl;
         return result;
     }
-    
+
     // Create the editor instance via registry
     auto editor_instance = _registry->createEditor(type_id);
     if (!editor_instance.state) {
@@ -65,7 +71,7 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
                   << type_id.toString().toStdString() << std::endl;
         return result;
     }
-    
+
     // Restore cached state from previous close, if available.
     // This lets reopened editors start with the last-used settings
     // rather than defaults.  The view/properties widgets should
@@ -73,12 +79,12 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
     if (auto cached = _registry->getCachedState(type_id)) {
         editor_instance.state->fromJson(*cached);
     }
-    
+
     result.state = editor_instance.state;
-    
+
     // Increment creation counter for this type
     _creation_counters[type_id]++;
-    
+
     // Build unique, stable object names from instance ID for ADS state persistence
     auto const instance_id_str = result.state->getInstanceId();
 
@@ -86,41 +92,42 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
     if (editor_instance.view) {
         auto const view_obj_name = QStringLiteral("view_%1").arg(instance_id_str);
         result.view_dock = createDockWidget(editor_instance.view, view_title, view_obj_name, true);
-        
+
         if (result.view_dock) {
+            tagDockWithInstanceId(result.view_dock, instance_id_str);
             // Add to the preferred zone
             _zone_manager->addToZone(result.view_dock, type_info.preferred_zone, raise_view);
         }
     }
-    
+
     // Create and place the properties dock widget (if properties factory exists)
     if (editor_instance.properties) {
         QString const props_title = view_title + QStringLiteral(" Properties");
         auto const props_obj_name = QStringLiteral("props_%1").arg(instance_id_str);
         result.properties_dock = createDockWidget(editor_instance.properties, props_title, props_obj_name, true);
-        
+
         if (result.properties_dock) {
+            tagDockWithInstanceId(result.properties_dock, instance_id_str);
             // Determine whether to raise properties based on type info
             bool const raise_props = type_info.auto_raise_properties;
-            
+
             // Add to the properties zone (as tab or direct based on type_info.properties_as_tab)
             // ZoneManager::addToZone always adds as tab, which is the default behavior
             _zone_manager->addToZone(result.properties_dock, type_info.properties_zone, raise_props);
         }
     }
-    
+
     // Connect cleanup signals
     auto const instance_id = EditorLib::EditorInstanceId(result.state->getInstanceId());
     connectCleanupSignals(result, instance_id);
-    
+
     // Emit signal for successful placement
     emit editorPlaced(instance_id, type_id);
-    
+
     return result;
 }
 
-int EditorCreationController::createdCount(EditorLib::EditorTypeId const & type_id) const
-{
+int EditorCreationController::createdCount(EditorLib::EditorTypeId const & type_id) const {
     auto const it = _creation_counters.find(type_id);
     return (it != _creation_counters.end()) ? it->second : 0;
 }
@@ -131,8 +138,7 @@ EditorCreationController::placeExistingEditor(
         Zone view_zone,
         Zone properties_zone,
         QString const & view_title,
-        bool raise_view)
-{
+        bool raise_view) {
     PlacedEditor result;
 
     if (!state) {
@@ -147,10 +153,10 @@ EditorCreationController::placeExistingEditor(
 
     // Determine title
     QString const title = view_title.isEmpty()
-            ? (state->getDisplayName().isEmpty()
-                    ? type_info.display_name
-                    : state->getDisplayName())
-            : view_title;
+                                  ? (state->getDisplayName().isEmpty()
+                                             ? type_info.display_name
+                                             : state->getDisplayName())
+                                  : view_title;
 
     // Build unique, stable object names from instance ID for ADS state persistence
     auto const instance_id_str = state->getInstanceId();
@@ -161,6 +167,7 @@ EditorCreationController::placeExistingEditor(
         auto const view_obj_name = QStringLiteral("view_%1").arg(instance_id_str);
         result.view_dock = createDockWidget(view, title, view_obj_name, true);
         if (result.view_dock) {
+            tagDockWithInstanceId(result.view_dock, instance_id_str);
             _zone_manager->addToZone(result.view_dock, view_zone, raise_view);
         }
     }
@@ -172,6 +179,7 @@ EditorCreationController::placeExistingEditor(
         auto const props_obj_name = QStringLiteral("props_%1").arg(instance_id_str);
         result.properties_dock = createDockWidget(properties, props_title, props_obj_name, true);
         if (result.properties_dock) {
+            tagDockWithInstanceId(result.properties_dock, instance_id_str);
             bool const raise_props = type_info.auto_raise_properties;
             _zone_manager->addToZone(result.properties_dock, properties_zone, raise_props);
         }
@@ -188,14 +196,13 @@ EditorCreationController::placeExistingEditor(
 }
 
 ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
-                                                               QString const & title,
-                                                               QString const & object_name,
-                                                               bool closable)
-{
+                                                              QString const & title,
+                                                              QString const & object_name,
+                                                              bool closable) {
     if (!widget) {
         return nullptr;
     }
-    
+
     auto * dock = new ads::CDockWidget(title);
     dock->setWidget(widget);
 
@@ -204,27 +211,26 @@ ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
     if (!object_name.isEmpty()) {
         dock->setObjectName(object_name);
     }
-    
+
     // Configure dock features
     dock->setFeature(ads::CDockWidget::DockWidgetClosable, closable);
     dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     dock->setFeature(ads::CDockWidget::DockWidgetMovable, true);
     dock->setFeature(ads::CDockWidget::DockWidgetFloatable, true);
-    
+
     return dock;
 }
 
 void EditorCreationController::connectCleanupSignals(PlacedEditor const & editor,
-                                                      EditorLib::EditorInstanceId const & instance_id)
-{
+                                                     EditorLib::EditorInstanceId const & instance_id) {
     if (!editor.view_dock) {
         return;
     }
-    
+
     // When the view dock is closed, cache state then unregister from the registry.
     // With DockWidgetDeleteOnClose = true, the dock widget (and its child view widget)
     // will be destroyed after this signal handler returns.
-    connect(editor.view_dock, &ads::CDockWidget::closed, this, 
+    connect(editor.view_dock, &ads::CDockWidget::closed, this,
             [this, instance_id]() {
                 if (_registry) {
                     // Cache state JSON before unregistering so reopening the
@@ -238,7 +244,7 @@ void EditorCreationController::connectCleanupSignals(PlacedEditor const & editor
                 }
                 emit editorClosed(instance_id);
             });
-    
+
     // If there's a properties dock, close it when the view is closed.
     // Use QPointer so the lambda is safe if the user independently
     // closed (and destroyed) the properties dock before the view dock.
@@ -253,16 +259,49 @@ void EditorCreationController::connectCleanupSignals(PlacedEditor const & editor
     }
 }
 
+void EditorCreationController::tagDockWithInstanceId(ads::CDockWidget * dock,
+                                                     QString const & instance_id) {
+    if (dock && !instance_id.isEmpty()) {
+        dock->setProperty(kEditorInstanceIdProperty, instance_id);
+    }
+}
+
+void EditorCreationController::connectActiveEditorOnDockFocus() {
+    if (!_dock_manager || !_registry) {
+        return;
+    }
+
+    connect(_dock_manager,
+            &ads::CDockManager::focusedDockWidgetChanged,
+            this,
+            [this](ads::CDockWidget * /*old_dock*/, ads::CDockWidget * new_dock) {
+                if (!new_dock || !_registry) {
+                    return;
+                }
+
+                auto const instance_id = new_dock->property(kEditorInstanceIdProperty).toString();
+                if (instance_id.isEmpty()) {
+                    return;
+                }
+
+                auto * context = _registry->selectionContext();
+                if (!context) {
+                    return;
+                }
+
+                context->setActiveEditor(EditorLib::EditorInstanceId(instance_id));
+            });
+}
+
 QString EditorCreationController::generateUniqueTitle(QString const & base_name,
-                                                       EditorLib::EditorTypeId const & type_id)
-{
+                                                      EditorLib::EditorTypeId const & type_id) {
     int const count = createdCount(type_id);
-    
+
     // First instance doesn't need a number suffix
     if (count == 0) {
         return base_name;
     }
-    
+
     // Subsequent instances get numbered (e.g., "Media Viewer 2", "Media Viewer 3")
     return base_name + QStringLiteral(" %1").arg(count + 1);
 }

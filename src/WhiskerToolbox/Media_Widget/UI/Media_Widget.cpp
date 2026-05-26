@@ -9,6 +9,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "EditorState/StrongTypes.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
@@ -104,7 +105,8 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 
     _data_manager->addObserver([this]() {
         _createOptions();
-    }, "Media_Widget");
+    },
+                               "Media_Widget");
 
     // Wire up the scene to the graphics view immediately so that
     // data overlays render without requiring a separate media load.
@@ -358,7 +360,7 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     _scene->UpdateCanvas();
 }
 
-void Media_Widget::LoadFrame(const TimePosition& position) {
+void Media_Widget::LoadFrame(TimePosition const & position) {
 
     if (_scene == nullptr) {
         std::cout << "Scene is null during LoadFrame" << std::endl;
@@ -480,6 +482,15 @@ void Media_Widget::_createMediaWindow() {
         if (_state) {
             _scene->setMediaWidgetState(_state.get());
         }
+
+        connect(_scene.get(), &Media_Window::groupSelectionInteracted, this, [this]() {
+            if (!_selection_context || !_state) {
+                return;
+            }
+            auto const instance_id = EditorLib::EditorInstanceId(_state->getInstanceId());
+            _selection_context->setActiveEditor(instance_id);
+            _selection_context->notifyInteraction(instance_id);
+        });
     }
 }
 

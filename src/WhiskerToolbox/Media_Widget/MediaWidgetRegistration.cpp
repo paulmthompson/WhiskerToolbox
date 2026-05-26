@@ -28,7 +28,7 @@ static void registerGroupActions(KeymapSystem::KeymapManager * keymap_manager) {
             EditorLib::EditorTypeId(QStringLiteral("MediaWidget")));
     QString const category = QStringLiteral("Media Viewer");
 
-    // Map keys 1–9 to group assignment actions
+    // Alt+1–9 avoids conflicting with Triage Session sequence slots (1–9)
     constexpr std::array<Qt::Key, 9> keys = {
             Qt::Key_1, Qt::Key_2, Qt::Key_3,
             Qt::Key_4, Qt::Key_5, Qt::Key_6,
@@ -39,7 +39,8 @@ static void registerGroupActions(KeymapSystem::KeymapManager * keymap_manager) {
                                         .display_name = QStringLiteral("Assign to Group %1").arg(i + 1),
                                         .category = category,
                                         .scope = scope,
-                                        .default_binding = QKeySequence(keys[static_cast<size_t>(i)])});
+                                        .default_binding = QKeySequence(
+                                                static_cast<int>(Qt::ALT | keys[static_cast<size_t>(i)]))});
     }
 }
 
@@ -57,7 +58,7 @@ void registerTypes(EditorRegistry * registry,
     registerGroupActions(keymap_manager);
 
     // Capture dependencies for lambdas
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
     auto gm = group_manager;
     auto * km = keymap_manager;
 
@@ -76,7 +77,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<MediaWidgetState>(); },
 
                             // View factory - creates Media_Widget (the canvas/view component)
-                            .create_view = [dm, gm, km, registry](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_view = [dm, gm, km, registry](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
                                 if (!media_state) {
                                     std::cerr << "MediaWidgetModule: Failed to cast state to MediaWidgetState" << std::endl;
@@ -99,7 +100,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates MediaPropertiesWidget
-                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_properties = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
                                 if (!media_state) {
                                     std::cerr << "MediaWidgetModule: Failed to cast state to MediaWidgetState for properties" << std::endl;

@@ -6,7 +6,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"      // TimePosition
+#include "TimeFrame/TimeFrame.hpp"// TimePosition
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
@@ -401,6 +401,9 @@ signals:
 
     // Mouse event signal with full event information (for modifier detection)
     void leftClickMediaWithEvent(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers);
+
+    /// Emitted when the user selects or changes group-based entity selection on the canvas
+    void groupSelectionInteracted();
 };
 
 /**
