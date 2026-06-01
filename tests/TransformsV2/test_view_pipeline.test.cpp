@@ -1,8 +1,8 @@
 #include "TransformsV2/algorithms/MaskArea/MaskArea.hpp"
 #include "TransformsV2/algorithms/SumReduction/SumReduction.hpp"
-#include "TransformsV2/detail/ContainerTransform.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/detail/ContainerTransform.hpp"
 
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -15,8 +15,12 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <algorithm>
+#include <any>
 #include <memory>
 #include <ranges>
+#include <span>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
@@ -66,6 +70,157 @@ inline std::shared_ptr<MaskData> createTestMaskData() {
     }
 
     return std::move(mask_data);
+}
+
+struct CountingExecutorParams {
+    int m_token = 0;
+};
+
+struct CountingExecutorStats {
+    static inline int m_mask_executor_factory_calls = 0;
+    static inline int m_area_executor_factory_calls = 0;
+    static inline int m_grouped_executor_factory_calls = 0;
+    static inline int m_mask_transform_calls = 0;
+    static inline int m_area_transform_calls = 0;
+    static inline int m_grouped_transform_calls = 0;
+
+    static void reset() {
+        m_mask_executor_factory_calls = 0;
+        m_area_executor_factory_calls = 0;
+        m_grouped_executor_factory_calls = 0;
+        m_mask_transform_calls = 0;
+        m_area_transform_calls = 0;
+        m_grouped_transform_calls = 0;
+    }
+};
+
+class CountingMaskExecutor final : public IParamExecutor {
+public:
+    explicit CountingMaskExecutor(CountingExecutorParams) {}
+
+    ElementVariant execute(std::string const &, ElementVariant const & input) const override {
+        ++CountingExecutorStats::m_mask_transform_calls;
+        auto const * mask = std::get_if<Mask2D>(&input);
+        if (mask == nullptr) {
+            throw std::runtime_error("CountingMaskExecutor expected Mask2D input");
+        }
+        return ElementVariant{*mask};
+    }
+
+    ElementVariant executeAny(std::string const &, std::any const & input) const override {
+        ++CountingExecutorStats::m_mask_transform_calls;
+        return ElementVariant{std::any_cast<Mask2D const &>(input)};
+    }
+};
+
+class CountingAreaExecutor final : public IParamExecutor {
+public:
+    explicit CountingAreaExecutor(CountingExecutorParams) {}
+
+    ElementVariant execute(std::string const &, ElementVariant const & input) const override {
+        ++CountingExecutorStats::m_area_transform_calls;
+        auto const * mask = std::get_if<Mask2D>(&input);
+        if (mask == nullptr) {
+            throw std::runtime_error("CountingAreaExecutor expected Mask2D input");
+        }
+        return ElementVariant{static_cast<float>(mask->size())};
+    }
+
+    ElementVariant executeAny(std::string const &, std::any const & input) const override {
+        ++CountingExecutorStats::m_area_transform_calls;
+        auto const & mask = std::any_cast<Mask2D const &>(input);
+        return ElementVariant{static_cast<float>(mask.size())};
+    }
+};
+
+class CountingGroupedExecutor final : public ITimeGroupedParamExecutor {
+public:
+    explicit CountingGroupedExecutor(CountingExecutorParams) {}
+
+    BatchVariant execute(std::string const &, BatchVariant const & input) const override {
+        ++CountingExecutorStats::m_grouped_transform_calls;
+        auto const * values = std::get_if<std::vector<float>>(&input);
+        if (values == nullptr) {
+            throw std::runtime_error("CountingGroupedExecutor expected float batch input");
+        }
+
+        float sum = 0.0F;
+        for (auto const value: *values) {
+            sum += value;
+        }
+        return BatchVariant{std::vector<float>{sum}};
+    }
+};
+
+constexpr char CountingMaskTransformName[] = "CountingMaskIdentityForCompiledStepTest";
+constexpr char CountingAreaTransformName[] = "CountingMaskAreaForCompiledStepTest";
+constexpr char CountingGroupedTransformName[] = "CountingGroupedSumForCompiledStepTest";
+
+void registerCountingExecutorTransforms() {
+    auto & registry = ElementRegistry::instance();
+    if (registry.hasElementTransform(CountingMaskTransformName)) {
+        return;
+    }
+
+    registry.registerTransform<Mask2D, Mask2D, CountingExecutorParams>(
+            CountingMaskTransformName,
+            [](Mask2D const & mask, CountingExecutorParams const &) { return mask; },
+            TransformMetadata{
+                    .description = "Counting identity transform for compiled-step tests",
+                    .category = "Tests",
+                    .input_type_name = "Mask2D",
+                    .output_type_name = "Mask2D",
+                    .params_type_name = "CountingExecutorParams"});
+
+    registry.registerTypedExecutorFactory<Mask2D, Mask2D, CountingExecutorParams>(
+            [](std::any const & params_any) -> std::unique_ptr<IParamExecutor> {
+                ++CountingExecutorStats::m_mask_executor_factory_calls;
+                return std::make_unique<CountingMaskExecutor>(
+                        std::any_cast<CountingExecutorParams>(params_any));
+            });
+
+    registry.registerTransform<Mask2D, float, CountingExecutorParams>(
+            CountingAreaTransformName,
+            [](Mask2D const & mask, CountingExecutorParams const &) {
+                return static_cast<float>(mask.size());
+            },
+            TransformMetadata{
+                    .description = "Counting area transform for compiled-step tests",
+                    .category = "Tests",
+                    .input_type_name = "Mask2D",
+                    .output_type_name = "float",
+                    .params_type_name = "CountingExecutorParams"});
+
+    registry.registerTypedExecutorFactory<Mask2D, float, CountingExecutorParams>(
+            [](std::any const & params_any) -> std::unique_ptr<IParamExecutor> {
+                ++CountingExecutorStats::m_area_executor_factory_calls;
+                return std::make_unique<CountingAreaExecutor>(
+                        std::any_cast<CountingExecutorParams>(params_any));
+            });
+
+    registry.registerTimeGroupedTransform<float, float, CountingExecutorParams>(
+            CountingGroupedTransformName,
+            [](std::span<float const> values, CountingExecutorParams const &) {
+                float sum = 0.0F;
+                for (auto const value: values) {
+                    sum += value;
+                }
+                return std::vector<float>{sum};
+            },
+            TransformMetadata{
+                    .description = "Counting grouped sum transform for compiled-step tests",
+                    .category = "Tests",
+                    .produces_single_output = true,
+                    .input_type_name = "float",
+                    .output_type_name = "float",
+                    .params_type_name = "CountingExecutorParams"});
+
+    registry.registerTimeGroupedExecutorFactory<float, float, CountingExecutorParams>(
+            [](std::any const & params_any) -> std::unique_ptr<ITimeGroupedParamExecutor> {
+                ++CountingExecutorStats::m_grouped_executor_factory_calls;
+                return std::make_unique<CountingGroupedExecutor>(
+                        std::any_cast<CountingExecutorParams>(params_any));
+            });
 }
 
 // ============================================================================
@@ -485,4 +640,74 @@ TEST_CASE("TransformsV2 - Complete view-based workflow", "[transforms][v2][view]
         REQUIRE(data_at_20.size() == 1);
         REQUIRE(data_at_20[0] == 60.0f);// 6.0 * 10
     }
+}
+
+TEST_CASE("TransformsV2 - fused pipeline reuses compiled element executors",
+          "[transforms][v2][pipeline][compiled-executor]") {
+    registerCountingExecutorTransforms();
+    CountingExecutorStats::reset();
+
+    auto mask_data = createTestMaskData();
+
+    TransformPipeline pipeline;
+    pipeline.addStep(CountingMaskTransformName, CountingExecutorParams{});
+    pipeline.addStep(CountingAreaTransformName, CountingExecutorParams{});
+
+    auto result_variant = pipeline.execute<MaskData>(*mask_data);
+    auto result = std::get<std::shared_ptr<RaggedAnalogTimeSeries>>(result_variant);
+
+    REQUIRE(result != nullptr);
+    REQUIRE(CountingExecutorStats::m_mask_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_area_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_mask_transform_calls == 4);
+    REQUIRE(CountingExecutorStats::m_area_transform_calls == 4);
+}
+
+TEST_CASE("TransformsV2 - view pipeline reuses compiled head and tail executors",
+          "[transforms][v2][view][compiled-executor]") {
+    registerCountingExecutorTransforms();
+    CountingExecutorStats::reset();
+
+    auto mask_data = createTestMaskData();
+
+    TransformPipeline pipeline;
+    pipeline.addStep(CountingMaskTransformName, CountingExecutorParams{});
+    pipeline.addStep(CountingAreaTransformName, CountingExecutorParams{});
+
+    auto view = pipeline.executeAsView(*mask_data);
+    std::vector<float> values;
+    for (auto const & [time, value]: view) {
+        (void) time;
+        values.push_back(std::get<float>(value));
+    }
+
+    REQUIRE(values.size() == 4);
+    REQUIRE(CountingExecutorStats::m_mask_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_area_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_mask_transform_calls == 4);
+    REQUIRE(CountingExecutorStats::m_area_transform_calls == 4);
+}
+
+TEST_CASE("TransformsV2 - grouped pipeline reuses compiled time-grouped executors",
+          "[transforms][v2][pipeline][compiled-executor][grouped]") {
+    registerCountingExecutorTransforms();
+    CountingExecutorStats::reset();
+
+    auto mask_data = createTestMaskData();
+
+    TransformPipeline pipeline;
+    pipeline.addStep(CountingMaskTransformName, CountingExecutorParams{});
+    pipeline.addStep(CountingAreaTransformName, CountingExecutorParams{});
+    pipeline.addStep(CountingGroupedTransformName, CountingExecutorParams{});
+
+    auto result_variant = pipeline.execute<MaskData>(*mask_data);
+    auto result = std::get<std::shared_ptr<AnalogTimeSeries>>(result_variant);
+
+    REQUIRE(result != nullptr);
+    REQUIRE(CountingExecutorStats::m_mask_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_area_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_grouped_executor_factory_calls == 1);
+    REQUIRE(CountingExecutorStats::m_mask_transform_calls == 4);
+    REQUIRE(CountingExecutorStats::m_area_transform_calls == 4);
+    REQUIRE(CountingExecutorStats::m_grouped_transform_calls == 3);
 }

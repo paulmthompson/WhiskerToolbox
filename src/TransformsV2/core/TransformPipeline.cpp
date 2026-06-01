@@ -73,17 +73,14 @@ std::function<ElementVariant(ElementVariant)> TransformPipeline::buildTypeErased
         std::type_index params_type) const {
     auto & registry = ElementRegistry::instance();
 
-    // Capture a pointer to the step so we always access the current params
-    // (which may have been modified by preprocessing)
-    auto step_ptr = &step;
-    return [&registry,
-            name = step.transform_name,
-            step_ptr,// Capture pointer to step to access mutable params
-            input_type,
-            output_type,
-            params_type](ElementVariant input) -> ElementVariant {
-        return registry.executeWithDynamicParams(
-                name, input, step_ptr->params, input_type, output_type, params_type);
+    auto executor = registry.createTypedExecutor(
+            TypeTriple{input_type, output_type, params_type},
+            step.params);
+    auto shared_executor = std::shared_ptr<IParamExecutor const>(std::move(executor));
+
+    return [executor = std::move(shared_executor),
+            name = step.transform_name](ElementVariant input) -> ElementVariant {
+        return executor->execute(name, input);
     };
 }
 
@@ -188,6 +185,14 @@ DataTypeVariant TransformPipeline::execute(InputContainer const & input) const {
             seg.step_indices = {i};
             seg.input_type = meta->input_type;
             seg.output_type = meta->output_type;
+            auto executor = registry.createTimeGroupedExecutor(
+                    TypeTriple{meta->input_type, meta->output_type, meta->params_type},
+                    step.params);
+            auto shared_executor = std::shared_ptr<ITimeGroupedParamExecutor const>(std::move(executor));
+            seg.time_grouped_fn = [executor = std::move(shared_executor),
+                                   name = step.transform_name](BatchVariant const & input) -> BatchVariant {
+                return executor->execute(name, input);
+            };
             segments.push_back(std::move(seg));
 
             // Assume time-grouped transforms produce ragged output unless proven otherwise

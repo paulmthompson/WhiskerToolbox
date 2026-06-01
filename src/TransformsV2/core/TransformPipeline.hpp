@@ -1,36 +1,36 @@
 #ifndef WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 #define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 
-#include "ElementRegistry.hpp"                  // ElementRegistry
+#include "ElementRegistry.hpp"// ElementRegistry
 #include "PipelineValueStore.hpp"
-#include "RangeReductionRegistry.hpp"           // RangeReductionRegistry
-#include "detail/ReductionStep.hpp"             // ReductionStep
-#include "extension/ParameterBinding.hpp"       // applyBindingsErased
-#include "extension/ValueProjectionTypes.hpp"   // ValueProjectionFn
-#include "extension/ViewAdaptorTypes.hpp"       // RangeReductionStep
-#include "detail/ExtractElement.hpp"            // extractElement
-#include "detail/PipelineOutputBuilder.hpp"     // PipelineOutputBuilder
-#include "detail/PipelineStep.hpp"              // PipelineStep
-#include "extension/TransformTypes.hpp"         // ElementVariant, BatchVariant
+#include "RangeReductionRegistry.hpp"        // RangeReductionRegistry
+#include "detail/ExtractElement.hpp"         // extractElement
+#include "detail/PipelineOutputBuilder.hpp"  // PipelineOutputBuilder
+#include "detail/PipelineStep.hpp"           // PipelineStep
+#include "detail/ReductionStep.hpp"          // ReductionStep
+#include "extension/ParameterBinding.hpp"    // applyBindingsErased
+#include "extension/TransformTypes.hpp"      // ElementVariant, BatchVariant
+#include "extension/ValueProjectionTypes.hpp"// ValueProjectionFn
+#include "extension/ViewAdaptorTypes.hpp"    // RangeReductionStep
 
 //#include "CoreGeometry/lines.hpp"
 //#include "CoreGeometry/masks.hpp"
 //#include "CoreGeometry/points.hpp"
-#include "DataManager/DataManagerTypes.hpp"     // DataTypeVariant
+#include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
 
-#include <any>          // std::any
-#include <functional>   // std::function
-#include <map>          // std::map
-#include <memory>       // std::shared_ptr
-#include <optional>     // std::optional
-#include <ranges>       // std::ranges::input_range
-#include <span>         // std::span
-#include <string>       // std::string
-#include <type_traits>  
-#include <typeindex>    // std::type_index
-#include <utility>      // std::pair
+#include <any>       // std::any
+#include <functional>// std::function
+#include <map>       // std::map
+#include <memory>    // std::shared_ptr
+#include <optional>  // std::optional
+#include <ranges>    // std::ranges::input_range
+#include <span>      // std::span
+#include <string>    // std::string
+#include <type_traits>
+#include <typeindex>// std::type_index
+#include <utility>  // std::pair
 #include <variant>
-#include <vector>       // std::vector
+#include <vector>// std::vector
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -167,9 +167,9 @@ public:
      * ```
      */
     TransformPipeline & addPreReduction(std::string const & reduction_name,
-                                         std::string const & output_key) {
+                                        std::string const & output_key) {
         ReductionStep step(reduction_name, output_key);
-        
+
         // Populate type info from registry if available
         auto & registry = RangeReductionRegistry::instance();
         if (auto const * meta = registry.getMetadata(reduction_name)) {
@@ -177,7 +177,7 @@ public:
             step.output_type = meta->output_type;
             step.params_type = meta->params_type;
         }
-        
+
         pre_reductions_.push_back(std::move(step));
         return *this;
     }
@@ -193,16 +193,16 @@ public:
      */
     template<typename Params>
     TransformPipeline & addPreReduction(std::string const & reduction_name,
-                                         std::string const & output_key,
-                                         Params params) {
+                                        std::string const & output_key,
+                                        Params params) {
         ReductionStep step(reduction_name, output_key, std::move(params));
-        
+
         auto & registry = RangeReductionRegistry::instance();
         if (auto const * meta = registry.getMetadata(reduction_name)) {
             step.input_type = meta->input_type;
             step.output_type = meta->output_type;
         }
-        
+
         pre_reductions_.push_back(std::move(step));
         return *this;
     }
@@ -227,7 +227,7 @@ public:
      * @return Reference to this pipeline for chaining
      */
     TransformPipeline & addPreReductions(std::vector<ReductionStep> reductions) {
-        for (auto & r : reductions) {
+        for (auto & r: reductions) {
             pre_reductions_.push_back(std::move(r));
         }
         return *this;
@@ -356,6 +356,9 @@ private:
 
         // For fused element segment
         std::function<ElementVariant(ElementVariant)> fused_fn;
+
+        // For compiled time-grouped segment
+        std::function<BatchVariant(BatchVariant const &)> time_grouped_fn;
     };
 
     /**
@@ -402,8 +405,6 @@ private:
         if (segments.size() == 1 && segments[0].is_element_wise) {
             return executeFusedImpl<InputContainer, OutputContainer>(input, segments[0].fused_fn);
         }
-
-        auto & registry = ElementRegistry::instance();
 
         // 3. Prepare output builder
         PipelineOutputBuilder<OutputContainer, ElementFor_t<OutputContainer>> builder(input.getTimeFrame());
@@ -456,16 +457,7 @@ private:
                     current_batch = std::move(next_batch);
                 } else {
                     // Grouped transform
-                    auto const & step = steps_[seg.step_indices[0]];
-                    auto const * meta = registry.getMetadata(step.transform_name);
-
-                    current_batch = registry.executeTimeGroupedWithDynamicParams(
-                            step.transform_name,
-                            current_batch,
-                            step.params,
-                            seg.input_type,
-                            seg.output_type,
-                            meta->params_type);
+                    current_batch = seg.time_grouped_fn(current_batch);
                 }
             }
 
@@ -624,7 +616,7 @@ public:
 
         // V2 Pattern: Execute pre-reductions and apply bindings before transforms
         using InputElement = ElementFor_t<InputContainer>;
-        
+
         PipelineValueStore store;
         if (hasPreReductions()) {
             // For AnalogTimeSeries, use raw float span directly (no copying)
@@ -641,8 +633,6 @@ public:
             // Apply computed values to step parameters via bindings
             applyBindingsToSteps(store);
         }
-
-        auto view = input.elements();
 
         std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
 
@@ -746,8 +736,6 @@ public:
             }
         }
 
-        // Build composed transform function (type-erased but created once)
-        std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
         // --- HEAD-TAIL EXECUTION STRATEGY ---
         // We split the pipeline into Head (first step) and Tail (rest).
         // Head handles the conversion from InputElement (which might be a tuple) to ElementVariant.
@@ -755,19 +743,19 @@ public:
 
         auto const & head_step = steps_.front();
         auto const * head_meta = registry.getMetadata(head_step.transform_name);
+        auto head_executor = registry.createTypedExecutor(
+                TypeTriple{std::type_index(typeid(InputElement)),
+                           head_meta->output_type,
+                           head_meta->params_type},
+                head_step.params);
+        auto shared_head_executor = std::shared_ptr<IParamExecutor const>(std::move(head_executor));
 
         // Build Head Function: InputElement -> ElementVariant
-        auto head_fn = [this, step = head_step, meta = head_meta](InputElement const & input) -> ElementVariant {
-            auto & reg = ElementRegistry::instance();
+        auto head_fn = [executor = std::move(shared_head_executor),
+                        name = head_step.transform_name](InputElement const & input) -> ElementVariant {
             // Wrap input in std::any to pass through the generic interface
             std::any input_any{input};
-            return reg.executeWithDynamicParamsAny(
-                    step.transform_name,
-                    input_any,
-                    step.params,
-                    std::type_index(typeid(InputElement)),// Use actual input type
-                    meta->output_type,
-                    meta->params_type);
+            return executor->executeAny(name, input_any);
         };
 
         // Build Tail Chain: ElementVariant -> ElementVariant
@@ -949,21 +937,21 @@ private:
 
         auto & registry = RangeReductionRegistry::instance();
 
-        for (auto const & reduction : pre_reductions_) {
+        for (auto const & reduction: pre_reductions_) {
             // Wrap the input span in std::any for type-erased execution
             std::any input_any{input_span};
 
             // For stateless reductions, provide NoReductionParams if params is empty
             std::any params_to_use = reduction.params.has_value()
-                ? reduction.params
-                : std::any{NoReductionParams{}};
+                                             ? reduction.params
+                                             : std::any{NoReductionParams{}};
 
             // Execute the reduction using the registry's type-erased interface
             std::any result_any = registry.executeErased(
-                reduction.reduction_name,
-                reduction.input_type,
-                input_any,
-                params_to_use);
+                    reduction.reduction_name,
+                    reduction.input_type,
+                    input_any,
+                    params_to_use);
 
             // Store the result based on output type
             // Try common scalar types and store in the value store
@@ -991,7 +979,7 @@ private:
      * @param store Value store containing bound values
      */
     void applyBindingsToSteps(PipelineValueStore const & store) const {
-        for (auto const & step : steps_) {
+        for (auto const & step: steps_) {
             if (step.hasBindings()) {
                 step.applyBindings(store);
             }
@@ -1190,21 +1178,22 @@ ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeli
             std::any params_copy = step.params;
             if (!step.param_bindings.empty()) {
                 params_copy = applyBindingsErased(
-                    meta->params_type,
-                    step.params,
-                    step.param_bindings,
-                    store);
+                        meta->params_type,
+                        step.params,
+                        step.param_bindings,
+                        store);
             }
 
-            // Capture all values by value for the closure
-            chain.push_back([&registry, name = step.transform_name,
-                             params = std::move(params_copy),
-                             in_type = meta->input_type,
-                             out_type = meta->output_type,
-                             param_type = meta->params_type](
+            auto executor = registry.createTypedExecutor(
+                    TypeTriple{meta->input_type, meta->output_type, meta->params_type},
+                    params_copy);
+            auto shared_executor = std::shared_ptr<IParamExecutor const>(std::move(executor));
+
+            // Capture the compiled executor for the returned projection closure.
+            chain.push_back([executor = std::move(shared_executor),
+                             name = step.transform_name](
                                     ElementVariant const & input) -> ElementVariant {
-                return registry.executeWithDynamicParams(
-                        name, input, params, in_type, out_type, param_type);
+                return executor->execute(name, input);
             });
         }
 
