@@ -42,22 +42,23 @@
  * ## Usage Example
  *
  * ```cpp
- * // Build pipeline that normalizes event time to float
- * TransformPipeline pipeline;
- * pipeline.addStep("NormalizeEventTimeValue", NormalizeTimeParams{});
+ * auto pipeline = loadPipelineFromJson(R"({
+ *     "steps": [{
+ *         "transform": "NormalizeTimeV2",
+ *         "params": {},
+ *         "param_bindings": {"alignment_time": "alignment_time"}
+ *     }]
+ * })");
  *
- * // Bind to value projection factory
- * auto factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+ * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
  *
- * // For each trial
  * for (size_t i = 0; i < gather_result.size(); ++i) {
- *     auto ctx = gather_result.buildContext(i);
- *     auto projection = factory(ctx);
+ *     auto store = gather_result.buildTrialStore(i);
+ *     auto projection = factory(store);
  *
  *     for (auto const& event : gather_result[i]->view()) {
- *         float norm_time = projection(event);  // Computed value
- *         EntityId id = event.id();             // From source
- *         draw(norm_time, i, id);
+ *         float norm_time = projection(event);
+ *         draw(norm_time, i, event.id());
  *     }
  * }
  * ```
@@ -74,7 +75,7 @@
  * ```
  *
  * @see ViewAdaptorTypes.hpp for batch adaptor types
- * @see ContextAwareParams.hpp for context injection
+ * @see TransformPipeline::bindValueProjectionV2()
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
