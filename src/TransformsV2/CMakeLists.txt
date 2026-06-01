@@ -8,6 +8,8 @@ find_package(reflectcpp CONFIG REQUIRED)
 set(TRANSFORM_V2_SOURCES
     detail/ContainerTraits.hpp
     detail/ContainerTraits.cpp 
+    detail/PipelineStep.hpp
+    detail/PipelineStep.cpp
 
         core/DataManagerIntegration.hpp
         core/DataManagerIntegration.cpp

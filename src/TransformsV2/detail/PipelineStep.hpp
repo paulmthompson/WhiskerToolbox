@@ -1,15 +1,15 @@
 #ifndef PIPELINE_STEP_HPP
 #define PIPELINE_STEP_HPP
 
-#include "core/ElementRegistry.hpp"
-#include "core/PipelineValueStore.hpp"
-#include "extension/ParameterBinding.hpp"
-#include "extension/TransformTypes.hpp"
+#include "core/ElementRegistry.hpp"     // ElementRegistry
+#include "core/PipelineValueStore.hpp"  // PipelineValueStore
 
-#include <any>          //std::any
-#include <functional>   // std::function
-#include <map>          // std::map
-#include <string>       // std::string
+#include "extension/TransformTypes.hpp" // ElementVariant, BatchVariant
+
+#include <any>       //std::any
+#include <functional>// std::function
+#include <map>       // std::map
+#include <string>    // std::string
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -56,7 +56,7 @@ namespace WhiskerToolbox::Transforms::V2 {
 struct PipelineStep {
     std::string transform_name;
     mutable std::any params;// Type-erased parameters (mutable for preprocessing/caching)
-    
+
     /// Bindings from value store to param fields
     /// Key: param field name, Value: store key
     std::map<std::string, std::string> param_bindings;
@@ -119,26 +119,13 @@ struct PipelineStep {
      * step.applyBindings(store);  // params now has mean=0.5f, std_dev=0.1f
      * ```
      */
-    void applyBindings(PipelineValueStore const& store) const {
-        if (param_bindings.empty()) {
-            return;
-        }
-        
-        // Use type-erased binding application from registry
-        params = tryApplyBindingsErased(
-            params.type(),
-            params,
-            param_bindings,
-            store);
-    }
+    void applyBindings(PipelineValueStore const & store) const;
 
     /**
      * @brief Check if this step has any parameter bindings
      * @return true if param_bindings is not empty
      */
-    [[nodiscard]] bool hasBindings() const noexcept {
-        return !param_bindings.empty();
-    }
+    [[nodiscard]] bool hasBindings() const noexcept;
 
 private:
 public:
@@ -182,6 +169,6 @@ public:
     }
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
-#endif // PIPELINE_STEP_HPP
+#endif// PIPELINE_STEP_HPP
