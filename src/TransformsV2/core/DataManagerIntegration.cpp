@@ -406,14 +406,7 @@ std::string DataManagerPipelineExecutor::storeOutputData(
         }
     }
 
-    // Visit the variant and store in DataManager
-    std::visit([this, &output_key, &time_key](auto const & data_ptr) {
-        if (data_ptr) {
-            using T = typename std::remove_reference_t<decltype(*data_ptr)>;
-            data_manager_->setData<T>(output_key, data_ptr, time_key);
-        }
-    },
-               data);
+    data_manager_->setData(output_key, data, time_key);
 
     return {};
 }
