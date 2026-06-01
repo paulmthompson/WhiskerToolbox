@@ -7,7 +7,6 @@
 #include "detail/ReductionStep.hpp"             // ReductionStep
 #include "extension/ParameterBinding.hpp"       // applyBindingsErased
 #include "extension/ValueProjectionTypes.hpp"   // ValueProjectionFn
-#include "extension/ViewAdaptorTypes.hpp"       // ViewAdapterFn (legacy?), ReducerFn
 #include "detail/ExtractElement.hpp"            // extractElement
 #include "detail/PipelineOutputBuilder.hpp"     // PipelineOutputBuilder
 #include "detail/PipelineStep.hpp"              // PipelineStep
@@ -262,8 +261,8 @@ public:
      * @brief Set a terminal range reduction for the pipeline
      *
      * A range reduction is applied after all element transforms to collapse
-     * a range of elements into a scalar. This is used with bindReducer()
-     * to create reducer functions for sorting, partitioning, etc.
+     * a range of elements into a scalar. Applied by executePipeline(),
+     * gatherAndExecutePipeline(), and TensorColumnBuilders after element transforms.
      *
      * @tparam IntermediateElement Element type after all element transforms
      * @tparam Scalar Output scalar type
@@ -1082,71 +1081,6 @@ private:
 };
 
 // ============================================================================
-// View Adaptor and Reducer Binding Methods
-// ============================================================================
-
-/**
- * @brief Bind a pipeline to produce a view adaptor function
- *
- * Creates a function that transforms a span of input elements into a vector
- * of output elements by applying all pipeline steps. The returned adaptor
- * can be used directly or composed with other operations.
- *
- * **Requirements:**
- * - Pipeline must have at least one step
- * - All steps must be element-level transforms (not time-grouped)
- *
- * @tparam InElement Input element type (e.g., EventWithId)
- * @tparam OutElement Output element type (e.g., NormalizedEvent)
- * @param pipeline The transform pipeline to bind
- * @return ViewAdaptorFn that transforms span<InElement> → vector<OutElement>
- *
- * @throws std::runtime_error if pipeline is empty or contains time-grouped transforms
- *
- * @example
- * ```cpp
- * auto pipeline = TransformPipeline()
- *     .addStep("ScaleValue", ScaleParams{.factor = 2.0f});
- * 
- * auto adaptor = bindToView<TimeValuePoint, TimeValuePoint>(pipeline);
- * auto transformed = adaptor(input_span);
- * ```
- */
-template<typename InElement, typename OutElement>
-ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeline);
-
-/**
- * @brief Bind a pipeline with reduction to produce a reducer function
- *
- * Creates a function that transforms a span of input elements through the
- * pipeline steps and then applies the terminal range reduction to produce
- * a scalar.
- *
- * **Requirements:**
- * - Pipeline must have setRangeReduction() called
- * - All steps must be element-level transforms
- *
- * @tparam InElement Input element type
- * @tparam Scalar Output scalar type
- * @param pipeline The transform pipeline with range reduction
- * @return ReducerFn that transforms span<InElement> → Scalar
- *
- * @throws std::runtime_error if pipeline has no range reduction
- *
- * @example
- * ```cpp
- * auto pipeline = TransformPipeline()
- *     .addStep("ScaleValue", ScaleParams{.factor = 1.0f})
- *     .setRangeReduction<TimeValuePoint, float>("MaxValue");
- * 
- * auto reducer = bindReducer<TimeValuePoint, float>(pipeline);
- * float max_val = reducer(input_span);
- * ```
- */
-template<typename InElement, typename Scalar>
-ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline);
-
-// ============================================================================
 // Value Projection Binding Methods
 // ============================================================================
 
@@ -1259,157 +1193,6 @@ extern template DataTypeVariant TransformPipeline::execute<AnalogTimeSeries>(Ana
 extern template DataTypeVariant TransformPipeline::execute<MaskData>(MaskData const &) const;
 extern template DataTypeVariant TransformPipeline::execute<LineData>(LineData const &) const;
 extern template DataTypeVariant TransformPipeline::execute<PointData>(PointData const &) const;
-
-// ============================================================================
-// Template Implementations: View Adaptor and Reducer Binding
-// ============================================================================
-
-namespace detail {
-
-/**
- * @brief Build a composed transform function from pipeline steps
- *
- * Creates a function that applies all pipeline steps in sequence.
- * Used internally by bindToView and related functions.
- *
- * @param pipeline The pipeline to build from
- * @return Composed function: InElement → OutElement
- */
-template<typename InElement, typename OutElement>
-auto buildComposedTransformFn(TransformPipeline const & pipeline) {
-    if (pipeline.empty()) {
-        throw std::runtime_error("Pipeline has no steps");
-    }
-
-    auto & registry = ElementRegistry::instance();
-
-    // Verify all steps are element-level
-    for (size_t i = 0; i < pipeline.size(); ++i) {
-        auto const & step = pipeline.getStep(i);
-        auto const * meta = registry.getMetadata(step.transform_name);
-        if (!meta) {
-            throw std::runtime_error("Transform not found: " + step.transform_name);
-        }
-        if (meta->is_time_grouped) {
-            throw std::runtime_error(
-                    "bindToView does not support time-grouped transforms. "
-                    "Step '" +
-                    step.transform_name + "' is time-grouped.");
-        }
-    }
-
-    // Build chain of type-erased transform functions
-    std::vector<std::function<ElementVariant(ElementVariant)>> chain;
-    chain.reserve(pipeline.size());
-
-    for (size_t i = 0; i < pipeline.size(); ++i) {
-        auto const & step = pipeline.getStep(i);
-        auto const * meta = registry.getMetadata(step.transform_name);
-
-        // Capture step info and create transform function
-        chain.push_back([&registry, name = step.transform_name, &step, meta](
-                                ElementVariant input) -> ElementVariant {
-            return registry.executeWithDynamicParams(
-                    name, input, step.params,
-                    meta->input_type, meta->output_type, meta->params_type);
-        });
-    }
-
-    // Return composed function that applies all transforms
-    return [chain = std::move(chain)](InElement const & input) -> OutElement {
-        ElementVariant current{input};
-        for (auto const & fn: chain) {
-            current = fn(std::move(current));
-        }
-        return std::get<OutElement>(std::move(current));
-    };
-}
-
-}// namespace detail
-
-template<typename InElement, typename OutElement>
-ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeline) {
-    // Build the composed function once
-    auto transform_fn = detail::buildComposedTransformFn<InElement, OutElement>(pipeline);
-
-    // Return adaptor that applies transform to each element
-    return [transform_fn = std::move(transform_fn)](std::span<InElement const> input)
-                   -> std::vector<OutElement> {
-        std::vector<OutElement> result;
-        result.reserve(input.size());
-        for (auto const & elem: input) {
-            result.push_back(transform_fn(elem));
-        }
-        return result;
-    };
-}
-
-template<typename InElement, typename Scalar>
-ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline) {
-    if (!pipeline.hasRangeReduction()) {
-        throw std::runtime_error("Pipeline has no range reduction. Call setRangeReduction() first.");
-    }
-
-    auto const & reduction_step = pipeline.getRangeReduction().value();
-    auto & reduction_registry = RangeReductionRegistry::instance();
-
-    // Get intermediate element type from the last step's output
-    auto & elem_registry = ElementRegistry::instance();
-    std::type_index intermediate_type = typeid(InElement);
-
-    if (!pipeline.empty()) {
-        auto const & last_step = pipeline.getStep(pipeline.size() - 1);
-        auto const * meta = elem_registry.getMetadata(last_step.transform_name);
-        if (meta) {
-            intermediate_type = meta->output_type;
-        }
-    }
-
-    // If pipeline is empty, elements go directly to reduction
-    if (pipeline.empty()) {
-        // Direct reduction without transformation
-        return [&reduction_registry,
-                reduction_name = reduction_step.reduction_name,
-                params = reduction_step.params](std::span<InElement const> input) -> Scalar {
-            std::any input_any{input};
-            std::any result = reduction_registry.executeErased(
-                    reduction_name, typeid(InElement), input_any, params);
-            return std::any_cast<Scalar>(result);
-        };
-    }
-
-    // Build transform function
-    using IntermediateElement = typename std::conditional_t<
-            std::is_same_v<decltype(intermediate_type), std::type_index>,
-            void,// Placeholder - actual type handled via variant
-            void>;
-
-    // For now, we handle specific intermediate types
-    // This could be extended with more type dispatch
-    auto transform_fn = detail::buildComposedTransformFn<InElement, InElement>(pipeline);
-
-    return [transform_fn = std::move(transform_fn),
-            &reduction_registry,
-            reduction_name = reduction_step.reduction_name,
-            params = reduction_step.params,
-            intermediate_type](std::span<InElement const> input) -> Scalar {
-        // Transform all elements
-        std::vector<InElement> transformed;
-        transformed.reserve(input.size());
-        for (auto const & elem: input) {
-            // Apply the composed transform
-            // Note: In full implementation, output type may differ from InElement
-            transformed.push_back(transform_fn(elem));
-        }
-
-        // Apply reduction
-        std::span<InElement const> transformed_span{transformed};
-        std::any input_any{transformed_span};
-        std::any result = reduction_registry.executeErased(
-                reduction_name, intermediate_type, input_any, params);
-        return std::any_cast<Scalar>(result);
-    };
-}
 
 // ============================================================================
 // Template Implementations: Value Projection Binding

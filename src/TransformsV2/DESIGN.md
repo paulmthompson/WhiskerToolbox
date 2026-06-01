@@ -140,11 +140,11 @@ For trial-aligned analysis, `GatherResult` provides:
 PipelineValueStore store = gather.buildTrialStore(trial_idx);
 // Contains: "alignment_time", "trial_index", "trial_duration", "end_time"
 
-// Project values across trials
-auto factory = bindValueProjectionWithContext<TimeFrameIndex, float>(pipeline);
-auto projections = gather.project(factory);
+// Project values across trials (V2 store-based binding)
+auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+auto projections = gather.projectV2(factory);
 
-// Reduce and sort trials
+// Reduce and sort trials (supply ReducerFactoryV2, often wrapping executeErased)
 auto latencies = gather.reduce(reducer_factory);
 auto sorted_indices = gather.sortIndicesBy(reducer_factory, /*ascending=*/true);
 auto reordered = gather.reorder(sorted_indices);

@@ -13,7 +13,6 @@ add_executable(test_TransformsV2
         test_view_pipeline.test.cpp
         test_line_min_point_dist_v2.test.cpp
         #test_zipping_logic.test.cpp
-        test_pipeline_adaptors.test.cpp
         test_pipeline_loader.test.cpp
         test_pipeline_library.test.cpp
         test_pipeline_zipping.test.cpp

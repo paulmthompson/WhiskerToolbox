@@ -3,68 +3,45 @@
 
 /**
  * @file ViewAdaptorTypes.hpp
- * @brief Types for view adaptors and reducers produced by TransformPipeline
+ * @brief Function-object types for gather-slice transforms and reductions
  *
- * This file provides the type definitions and interfaces for view adaptors
- * and reducers that enable lazy, composable transformations on GatherResult
- * views without intermediate materialization.
+ * Defines `ViewAdaptorFn`, `ReducerFn`, and factory aliases used with
+ * `GatherResult` and interval/tensor builders. Callers supply these callables
+ * directly (often wrapping `RangeReductionRegistry::executeErased()`).
  *
- * ## View Adaptor
+ * ## Production patterns
  *
- * A view adaptor transforms a range of input elements into a lazy range of
- * output elements. No intermediate storage is created - each element is
- * transformed on-demand as the output range is consumed.
+ * **Per-trial scalar features (interval rows):**
+ * `gatherAndExecutePipeline()` and `TensorColumnBuilders` run
+ * `executePipeline()` on each gathered slice, then apply the pipeline's
+ * terminal range reduction via `RangeReductionRegistry::executeErased()`.
  *
- * ```cpp
- * // ViewAdaptor: transforms range<In> → lazy range<Out>
- * auto adaptor = pipeline.bindToView<EventWithId, NormalizedEvent>();
- * auto lazy_view = adaptor(trial_events_view);
- * for (auto const& normalized : lazy_view) { ... }
- * ```
+ * **Per-element projection (raster plots):**
+ * `bindValueProjectionV2()` + `GatherResult::projectV2()` with
+ * `PipelineValueStore` from `buildTrialStore()`.
  *
- * ## Context-Aware View Adaptor Factory
- *
- * For transforms that need per-trial context (e.g., NormalizeTime), a factory
- * pattern is used. The factory accepts TrialContext and returns a view adaptor
- * with context injected into the parameters.
+ * **Trial sorting / batch reduce:**
+ * Build a `ReducerFactoryV2` lambda and pass it to `GatherResult::reduce()`.
  *
  * ```cpp
- * // Factory: TrialContext → ViewAdaptor
- * auto factory = pipeline.bindToViewWithContext<EventWithId, NormalizedEvent>();
- * for (size_t i = 0; i < gather_result.size(); ++i) {
- *     TrialContext ctx{.alignment_time = interval.start};
- *     auto adaptor = factory(ctx);
- *     auto lazy_view = adaptor(gather_result[i]->view());
- * }
+ * ReducerFactoryV2<EventWithId, float> factory =
+ *     [&](PipelineValueStore const&) -> ReducerFn<EventWithId, float> {
+ *         return [](std::span<EventWithId const> events) -> float {
+ *             auto& reg = RangeReductionRegistry::instance();
+ *             std::any input_any{events};
+ *             return std::any_cast<float>(reg.executeErased(
+ *                 "FirstPositiveLatency", typeid(EventWithId), input_any, {}));
+ *         };
+ *     };
+ * auto latencies = gather.reduce(factory);
  * ```
  *
- * ## Reducer
- *
- * A reducer combines a view adaptor with a terminal range reduction to
- * produce a scalar from a range of input elements.
- *
- * ```cpp
- * // Reducer: range<In> → Scalar
- * auto reducer = pipeline.bindReducer<EventWithId, float>();
- * float latency = reducer(trial_events_view);
- * ```
- *
- * ## Context-Aware Reducer Factory
- *
- * Similar to view adaptor factories, reducer factories accept context.
- *
- * ```cpp
- * auto factory = pipeline.bindReducerWithContext<EventWithId, float>();
- * auto latencies = gather_result.transform([&](auto const& trial) {
- *     TrialContext ctx{...};
- *     return factory(ctx)(trial->view());
- * });
- * ```
- *
- * @see TransformPipeline for methods that create these types
- * @see RangeReductionRegistry.hpp for range reductions
- * @see GatherResult.hpp for trial-aligned analysis
- * @see PipelineValueStore for the V2 pattern replacing TrialContext
+ * @see TransformPipeline::bindValueProjectionV2()
+ * @see GatherPipelineExecutor.hpp gatherAndExecutePipeline()
+ * @see TensorColumnBuilders.hpp buildIntervalReductionProvider()
+ * @see RangeReductionRegistry.hpp
+ * @see GatherResult.hpp
+ * @see PipelineValueStore
  */
 
 #include "TransformTypes.hpp"

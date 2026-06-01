@@ -41,8 +41,8 @@ User wants to:
 | `ElementRegistry` | Stores element transforms |
 | `TimeGroupedTransform` | Per-time-point M→N reductions |
 | `RangeReductionRegistry` | Stores whole-range → scalar reductions |
-| `TransformPipeline` | Composes transforms, produces view adaptors and reducers |
-| `GatherResult` | Provides trial structure, consumes pipeline adaptors |
+| `TransformPipeline` | Composes transforms; `execute` / `executePipeline` on containers; `bindValueProjectionV2` for per-element values |
+| `GatherResult` | Trial-aligned slices; `projectV2`, `reduce`, `buildTrialStore` |
 | `PipelineValueStore` | Stores per-trial computed values for parameter binding |
 
 ### Two Types of Reductions
@@ -75,7 +75,7 @@ public:
     
     /// Apply reducer to all trials, returns vector of scalars
     template<typename Scalar>
-    std::vector<Scalar> reduce(ReducerFactory<element_type, Scalar> const& factory) const;
+    std::vector<Scalar> reduce(ReducerFactoryV2<element_type, Scalar> const& factory) const;
     
     /// Sort trial indices by reduction result
     template<typename Scalar>
