@@ -42,7 +42,7 @@ User wants to:
 | `TimeGroupedTransform` | Per-time-point M→N reductions |
 | `RangeReductionRegistry` | Stores whole-range → scalar reductions |
 | `TransformPipeline` | Composes transforms; `execute` / `executePipeline` on containers; `bindValueProjectionV2` for per-element values |
-| `GatherResult` | Trial-aligned slices; `projectV2`, `reduce`, `buildTrialStore` |
+| `GatherResult` | Trial-aligned slices; `project`, `reduce`, `buildTrialStore` |
 | `PipelineValueStore` | Stores per-trial computed values for parameter binding |
 
 ### Two Types of Reductions
@@ -71,7 +71,7 @@ public:
     
     /// Project values across all trials using a store-based factory
     template<typename Value>
-    auto projectV2(ValueProjectionFactoryV2<element_type, Value> const& factory) const;
+    auto project(ValueProjectionFactoryV2<element_type, Value> const& factory) const;
     
     /// Apply reducer to all trials, returns vector of scalars
     template<typename Scalar>
@@ -80,7 +80,7 @@ public:
     /// Sort trial indices by reduction result
     template<typename Scalar>
     std::vector<size_type> sortIndicesBy(
-        ReducerFactory<element_type, Scalar> const& factory,
+        ReducerFactoryV2<element_type, Scalar> const& factory,
         bool ascending = true) const;
     
     /// Create reordered result

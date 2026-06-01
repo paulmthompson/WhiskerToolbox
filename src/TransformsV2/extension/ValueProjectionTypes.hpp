@@ -80,8 +80,8 @@
  */
 
 #include "core/PipelineValueStore.hpp"
-#include "ViewAdaptorTypes.hpp"  // For TrialContext (legacy)
 
+#include <any>
 #include <concepts>
 #include <functional>
 #include <ranges>
@@ -117,43 +117,14 @@ namespace WhiskerToolbox::Transforms::V2 {
  * ```
  */
 template<typename InElement, typename Value>
-using ValueProjectionFn = std::function<Value(InElement const&)>;
+using ValueProjectionFn = std::function<Value(InElement const &)>;
 
 /**
- * @brief Factory that creates value projections from TrialContext
+ * @brief Factory that creates value projections from PipelineValueStore
  *
- * For context-aware transforms (e.g., NormalizeTime), the factory receives
- * per-trial context and produces a projection function with that context
- * injected.
- *
- * @tparam InElement Input element type
- * @tparam Value Output value type
- *
- * ## Example
- *
- * ```cpp
- * ValueProjectionFactory<EventWithId, float> factory = ...;
- *
- * for (size_t i = 0; i < trials.size(); ++i) {
- *     TrialContext ctx{.alignment_time = trials[i].start()};
- *     auto projection = factory(ctx);
- *
- *     for (auto const& event : trial_views[i]) {
- *         float norm_time = projection(event);
- *     }
- * }
- * ```
- */
-template<typename InElement, typename Value>
-using ValueProjectionFactory = std::function<ValueProjectionFn<InElement, Value>(TrialContext const&)>;
-
-/**
- * @brief Factory that creates value projections from PipelineValueStore (V2 pattern)
- *
- * This is the V2 replacement for ValueProjectionFactory that uses the generic
- * PipelineValueStore instead of specialized TrialContext. The factory receives
- * per-trial values from the store and produces a projection function with those
- * values bound to parameters.
+ * The factory receives per-trial values from the store and produces a projection
+ * function with those values bound to transform parameters (via pipelines or
+ * manual parameter setup).
  *
  * ## Design Goals
  *
@@ -192,7 +163,7 @@ using ValueProjectionFactory = std::function<ValueProjectionFn<InElement, Value>
  * @see GatherResult::buildTrialStore() for populating store with trial values
  */
 template<typename InElement, typename Value>
-using ValueProjectionFactoryV2 = std::function<ValueProjectionFn<InElement, Value>(PipelineValueStore const&)>;
+using ValueProjectionFactoryV2 = std::function<ValueProjectionFn<InElement, Value>(PipelineValueStore const &)>;
 
 // ============================================================================
 // Type-Erased Versions (for runtime composition)
@@ -204,19 +175,12 @@ using ValueProjectionFactoryV2 = std::function<ValueProjectionFn<InElement, Valu
  * Used internally by the pipeline for runtime-typed execution.
  * Input and output are wrapped in std::any.
  */
-using ErasedValueProjectionFn = std::function<std::any(std::any const&)>;
+using ErasedValueProjectionFn = std::function<std::any(std::any const &)>;
 
 /**
  * @brief Type-erased value projection factory
  */
-using ErasedValueProjectionFactory = std::function<ErasedValueProjectionFn(TrialContext const&)>;
-
-/**
- * @brief Type-erased value projection factory (V2 pattern)
- *
- * Uses PipelineValueStore instead of TrialContext.
- */
-using ErasedValueProjectionFactoryV2 = std::function<ErasedValueProjectionFn(PipelineValueStore const&)>;
+using ErasedValueProjectionFactoryV2 = std::function<ErasedValueProjectionFn(PipelineValueStore const &)>;
 
 // ============================================================================
 // Concepts for Value Projections
@@ -228,18 +192,18 @@ using ErasedValueProjectionFactoryV2 = std::function<ErasedValueProjectionFn(Pip
  * A value projection takes a single element and returns a value.
  */
 template<typename F, typename InElement, typename Value>
-concept ValueProjection = requires(F f, InElement const& input) {
+concept ValueProjection = requires(F f, InElement const & input) {
     { f(input) } -> std::convertible_to<Value>;
 };
 
 /**
  * @brief Concept for a valid value projection factory
  *
- * A factory takes TrialContext and returns a value projection.
+ * A factory takes PipelineValueStore and returns a value projection.
  */
 template<typename F, typename InElement, typename Value>
-concept ValueProjectionFactoryConcept = requires(F f, TrialContext const& ctx, InElement const& elem) {
-    { f(ctx) } -> ValueProjection<InElement, Value>;
+concept ValueProjectionFactoryV2Concept = requires(F f, PipelineValueStore const & store, InElement const & elem) {
+    { f(store) } -> ValueProjection<InElement, Value>;
 };
 
 // ============================================================================
@@ -274,7 +238,7 @@ concept ValueProjectionFactoryConcept = requires(F f, TrialContext const& ctx, I
  * ```
  */
 template<typename InElement, typename Value>
-using ProjectedPair = std::pair<InElement const&, Value>;
+using ProjectedPair = std::pair<InElement const &, Value>;
 
 /**
  * @brief Create a lazy projected view from a range and projection function
@@ -309,14 +273,13 @@ using ProjectedPair = std::pair<InElement const&, Value>;
  */
 template<std::ranges::input_range Range, typename Proj>
     requires std::invocable<Proj, std::ranges::range_reference_t<Range>>
-auto makeProjectedView(Range&& range, Proj&& projection) {
+auto makeProjectedView(Range && range, Proj && projection) {
     using Element = std::ranges::range_value_t<Range>;
-    using Value = std::invoke_result_t<Proj, Element const&>;
+    using Value = std::invoke_result_t<Proj, Element const &>;
 
-    return std::forward<Range>(range)
-        | std::views::transform([proj = std::forward<Proj>(projection)](auto const& elem) {
-            return std::make_pair(std::cref(elem), proj(elem));
-        });
+    return std::forward<Range>(range) | std::views::transform([proj = std::forward<Proj>(projection)](auto const & elem) {
+               return std::make_pair(std::cref(elem), proj(elem));
+           });
 }
 
 /**
@@ -340,9 +303,8 @@ auto makeProjectedView(Range&& range, Proj&& projection) {
  */
 template<std::ranges::input_range Range, typename Proj>
     requires std::invocable<Proj, std::ranges::range_reference_t<Range>>
-auto makeValueView(Range&& range, Proj&& projection) {
-    return std::forward<Range>(range)
-        | std::views::transform(std::forward<Proj>(projection));
+auto makeValueView(Range && range, Proj && projection) {
+    return std::forward<Range>(range) | std::views::transform(std::forward<Proj>(projection));
 }
 
 // ============================================================================
@@ -361,8 +323,8 @@ auto makeValueView(Range&& range, Proj&& projection) {
  */
 template<typename InElement, typename Value>
 ErasedValueProjectionFn eraseValueProjection(ValueProjectionFn<InElement, Value> typed_fn) {
-    return [fn = std::move(typed_fn)](std::any const& input) -> std::any {
-        auto const& elem = std::any_cast<InElement const&>(input);
+    return [fn = std::move(typed_fn)](std::any const & input) -> std::any {
+        auto const & elem = std::any_cast<InElement const &>(input);
         return std::any{fn(elem)};
     };
 }
@@ -376,10 +338,10 @@ ErasedValueProjectionFn eraseValueProjection(ValueProjectionFn<InElement, Value>
  * @return Type-erased projection factory
  */
 template<typename InElement, typename Value>
-ErasedValueProjectionFactory eraseValueProjectionFactory(
-        ValueProjectionFactory<InElement, Value> typed_factory) {
-    return [factory = std::move(typed_factory)](TrialContext const& ctx) -> ErasedValueProjectionFn {
-        auto typed_fn = factory(ctx);
+ErasedValueProjectionFactoryV2 eraseValueProjectionFactoryV2(
+        ValueProjectionFactoryV2<InElement, Value> typed_factory) {
+    return [factory = std::move(typed_factory)](PipelineValueStore const & store) -> ErasedValueProjectionFn {
+        auto typed_fn = factory(store);
         return eraseValueProjection<InElement, Value>(std::move(typed_fn));
     };
 }
@@ -400,7 +362,7 @@ ErasedValueProjectionFactory eraseValueProjectionFactory(
  */
 template<typename InElement, typename Value>
 ValueProjectionFn<InElement, Value> recoverValueProjection(ErasedValueProjectionFn erased_fn) {
-    return [fn = std::move(erased_fn)](InElement const& elem) -> Value {
+    return [fn = std::move(erased_fn)](InElement const & elem) -> Value {
         // Pass element by value in std::any (matches eraseValueProjection convention)
         std::any result = fn(std::any{elem});
         return std::any_cast<Value>(result);
@@ -416,15 +378,15 @@ ValueProjectionFn<InElement, Value> recoverValueProjection(ErasedValueProjection
  * @return Typed projection factory
  */
 template<typename InElement, typename Value>
-ValueProjectionFactory<InElement, Value> recoverValueProjectionFactory(
-        ErasedValueProjectionFactory erased_factory) {
-    return [factory = std::move(erased_factory)](TrialContext const& ctx) 
-            -> ValueProjectionFn<InElement, Value> {
-        auto erased_fn = factory(ctx);
+ValueProjectionFactoryV2<InElement, Value> recoverValueProjectionFactoryV2(
+        ErasedValueProjectionFactoryV2 erased_factory) {
+    return [factory = std::move(erased_factory)](PipelineValueStore const & store)
+                   -> ValueProjectionFn<InElement, Value> {
+        auto erased_fn = factory(store);
         return recoverValueProjection<InElement, Value>(std::move(erased_fn));
     };
 }
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
-#endif  // WHISKERTOOLBOX_V2_VALUE_PROJECTION_TYPES_HPP
+#endif// WHISKERTOOLBOX_V2_VALUE_PROJECTION_TYPES_HPP

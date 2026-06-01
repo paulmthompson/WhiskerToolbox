@@ -40,9 +40,11 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "utils/GatherResult.hpp"
-#include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
+#include "transforms/v2/core/PipelineValueStore.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/extension/ValueProjectionTypes.hpp"
+#include "utils/GatherResult.hpp"
 
 #include <benchmark/benchmark.h>
 #include <memory>
@@ -57,10 +59,10 @@ namespace RasterPlotBenchmarks {
 // ============================================================================
 
 struct RasterBenchmarkConfig {
-    size_t raster_event_count = 100'000;  // Events in the raster series
-    size_t alignment_event_count = 1'000;  // Number of alignment events (trials)
-    int64_t window_half_size = 500;        // Half-window size for gathering events
-    int64_t time_range = 1'000'000;        // Total time range
+    size_t raster_event_count = 100'000; // Events in the raster series
+    size_t alignment_event_count = 1'000;// Number of alignment events (trials)
+    int64_t window_half_size = 500;      // Half-window size for gathering events
+    int64_t time_range = 1'000'000;      // Total time range
     uint32_t random_seed = 42;
 };
 
@@ -68,22 +70,22 @@ struct RasterBenchmarkConfig {
 struct MockGPUBuffer {
     std::vector<float> x_coords;
     std::vector<float> y_coords;
-    
+
     void clear() {
         x_coords.clear();
         y_coords.clear();
     }
-    
+
     void reserve(size_t n) {
         x_coords.reserve(n);
         y_coords.reserve(n);
     }
-    
+
     void addPoint(float x, float y) {
         x_coords.push_back(x);
         y_coords.push_back(y);
     }
-    
+
     [[nodiscard]] size_t size() const { return x_coords.size(); }
 };
 
@@ -95,17 +97,16 @@ struct MockGPUBuffer {
  * @brief Generate sorted random event times
  */
 std::vector<TimeFrameIndex> generateRandomEvents(
-    size_t count, int64_t time_range, std::mt19937& rng) 
-{
+        size_t count, int64_t time_range, std::mt19937 & rng) {
     std::uniform_int_distribution<int64_t> dist(0, time_range - 1);
-    
+
     std::vector<TimeFrameIndex> events;
     events.reserve(count);
-    
+
     for (size_t i = 0; i < count; ++i) {
         events.emplace_back(dist(rng));
     }
-    
+
     std::ranges::sort(events);
     return events;
 }
@@ -114,20 +115,19 @@ std::vector<TimeFrameIndex> generateRandomEvents(
  * @brief Generate alignment events spread across time range
  */
 std::vector<TimeFrameIndex> generateAlignmentEvents(
-    size_t count, int64_t time_range, int64_t window_half_size, std::mt19937& rng)
-{
+        size_t count, int64_t time_range, int64_t window_half_size, std::mt19937 & rng) {
     // Ensure alignment events are within valid range for windowing
     int64_t const safe_start = window_half_size;
     int64_t const safe_end = time_range - window_half_size - 1;
     std::uniform_int_distribution<int64_t> dist(safe_start, safe_end);
-    
+
     std::vector<TimeFrameIndex> events;
     events.reserve(count);
-    
+
     for (size_t i = 0; i < count; ++i) {
         events.emplace_back(dist(rng));
     }
-    
+
     std::ranges::sort(events);
     return events;
 }
@@ -140,16 +140,15 @@ std::vector<TimeFrameIndex> generateAlignmentEvents(
  * @brief Extract events in window using binary search on sorted vector
  */
 std::vector<TimeFrameIndex> extractEventsInWindow(
-    std::vector<TimeFrameIndex> const& all_events,
-    int64_t center,
-    int64_t half_window)
-{
+        std::vector<TimeFrameIndex> const & all_events,
+        int64_t center,
+        int64_t half_window) {
     int64_t const start = center - half_window;
     int64_t const end = center + half_window;
-    
+
     auto it_start = std::ranges::lower_bound(all_events, TimeFrameIndex{start});
     auto it_end = std::ranges::upper_bound(all_events, TimeFrameIndex{end});
-    
+
     return {it_start, it_end};
 }
 
@@ -157,25 +156,24 @@ std::vector<TimeFrameIndex> extractEventsInWindow(
  * @brief Baseline approach: Build nested vectors and populate GPU buffer
  */
 void populateGPUBufferBaseline(
-    std::vector<std::vector<TimeFrameIndex>> const& windowed_events,
-    std::vector<TimeFrameIndex> const& alignment_events,
-    MockGPUBuffer& buffer)
-{
+        std::vector<std::vector<TimeFrameIndex>> const & windowed_events,
+        std::vector<TimeFrameIndex> const & alignment_events,
+        MockGPUBuffer & buffer) {
     buffer.clear();
-    
+
     // Estimate total events for reservation
     size_t total_events = 0;
-    for (auto const& window : windowed_events) {
+    for (auto const & window: windowed_events) {
         total_events += window.size();
     }
     buffer.reserve(total_events);
-    
+
     // Populate buffer
     for (size_t trial_idx = 0; trial_idx < windowed_events.size(); ++trial_idx) {
         auto const y = static_cast<float>(trial_idx);
         int64_t const center = alignment_events[trial_idx].getValue();
-        
-        for (auto const& event : windowed_events[trial_idx]) {
+
+        for (auto const & event: windowed_events[trial_idx]) {
             // X is relative to alignment event
             auto const x = static_cast<float>(event.getValue() - center);
             buffer.addPoint(x, y);
@@ -190,22 +188,21 @@ void populateGPUBufferBaseline(
  * Used in the baseline comparison to show the cost of normalization.
  */
 void extractWindowsWithNormalization(
-    std::vector<TimeFrameIndex> const& all_events,
-    std::vector<TimeFrameIndex> const& alignment_events,
-    int64_t half_window,
-    std::vector<std::vector<float>>& normalized_windows)
-{
+        std::vector<TimeFrameIndex> const & all_events,
+        std::vector<TimeFrameIndex> const & alignment_events,
+        int64_t half_window,
+        std::vector<std::vector<float>> & normalized_windows) {
     normalized_windows.clear();
     normalized_windows.resize(alignment_events.size());
-    
+
     for (size_t trial_idx = 0; trial_idx < alignment_events.size(); ++trial_idx) {
         int64_t const center = alignment_events[trial_idx].getValue();
         int64_t const start = center - half_window;
         int64_t const end = center + half_window;
-        
+
         auto it_start = std::ranges::lower_bound(all_events, TimeFrameIndex{start});
         auto it_end = std::ranges::upper_bound(all_events, TimeFrameIndex{end});
-        
+
         // Normalize times during extraction
         for (auto it = it_start; it != it_end; ++it) {
             float normalized_time = static_cast<float>(it->getValue() - center);
@@ -218,23 +215,22 @@ void extractWindowsWithNormalization(
  * @brief Populate GPU buffer from normalized float vectors
  */
 void populateGPUBufferFromNormalized(
-    std::vector<std::vector<float>> const& normalized_windows,
-    MockGPUBuffer& buffer)
-{
+        std::vector<std::vector<float>> const & normalized_windows,
+        MockGPUBuffer & buffer) {
     buffer.clear();
-    
+
     // Estimate total events for reservation
     size_t total_events = 0;
-    for (auto const& window : normalized_windows) {
+    for (auto const & window: normalized_windows) {
         total_events += window.size();
     }
     buffer.reserve(total_events);
-    
+
     // Populate buffer
     for (size_t trial_idx = 0; trial_idx < normalized_windows.size(); ++trial_idx) {
         auto const y = static_cast<float>(trial_idx);
-        
-        for (auto const& x : normalized_windows[trial_idx]) {
+
+        for (auto const & x: normalized_windows[trial_idx]) {
             buffer.addPoint(x, y);
         }
     }
@@ -250,10 +246,9 @@ void populateGPUBufferFromNormalized(
  * Uses DigitalEventSeries::createView with time range filtering
  */
 std::shared_ptr<DigitalEventSeries> createEventWindowView(
-    std::shared_ptr<DigitalEventSeries const> source,
-    int64_t center,
-    int64_t half_window)
-{
+        std::shared_ptr<DigitalEventSeries const> source,
+        int64_t center,
+        int64_t half_window) {
     TimeFrameIndex const start{center - half_window};
     TimeFrameIndex const end{center + half_window};
     return DigitalEventSeries::createView(std::move(source), start, end);
@@ -263,25 +258,24 @@ std::shared_ptr<DigitalEventSeries> createEventWindowView(
  * @brief View-based approach: Create views and populate GPU buffer
  */
 void populateGPUBufferViews(
-    std::vector<std::shared_ptr<DigitalEventSeries>> const& windowed_views,
-    std::vector<TimeFrameIndex> const& alignment_events,
-    MockGPUBuffer& buffer)
-{
+        std::vector<std::shared_ptr<DigitalEventSeries>> const & windowed_views,
+        std::vector<TimeFrameIndex> const & alignment_events,
+        MockGPUBuffer & buffer) {
     buffer.clear();
-    
+
     // Estimate total events for reservation
     size_t total_events = 0;
-    for (auto const& view : windowed_views) {
+    for (auto const & view: windowed_views) {
         total_events += view->size();
     }
     buffer.reserve(total_events);
-    
+
     // Populate buffer
     for (size_t trial_idx = 0; trial_idx < windowed_views.size(); ++trial_idx) {
         auto const y = static_cast<float>(trial_idx);
         int64_t const center = alignment_events[trial_idx].getValue();
-        
-        for (auto const& event : windowed_views[trial_idx]->view()) {
+
+        for (auto const & event: windowed_views[trial_idx]->view()) {
             auto const x = static_cast<float>(event.time().getValue() - center);
             buffer.addPoint(x, y);
         }
@@ -294,25 +288,25 @@ void populateGPUBufferViews(
 
 class RasterPlotBenchmark : public benchmark::Fixture {
 public:
-    void SetUp(benchmark::State const& state) override {
+    void SetUp(benchmark::State const & state) override {
         config_ = RasterBenchmarkConfig{};
         std::mt19937 rng(config_.random_seed);
-        
+
         // Generate data
         raster_events_ = generateRandomEvents(
-            config_.raster_event_count, config_.time_range, rng);
+                config_.raster_event_count, config_.time_range, rng);
         alignment_events_ = generateAlignmentEvents(
-            config_.alignment_event_count, config_.time_range, 
-            config_.window_half_size, rng);
-        
+                config_.alignment_event_count, config_.time_range,
+                config_.window_half_size, rng);
+
         // Create DigitalEventSeries for view-based approach
         raster_series_ = std::make_shared<DigitalEventSeries>(raster_events_);
-        
+
         // Pre-size buffer
         buffer_.reserve(config_.raster_event_count);
     }
-    
-    void TearDown(benchmark::State const&) override {
+
+    void TearDown(benchmark::State const &) override {
         raster_events_.clear();
         alignment_events_.clear();
         windowed_vectors_.clear();
@@ -320,29 +314,29 @@ public:
         buffer_.clear();
         raster_series_.reset();
     }
-    
-    void ReportStats(benchmark::State& state, bool include_buffer = true) const {
+
+    void ReportStats(benchmark::State & state, bool include_buffer = true) const {
         state.counters["raster_events"] = static_cast<double>(config_.raster_event_count);
         state.counters["alignment_events"] = static_cast<double>(config_.alignment_event_count);
         state.counters["window_size"] = static_cast<double>(config_.window_half_size * 2);
         if (include_buffer) {
             state.counters["buffer_points"] = static_cast<double>(buffer_.size());
         }
-        
+
         // Calculate expected events per window
-        double const density = static_cast<double>(config_.raster_event_count) / 
+        double const density = static_cast<double>(config_.raster_event_count) /
                                static_cast<double>(config_.time_range);
-        double const expected_per_window = density * 
+        double const expected_per_window = density *
                                            static_cast<double>(config_.window_half_size * 2);
         state.counters["expected_events_per_window"] = expected_per_window;
     }
-    
+
 protected:
     RasterBenchmarkConfig config_;
     std::vector<TimeFrameIndex> raster_events_;
     std::vector<TimeFrameIndex> alignment_events_;
     std::shared_ptr<DigitalEventSeries> raster_series_;
-    
+
     // Storage for benchmark iterations
     std::vector<std::vector<TimeFrameIndex>> windowed_vectors_;
     std::vector<std::shared_ptr<DigitalEventSeries>> windowed_views_;
@@ -356,108 +350,112 @@ protected:
 /**
  * @brief Benchmark: Extract windows into nested vectors (baseline)
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, ExtractWindows_Baseline)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, ExtractWindows_Baseline)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_vectors_.clear();
         windowed_vectors_.reserve(alignment_events_.size());
-        
-        for (auto const& align_event : alignment_events_) {
+
+        for (auto const & align_event: alignment_events_) {
             windowed_vectors_.push_back(extractEventsInWindow(
-                raster_events_, 
-                align_event.getValue(), 
-                config_.window_half_size));
+                    raster_events_,
+                    align_event.getValue(),
+                    config_.window_half_size));
         }
-        
+
         benchmark::DoNotOptimize(windowed_vectors_.data());
     }
-    
+
     ReportStats(state, false);
-    
+
     // Report memory usage estimate
     size_t total_copied_events = 0;
-    for (auto const& vec : windowed_vectors_) {
+    for (auto const & vec: windowed_vectors_) {
         total_copied_events += vec.size();
     }
     state.counters["copied_events"] = static_cast<double>(total_copied_events);
     state.counters["bytes_copied"] = static_cast<double>(
-        total_copied_events * sizeof(TimeFrameIndex));
+            total_copied_events * sizeof(TimeFrameIndex));
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, ExtractWindows_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Create views for windows (view-based)
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, CreateViews_ViewBased)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, CreateViews_ViewBased)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_views_.clear();
         windowed_views_.reserve(alignment_events_.size());
-        
-        for (auto const& align_event : alignment_events_) {
+
+        for (auto const & align_event: alignment_events_) {
             windowed_views_.push_back(createEventWindowView(
-                raster_series_,
-                align_event.getValue(),
-                config_.window_half_size));
+                    raster_series_,
+                    align_event.getValue(),
+                    config_.window_half_size));
         }
-        
+
         benchmark::DoNotOptimize(windowed_views_.data());
     }
-    
+
     ReportStats(state, false);
     state.counters["views_created"] = static_cast<double>(windowed_views_.size());
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, CreateViews_ViewBased)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Populate GPU buffer from nested vectors (baseline)
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_Baseline)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_Baseline)
+(benchmark::State & state) {
     // Pre-create windows
     windowed_vectors_.clear();
     windowed_vectors_.reserve(alignment_events_.size());
-    for (auto const& align_event : alignment_events_) {
+    for (auto const & align_event: alignment_events_) {
         windowed_vectors_.push_back(extractEventsInWindow(
-            raster_events_, align_event.getValue(), config_.window_half_size));
+                raster_events_, align_event.getValue(), config_.window_half_size));
     }
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         populateGPUBufferBaseline(windowed_vectors_, alignment_events_, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
         benchmark::DoNotOptimize(buffer_.y_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, PopulateBuffer_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Populate GPU buffer from views (view-based)
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_ViewBased)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_ViewBased)
+(benchmark::State & state) {
     // Pre-create views
     windowed_views_.clear();
     windowed_views_.reserve(alignment_events_.size());
-    for (auto const& align_event : alignment_events_) {
+    for (auto const & align_event: alignment_events_) {
         windowed_views_.push_back(createEventWindowView(
-            raster_series_, align_event.getValue(), config_.window_half_size));
+                raster_series_, align_event.getValue(), config_.window_half_size));
     }
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         populateGPUBufferViews(windowed_views_, alignment_events_, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
         benchmark::DoNotOptimize(buffer_.y_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, PopulateBuffer_ViewBased)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // Full Pipeline Benchmarks
@@ -468,54 +466,56 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, PopulateBuffer_ViewBased)
  * 
  * Full workflow: Extract windows → Populate GPU buffer
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Baseline)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Baseline)
+(benchmark::State & state) {
+    for (auto _: state) {
         // Phase 1: Extract windows
         windowed_vectors_.clear();
         windowed_vectors_.reserve(alignment_events_.size());
-        for (auto const& align_event : alignment_events_) {
+        for (auto const & align_event: alignment_events_) {
             windowed_vectors_.push_back(extractEventsInWindow(
-                raster_events_, align_event.getValue(), config_.window_half_size));
+                    raster_events_, align_event.getValue(), config_.window_half_size));
         }
-        
+
         // Phase 2: Populate buffer
         populateGPUBufferBaseline(windowed_vectors_, alignment_events_, buffer_);
-        
+
         benchmark::DoNotOptimize(buffer_.x_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Complete raster pipeline (view-based)
  * 
  * Full workflow: Create views → Populate GPU buffer
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_ViewBased)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_ViewBased)
+(benchmark::State & state) {
+    for (auto _: state) {
         // Phase 1: Create views
         windowed_views_.clear();
         windowed_views_.reserve(alignment_events_.size());
-        for (auto const& align_event : alignment_events_) {
+        for (auto const & align_event: alignment_events_) {
             windowed_views_.push_back(createEventWindowView(
-                raster_series_, align_event.getValue(), config_.window_half_size));
+                    raster_series_, align_event.getValue(), config_.window_half_size));
         }
-        
+
         // Phase 2: Populate buffer
         populateGPUBufferViews(windowed_views_, alignment_events_, buffer_);
-        
+
         benchmark::DoNotOptimize(buffer_.x_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_ViewBased)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // Scalability Benchmarks (varying parameters)
@@ -526,15 +526,15 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_ViewBased)
  */
 class RasterScalabilityBenchmark : public benchmark::Fixture {
 public:
-    void SetUp(benchmark::State const& state) override {
+    void SetUp(benchmark::State const & state) override {
         config_.alignment_event_count = static_cast<size_t>(state.range(0));
         std::mt19937 rng(config_.random_seed);
-        
+
         raster_events_ = generateRandomEvents(
-            config_.raster_event_count, config_.time_range, rng);
+                config_.raster_event_count, config_.time_range, rng);
         alignment_events_ = generateAlignmentEvents(
-            config_.alignment_event_count, config_.time_range,
-            config_.window_half_size, rng);
+                config_.alignment_event_count, config_.time_range,
+                config_.window_half_size, rng);
         raster_series_ = std::make_shared<DigitalEventSeries>(raster_events_);
     }
 
@@ -548,13 +548,14 @@ protected:
     MockGPUBuffer buffer_;
 };
 
-BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Baseline)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Baseline)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_vectors_.clear();
         windowed_vectors_.reserve(alignment_events_.size());
-        for (auto const& align_event : alignment_events_) {
+        for (auto const & align_event: alignment_events_) {
             windowed_vectors_.push_back(extractEventsInWindow(
-                raster_events_, align_event.getValue(), config_.window_half_size));
+                    raster_events_, align_event.getValue(), config_.window_half_size));
         }
         populateGPUBufferBaseline(windowed_vectors_, alignment_events_, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
@@ -562,13 +563,14 @@ BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Baseline)(benchma
     state.counters["alignments"] = static_cast<double>(alignment_events_.size());
 }
 
-BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_ViewBased)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_ViewBased)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_views_.clear();
         windowed_views_.reserve(alignment_events_.size());
-        for (auto const& align_event : alignment_events_) {
+        for (auto const & align_event: alignment_events_) {
             windowed_views_.push_back(createEventWindowView(
-                raster_series_, align_event.getValue(), config_.window_half_size));
+                    raster_series_, align_event.getValue(), config_.window_half_size));
         }
         populateGPUBufferViews(windowed_views_, alignment_events_, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
@@ -577,12 +579,20 @@ BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_ViewBased)(benchm
 }
 
 BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_Baseline)
-    ->Arg(100)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMicrosecond);
+        ->Arg(100)
+        ->Arg(500)
+        ->Arg(1000)
+        ->Arg(2000)
+        ->Arg(5000)
+        ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_ViewBased)
-    ->Arg(100)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMicrosecond);
+        ->Arg(100)
+        ->Arg(500)
+        ->Arg(1000)
+        ->Arg(2000)
+        ->Arg(5000)
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // Memory Allocation Comparison
@@ -594,48 +604,50 @@ BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_ViewBased)
  * Only creates the windows/views, doesn't iterate them.
  * Shows allocation cost difference more clearly.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, AllocationOnly_Baseline)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, AllocationOnly_Baseline)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_vectors_.clear();
         windowed_vectors_.reserve(alignment_events_.size());
-        
-        for (auto const& align_event : alignment_events_) {
+
+        for (auto const & align_event: alignment_events_) {
             windowed_vectors_.push_back(extractEventsInWindow(
-                raster_events_, align_event.getValue(), config_.window_half_size));
+                    raster_events_, align_event.getValue(), config_.window_half_size));
         }
-        
+
         benchmark::DoNotOptimize(windowed_vectors_.data());
         benchmark::ClobberMemory();
     }
-    
+
     ReportStats(state, false);
 }
 
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, AllocationOnly_ViewBased)(benchmark::State& state) {
-    for (auto _ : state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, AllocationOnly_ViewBased)
+(benchmark::State & state) {
+    for (auto _: state) {
         windowed_views_.clear();
         windowed_views_.reserve(alignment_events_.size());
-        
-        for (auto const& align_event : alignment_events_) {
+
+        for (auto const & align_event: alignment_events_) {
             windowed_views_.push_back(createEventWindowView(
-                raster_series_, align_event.getValue(), config_.window_half_size));
+                    raster_series_, align_event.getValue(), config_.window_half_size));
         }
-        
+
         benchmark::DoNotOptimize(windowed_views_.data());
         benchmark::ClobberMemory();
     }
-    
+
     ReportStats(state, false);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, AllocationOnly_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, AllocationOnly_ViewBased)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
-// Iteration-Only Comparison  
+// Iteration-Only Comparison
 // ============================================================================
 
 /**
@@ -644,59 +656,61 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, AllocationOnly_ViewBased)
  * Pre-allocate windows/views, then only benchmark iteration.
  * Shows cache locality and indirection cost.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_Baseline)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_Baseline)
+(benchmark::State & state) {
     // Pre-create windows
     windowed_vectors_.clear();
     windowed_vectors_.reserve(alignment_events_.size());
-    for (auto const& align_event : alignment_events_) {
+    for (auto const & align_event: alignment_events_) {
         windowed_vectors_.push_back(extractEventsInWindow(
-            raster_events_, align_event.getValue(), config_.window_half_size));
+                raster_events_, align_event.getValue(), config_.window_half_size));
     }
-    
+
     int64_t sum = 0;
-    for (auto _ : state) {
+    for (auto _: state) {
         sum = 0;
         for (size_t i = 0; i < windowed_vectors_.size(); ++i) {
-            for (auto const& event : windowed_vectors_[i]) {
+            for (auto const & event: windowed_vectors_[i]) {
                 sum += event.getValue();
             }
         }
         benchmark::DoNotOptimize(sum);
     }
-    
+
     ReportStats(state, false);
     state.counters["checksum"] = static_cast<double>(sum);
 }
 
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_ViewBased)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_ViewBased)
+(benchmark::State & state) {
     // Pre-create views
     windowed_views_.clear();
     windowed_views_.reserve(alignment_events_.size());
-    for (auto const& align_event : alignment_events_) {
+    for (auto const & align_event: alignment_events_) {
         windowed_views_.push_back(createEventWindowView(
-            raster_series_, align_event.getValue(), config_.window_half_size));
+                raster_series_, align_event.getValue(), config_.window_half_size));
     }
-    
+
     int64_t sum = 0;
-    for (auto _ : state) {
+    for (auto _: state) {
         sum = 0;
         for (size_t i = 0; i < windowed_views_.size(); ++i) {
-            for (auto const& event : windowed_views_[i]->view()) {
+            for (auto const & event: windowed_views_[i]->view()) {
                 sum += event.time().getValue();
             }
         }
         benchmark::DoNotOptimize(sum);
     }
-    
+
     ReportStats(state, false);
     state.counters["checksum"] = static_cast<double>(sum);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, IterationOnly_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, IterationOnly_ViewBased)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // GatherResult-Based Benchmarks
@@ -709,17 +723,16 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, IterationOnly_ViewBased)
  * suitable for use with gather().
  */
 std::shared_ptr<DigitalIntervalSeries> createAlignmentIntervals(
-    std::vector<TimeFrameIndex> const& alignment_events,
-    int64_t half_window)
-{
+        std::vector<TimeFrameIndex> const & alignment_events,
+        int64_t half_window) {
     std::vector<Interval> intervals;
     intervals.reserve(alignment_events.size());
-    
-    for (auto const& event : alignment_events) {
+
+    for (auto const & event: alignment_events) {
         int64_t const center = event.getValue();
         intervals.push_back(Interval{center - half_window, center + half_window});
     }
-    
+
     return std::make_shared<DigitalIntervalSeries>(std::move(intervals));
 }
 
@@ -727,25 +740,24 @@ std::shared_ptr<DigitalIntervalSeries> createAlignmentIntervals(
  * @brief Populate GPU buffer from GatherResult
  */
 void populateGPUBufferGather(
-    GatherResult<DigitalEventSeries> const& gathered,
-    MockGPUBuffer& buffer)
-{
+        GatherResult<DigitalEventSeries> const & gathered,
+        MockGPUBuffer & buffer) {
     buffer.clear();
-    
+
     // Estimate total events for reservation
     size_t total_events = 0;
-    for (auto const& view : gathered) {
+    for (auto const & view: gathered) {
         total_events += view->size();
     }
     buffer.reserve(total_events);
-    
+
     // Populate buffer using transformWithInterval
     for (size_t trial_idx = 0; trial_idx < gathered.size(); ++trial_idx) {
         auto const y = static_cast<float>(trial_idx);
         Interval const interval = gathered.intervalAt(trial_idx);
         int64_t const center = (interval.start + interval.end) / 2;
-        
-        for (auto const& event : gathered[trial_idx]->view()) {
+
+        for (auto const & event: gathered[trial_idx]->view()) {
             auto const x = static_cast<float>(event.time().getValue() - center);
             buffer.addPoint(x, y);
         }
@@ -759,25 +771,24 @@ void populateGPUBufferGather(
  * The projections are pre-computed and passed in.
  */
 void populateGPUBufferGatherWithProjection(
-    GatherResult<DigitalEventSeries> const& gathered,
-    std::vector<WhiskerToolbox::Transforms::V2::ValueProjectionFn<EventWithId, float>> const& projections,
-    MockGPUBuffer& buffer)
-{
+        GatherResult<DigitalEventSeries> const & gathered,
+        std::vector<WhiskerToolbox::Transforms::V2::ValueProjectionFn<EventWithId, float>> const & projections,
+        MockGPUBuffer & buffer) {
     buffer.clear();
-    
+
     // Estimate total events
     size_t total_events = 0;
-    for (auto const& view : gathered) {
+    for (auto const & view: gathered) {
         total_events += view->size();
     }
     buffer.reserve(total_events);
-    
+
     // Populate buffer using projections
     for (size_t trial_idx = 0; trial_idx < gathered.size(); ++trial_idx) {
         auto const y = static_cast<float>(trial_idx);
-        auto const& projection = projections[trial_idx];
-        
-        for (auto const& event : gathered[trial_idx]->view()) {
+        auto const & projection = projections[trial_idx];
+
+        for (auto const & event: gathered[trial_idx]->view()) {
             // Use projection to get normalized time
             float normalized_time = projection(event);
             buffer.addPoint(normalized_time, y);
@@ -790,134 +801,140 @@ void populateGPUBufferGatherWithProjection(
  * 
  * Uses the GatherResult utility to create all views at once.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, CreateViews_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, CreateViews_Gather)
+(benchmark::State & state) {
     // Create alignment intervals once (not part of benchmark)
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
-    for (auto _ : state) {
+            alignment_events_, config_.window_half_size);
+
+    for (auto _: state) {
         auto gathered = gather(raster_series_, alignment_intervals);
-        
+
         benchmark::DoNotOptimize(gathered.source());
         benchmark::ClobberMemory();
     }
-    
+
     ReportStats(state, false);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, CreateViews_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Populate GPU buffer from GatherResult
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, PopulateBuffer_Gather)
+(benchmark::State & state) {
     // Pre-create gather result
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
+            alignment_events_, config_.window_half_size);
     auto gathered = gather(raster_series_, alignment_intervals);
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         populateGPUBufferGather(gathered, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
         benchmark::DoNotOptimize(buffer_.y_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, PopulateBuffer_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Complete raster pipeline using gather()
  * 
  * Full workflow: gather() → Populate GPU buffer
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather)
+(benchmark::State & state) {
     // Create alignment intervals once (this would typically be done once at setup)
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
-    for (auto _ : state) {
+            alignment_events_, config_.window_half_size);
+
+    for (auto _: state) {
         // Phase 1: Gather views
         auto gathered = gather(raster_series_, alignment_intervals);
-        
+
         // Phase 2: Populate buffer
         populateGPUBufferGather(gathered, buffer_);
-        
+
         benchmark::DoNotOptimize(buffer_.x_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Iteration only using GatherResult
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, IterationOnly_Gather)
+(benchmark::State & state) {
     // Pre-create gather result
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
+            alignment_events_, config_.window_half_size);
     auto gathered = gather(raster_series_, alignment_intervals);
-    
+
     int64_t sum = 0;
-    for (auto _ : state) {
+    for (auto _: state) {
         sum = 0;
-        for (auto const& view : gathered) {
-            for (auto const& event : view->view()) {
+        for (auto const & view: gathered) {
+            for (auto const & event: view->view()) {
                 sum += event.time().getValue();
             }
         }
         benchmark::DoNotOptimize(sum);
     }
-    
+
     ReportStats(state, false);
     state.counters["checksum"] = static_cast<double>(sum);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, IterationOnly_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Using GatherResult::transform() for analysis
  * 
  * Shows how transform() can be used to compute per-trial statistics.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, Transform_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, Transform_Gather)
+(benchmark::State & state) {
     // Pre-create gather result
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
+            alignment_events_, config_.window_half_size);
     auto gathered = gather(raster_series_, alignment_intervals);
-    
-    for (auto _ : state) {
-        auto counts = gathered.transform([](auto const& view) {
+
+    for (auto _: state) {
+        auto counts = gathered.transform([](auto const & view) {
             return view->size();
         });
-        
+
         benchmark::DoNotOptimize(counts.data());
         benchmark::ClobberMemory();
     }
-    
+
     ReportStats(state, false);
     state.counters["num_trials"] = static_cast<double>(gathered.size());
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, Transform_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // Scalability Benchmarks for Gather
 // ============================================================================
 
-BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)
+(benchmark::State & state) {
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
-    for (auto _ : state) {
+            alignment_events_, config_.window_half_size);
+
+    for (auto _: state) {
         auto gathered = gather(raster_series_, alignment_intervals);
         populateGPUBufferGather(gathered, buffer_);
         benchmark::DoNotOptimize(buffer_.x_coords.data());
@@ -926,8 +943,12 @@ BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)(benchmark
 }
 
 BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)
-    ->Arg(100)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
-    ->Unit(benchmark::kMicrosecond);
+        ->Arg(100)
+        ->Arg(500)
+        ->Arg(1000)
+        ->Arg(2000)
+        ->Arg(5000)
+        ->Unit(benchmark::kMicrosecond);
 
 // ============================================================================
 // Normalization Benchmarks - Baseline vs Transform Pipeline
@@ -939,81 +960,81 @@ BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)
  * Measures the cost of extracting windows and normalizing times in the 
  * baseline approach (raw vectors with manual normalization).
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Baseline_Normalized)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Baseline_Normalized)
+(benchmark::State & state) {
     // Pre-generate the alignment interval data structure
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
+            alignment_events_, config_.window_half_size);
+
     // Storage for normalized windows
     std::vector<std::vector<float>> normalized_windows;
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         // Phase 1: Extract windows with normalization
-        extractWindowsWithNormalization(raster_events_, alignment_events_, 
+        extractWindowsWithNormalization(raster_events_, alignment_events_,
                                         config_.window_half_size, normalized_windows);
-        
+
         // Phase 2: Populate buffer from normalized data
         populateGPUBufferFromNormalized(normalized_windows, buffer_);
-        
+
         benchmark::DoNotOptimize(buffer_.x_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Baseline_Normalized)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Gather with transform pipeline normalization
  * 
  * Uses NormalizeTimeValue projection to normalize times through the 
- * transform pipeline. Measures the cost of using context-aware transforms
- * vs manual normalization.
+ * transform pipeline. Measures the cost of per-trial normalization via
+ * PipelineValueStore vs manual normalization.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
+(benchmark::State & state) {
     // Create alignment intervals
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
-    // Build projection pipeline once (outside benchmark loop)
+            alignment_events_, config_.window_half_size);
+
+    // Build projection factory once (outside benchmark loop)
     using namespace WhiskerToolbox::Transforms::V2;
-    
-    // Create a factory that produces projections for each trial
-    auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
-        // Create params for this trial using alignment_time from context
+
+    ValueProjectionFactoryV2<EventWithId, float> projection_factory =
+            [](PipelineValueStore const & store) -> ValueProjectionFn<EventWithId, float> {
         NormalizeTimeParams params;
-        params.setAlignmentTime(ctx.alignment_time);
-        
-        // Return a projection function that uses these params
-        return [params](EventWithId const& event) -> float {
+        int64_t const alignment_val = store.getInt("alignment_time").value_or(0);
+        params.setAlignmentTime(TimeFrameIndex{alignment_val});
+        return [params](EventWithId const & event) -> float {
             return normalizeTimeValue(event.time(), params);
         };
     };
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         // Phase 1: Create gather result
         auto gathered = gather(raster_series_, alignment_intervals);
-        
-        // Phase 2: Build projections for each trial (context injection)
+
+        // Phase 2: Build projections for each trial (store-based binding)
         std::vector<ValueProjectionFn<EventWithId, float>> projections;
         projections.reserve(gathered.size());
         for (size_t i = 0; i < gathered.size(); ++i) {
-            auto ctx = gathered.buildContext(i);
-            projections.push_back(projection_factory(ctx));
+            auto store = gathered.buildTrialStore(i);
+            projections.push_back(projection_factory(store));
         }
-        
+
         // Phase 3: Populate buffer using projections
         populateGPUBufferGatherWithProjection(gathered, projections, buffer_);
-        
+
         benchmark::DoNotOptimize(buffer_.x_coords.data());
     }
-    
+
     ReportStats(state);
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Isolated normalization cost for baseline
@@ -1021,75 +1042,79 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
  * Measures just the extraction and normalization phase without buffer population.
  * Separates allocation overhead from normalization computation cost.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Baseline)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Baseline)
+(benchmark::State & state) {
     std::vector<std::vector<float>> normalized_windows;
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         extractWindowsWithNormalization(raster_events_, alignment_events_,
                                         config_.window_half_size, normalized_windows);
-        
+
         benchmark::DoNotOptimize(normalized_windows.data());
     }
-    
+
     state.counters["alignments"] = static_cast<double>(alignment_events_.size());
     state.counters["events"] = static_cast<double>(raster_events_.size());
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, Normalization_Baseline)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark: Isolated normalization cost for gather with projections
  * 
  * Measures the projection creation and application without buffer population.
- * Shows the overhead of context injection and transform pipeline execution.
+ * Shows the overhead of store-based projection setup and execution.
  */
-BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)
+(benchmark::State & state) {
     // Create alignment intervals
     auto alignment_intervals = createAlignmentIntervals(
-        alignment_events_, config_.window_half_size);
-    
+            alignment_events_, config_.window_half_size);
+
     // Create projection factory
     using namespace WhiskerToolbox::Transforms::V2;
-    auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
+    ValueProjectionFactoryV2<EventWithId, float> projection_factory =
+            [](PipelineValueStore const & store) -> ValueProjectionFn<EventWithId, float> {
         NormalizeTimeParams params;
-        params.setAlignmentTime(ctx.alignment_time);
-        return [params](EventWithId const& event) -> float {
+        int64_t const alignment_val = store.getInt("alignment_time").value_or(0);
+        params.setAlignmentTime(TimeFrameIndex{alignment_val});
+        return [params](EventWithId const & event) -> float {
             return normalizeTimeValue(event.time(), params);
         };
     };
-    
-    for (auto _ : state) {
+
+    for (auto _: state) {
         // Create gather result
         auto gathered = gather(raster_series_, alignment_intervals);
-        
-        // Create projections with context injection
+
+        // Create projections with per-trial store
         std::vector<ValueProjectionFn<EventWithId, float>> projections;
         projections.reserve(gathered.size());
         for (size_t i = 0; i < gathered.size(); ++i) {
-            auto ctx = gathered.buildContext(i);
-            projections.push_back(projection_factory(ctx));
+            auto store = gathered.buildTrialStore(i);
+            projections.push_back(projection_factory(store));
         }
-        
+
         // Compute sum of normalized times to ensure projections are actually evaluated
         int64_t sum = 0;
         for (size_t i = 0; i < gathered.size(); ++i) {
-            auto const& projection = projections[i];
-            for (auto const& event : gathered[i]->view()) {
+            auto const & projection = projections[i];
+            for (auto const & event: gathered[i]->view()) {
                 sum += static_cast<int64_t>(projection(event));
             }
         }
-        
+
         benchmark::DoNotOptimize(sum);
     }
-    
+
     state.counters["alignments"] = static_cast<double>(alignment_events_.size());
     state.counters["events"] = static_cast<double>(raster_events_.size());
 }
 
 BENCHMARK_REGISTER_F(RasterPlotBenchmark, Normalization_Gather)
-    ->Unit(benchmark::kMicrosecond);
+        ->Unit(benchmark::kMicrosecond);
 
-}  // namespace RasterPlotBenchmarks
+}// namespace RasterPlotBenchmarks
 
 BENCHMARK_MAIN();

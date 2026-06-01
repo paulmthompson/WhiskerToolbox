@@ -821,7 +821,7 @@ public:
      * @throws std::out_of_range if trial_idx >= size()
      *
      * @see PipelineValueStore for store documentation
-     * @see projectV2() for applying store-based projections to all trials
+     * @see project() for applying store-based projections to all trials
      */
     [[nodiscard]] WhiskerToolbox::Transforms::V2::PipelineValueStore buildTrialStore(size_type trial_idx) const {
         if (trial_idx >= size()) {

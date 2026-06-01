@@ -126,6 +126,6 @@ Complete pipeline with pre-reductions and bindings:
 | Old Pattern | New Pattern |
 |-------------|-------------|
 | `preprocess()` method in params | Pre-reductions with value store |
-| `setContext(TrialContext)` | `buildTrialStore()` + parameter bindings |
+| Manual per-trial alignment setup | `buildTrialStore()` + parameter bindings |
 | `ContextInjectorRegistry` | (Removed) Use bindings instead |
 | `PreprocessingRegistry` | (Removed) Use pre-reductions instead |

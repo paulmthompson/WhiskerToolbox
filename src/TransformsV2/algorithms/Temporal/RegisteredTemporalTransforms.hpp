@@ -13,14 +13,14 @@
  * - NormalizeEventTime: EventWithId → NormalizedEvent
  * - NormalizeValueTime: TimeValuePoint → NormalizedValue
  *
- * ## Context-Aware Registration
+ * ## Trial-aligned usage
  *
- * These transforms use NormalizeTimeParams which is context-aware.
- * The TransformPipeline will automatically inject TrialContext when
- * executing these transforms on trial-aligned data.
+ * For per-trial alignment, use `NormalizeTimeParamsV2` with
+ * `param_bindings` and `PipelineValueStore` from `GatherResult::buildTrialStore()`,
+ * or `bindValueProjectionV2()` for value projections.
  *
  * @see NormalizeTime.hpp for transform implementation
- * @see ContextAwareParams.hpp for context injection infrastructure
+ * @see PipelineValueStore.hpp
  */
 
 namespace WhiskerToolbox::Transforms::V2::Temporal {
@@ -37,6 +37,6 @@ namespace WhiskerToolbox::Transforms::V2::Temporal {
  */
 void registerTemporalTransforms();
 
-}  // namespace WhiskerToolbox::Transforms::V2::Temporal
+}// namespace WhiskerToolbox::Transforms::V2::Temporal
 
-#endif  // WHISKERTOOLBOX_V2_REGISTERED_TEMPORAL_TRANSFORMS_HPP
+#endif// WHISKERTOOLBOX_V2_REGISTERED_TEMPORAL_TRANSFORMS_HPP

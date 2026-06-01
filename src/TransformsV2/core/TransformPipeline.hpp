@@ -7,6 +7,7 @@
 #include "detail/ReductionStep.hpp"             // ReductionStep
 #include "extension/ParameterBinding.hpp"       // applyBindingsErased
 #include "extension/ValueProjectionTypes.hpp"   // ValueProjectionFn
+#include "extension/ViewAdaptorTypes.hpp"       // RangeReductionStep
 #include "detail/ExtractElement.hpp"            // extractElement
 #include "detail/PipelineOutputBuilder.hpp"     // PipelineOutputBuilder
 #include "detail/PipelineStep.hpp"              // PipelineStep

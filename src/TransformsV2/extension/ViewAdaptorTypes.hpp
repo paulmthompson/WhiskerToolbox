@@ -17,7 +17,7 @@
  * terminal range reduction via `RangeReductionRegistry::executeErased()`.
  *
  * **Per-element projection (raster plots):**
- * `bindValueProjectionV2()` + `GatherResult::projectV2()` with
+ * `bindValueProjectionV2()` + `GatherResult::project()` with
  * `PipelineValueStore` from `buildTrialStore()`.
  *
  * **Trial sorting / batch reduce:**
@@ -46,13 +46,10 @@
 
 #include "TransformTypes.hpp"
 
-#include "TimeFrame/TimeFrameIndex.hpp"
-
 #include <any>
 #include <concepts>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <ranges>
 #include <span>
 #include <typeindex>
@@ -60,37 +57,7 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-// ============================================================================
-// Legacy Context Types (for backward compatibility)
-// ============================================================================
-
-/**
- * @brief Context for trial-aligned analysis (legacy - use PipelineValueStore for V2)
- *
- * This struct is kept for backward compatibility with existing code that uses
- * the context injection pattern. For new code, prefer using PipelineValueStore
- * with parameter bindings.
- *
- * @see PipelineValueStore for the V2 pattern
- * @see GatherResult::buildTrialStore() for V2 trial value population
- */
-struct TrialContext {
-    /// The time to use as the reference point (t=0) for normalization
-    TimeFrameIndex alignment_time{0};
-
-    /// Optional: Index of the current trial (for debugging/logging)
-    std::optional<std::size_t> trial_index{std::nullopt};
-
-    /// Optional: Duration of the trial (end_time - start_time)
-    std::optional<int64_t> trial_duration{std::nullopt};
-
-    /// Optional: End time of the trial interval
-    std::optional<TimeFrameIndex> end_time{std::nullopt};
-};
-
-}  // namespace WhiskerToolbox::Transforms::V2
-
-namespace WhiskerToolbox::Transforms::V2 {
+class PipelineValueStore;
 
 // ============================================================================
 // View Adaptor Types
@@ -116,21 +83,6 @@ using ViewAdaptorFn = std::function<std::vector<OutElement>(std::span<InElement 
  */
 using ErasedViewAdaptorFn = std::function<std::any(std::any const &)>;
 
-/**
- * @brief Factory that creates a view adaptor from TrialContext
- *
- * This is used when the pipeline contains context-aware transforms
- * (e.g., NormalizeTime). The factory receives context for each trial
- * and produces an adaptor with that context injected.
- */
-template<typename InElement, typename OutElement>
-using ViewAdaptorFactory = std::function<ViewAdaptorFn<InElement, OutElement>(TrialContext const &)>;
-
-/**
- * @brief Type-erased view adaptor factory
- */
-using ErasedViewAdaptorFactory = std::function<ErasedViewAdaptorFn(TrialContext const &)>;
-
 // ============================================================================
 // Reducer Types
 // ============================================================================
@@ -150,32 +102,12 @@ using ReducerFn = std::function<Scalar(std::span<InElement const>)>;
 using ErasedReducerFn = std::function<std::any(std::any const &)>;
 
 /**
- * @brief Factory that creates a reducer from TrialContext (legacy)
- *
- * Used when the pipeline contains context-aware transforms.
- * For new code, prefer ReducerFactoryV2 with PipelineValueStore.
- */
-template<typename InElement, typename Scalar>
-using ReducerFactory = std::function<ReducerFn<InElement, Scalar>(TrialContext const &)>;
-
-/**
- * @brief Type-erased reducer factory (legacy)
- */
-using ErasedReducerFactory = std::function<ErasedReducerFn(TrialContext const &)>;
-
-// Forward declaration for V2 types
-class PipelineValueStore;
-
-/**
- * @brief Factory that creates a reducer from PipelineValueStore (V2 pattern)
- *
- * This is the V2 replacement for ReducerFactory that uses the generic
- * PipelineValueStore instead of specialized TrialContext.
+ * @brief Factory that creates a reducer from PipelineValueStore
  *
  * @tparam InElement Input element type
  * @tparam Scalar Output scalar type
  *
- * @see GatherResult::reduceV2() for usage
+ * @see GatherResult::reduce() for usage
  * @see PipelineValueStore for store documentation
  */
 template<typename InElement, typename Scalar>
@@ -201,8 +133,8 @@ concept ViewAdaptor = requires(F f, std::span<InElement const> input) {
     { f(input) } -> std::ranges::input_range;
     // Output range must yield OutElement
     requires std::convertible_to<
-        std::ranges::range_value_t<decltype(f(input))>,
-        OutElement>;
+            std::ranges::range_value_t<decltype(f(input))>,
+            OutElement>;
 };
 
 /**
@@ -295,36 +227,6 @@ struct BoundReducer {
     std::type_index intermediate_type = typeid(void);
 };
 
-/**
- * @brief Result of binding a context-aware pipeline
- */
-template<typename InElement, typename OutElement>
-struct BoundContextAwareViewAdaptor {
-    /// Factory that creates adaptors from context
-    ViewAdaptorFactory<InElement, OutElement> factory;
+}// namespace WhiskerToolbox::Transforms::V2
 
-    /// Input element type
-    std::type_index input_type = typeid(InElement);
-
-    /// Output element type
-    std::type_index output_type = typeid(OutElement);
-};
-
-/**
- * @brief Result of binding a context-aware pipeline with reduction
- */
-template<typename InElement, typename Scalar>
-struct BoundContextAwareReducer {
-    /// Factory that creates reducers from context
-    ReducerFactory<InElement, Scalar> factory;
-
-    /// Input element type
-    std::type_index input_type = typeid(InElement);
-
-    /// Output scalar type
-    std::type_index output_type = typeid(Scalar);
-};
-
-}  // namespace WhiskerToolbox::Transforms::V2
-
-#endif  // WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP
+#endif// WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP

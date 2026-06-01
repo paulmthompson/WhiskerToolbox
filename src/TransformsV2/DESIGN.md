@@ -142,7 +142,7 @@ PipelineValueStore store = gather.buildTrialStore(trial_idx);
 
 // Project values across trials (V2 store-based binding)
 auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-auto projections = gather.projectV2(factory);
+auto projections = gather.project(factory);
 
 // Reduce and sort trials (supply ReducerFactoryV2, often wrapping executeErased)
 auto latencies = gather.reduce(reducer_factory);
