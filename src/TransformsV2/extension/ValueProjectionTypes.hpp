@@ -75,7 +75,7 @@
  * ```
  *
  * @see ViewAdaptorTypes.hpp for batch adaptor types
- * @see TransformPipeline::bindValueProjectionV2()
+ * @see bindValueProjectionV2()
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
