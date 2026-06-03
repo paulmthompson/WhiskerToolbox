@@ -2,9 +2,9 @@
 #define PIPELINE_STEP_HPP
 
 #include "core/ElementRegistry.hpp"     // ElementRegistry
-#include "core/PipelineValueStore.hpp"  // PipelineValueStore
+#include "PipelineValueStore/PipelineValueStore.hpp"  // PipelineValueStore
 
-#include "extension/TransformTypes.hpp" // ElementVariant, BatchVariant
+#include "TransformTypes/TransformTypes.hpp" // ElementVariant, BatchVariant
 
 #include <any>       //std::any
 #include <functional>// std::function

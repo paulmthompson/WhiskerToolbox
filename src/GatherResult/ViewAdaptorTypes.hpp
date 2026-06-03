@@ -44,7 +44,7 @@
  * @see PipelineValueStore
  */
 
-#include "TransformTypes.hpp"
+#include "TransformTypes/TransformTypes.hpp"
 
 #include <any>
 #include <concepts>
@@ -56,8 +56,10 @@
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
-
 class PipelineValueStore;
+}// namespace WhiskerToolbox::Transforms::V2
+
+namespace WhiskerToolbox::Gather {
 
 // ============================================================================
 // View Adaptor Types
@@ -111,12 +113,12 @@ using ErasedReducerFn = std::function<std::any(std::any const &)>;
  * @see PipelineValueStore for store documentation
  */
 template<typename InElement, typename Scalar>
-using ReducerFactoryV2 = std::function<ReducerFn<InElement, Scalar>(PipelineValueStore const &)>;
+using ReducerFactoryV2 = std::function<ReducerFn<InElement, Scalar>(WhiskerToolbox::Transforms::V2::PipelineValueStore const &)>;
 
 /**
  * @brief Type-erased reducer factory (V2 pattern)
  */
-using ErasedReducerFactoryV2 = std::function<ErasedReducerFn(PipelineValueStore const &)>;
+using ErasedReducerFactoryV2 = std::function<ErasedReducerFn(WhiskerToolbox::Transforms::V2::PipelineValueStore const &)>;
 
 // ============================================================================
 // Concepts for View Adaptors
@@ -147,40 +149,6 @@ concept Reducer = requires(F f, std::span<InElement const> input) {
     { f(input) } -> std::convertible_to<Scalar>;
 };
 
-// ============================================================================
-// Terminal Reduction Step Descriptor
-// ============================================================================
-
-/**
- * @brief Descriptor for a terminal range reduction in a pipeline
- *
- * This is stored in TransformPipeline when setRangeReduction() is called.
- * It contains the reduction name and type-erased parameters.
- */
-struct RangeReductionStep {
-    /// Name of the registered range reduction
-    std::string reduction_name;
-
-    /// Type-erased parameters for the reduction
-    std::any params;
-
-    /// Input element type (for validation)
-    std::type_index input_type = typeid(void);
-
-    /// Output scalar type
-    std::type_index output_type = typeid(void);
-
-    /// Parameter type
-    std::type_index params_type = typeid(void);
-
-    RangeReductionStep() = default;
-
-    template<typename Params>
-    RangeReductionStep(std::string name, Params p)
-        : reduction_name(std::move(name)),
-          params(std::move(p)),
-          params_type(typeid(Params)) {}
-};
 
 // ============================================================================
 // Result Types for Pipeline Binding
@@ -227,6 +195,6 @@ struct BoundReducer {
     std::type_index intermediate_type = typeid(void);
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Gather
 
 #endif// WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP

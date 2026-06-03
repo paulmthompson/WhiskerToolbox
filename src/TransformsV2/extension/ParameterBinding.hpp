@@ -52,7 +52,7 @@
  * @see PipelineStep.hpp for integration with pipeline execution
  */
 
-#include "core/PipelineValueStore.hpp" // For PipelineValueStore
+#include "PipelineValueStore/PipelineValueStore.hpp" // For PipelineValueStore
 
 #include <rfl.hpp>
 #include <rfl/DefaultIfMissing.hpp>

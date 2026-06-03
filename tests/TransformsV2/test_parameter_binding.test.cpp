@@ -9,7 +9,7 @@
  * 4. Registry-based binding applicator registration
  */
 
-#include "TransformsV2/core/PipelineValueStore.hpp"
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ParameterBinding.hpp"
 
 #include <catch2/catch_test_macros.hpp>

@@ -71,16 +71,18 @@
  * @see AnalogTimeSeries::createView() for analog series views
  */
 
+#include "IntervalAdapters.hpp"
+
+#include "ViewAdaptorTypes.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "TransformsV2/core/PipelineValueStore.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
-#include "TransformsV2/extension/ViewAdaptorTypes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -158,7 +160,7 @@ concept HasElementType = requires {
  * can provide their underlying TimeFrame for cross-timeframe alignment.
  */
 template<typename T>
-concept HasTimeFrameAccess = requires(T const& t) {
+concept HasTimeFrameAccess = requires(T const & t) {
     { t.getTimeFrame() } -> std::same_as<std::shared_ptr<TimeFrame>>;
 };
 
@@ -166,7 +168,7 @@ concept HasTimeFrameAccess = requires(T const& t) {
  * @brief Concept for data types that have a TimeFrame
  */
 template<typename T>
-concept HasTimeFrame = requires(T const& t) {
+concept HasTimeFrame = requires(T const & t) {
     { t.getTimeFrame() } -> std::same_as<std::shared_ptr<TimeFrame>>;
 };
 
@@ -196,7 +198,7 @@ struct element_type_of<AnalogTimeSeries> {
     using type = AnalogTimeSeries::TimeValuePoint;
 };
 
-// Specialization: DigitalIntervalSeries uses IntervalWithId  
+// Specialization: DigitalIntervalSeries uses IntervalWithId
 template<>
 struct element_type_of<DigitalIntervalSeries> {
     using type = IntervalWithId;
@@ -261,7 +263,7 @@ public:
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
-        for (auto const & interval : intervals->view()) {
+        for (auto const & interval: intervals->view()) {
             result._intervals.push_back(interval.interval);
             auto view = U::createView(
                     source,
@@ -294,7 +296,7 @@ public:
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
-        for (auto const & interval : intervals->view()) {
+        for (auto const & interval: intervals->view()) {
             result._intervals.push_back(interval.interval);
             auto view = U::createView(
                     source,
@@ -328,7 +330,7 @@ public:
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
-        for (auto const & interval : intervals->view()) {
+        for (auto const & interval: intervals->view()) {
             result._intervals.push_back(interval.interval);
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
                     TimeFrameIndex(interval.interval.start),
@@ -376,41 +378,43 @@ public:
      */
     template<typename U = T, typename IntervalSourceT>
         requires WhiskerToolbox::Gather::ViewableDataType<U> &&
-                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
-            IntervalSourceT const& interval_source) {
+            IntervalSourceT const & interval_source) {
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
-        
+
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        
-        for (auto const & aligned_interval : interval_source) {
+
+        for (auto const & aligned_interval: interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
-            
+
             if (adapter_tf) {
                 // Adapter yields indices in its own TimeFrame; convert to
                 // absolute time, then to source-TF indices for view creation.
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.alignment_time));
+                        TimeFrameIndex(aligned_interval.alignment_time));
                 int64_t start_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.start));
+                        TimeFrameIndex(aligned_interval.start));
                 int64_t end_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.end));
-                
+                        TimeFrameIndex(aligned_interval.end));
+
                 if (source_tf) {
                     view_start = source_tf->getIndexAtTime(
-                        static_cast<float>(start_abs)).getValue();
+                                                  static_cast<float>(start_abs))
+                                         .getValue();
                     view_end = source_tf->getIndexAtTime(
-                        static_cast<float>(end_abs)).getValue();
+                                                static_cast<float>(end_abs))
+                                       .getValue();
                 } else {
                     view_start = start_abs;
                     view_end = end_abs;
@@ -420,26 +424,28 @@ public:
                 // Convert directly to source-TF indices.
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.start)).getValue();
+                                              static_cast<float>(aligned_interval.start))
+                                     .getValue();
                 view_end = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.end)).getValue();
+                                            static_cast<float>(aligned_interval.end))
+                                   .getValue();
             } else {
                 // No TimeFrame at all: raw indices are the only option
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
             }
-            
+
             result._intervals.push_back(Interval{view_start, view_end});
             result._alignment_times.push_back(alignment_abs_time);
-            
+
             auto view = U::createView(
                     source,
                     TimeFrameIndex(view_start),
                     TimeFrameIndex(view_end));
             result._views.push_back(std::move(view));
         }
-        
+
         return result;
     }
 
@@ -449,39 +455,41 @@ public:
     template<typename U = T, typename IntervalSourceT>
         requires WhiskerToolbox::Gather::ViewableDataTypeInt64<U> &&
                  (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
-                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
-            IntervalSourceT const& interval_source) {
+            IntervalSourceT const & interval_source) {
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
-        
+
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        
-        for (auto const & aligned_interval : interval_source) {
+
+        for (auto const & aligned_interval: interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
-            
+
             if (adapter_tf) {
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.alignment_time));
+                        TimeFrameIndex(aligned_interval.alignment_time));
                 int64_t start_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.start));
+                        TimeFrameIndex(aligned_interval.start));
                 int64_t end_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.end));
-                
+                        TimeFrameIndex(aligned_interval.end));
+
                 if (source_tf) {
                     view_start = source_tf->getIndexAtTime(
-                        static_cast<float>(start_abs)).getValue();
+                                                  static_cast<float>(start_abs))
+                                         .getValue();
                     view_end = source_tf->getIndexAtTime(
-                        static_cast<float>(end_abs)).getValue();
+                                                static_cast<float>(end_abs))
+                                       .getValue();
                 } else {
                     view_start = start_abs;
                     view_end = end_abs;
@@ -489,18 +497,20 @@ public:
             } else if (source_tf) {
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.start)).getValue();
+                                              static_cast<float>(aligned_interval.start))
+                                     .getValue();
                 view_end = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.end)).getValue();
+                                            static_cast<float>(aligned_interval.end))
+                                   .getValue();
             } else {
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
             }
-            
+
             result._intervals.push_back(Interval{view_start, view_end});
             result._alignment_times.push_back(alignment_abs_time);
-            
+
             auto view = U::createView(
                     source,
                     view_start,
@@ -518,39 +528,41 @@ public:
         requires WhiskerToolbox::Gather::CopyableTimeRangeDataType<U> &&
                  (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
                  (!WhiskerToolbox::Gather::ViewableDataTypeInt64<U>) &&
-                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
-            IntervalSourceT const& interval_source) {
+            IntervalSourceT const & interval_source) {
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
-        
+
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        
-        for (auto const & aligned_interval : interval_source) {
+
+        for (auto const & aligned_interval: interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
-            
+
             if (adapter_tf) {
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.alignment_time));
+                        TimeFrameIndex(aligned_interval.alignment_time));
                 int64_t start_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.start));
+                        TimeFrameIndex(aligned_interval.start));
                 int64_t end_abs = adapter_tf->getTimeAtIndex(
-                    TimeFrameIndex(aligned_interval.end));
-                
+                        TimeFrameIndex(aligned_interval.end));
+
                 if (source_tf) {
                     view_start = source_tf->getIndexAtTime(
-                        static_cast<float>(start_abs)).getValue();
+                                                  static_cast<float>(start_abs))
+                                         .getValue();
                     view_end = source_tf->getIndexAtTime(
-                        static_cast<float>(end_abs)).getValue();
+                                                static_cast<float>(end_abs))
+                                       .getValue();
                 } else {
                     view_start = start_abs;
                     view_end = end_abs;
@@ -558,18 +570,20 @@ public:
             } else if (source_tf) {
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.start)).getValue();
+                                              static_cast<float>(aligned_interval.start))
+                                     .getValue();
                 view_end = source_tf->getIndexAtTime(
-                    static_cast<float>(aligned_interval.end)).getValue();
+                                            static_cast<float>(aligned_interval.end))
+                                   .getValue();
             } else {
                 alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
             }
-            
+
             result._intervals.push_back(Interval{view_start, view_end});
             result._alignment_times.push_back(alignment_abs_time);
-            
+
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
                     TimeFrameIndex(view_start),
                     TimeFrameIndex(view_end)));
@@ -650,7 +664,7 @@ public:
     /**
      * @brief Get the alignment intervals used to create views
      */
-    [[nodiscard]] std::vector<Interval> const& intervals() const { return _intervals; }
+    [[nodiscard]] std::vector<Interval> const & intervals() const { return _intervals; }
 
     /**
      * @brief Get the interval at a specific index (O(1) access)
@@ -688,7 +702,7 @@ public:
         }
         // Handle potential reordering from sortBy()/reorder()
         size_type orig_idx = !_reorder_indices.empty() ? _reorder_indices[i] : i;
-        
+
         // Use alignment_times if available, otherwise fall back to interval start
         if (!_alignment_times.empty() && orig_idx < _alignment_times.size()) {
             return _alignment_times[orig_idx];
@@ -724,7 +738,7 @@ public:
         using ResultType = std::invoke_result_t<F, value_type const &>;
         std::vector<ResultType> results;
         results.reserve(_views.size());
-        for (auto const & view : _views) {
+        for (auto const & view: _views) {
             results.push_back(std::invoke(std::forward<F>(func), view));
         }
         return results;
@@ -774,7 +788,7 @@ public:
         result._intervals = _intervals;
         result._views.reserve(_views.size());
 
-        for (auto const & view : _views) {
+        for (auto const & view: _views) {
             if constexpr (requires { view->materialize(); }) {
                 result._views.push_back(view->materialize());
             } else {
@@ -827,21 +841,21 @@ public:
         if (trial_idx >= size()) {
             throw std::out_of_range("GatherResult::buildTrialStore: index out of range");
         }
-        
+
         auto interval = intervalAtReordered(trial_idx);
         size_type orig_idx = originalIndex(trial_idx);
-        
+
         // Use stored alignment time if available, otherwise default to interval start
         int64_t alignment_time = !_alignment_times.empty()
-            ? _alignment_times[orig_idx]
-            : static_cast<int64_t>(interval.start);
-        
+                                         ? _alignment_times[orig_idx]
+                                         : static_cast<int64_t>(interval.start);
+
         WhiskerToolbox::Transforms::V2::PipelineValueStore store;
         store.set("alignment_time", alignment_time);
         store.set("trial_index", static_cast<int64_t>(orig_idx));
         store.set("trial_duration", interval.end - interval.start);
         store.set("end_time", static_cast<int64_t>(interval.end));
-        
+
         return store;
     }
 
@@ -878,7 +892,7 @@ public:
      */
     template<typename Value>
     [[nodiscard]] auto project(
-            WhiskerToolbox::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const& factory) const {
+            WhiskerToolbox::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const & factory) const {
         using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
         std::vector<ProjectionFn> projections;
         projections.reserve(size());
@@ -919,7 +933,7 @@ public:
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<Scalar> reduce(
-            WhiskerToolbox::Transforms::V2::ReducerFactoryV2<element_type, Scalar> const& reducer_factory) const {
+            WhiskerToolbox::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory) const {
         std::vector<Scalar> results;
         results.reserve(size());
 
@@ -967,9 +981,9 @@ public:
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<size_type> sortIndicesBy(
-            WhiskerToolbox::Transforms::V2::ReducerFactoryV2<element_type, Scalar> const& reducer_factory,
+            WhiskerToolbox::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory,
             bool ascending = true) const {
-        
+
         auto values = reduce(reducer_factory);
 
         std::vector<size_type> indices(size());
@@ -977,24 +991,24 @@ public:
 
         if (ascending) {
             std::stable_sort(indices.begin(), indices.end(),
-                [&values](size_type a, size_type b) {
-                    // Handle NaN: NaN values sort to end
-                    if constexpr (std::is_floating_point_v<Scalar>) {
-                        if (std::isnan(values[a])) return false;
-                        if (std::isnan(values[b])) return true;
-                    }
-                    return values[a] < values[b];
-                });
+                             [&values](size_type a, size_type b) {
+                                 // Handle NaN: NaN values sort to end
+                                 if constexpr (std::is_floating_point_v<Scalar>) {
+                                     if (std::isnan(values[a])) return false;
+                                     if (std::isnan(values[b])) return true;
+                                 }
+                                 return values[a] < values[b];
+                             });
         } else {
             std::stable_sort(indices.begin(), indices.end(),
-                [&values](size_type a, size_type b) {
-                    // Handle NaN: NaN values sort to end
-                    if constexpr (std::is_floating_point_v<Scalar>) {
-                        if (std::isnan(values[a])) return false;
-                        if (std::isnan(values[b])) return true;
-                    }
-                    return values[a] > values[b];
-                });
+                             [&values](size_type a, size_type b) {
+                                 // Handle NaN: NaN values sort to end
+                                 if constexpr (std::is_floating_point_v<Scalar>) {
+                                     if (std::isnan(values[a])) return false;
+                                     if (std::isnan(values[b])) return true;
+                                 }
+                                 return values[a] > values[b];
+                             });
         }
 
         return indices;
@@ -1020,10 +1034,10 @@ public:
      * // sorted_result[0] is now the trial with smallest reduction value
      * @endcode
      */
-    [[nodiscard]] GatherResult reorder(std::vector<size_type> const& indices) const {
+    [[nodiscard]] GatherResult reorder(std::vector<size_type> const & indices) const {
         if (indices.size() != size()) {
             throw std::invalid_argument(
-                "GatherResult::reorder: indices size must match result size");
+                    "GatherResult::reorder: indices size must match result size");
         }
 
         GatherResult result;
@@ -1032,12 +1046,12 @@ public:
         result._intervals = _intervals;
         result._alignment_times = _alignment_times;
         result._views.reserve(size());
-        result._reorder_indices = indices;  // Store the reorder mapping
+        result._reorder_indices = indices;// Store the reorder mapping
 
-        for (auto idx : indices) {
+        for (auto idx: indices) {
             if (idx >= size()) {
                 throw std::out_of_range(
-                    "GatherResult::reorder: index out of range");
+                        "GatherResult::reorder: index out of range");
             }
             result._views.push_back(_views[idx]);
         }
@@ -1059,7 +1073,7 @@ public:
             throw std::out_of_range("GatherResult::originalIndex: index out of range");
         }
         if (_reorder_indices.empty()) {
-            return reordered_idx;  // Not reordered
+            return reordered_idx;// Not reordered
         }
         return _reorder_indices[reordered_idx];
     }
@@ -1099,18 +1113,18 @@ private:
     template<typename U, typename IntervalSourceT>
         requires WhiskerToolbox::Gather::HasTimeFrame<U>
     static std::function<int64_t(int64_t)> getTimeConverter(
-            std::shared_ptr<U> const& source,
-            IntervalSourceT const& interval_source) {
-        
+            std::shared_ptr<U> const & source,
+            IntervalSourceT const & interval_source) {
+
         // Get TimeFrames
         auto source_tf = source ? source->getTimeFrame() : nullptr;
-        
+
         // Check if adapter has TimeFrame access
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        
+
         // If both have TimeFrames and they're different, need conversion
         if (source_tf && adapter_tf && source_tf.get() != adapter_tf.get()) {
             // Return a converting function
@@ -1119,31 +1133,31 @@ private:
                 // adapter_tf: index -> absolute time via getTimeAtIndex
                 // source_tf: absolute time -> index via getIndexAtTime
                 auto absolute_time = static_cast<float>(
-                    adapter_tf->getTimeAtIndex(TimeFrameIndex(time)));
+                        adapter_tf->getTimeAtIndex(TimeFrameIndex(time)));
                 return source_tf->getIndexAtTime(absolute_time).getValue();
             };
         }
-        
+
         // No conversion needed - return identity
         return [](int64_t time) -> int64_t { return time; };
     }
-    
+
     /**
      * @brief Fallback for sources without TimeFrame access - no conversion
      */
     template<typename U, typename IntervalSourceT>
-        requires (!WhiskerToolbox::Gather::HasTimeFrame<U>)
+        requires(!WhiskerToolbox::Gather::HasTimeFrame<U>)
     static std::function<int64_t(int64_t)> getTimeConverter(
-            std::shared_ptr<U> const& /*source*/,
-            IntervalSourceT const& /*interval_source*/) {
+            std::shared_ptr<U> const & /*source*/,
+            IntervalSourceT const & /*interval_source*/) {
         return [](int64_t time) -> int64_t { return time; };
     }
 
     std::shared_ptr<T> _source;
-    std::vector<Interval> _intervals;         // Stored intervals (no merging)
+    std::vector<Interval> _intervals;// Stored intervals (no merging)
     std::vector<value_type> _views;
-    std::vector<size_type> _reorder_indices;  // Maps reordered position → original index
-    std::vector<int64_t> _alignment_times;    // Per-trial alignment times (optional)
+    std::vector<size_type> _reorder_indices;// Maps reordered position → original index
+    std::vector<int64_t> _alignment_times;  // Per-trial alignment times (optional)
 };
 
 // =============================================================================
@@ -1213,7 +1227,7 @@ template<typename T>
  * @endcode
  */
 template<typename T, typename IntervalSourceT>
-    requires WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+    requires WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
 [[nodiscard]] GatherResult<T> gather(
         std::shared_ptr<T> source,
         IntervalSourceT & interval_source) {

@@ -6,8 +6,8 @@
 // only the gather logic that depends on PlotAlignmentData (a plain POD struct).
 
 #include "GatherResult/GatherResult.hpp"
+#include "GatherResult/IntervalAdapters.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -23,9 +23,9 @@ namespace WhiskerToolbox::Plots {
 
 namespace {
 
-using WhiskerToolbox::Transforms::V2::AlignmentPoint;
-using WhiskerToolbox::Transforms::V2::expandEvents;
-using WhiskerToolbox::Transforms::V2::withAlignment;
+using WhiskerToolbox::Gather::AlignmentPoint;
+using WhiskerToolbox::Gather::expandEvents;
+using WhiskerToolbox::Gather::withAlignment;
 
 [[nodiscard]] AlignmentPoint toAlignmentPointLocal(IntervalAlignmentType type) noexcept {
     return (type == IntervalAlignmentType::End)

@@ -2,21 +2,21 @@
 #define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 
 #include "ElementRegistry.hpp"// ElementRegistry
-#include "PipelineValueStore.hpp"
+#include "PipelineValueStore/PipelineValueStore.hpp"
 #include "RangeReductionRegistry.hpp"        // RangeReductionRegistry
+#include "RangeReductionStep.hpp"            // RangeReductionStep
 #include "detail/ExtractElement.hpp"         // extractElement
 #include "detail/PipelineOutputBuilder.hpp"  // PipelineOutputBuilder
 #include "detail/PipelineStep.hpp"           // PipelineStep
 #include "detail/ReductionStep.hpp"          // ReductionStep
 #include "extension/ParameterBinding.hpp"    // applyBindingsErased
-#include "extension/TransformTypes.hpp"      // ElementVariant, BatchVariant
 #include "extension/ValueProjectionTypes.hpp"// ValueProjectionFn
-#include "extension/ViewAdaptorTypes.hpp"    // RangeReductionStep
 
 //#include "CoreGeometry/lines.hpp"
 //#include "CoreGeometry/masks.hpp"
 //#include "CoreGeometry/points.hpp"
 #include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
+#include "TransformTypes/TransformTypes.hpp"      // ElementVariant, BatchVariant
 
 #include <any>       // std::any
 #include <functional>// std::function

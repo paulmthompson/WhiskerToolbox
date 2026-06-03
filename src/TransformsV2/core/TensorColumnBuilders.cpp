@@ -1,17 +1,16 @@
 #include "TensorColumnBuilders.hpp"
 
+#include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/core/TypeChainResolver.hpp"
+#include "TransformsV2/extension/gatherResult/GatherPipelineExecutor.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
+
 #include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "Tensors/TensorData.hpp"
-
-#include "GatherPipelineExecutor.hpp"
-
-#include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/core/TypeChainResolver.hpp"
-#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include <cmath>     // NAN
 #include <functional>

@@ -4,12 +4,12 @@
  */
 
 #include "GatherResult/GatherResult.hpp"
+#include "GatherResult/IntervalAdapters.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -17,9 +17,9 @@
 #include <memory>
 #include <vector>
 
-using WhiskerToolbox::Transforms::V2::expandEvents;
-using WhiskerToolbox::Transforms::V2::withAlignment;
-using WhiskerToolbox::Transforms::V2::AlignmentPoint;
+using WhiskerToolbox::Gather::expandEvents;
+using WhiskerToolbox::Gather::withAlignment;
+using WhiskerToolbox::Gather::AlignmentPoint;
 
 // =============================================================================
 // Test Fixtures

@@ -12,7 +12,7 @@
  */
 
 #include "DigitalTimeSeries/EventWithId.hpp"
-#include "TransformsV2/core/PipelineValueStore.hpp"
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>

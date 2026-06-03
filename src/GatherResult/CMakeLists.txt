@@ -8,4 +8,8 @@ INTERFACE
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(GatherResult INTERFACE TransformsV2 DataManager)
+target_link_libraries(GatherResult INTERFACE TransformsV2)
+target_link_libraries(GatherResult INTERFACE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(GatherResult INTERFACE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(GatherResult INTERFACE WhiskerToolbox::TimeFrame)
+target_link_libraries(GatherResult INTERFACE TransformTypes)

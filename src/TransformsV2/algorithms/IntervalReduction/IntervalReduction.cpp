@@ -206,9 +206,9 @@ std::shared_ptr<TensorData> analogIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    ReducerFactoryV2<TimeValuePoint, float> factory =
+    Gather::ReducerFactoryV2<TimeValuePoint, float> factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> ReducerFn<TimeValuePoint, float> {
+                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<TimeValuePoint, float> {
         return [&reduction_name, &reduction_params](
                        std::span<TimeValuePoint const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
@@ -283,9 +283,9 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    ReducerFactoryV2<EventElement, float> factory =
+    Gather::ReducerFactoryV2<EventElement, float> factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> ReducerFn<EventElement, float> {
+                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<EventElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<EventElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
@@ -360,9 +360,9 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    ReducerFactoryV2<IntervalElement, float> factory =
+    Gather::ReducerFactoryV2<IntervalElement, float> factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> ReducerFn<IntervalElement, float> {
+                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<IntervalElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<IntervalElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();

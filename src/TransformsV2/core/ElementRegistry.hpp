@@ -8,7 +8,7 @@
 #include "detail/ParamExecutor.hpp"       // IParamExecutor, TypedParamExecutor, ITimeGroupedParamExecutor, TypedTimeGroupedParamExecutor
 #include "extension/ContainerRegistry.hpp"// ContainerTransformMetadata
 #include "extension/ElementTransform.hpp" // TypedTimeGroupedTransform, TypedTransform, is_tuple_v
-#include "extension/TransformTypes.hpp"   // ElementVariant, TransformLineageType, BatchVariant
+#include "TransformTypes/TransformTypes.hpp"   // ElementVariant, TransformLineageType, BatchVariant
 
 #include "DataManagerTypes.hpp"
 

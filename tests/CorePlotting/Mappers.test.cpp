@@ -19,8 +19,8 @@
 #include "CoreGeometry/points.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "GatherResult/IntervalAdapters.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -761,7 +761,7 @@ TEST_CASE("RasterMapper::mapEventsInWindow - includes pre-alignment events",
 TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment events",
           "[Mappers][RasterMapper][GatherResult][integration][negative]") {
 
-    using WhiskerToolbox::Transforms::V2::expandEvents;
+    using WhiskerToolbox::Gather::expandEvents;
 
     // Identity TimeFrame: index i → time i  (like a 1-to-1 data stream)
     auto tf = createLinearTimeFrame(200, 1);

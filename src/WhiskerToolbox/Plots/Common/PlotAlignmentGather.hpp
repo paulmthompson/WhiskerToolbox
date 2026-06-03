@@ -36,7 +36,7 @@
 #include "GatherResult/GatherResult.hpp"
 #include "PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
+#include "GatherResult/IntervalAdapters.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -48,9 +48,9 @@
 
 namespace WhiskerToolbox::Plots {
 
-using WhiskerToolbox::Transforms::V2::AlignmentPoint;
-using WhiskerToolbox::Transforms::V2::expandEvents;
-using WhiskerToolbox::Transforms::V2::withAlignment;
+using WhiskerToolbox::Gather::AlignmentPoint;
+using WhiskerToolbox::Gather::expandEvents;
+using WhiskerToolbox::Gather::withAlignment;
 
 // =============================================================================
 // Type Conversion Helpers

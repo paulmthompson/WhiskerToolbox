@@ -20,6 +20,8 @@ endif()
 
 add_subdirectory(DataObjects)
 
+add_subdirectory(TransformTypes)
+
 add_subdirectory(IO)
 
 add_subdirectory(StateEstimation)

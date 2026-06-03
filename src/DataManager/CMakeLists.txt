@@ -209,6 +209,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::CoreMath)
 target_link_libraries(DataManager PUBLIC CoreUtilities) # used in 
+target_link_libraries(DataManager PUBLIC TransformTypes)
 
 target_link_libraries(DataManager PRIVATE StateEstimation)
 

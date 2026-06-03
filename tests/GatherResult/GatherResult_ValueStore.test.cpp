@@ -2,24 +2,23 @@
  * @file GatherResult_ValueStore.test.cpp
  * @brief Tests for GatherResult V2 pattern with PipelineValueStore
  *
- * These tests verify the Phase 3 Value Store integration:
+ * These tests verify the Value Store integration:
  * - buildTrialStore() - produces correct PipelineValueStore for each trial
  * - projectV2() - applies value projection factory with store bindings
  * - bindValueProjectionV2() - creates factories from pipelines with bindings
  * - NormalizeTimeParamsV2 - binding-based normalization parameters
  *
- * @see PIPELINE_VALUE_STORE_ROADMAP.md Phase 3 for design details
  */
 
 #include "GatherResult/GatherResult.hpp"
+#include "GatherResult/IntervalAdapters.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TransformsV2/algorithms/Temporal/NormalizeTime.hpp"
 #include "TransformsV2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
-#include "TransformsV2/core/PipelineValueStore.hpp"
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/extension/IntervalAdapters.hpp"
 #include "TransformsV2/extension/ParameterBinding.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
@@ -29,6 +28,7 @@
 #include <memory>
 #include <vector>
 
+using namespace WhiskerToolbox::Gather;
 using namespace WhiskerToolbox::Transforms::V2;
 using Catch::Matchers::WithinAbs;
 

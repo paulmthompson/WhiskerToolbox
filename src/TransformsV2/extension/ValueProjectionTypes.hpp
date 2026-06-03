@@ -79,8 +79,6 @@
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
-#include "core/PipelineValueStore.hpp"
-
 #include <any>
 #include <concepts>
 #include <functional>
@@ -88,6 +86,8 @@
 #include <utility>
 
 namespace WhiskerToolbox::Transforms::V2 {
+
+class PipelineValueStore;
 
 // ============================================================================
 // Value Projection Function Types

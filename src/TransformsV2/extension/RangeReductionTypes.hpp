@@ -41,7 +41,7 @@
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
-#include "utils/TimeSeriesConcepts.hpp"
+#include "DataManager/utils/TimeSeriesConcepts.hpp"
 
 #include <concepts>
 #include <string>

@@ -6,6 +6,10 @@ find_package(reflectcpp CONFIG REQUIRED)
 
 
 set(TRANSFORM_V2_SOURCES
+
+    PipelineValueStore/PipelineValueStore.hpp
+    PipelineValueStore/PipelineValueStore.cpp
+
     detail/ContainerTraits.hpp
     detail/ContainerTraits.cpp 
     detail/PipelineStep.hpp
@@ -15,25 +19,22 @@ set(TRANSFORM_V2_SOURCES
         core/DataManagerIntegration.cpp
         core/ElementRegistry.cpp
         core/ElementRegistry.hpp 
-        core/PipelineValueStore.hpp
-        core/PipelineValueStore.cpp
         core/RangeReductionRegistry.hpp
         core/RegisteredTransforms.cpp
         core/TensorColumnBuilders.hpp
         core/TensorColumnBuilders.cpp
-        core/GatherPipelineExecutor.hpp
-        core/GatherPipelineExecutor.cpp
+
         core/TransformPipeline.hpp
         core/TransformPipeline.cpp
         core/TypeChainResolver.hpp
         core/TypeChainResolver.cpp
 
+        extension/gatherResult/GatherPipelineExecutor.hpp
+        extension/gatherResult/GatherPipelineExecutor.cpp
         extension/ElementTransform.hpp
         extension/ParameterBinding.hpp
         extension/ParameterBinding.cpp
         extension/RangeReductionTypes.hpp
-        extension/ValueProjectionTypes.hpp
-        extension/ViewAdaptorTypes.hpp
 
         io/ParameterIO.hpp
         io/ParameterIO.cpp
@@ -135,6 +136,7 @@ target_link_libraries(TransformsV2 PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::CoreMath)
+target_link_libraries(TransformsV2 PUBLIC TransformTypes)
 
 target_link_libraries(TransformsV2 PUBLIC reflectcpp::reflectcpp)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::ParameterSchema)

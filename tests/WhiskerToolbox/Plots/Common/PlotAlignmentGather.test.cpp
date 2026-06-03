@@ -17,7 +17,7 @@
 #include <vector>
 
 using namespace WhiskerToolbox::Plots;
-using WhiskerToolbox::Transforms::V2::AlignmentPoint;
+using WhiskerToolbox::Gather::AlignmentPoint;
 
 // =============================================================================
 // Test Fixtures
