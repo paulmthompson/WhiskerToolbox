@@ -59,6 +59,7 @@ set(TENSOR_SOURCES
     DimensionDescriptor.cpp
     RowDescriptor.hpp
     RowDescriptor.cpp
+    InvalidationWiringFn.hpp
     storage/TensorStorageBase.hpp
     storage/ArmadilloTensorStorage.hpp
     storage/ArmadilloTensorStorage.cpp

@@ -27,6 +27,7 @@
 
 #include "DimensionDescriptor.hpp"
 #include "RowDescriptor.hpp"
+#include "InvalidationWiringFn.hpp"
 #include "storage/LazyColumnTensorStorage.hpp"
 #include "storage/TensorStorageWrapper.hpp"
 
@@ -46,19 +47,8 @@
 #include <vector>
 
 class TimeIndexStorage;
-class LazyColumnTensorStorage;
-class TensorData;
 class TimeFrame;
 
-/**
- * @brief Callback that wires observer invalidation after lazy tensor construction.
- *
- * Receives the lazy storage (for invalidateColumn) and the TensorData
- * (for notifyObservers). Called exactly once, at the end of createFromLazyColumns().
- * Constructed at the builder layer (e.g., TensorColumnBuilders.hpp in TransformsV2).
- *
- */
-using InvalidationWiringFn = std::function<void(LazyColumnTensorStorage &, TensorData &)>;
 
 /**
  * @brief Refactored N-dimensional tensor with named axes, multiple storage

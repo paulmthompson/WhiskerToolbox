@@ -18,7 +18,7 @@
  * @see GatherResult for the gather+reduce pattern
  */
 
-#include "Tensors/TensorData.hpp"                     // InvalidationWiringFn
+#include "Tensors/InvalidationWiringFn.hpp"                     // InvalidationWiringFn
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"// ColumnProviderFn, ColumnSource
 #include "TimeFrame/TimeFrameIndex.hpp"                           // TimeFrameIndex
 
