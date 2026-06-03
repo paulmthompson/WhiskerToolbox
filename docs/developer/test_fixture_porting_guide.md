@@ -1,72 +1,167 @@
 # Test Fixture Porting Guide: V1 to V2 Transform Testing
 
-This guide describes the process for creating reusable test fixtures that enable consistent testing between V1 and V2 transform implementations. By decoupling test data creation from the transform-specific API, you can verify that both V1 and V2 produce identical results for the same input data.
+This guide describes how to share test data and expected results between V1 and V2 transform implementations. The preferred approach for **algorithm parity** is a **test vector** (one table row = input + parameters + expected output). Heavier **fixtures** (Catch2 `TEST_CASE_METHOD`, DataManager setup) remain useful when tests need pre-loaded DataManager state or multiple named objects.
 
 ## Overview
 
-The goal is to: 1. **Decouple test data** from transformation logic 2. **Reuse the same test data** across V1 and V2 tests 3. **Ensure algorithmic consistency** between implementations 4. **Keep parameter/JSON testing** in their respective test files
+Goals when porting tests:
+
+1. **Decouple test data** from transform-specific APIs (V1 free functions vs V2 `ElementRegistry`)
+2. **Reuse the same cases** in both test binaries
+3. **Encode expected outputs once** so V1/V2 drift is caught immediately
+4. **Keep version-specific tests separate** — JSON formats, registry metadata, progress/cancellation, null-input edge cases
+
+Choose an approach:
+
+| Approach | Best for | Shared artifact |
+|----------|----------|-----------------|
+| **Test vector** | Container/element transforms with clear I/O (signal in → events out) | `fixtures/vectors/.../*_vectors.hpp` + optional `*_test_helpers.hpp` |
+| **Scenario builders** | Input-only reuse (parameters still duplicated in tests) | `fixtures/scenarios/.../*_scenarios.hpp` |
+| **DataManager fixture** | Many named objects, time frames, integration tests | `fixtures/*TestFixture.hpp` |
+
+For new work, prefer **test vectors** over scenario-only headers when parameters and expected results are duplicated across V1 and V2.
 
 ## Directory Structure
 
-```         
-tests/
-└── DataManager/
-    └── fixtures/
-        ├── MaskAreaTestFixture.hpp      # Shared test data
-        ├── AnalogEventThresholdTestFixture.hpp
-        └── ...
+```
+tests/DataManager/fixtures/
+├── builders/                          # AnalogTimeSeriesBuilder, MaskDataBuilder, ...
+├── vectors/                           # Preferred: full I/O test rows
+│   └── analog/
+│       ├── analog_event_threshold_vectors.hpp
+│       └── analog_event_threshold_test_helpers.hpp
+├── scenarios/                         # Input-only factory functions (legacy / simple cases)
+│   └── analog/
+│       └── interval_threshold_scenarios.hpp
+├── MaskAreaTestFixture.hpp            # DataManager-backed fixtures (when needed)
+└── ...
 
-src/DataManager/
-├── transforms/
-│   └── Masks/
-│       └── Mask_Area/
-│           └── mask_area.test.cpp       # V1 tests (uses fixture)
-└── transforms/v2/
-    └── algorithms/
-        └── MaskArea/
-            └── MaskArea.test.cpp        # V2 tests (uses same fixture)
+src/DataManager/transforms/.../my_transform.test.cpp     # V1
+src/TransformsV2/algorithms/MyTransform/MyTransform.test.cpp   # V2
 ```
 
-## Step-by-Step Process
+Both `test_data_manager` and `test_TransformsV2` add `tests/DataManager` to their include path — no CMake change is required for new headers under `fixtures/vectors/`.
 
-### Step 1: Analyze Existing V1 Tests
+## Recommended: Test Vector Pattern
 
-Identify the test data patterns in your V1 tests:
+### Step 1: Extract rows from V1 tests
 
-``` cpp
-// Before: Data creation scattered in V1 tests
-TEST_CASE("Mask area calculation", "[mask][area]") {
-    auto mask_data = std::make_shared<MaskData>();
-    
-    // Data creation mixed with test logic
-    std::vector<uint32_t> x1 = {1, 2, 3};
-    std::vector<uint32_t> y1 = {1, 2, 3};
-    mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
-    
-    auto result = area(mask_data.get());
-    // ... assertions
+Each duplicated `SECTION` becomes one `Case` row: raw `values`/`times`, neutral parameters (`threshold`, `direction`, `lockout`), and `expected_event_times`.
+
+```cpp
+// tests/DataManager/fixtures/vectors/analog/my_transform_vectors.hpp
+namespace my_transform_vectors {
+
+enum class Direction { positive, negative, absolute };
+
+struct Case {
+    std::string_view name;              // Catch2 DYNAMIC_SECTION label
+    std::string_view dm_key;            // DataManager key for JSON integration tests
+    std::vector<float> values;
+    std::vector<int> times;
+  // ... version-neutral parameters ...
+    std::vector<int> expected_event_times;  // empty => expect no output events
+};
+
+inline std::vector<Case> const& algorithmCases() {
+    static std::vector<Case> const cases = { /* rows */ };
+    return cases;
+}
+
+inline Case const* findCaseByDmKey(std::string_view dm_key) { /* ... */ }
+
+} // namespace
+```
+
+Use `static std::vector<Case> const` inside a function (not `constexpr std::array`) when rows contain `std::vector` members.
+
+### Step 2: Add shared helpers
+
+Keep helpers free of V2 headers when only V1 tests need them; put V2 param adapters in the V2 test `.cpp` if the V1 target must not link TransformsV2.
+
+```cpp
+// tests/DataManager/fixtures/vectors/analog/my_transform_test_helpers.hpp
+namespace my_transform_test {
+
+inline std::shared_ptr<AnalogTimeSeries> buildAnalogTimeSeries(Case const& tc) {
+    return AnalogTimeSeriesBuilder().withValues(tc.values).atTimes(tc.times).build();
+}
+
+inline ThresholdParams toThresholdParams(Case const& tc) { /* map neutral enum → V1 */ }
+
+inline void requireEventTimes(DigitalEventSeries const& events,
+                              std::span<int const> expected_times) {
+    // RangeEquals on event.time()
+}
+
+} // namespace
+```
+
+### Step 3: Table-driven algorithm tests (V1 and V2)
+
+```cpp
+for (auto const& tc : my_transform_vectors::algorithmCases()) {
+    if (!isHappyPathCase(tc.dm_key)) { continue; }  // optional filter
+    DYNAMIC_SECTION(tc.name) {
+        auto input = my_transform_test::buildAnalogTimeSeries(tc);
+        auto const params = my_transform_test::toThresholdParams(tc);  // or V2 adapter
+
+        auto result = event_threshold(input.get(), params);  // V1
+        // auto result = registry.executeContainerTransform<...>(..., toV2Params(tc), ctx);  // V2
+
+        my_transform_test::requireEventTimes(*result, tc.expected_event_times);
+    }
 }
 ```
 
-### Step 2: Create the Test Fixture
+Use **`DYNAMIC_SECTION(tc.name)`** so each row appears as its own subcase in Catch2 reports.
 
-Create a fixture header in `tests/DataManager/fixtures/`:
+Split **happy path** vs **shared edge** loops with a small `isHappyPathCase(dm_key)` helper if edge rows should live in a separate `TEST_CASE`.
 
-``` cpp
-// tests/DataManager/fixtures/MyTransformTestFixture.hpp
-#ifndef MY_TRANSFORM_TEST_FIXTURE_HPP
-#define MY_TRANSFORM_TEST_FIXTURE_HPP
+### Step 4: DataManager / JSON integration
 
-#include "catch2/catch_test_macros.hpp"
-#include "DataManager.hpp"
-#include "MyDataType.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"
+Populate the DataManager from the same table:
 
-#include <memory>
-#include <map>
-#include <string>
+```cpp
+for (auto const& tc : my_transform_vectors::algorithmCases()) {
+    std::string const time_key = std::string(tc.dm_key) + "_time";
+    dm.setData(std::string(tc.dm_key), buildAnalogTimeSeries(tc), TimeKey(time_key));
+}
+```
 
+JSON `input_key` values must match `Case::dm_key`. Assert pipeline output with `findCaseByDmKey("positive_no_lockout")` and `requireEventTimes`.
+
+### Step 5: What stays out of the vector
+
+| Keep in V1 test only | Keep in V2 test only |
+|----------------------|----------------------|
+| `ProgressCallback` sequencing | `ComputeContext::is_cancelled` |
+| Null pointer / invalid enum handling | `loadParametersFromJson`, rfl validation |
+| V1 `TransformRegistry` / `load_data_from_json_config` | `ElementRegistry` metadata |
+| | `load_data_from_json_config_v2` |
+
+Optional explicit **parity** `TEST_CASE` is usually unnecessary if both binaries iterate the same `algorithmCases()`.
+
+## Alternative: Scenario Builders (input only)
+
+When you only need shared **inputs**, use `fixtures/scenarios/` with builder functions:
+
+```cpp
+inline std::shared_ptr<AnalogTimeSeries> positive_threshold_no_lockout() {
+    return AnalogTimeSeriesBuilder()
+        .withValues({0.5f, 1.5f, 0.8f, 2.5f, 1.2f})
+        .atTimes({100, 200, 300, 400, 500})
+        .build();
+}
+```
+
+Downside: **parameters and expected outputs are still duplicated** in V1 and V2 test files. Migrate to a test vector when that duplication becomes painful (as with AnalogEventThreshold).
+
+## Alternative: DataManager Fixture Class
+
+Use `TEST_CASE_METHOD` fixtures when tests need a fully wired `DataManager`, multiple time keys, or many interdependent objects.
+
+```cpp
 class MyTransformTestFixture {
 protected:
     MyTransformTestFixture() {
@@ -76,167 +171,28 @@ protected:
         populateTestData();
     }
 
-    ~MyTransformTestFixture() = default;
-
-    DataManager* getDataManager() {
-        return m_data_manager.get();
-    }
-
-    // Map of named test data objects
+    DataManager* getDataManager() { return m_data_manager.get(); }
     std::map<std::string, std::shared_ptr<MyDataType>> m_test_data;
 
 private:
     void populateTestData() {
-        // Create each test scenario with a descriptive key
-        createData("empty_data", /* ... */);
         createData("single_element", /* ... */);
-        createData("multiple_elements", /* ... */);
-        createData("edge_case_scenario", /* ... */);
     }
-
-    void createData(const std::string& key, /* ... */) {
-        auto data = std::make_shared<MyDataType>();
-        // ... populate data ...
-        m_data_manager->setData(key, data, TimeKey("default"));
-        m_test_data[key] = data;
-    }
-
-    std::unique_ptr<DataManager> m_data_manager;
-    std::shared_ptr<TimeFrame> m_time_frame;
+    // ...
 };
-
-#endif
 ```
 
-**Key Design Principles:**
+**Design principles:**
 
-1.  **Use descriptive keys** - Name test data by the scenario, not the expected result
-2.  **Store both in map and DataManager** - Allows direct access and key-based lookup
-3.  **Document expected results in comments** - But don't encode them in the fixture
-4.  **Keep fixture minimal** - Only data creation, no transform logic
+1. **Descriptive keys** — name by scenario, not by expected numeric result
+2. **Document expectations in comments** on `populateTestData`, or prefer encoding them in a test vector
+3. **No transform logic in the fixture** — data creation only
 
-### Step 3: Refactor V1 Tests to Use Fixture
+## Fixture Patterns (legacy / specialized)
 
-Update the V1 test file to use `TEST_CASE_METHOD`:
+### Multiple data types
 
-``` cpp
-// src/DataManager/transforms/.../my_transform.test.cpp
-
-#include "my_transform.hpp"
-#include "fixtures/MyTransformTestFixture.hpp"
-
-// Tests using fixture data
-TEST_CASE_METHOD(MyTransformTestFixture, 
-                 "Transform - Scenario Name", 
-                 "[transforms][v1][my_transform]") {
-    
-    auto input = m_test_data["single_element"];
-    auto result = my_transform(input.get());
-    
-    REQUIRE(result != nullptr);
-    // ... assertions specific to this scenario
-}
-
-// Keep non-fixture tests for simple cases
-TEST_CASE("Transform - Simple inline test", "[transforms][v1][my_transform]") {
-    // Small inline tests that don't benefit from fixture
-}
-
-// Keep parameter/JSON tests separate
-TEST_CASE("Transform - JSON pipeline", "[transforms][v1][json]") {
-    // JSON/parameter-specific tests stay in this file
-}
-```
-
-### Step 4: Create V2 Tests Using Same Fixture
-
-In the V2 test file, use the same fixture:
-
-``` cpp
-// src/DataManager/transforms/v2/algorithms/MyTransform/MyTransform.test.cpp
-
-#include "MyTransform.hpp"
-#include "fixtures/MyTransformTestFixture.hpp"
-#include "transforms/v2/core/DataManagerIntegration.hpp"
-
-using namespace WhiskerToolbox::Transforms::V2;
-
-// V2 tests using same fixture data
-TEST_CASE_METHOD(MyTransformTestFixture,
-                 "TransformsV2 - Scenario Name",
-                 "[transforms][v2][my_transform]") {
-    
-    auto input = m_test_data["single_element"];
-    
-    // Use V2 registry
-    auto& registry = ElementRegistry::instance();
-    MyTransformParams params;
-    
-    auto result = registry.execute<ElementType, OutputType, MyTransformParams>(
-        "MyTransform", *input, params);
-    
-    // Same assertions as V1 (verify algorithmic parity)
-    REQUIRE(result == expected_value);
-}
-
-// V2 JSON/DataManager integration tests
-TEST_CASE_METHOD(MyTransformTestFixture,
-                 "TransformsV2 - DataManager Integration via load_data_from_json_config_v2",
-                 "[transforms][v2][datamanager]") {
-    
-    // Fixture pre-populates data in DataManager
-    auto dm = getDataManager();
-    
-    // V2 JSON format
-    std::string json_config = R"({
-        "name": "Test Pipeline",
-        "steps": [{
-            "name": "MyTransform",
-            "input_key": "single_element",
-            "output_key": "result",
-            "parameters": {}
-        }]
-    })";
-    
-    auto result = load_data_from_json_config_v2(dm, json_config);
-    REQUIRE(result.success);
-    
-    auto output = dm->getData<OutputType>("result");
-    REQUIRE(output != nullptr);
-    // ... verify results match V1
-}
-```
-
-### Step 5: Verify Consistency
-
-Create explicit parity tests:
-
-``` cpp
-TEST_CASE_METHOD(MyTransformTestFixture,
-                 "V1/V2 Parity - Single element",
-                 "[transforms][parity]") {
-    
-    auto input = m_test_data["single_element"];
-    
-    // V1 result
-    auto v1_result = v1_transform(input.get());
-    
-    // V2 result
-    auto& registry = ElementRegistry::instance();
-    auto v2_result = registry.execute<...>("Transform", *input, {});
-    
-    // Compare (accounting for V1->AnalogTimeSeries vs V2->RaggedAnalogTimeSeries)
-    REQUIRE(/* results equivalent */);
-}
-```
-
-## Fixture Patterns
-
-### Pattern: Multiple Data Types
-
-For transforms that work on different input types:
-
-``` cpp
+```cpp
 class MultiInputTestFixture {
 protected:
     std::map<std::string, std::shared_ptr<TypeA>> m_type_a_data;
@@ -244,60 +200,47 @@ protected:
 };
 ```
 
-### Pattern: Expected Results Documentation
+### Parameterized data without a vector
 
-Document expected results without encoding them:
-
-``` cpp
-void populateTestData() {
-    // Scenario: Single mask at timestamp 100 with 3 pixels
-    // V1 Expected: AnalogTimeSeries with {100: 3.0}
-    // V2 Expected: RaggedAnalogTimeSeries with {100: [3.0]}
-    createMask("single_mask_3px", 
-        /*timestamp=*/100, 
-        /*pixels=*/{Point2D{1,1}, Point2D{1,2}, Point2D{2,1}});
-}
-```
-
-### Pattern: Parameterized Data
-
-For testing parameter variations:
-
-``` cpp
-void populateTestData() {
-    // Base data for parameter testing
-    createSignal("param_test_base", {1.0, 2.0, 3.0}, {0, 10, 20});
-    
-    // The parameters themselves stay in the test files,
-    // only the data is shared via fixture
-}
-```
-
-## What Stays in Test Files
-
-Keep these in the respective V1/V2 test files:
-
-1.  **Parameter struct tests** - JSON loading, validation
-2.  **Transform-specific API tests** - V1 `TransformOperation` vs V2 `ElementRegistry`
-3.  **JSON pipeline format tests** - V1 format vs V2 format
-4.  **Registry-specific tests** - Metadata, type mapping
-5.  **Simple inline tests** - Trivial cases that don't need fixture
+Base signal in the fixture; parameter variations stay in each test file (acceptable only for a few cases).
 
 ## Checklist for Porting
 
--   [ ] Identify reusable test scenarios in V1 tests
--   [ ] Create fixture in `tests/DataManager/fixtures/`
--   [ ] Add fixture to V1 test's CMakeLists.txt includes
--   [ ] Refactor V1 tests to use `TEST_CASE_METHOD`
--   [ ] Verify V1 tests still pass
--   [ ] Add fixture include to V2 test file
--   [ ] Create V2 tests using same data keys
--   [ ] Create DataManager integration tests using `load_data_from_json_config_v2`
--   [ ] Verify V2 tests pass with same expected results
--   [ ] (Optional) Add explicit V1/V2 parity tests
+- [ ] List duplicated V1 `SECTION`s (input, params, expected output)
+- [ ] Add `fixtures/vectors/.../*_vectors.hpp` with `Case` + `algorithmCases()`
+- [ ] Add `*_test_helpers.hpp` (`build*`, `to*Params`, shared matchers)
+- [ ] Refactor V1 algorithm tests: loop + `DYNAMIC_SECTION`
+- [ ] Refactor V2 algorithm tests: same loop, V2 param adapter + registry/direct call
+- [ ] Wire DataManager/JSON tests from `dm_key` / `findCaseByDmKey`
+- [ ] Leave version-specific API tests in the respective `.cpp` files
+- [ ] Run V1 and V2 tests; remove obsolete scenario headers if fully migrated
 
 ## Example: AnalogEventThreshold
 
-See the complete implementation: - Fixture: `tests/DataManager/fixtures/AnalogEventThresholdTestFixture.hpp` - V2 Tests: `src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp`
+Reference implementation (test vector + helpers + table-driven tests):
 
-The fixture creates named test signals like `"positive_no_lockout"`, `"negative_with_lockout"`, etc., which are then used in both V1 and V2 tests with their respective APIs.
+| File | Role |
+|------|------|
+| [`analog_event_threshold_vectors.hpp`](../../tests/DataManager/fixtures/vectors/analog/analog_event_threshold_vectors.hpp) | `Case` rows: `values`, `times`, `threshold`, `direction`, `lockout`, `expected_event_times`, `dm_key` |
+| [`analog_event_threshold_test_helpers.hpp`](../../tests/DataManager/fixtures/vectors/analog/analog_event_threshold_test_helpers.hpp) | `buildAnalogTimeSeries`, `toThresholdParams`, `requireEventTimes` (V2 `toAnalogEventThresholdParams` lives in the V2 test `.cpp`) |
+| [`analog_event_threshold.test.cpp`](../../src/DataManager/transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.test.cpp) | V1: `algorithmCases()` loop; separate cases for progress, null input, invalid enum |
+| [`AnalogEventThreshold.test.cpp`](../../src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp) | V2: same loop via registry; cancellation, JSON, registry tests separate |
+
+**Sample row** (positive threshold, no lockout):
+
+```cpp
+{.name = "positive_no_lockout",
+ .dm_key = "positive_no_lockout",
+ .values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f},
+ .times = {100, 200, 300, 400, 500},
+ .threshold = 1.0f,
+ .direction = Direction::positive,
+ .lockout = 0.0f,
+ .expected_event_times = {200, 400, 500}},
+```
+
+**Parity note:** V1 and V2 absolute mode compare `abs(value)` to `threshold` vs `abs(threshold)` respectively. Shared vectors use positive absolute thresholds only; add a dedicated row before testing negative absolute thresholds.
+
+## Related follow-up
+
+The same vector pattern can replace input-only [`interval_threshold_scenarios.hpp`](../../tests/DataManager/fixtures/scenarios/analog/interval_threshold_scenarios.hpp) for AnalogIntervalThreshold when parameter/expected duplication becomes a maintenance burden.

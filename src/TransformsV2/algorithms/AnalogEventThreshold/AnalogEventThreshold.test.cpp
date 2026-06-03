@@ -12,8 +12,8 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 
-// Builder-based test fixtures
-#include "fixtures/scenarios/analog/threshold_scenarios.hpp"
+#include "fixtures/vectors/analog/analog_event_threshold_test_helpers.hpp"
+#include "fixtures/vectors/analog/analog_event_threshold_vectors.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -44,195 +44,121 @@ namespace {
     static RegisterAnalogEventThreshold register_analog_event_threshold;
 }
 
-auto compare_pred = [](EventWithId const & a, TimeFrameIndex const & b) {
-    return a.time() == b;
-};
+namespace {
 
-// ============================================================================
-// Tests: Algorithm Correctness (using builder-based scenarios)
-// ============================================================================
+using analog_event_threshold_test::buildAnalogTimeSeries;
+using analog_event_threshold_test::requireEventTimes;
+using analog_event_threshold_vectors::algorithmCases;
+using analog_event_threshold_vectors::findCaseByDmKey;
+using analog_event_threshold_vectors::Direction;
 
-TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path", 
-                 "[transforms][v2][container][analog_event_threshold]") {
-    
-    auto& registry = ElementRegistry::instance();
-    std::shared_ptr<DigitalEventSeries> result_events;
+bool isHappyPathCase(std::string_view dm_key) {
+    return dm_key != "empty_signal" && dm_key != "lockout_larger_than_duration" &&
+           dm_key != "events_at_threshold" && dm_key != "zero_based_timestamps";
+}
+
+AnalogEventThresholdParams toAnalogEventThresholdParams(analog_event_threshold_vectors::Case const& tc) {
     AnalogEventThresholdParams params;
-    std::vector<TimeFrameIndex> expected_events;
+    params.threshold_value = tc.threshold;
+    params.lockout_time = tc.lockout;
+    switch (tc.direction) {
+    case Direction::positive:
+        params.direction = AnalogEventThresholdParams::Direction::positive;
+        break;
+    case Direction::negative:
+        params.direction = AnalogEventThresholdParams::Direction::negative;
+        break;
+    case Direction::absolute:
+        params.direction = AnalogEventThresholdParams::Direction::absolute;
+        break;
+    }
+    return params;
+}
+
+} // namespace
+
+// ============================================================================
+// Tests: Algorithm Correctness (shared I/O vectors)
+// ============================================================================
+
+TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
+          "[transforms][v2][container][analog_event_threshold]") {
+
+    auto& registry = ElementRegistry::instance();
     ComputeContext ctx;
-    
-    // Progress tracking
     int progress_val = -1;
     int call_count = 0;
     ctx.progress = [&](int p) {
         progress_val = p;
         call_count++;
     };
-    
-    SECTION("Positive threshold, no lockout") {
-        auto ats = analog_scenarios::positive_threshold_no_lockout();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
-        
-        // Check progress was reported
-        REQUIRE(progress_val == 100);
-        REQUIRE(call_count > 0);
-    }
-    
-    SECTION("Positive threshold, with lockout") {
-        auto ats = analog_scenarios::positive_threshold_with_lockout();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 150.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
-    }
-    
-    SECTION("Negative threshold, no lockout") {
-        auto ats = analog_scenarios::negative_threshold_no_lockout();
-        params.threshold_value = -1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::negative;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-            Catch::Matchers::RangeEquals(expected_events));
-    }
-    
-    SECTION("Negative threshold, with lockout") {
-        auto ats = analog_scenarios::negative_threshold_with_lockout();
-        params.threshold_value = -1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::negative;
-        params.lockout_time = 150.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
-    }
-    
-    SECTION("Absolute threshold, no lockout") {
-        auto ats = analog_scenarios::absolute_threshold_no_lockout();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::absolute;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
-    }
-    
-    SECTION("Absolute threshold, with lockout") {
-        auto ats = analog_scenarios::absolute_threshold_with_lockout();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::absolute;
-        params.lockout_time = 150.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
-    }
-    
-    SECTION("No events expected (threshold too high)") {
-        auto ats = analog_scenarios::no_events_high_threshold();
-        params.threshold_value = 10.0f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        REQUIRE(result_events->size() == 0);
-    }
-    
-    SECTION("All events expected (threshold very low, no lockout)") {
-        auto ats = analog_scenarios::all_events_low_threshold();
-        params.threshold_value = 0.1f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        expected_events = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
-                          TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
+
+    for (auto const& tc : algorithmCases()) {
+        if (!isHappyPathCase(tc.dm_key)) {
+            continue;
+        }
+        DYNAMIC_SECTION(tc.name) {
+            auto ats = buildAnalogTimeSeries(tc);
+            auto const params = toAnalogEventThresholdParams(tc);
+
+            auto result_events =
+                    registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries,
+                                                      AnalogEventThresholdParams>(
+                            "AnalogEventThreshold", *ats, params, ctx);
+
+            requireEventTimes(*result_events, tc.expected_event_times);
+
+            if (tc.dm_key == "positive_no_lockout") {
+                REQUIRE(progress_val == 100);
+                REQUIRE(call_count > 0);
+            }
+        }
     }
 }
 
 TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
-                 "[transforms][v2][container][analog_event_threshold]") {
-    
+          "[transforms][v2][container][analog_event_threshold]") {
+
     auto& registry = ElementRegistry::instance();
-    std::shared_ptr<DigitalEventSeries> result_events;
-    AnalogEventThresholdParams params;
     ComputeContext ctx;
-    
-    SECTION("Empty analog time series") {
-        auto ats = analog_scenarios::empty_signal();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 0.0f;
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->size() == 0);
-    }
-    
-    SECTION("Lockout time larger than series duration") {
-        auto ats = analog_scenarios::lockout_larger_than_duration();
-        params.threshold_value = 1.0f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 1000.0f;  // Much larger than series
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        // Should only get first event
-        REQUIRE(result_events->size() == 1);
+
+    for (auto const& tc : algorithmCases()) {
+        if (tc.dm_key != "empty_signal" && tc.dm_key != "lockout_larger_than_duration" &&
+            tc.dm_key != "events_at_threshold" && tc.dm_key != "zero_based_timestamps") {
+            continue;
+        }
+        DYNAMIC_SECTION(tc.name) {
+            auto ats = buildAnalogTimeSeries(tc);
+            auto const params = toAnalogEventThresholdParams(tc);
+
+            auto result_events =
+                    registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries,
+                                                      AnalogEventThresholdParams>(
+                            "AnalogEventThreshold", *ats, params, ctx);
+
+            REQUIRE(result_events != nullptr);
+            if (tc.dm_key == "lockout_larger_than_duration") {
+                REQUIRE(result_events->size() == 1);
+            } else {
+                requireEventTimes(*result_events, tc.expected_event_times);
+            }
+        }
     }
 
     SECTION("Cancellation support") {
-        auto ats = analog_scenarios::all_events_low_threshold();
-        params.threshold_value = 0.1f;
-        params.direction = AnalogEventThresholdParams::Direction::positive;
-        params.lockout_time = 0.0f;
-        
-        // Set cancellation flag
+        auto const* tc = findCaseByDmKey("all_events_low_threshold");
+        REQUIRE(tc != nullptr);
+        auto ats = buildAnalogTimeSeries(*tc);
+        auto const params = toAnalogEventThresholdParams(*tc);
+
         bool should_cancel = true;
         ctx.is_cancelled = [&]() { return should_cancel; };
-        
-        result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-            "AnalogEventThreshold", *ats, params, ctx);
-        
-        // Should return empty due to cancellation
+
+        auto result_events =
+                registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries,
+                                                  AnalogEventThresholdParams>(
+                        "AnalogEventThreshold", *ats, params, ctx);
+
         REQUIRE(result_events->view().empty());
     }
 }
@@ -356,34 +282,15 @@ TEST_CASE("V2 Container Transform: Registry Integration",
 // ============================================================================
 
 namespace {
-    // Helper to set up DataManager with all threshold test scenarios
-    void populateDataManagerWithThresholdScenarios(DataManager& dm) {
-        dm.setData("positive_no_lockout", analog_scenarios::positive_threshold_no_lockout(), 
-                   TimeKey("positive_no_lockout_time"));
-        dm.setData("positive_with_lockout", analog_scenarios::positive_threshold_with_lockout(), 
-                   TimeKey("positive_with_lockout_time"));
-        dm.setData("negative_no_lockout", analog_scenarios::negative_threshold_no_lockout(), 
-                   TimeKey("negative_no_lockout_time"));
-        dm.setData("negative_with_lockout", analog_scenarios::negative_threshold_with_lockout(), 
-                   TimeKey("negative_with_lockout_time"));
-        dm.setData("absolute_no_lockout", analog_scenarios::absolute_threshold_no_lockout(), 
-                   TimeKey("absolute_no_lockout_time"));
-        dm.setData("absolute_with_lockout", analog_scenarios::absolute_threshold_with_lockout(), 
-                   TimeKey("absolute_with_lockout_time"));
-        dm.setData("no_events_high_threshold", analog_scenarios::no_events_high_threshold(), 
-                   TimeKey("no_events_high_threshold_time"));
-        dm.setData("all_events_low_threshold", analog_scenarios::all_events_low_threshold(), 
-                   TimeKey("all_events_low_threshold_time"));
-        dm.setData("empty_signal", analog_scenarios::empty_signal(), 
-                   TimeKey("empty_signal_time"));
-        dm.setData("lockout_larger_than_duration", analog_scenarios::lockout_larger_than_duration(), 
-                   TimeKey("lockout_larger_than_duration_time"));
-        dm.setData("events_at_threshold", analog_scenarios::events_at_threshold(), 
-                   TimeKey("events_at_threshold_time"));
-        dm.setData("zero_based_timestamps", analog_scenarios::zero_based_timestamps(), 
-                   TimeKey("zero_based_timestamps_time"));
+
+void populateDataManagerWithThresholdVectors(DataManager& dm) {
+    for (auto const& tc : algorithmCases()) {
+        std::string const time_key = std::string(tc.dm_key) + "_time";
+        dm.setData(std::string(tc.dm_key), buildAnalogTimeSeries(tc), TimeKey(time_key));
     }
 }
+
+} // namespace
 
 TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2",
                  "[transforms][v2][container][analog_event_threshold][json_config]") {
@@ -392,7 +299,7 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
     
     // Set up DataManager with scenario data
     DataManager dm;
-    populateDataManagerWithThresholdScenarios(dm);
+    populateDataManagerWithThresholdVectors(dm);
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_event_threshold_v2_test";
@@ -441,10 +348,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events");
         REQUIRE(result_events != nullptr);
         
-        // Verify the event detection results
-        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
+        auto const* tc = findCaseByDmKey("positive_no_lockout");
+        REQUIRE(tc != nullptr);
+        requireEventTimes(*result_events, tc->expected_event_times);
     }
     
     SECTION("Execute V2 pipeline with lockout") {
@@ -487,10 +393,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_lockout");
         REQUIRE(result_events != nullptr);
         
-        // With lockout of 150, event at 300 should be skipped
-        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
+        auto const* tc = findCaseByDmKey("positive_with_lockout");
+        REQUIRE(tc != nullptr);
+        requireEventTimes(*result_events, tc->expected_event_times);
     }
     
     SECTION("Execute V2 pipeline with negative threshold") {
@@ -533,9 +438,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_negative");
         REQUIRE(result_events != nullptr);
         
-        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
+        auto const* tc = findCaseByDmKey("negative_no_lockout");
+        REQUIRE(tc != nullptr);
+        requireEventTimes(*result_events, tc->expected_event_times);
     }
     
     SECTION("Execute V2 pipeline with absolute threshold") {
@@ -578,9 +483,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_absolute");
         REQUIRE(result_events != nullptr);
         
-        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
-         Catch::Matchers::RangeEquals(expected_events));
+        auto const* tc = findCaseByDmKey("absolute_no_lockout");
+        REQUIRE(tc != nullptr);
+        requireEventTimes(*result_events, tc->expected_event_times);
     }
     
     SECTION("Execute V2 pipeline - no events expected (high threshold)") {
