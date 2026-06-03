@@ -63,6 +63,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/DigitalEventStorage.hpp"
 
 #include <compare>
@@ -129,6 +130,12 @@ class EntityRegistry;
  */
 class DigitalEventSeries : public ObserverData {
 public:
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<DigitalEventSeries, EventWithId> {
+        static constexpr bool is_ragged = false;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+    };
+
     /**
      * @brief Default constructor creating an empty series with owning storage
      */

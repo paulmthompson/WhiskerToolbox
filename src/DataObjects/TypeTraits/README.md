@@ -126,13 +126,13 @@ static_assert(!WhiskerToolbox::TypeTraits::is_ragged_v<MyNewContainer>);
 
 ## Integration with Transform System
 
-The transform system (`transforms/v2/core/ContainerTraits.hpp`) uses these traits to:
+The transform system (`DataManager/utils/ContainerElementMapping.hpp`) uses these traits to:
 - Map element types to container types
 - Determine appropriate output containers for transforms
 - Validate type compatibility
 
 ```cpp
-// ContainerTraits now queries DataTraits instead of defining its own
+// ContainerElementMapping queries DataTraits for container → element mapping
 template<typename T>
 inline constexpr bool is_ragged_v = WhiskerToolbox::TypeTraits::is_ragged_v<T>;
 ```
@@ -148,5 +148,5 @@ Potential additional trait properties:
 ## Related Documentation
 
 - Transform System V2: `transforms/v2/DESIGN.md`
-- Container Traits: `transforms/v2/core/ContainerTraits.hpp`
-- Type Index Mapping: `transforms/v2/core/ContainerTraits.cpp`
+- Container mapping: `DataManager/utils/ContainerElementMapping.hpp`
+- Type index mapping: `DataManager/utils/ContainerTypeIndex.hpp`

@@ -6,7 +6,7 @@
 #include "core/ElementRegistry.hpp"
 #include "core/RegisteredTransforms.hpp"
 #include "core/TransformPipeline.hpp"
-#include "detail/ContainerTraits.hpp"
+#include "DataManager/utils/ContainerElementMapping.hpp"
 #include "detail/FlatZipView.hpp"
 #include "io/ParameterIO.hpp"    // loadParametersForTransform  
 #include "io/PipelineLoader.hpp"
@@ -29,6 +29,9 @@
 #include <ranges>
 
 namespace WhiskerToolbox::Transforms::V2 {
+
+using TypeTraits::ElementForSafe_t;
+using TypeTraits::has_element_type_v;
 
 // ============================================================================
 // DataManagerPipelineExecutor Implementation

@@ -38,6 +38,7 @@ target_link_libraries(DigitalTimeSeries PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
+    DataTypeTraits
   #  nlohmann_json::nlohmann_json  # For JSON support
 )
 

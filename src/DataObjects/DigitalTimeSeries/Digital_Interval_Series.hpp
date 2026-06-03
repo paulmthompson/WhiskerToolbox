@@ -63,6 +63,7 @@
 #include "Entity/EntityTypes.hpp"                   // EntityId
 #include "Observer/Observer_Data.hpp"               // ObserverData base class
 #include "TimeFrame/TimeFrame.hpp"                  // TimeFrame and TimeFrameIndex
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "TimeFrame/interval_data.hpp"              // Interval struct
 #include "storage/DigitalIntervalStorage.hpp"
 
@@ -136,6 +137,12 @@ inline constexpr bool always_false_v = false;
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<DigitalIntervalSeries, IntervalWithId> {
+        static constexpr bool is_ragged = false;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+    };
+
     // ========== Constructors ==========
     /**
      * @brief Default constructor

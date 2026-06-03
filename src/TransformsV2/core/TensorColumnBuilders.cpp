@@ -6,6 +6,8 @@
 #include "TransformsV2/io/PipelineLoader.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
+#include "DataManager/utils/DataTypeIndexBridge.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -21,41 +23,6 @@
 namespace WhiskerToolbox::TensorBuilders {
 
 namespace {
-
-// ============================================================================
-// DM_DataType → std::type_index Mapping
-// ============================================================================
-
-/**
- * @brief Map a DM_DataType enum value to the std::type_index of the
- *        corresponding container class.
- *
- * This bridges the DataManager's runtime type enum to the type_index
- * used by TypeChainResolver and TypeIndexMapper for pipeline validation.
- *
- * Uses TypeIndexMapper::stringToContainer() internally so the builder
- * layer does not need to include concrete data type headers (MaskData,
- * LineData, PointData, etc.).
- *
- * @throws std::runtime_error for types that cannot be used as pipeline sources
- *         (Video, Images, Tensor, Time, Unknown).
- */
-std::type_index dmTypeToContainerTypeIndex(DM_DataType type) {
-    using Transforms::V2::TypeIndexMapper;
-
-    switch (type) {
-        case DM_DataType::Analog:          return TypeIndexMapper::stringToContainer("AnalogTimeSeries");
-        case DM_DataType::RaggedAnalog:    return TypeIndexMapper::stringToContainer("RaggedAnalogTimeSeries");
-        case DM_DataType::Mask:            return TypeIndexMapper::stringToContainer("MaskData");
-        case DM_DataType::Line:            return TypeIndexMapper::stringToContainer("LineData");
-        case DM_DataType::Points:          return TypeIndexMapper::stringToContainer("PointData");
-        case DM_DataType::DigitalEvent:    return TypeIndexMapper::stringToContainer("DigitalEventSeries");
-        case DM_DataType::DigitalInterval: return TypeIndexMapper::stringToContainer("DigitalIntervalSeries");
-        default:
-            throw std::runtime_error(
-                "dmTypeToContainerTypeIndex: unsupported DM_DataType for pipeline source");
-    }
-}
 
 // ============================================================================
 // Pipeline Validation Helpers
@@ -94,14 +61,14 @@ std::vector<std::string> getStepNames(
  *     already be float (AnalogTimeSeries / RaggedAnalogTimeSeries).
  *
  * @param source_container_type  type_index of the source container
- *        (obtained via dmTypeToContainerTypeIndex())
+ *        (obtained via dmDataTypeToContainerTypeIndex())
  * @param pipeline               The pipeline to validate
  * @return true if the pipeline's final output is a float-compatible scalar
  */
 bool pipelineProducesFloat(
         std::type_index source_container_type,
         Transforms::V2::TransformPipeline const & pipeline) {
-    using Transforms::V2::TypeIndexMapper;
+    using TypeTraits::TypeIndexMapper;
     using Transforms::V2::resolveTypeChain;
 
     auto const step_names = getStepNames(pipeline);
@@ -283,7 +250,7 @@ ColumnProviderFn buildPipelineColumnProvider(
             "' not found in DataManager");
     }
 
-    auto const src_type_index = dmTypeToContainerTypeIndex(src_type);
+    auto const src_type_index = TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
 
     bool const is_empty_pipeline = pipeline.empty() && !pipeline.hasRangeReduction();
 
@@ -357,7 +324,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
             "' not found in DataManager");
     }
 
-    auto const src_type_index = dmTypeToContainerTypeIndex(src_type);
+    auto const src_type_index = TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
 
     // ── Require a range reduction for interval rows ─────────────────────
     if (!pipeline.hasRangeReduction()) {

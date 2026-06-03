@@ -39,6 +39,11 @@ set(DATAMANAGER_SOURCES
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
         utils/DerivedTimeFrame.cpp
+        utils/ContainerElementMapping.hpp
+        utils/ContainerTypeIndex.hpp
+        utils/ContainerTypeIndex.cpp
+        utils/DataTypeIndexBridge.hpp
+        utils/DataTypeIndexBridge.cpp
         utils/filter/FilterFactory.hpp
         utils/filter/FilterFactory.cpp
         utils/filter/FilterImplementations.hpp
@@ -231,6 +236,7 @@ target_link_libraries(DataManager PRIVATE WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::PointData)
 
 target_link_libraries(DataManager PUBLIC DataTypeEnum)
+target_link_libraries(DataManager PUBLIC DataTypeTraits)
 
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PRIVATE ImageProcessing)

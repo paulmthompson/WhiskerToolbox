@@ -6,9 +6,11 @@
 #include "TypeChainResolver.hpp"
 
 #include "ElementRegistry.hpp"
-#include "detail/ContainerTraits.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 namespace WhiskerToolbox::Transforms::V2 {
+
+using TypeTraits::TypeIndexMapper;
 
 // ---------------------------------------------------------------------------
 // Local helper — mirrors the dispatch in TransformPipeline::execute()

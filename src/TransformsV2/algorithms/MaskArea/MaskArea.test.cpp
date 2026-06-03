@@ -9,6 +9,8 @@
 #include "TransformsV2/io/ParameterIO.hpp"
 #include "TransformsV2/detail/ContainerTransform.hpp" // applyElementTransform
 #include "TransformsV2/core/TransformPipeline.hpp"
+#include "DataManager/utils/ContainerElementMapping.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 #include "fixtures/scenarios/mask/area_scenarios.hpp"
 
@@ -21,6 +23,8 @@
 
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::TypeTraits;
+
 
 // ============================================================================
 // Tests: MaskAreaParams JSON Loading

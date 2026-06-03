@@ -43,7 +43,8 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
-#include "TransformsV2/detail/ContainerTraits.hpp"
+#include "DataManager/utils/ContainerElementMapping.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 #include <QStackedWidget>
 #include <QTest>
@@ -54,6 +55,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace WhiskerToolbox::TypeTraits;
 
 // ============================================================================
 // Test Fixture

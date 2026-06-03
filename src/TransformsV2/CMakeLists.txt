@@ -10,8 +10,6 @@ set(TRANSFORM_V2_SOURCES
     PipelineValueStore/PipelineValueStore.hpp
     PipelineValueStore/PipelineValueStore.cpp
 
-    detail/ContainerTraits.hpp
-    detail/ContainerTraits.cpp 
     detail/PipelineStep.hpp
     detail/PipelineStep.cpp
 
@@ -149,10 +147,8 @@ target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::PointData)
 
-target_link_libraries(TransformsV2 PRIVATE DataManager) # DataTypeVariant
+target_link_libraries(TransformsV2 PUBLIC DataManager) # DataTypeVariant, container type mapping utils
 target_link_libraries(TransformsV2 PRIVATE MLCore) # TensorPCA → PCAOperation
-
-target_link_libraries(TransformsV2 PUBLIC DataTypeTraits)
 
 # Optional LibTorch support for GPU-accelerated tensor transforms (e.g., TensorCAR).
 # TENSOR_BACKEND_LIBTORCH is PRIVATE to avoid torch header pollution to consumers.

@@ -14,7 +14,7 @@
 #include "TransformsV2/io/PipelineLibrary.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/detail/ContainerTraits.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
@@ -42,6 +42,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace WhiskerToolbox::TypeTraits;
 
 // ============================================================================
 // Construction / Destruction

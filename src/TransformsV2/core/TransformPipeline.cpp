@@ -9,6 +9,8 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
+using TypeTraits::ElementFor_t;
+
 // ============================================================================
 // Batch Variant Helpers
 // ============================================================================

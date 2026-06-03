@@ -1,4 +1,9 @@
-#include "ContainerTraits.hpp"
+/// @file ContainerTypeIndex.cpp
+/// @brief Runtime type_index mapping for DataManager container types.
+
+#include "ContainerTypeIndex.hpp"
+
+#include "TypeTraits/DataTypeTraits.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
@@ -13,9 +18,18 @@
 #include "Tensors/TensorData.hpp"
 
 #include <stdexcept>
-#include <unordered_set>
+#include <unordered_map>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace WhiskerToolbox::TypeTraits {
+
+namespace {
+
+template<typename Container>
+[[nodiscard]] bool isRaggedContainerType(std::type_index container_type) {
+    return container_type == typeid(Container) && is_ragged_v<Container>;
+}
+
+} // namespace
 
 std::type_index TypeIndexMapper::elementToContainer(std::type_index element_type) {
     static std::unordered_map<std::type_index, std::type_index> const map = {
@@ -23,11 +37,8 @@ std::type_index TypeIndexMapper::elementToContainer(std::type_index element_type
             {typeid(Line2D), typeid(LineData)},
             {typeid(Point2D<float>), typeid(PointData)},
             {typeid(float), typeid(RaggedAnalogTimeSeries)}};
-    // Note: float maps to RaggedAnalogTimeSeries here.
-    // AnalogTimeSeries also has float elements but uses a different storage model.
-    // See containerToElement() for the reverse mapping which covers both.
 
-    auto it = map.find(element_type);
+    auto const it = map.find(element_type);
     if (it != map.end()) {
         return it->second;
     }
@@ -43,7 +54,7 @@ std::type_index TypeIndexMapper::containerToElement(std::type_index container_ty
             {typeid(AnalogTimeSeries), typeid(float)},
             {typeid(RaggedAnalogTimeSeries), typeid(float)}};
 
-    auto it = map.find(container_type);
+    auto const it = map.find(container_type);
     if (it != map.end()) {
         return it->second;
     }
@@ -62,7 +73,7 @@ std::string TypeIndexMapper::containerToString(std::type_index container_type) {
             {typeid(DigitalIntervalSeries), "DigitalIntervalSeries"},
             {typeid(TensorData), "TensorData"}};
 
-    auto it = map.find(container_type);
+    auto const it = map.find(container_type);
     if (it != map.end()) {
         return it->second;
     }
@@ -80,7 +91,6 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
             {"DigitalEventSeries", typeid(DigitalEventSeries)},
             {"DigitalIntervalSeries", typeid(DigitalIntervalSeries)},
             {"TensorData", typeid(TensorData)},
-            // Short-format aliases (from convert_data_type_to_string)
             {"mask", typeid(MaskData)},
             {"line", typeid(LineData)},
             {"points", typeid(PointData)},
@@ -89,7 +99,7 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
             {"digital_interval", typeid(DigitalIntervalSeries)},
             {"tensor", typeid(TensorData)}};
 
-    auto it = map.find(name);
+    auto const it = map.find(name);
     if (it != map.end()) {
         return it->second;
     }
@@ -98,14 +108,14 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
 }
 
 bool TypeIndexMapper::isContainerRagged(std::type_index container_type) {
-    // All containers with DataTraits::is_ragged == true
-    static std::unordered_set<std::type_index> const ragged_types = {
-            typeid(MaskData),
-            typeid(LineData),
-            typeid(PointData),
-            typeid(RaggedAnalogTimeSeries)};
-
-    return ragged_types.contains(container_type);
+    return isRaggedContainerType<MaskData>(container_type) ||
+           isRaggedContainerType<LineData>(container_type) ||
+           isRaggedContainerType<PointData>(container_type) ||
+           isRaggedContainerType<RaggedAnalogTimeSeries>(container_type) ||
+           isRaggedContainerType<AnalogTimeSeries>(container_type) ||
+           isRaggedContainerType<DigitalEventSeries>(container_type) ||
+           isRaggedContainerType<DigitalIntervalSeries>(container_type) ||
+           isRaggedContainerType<TensorData>(container_type);
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+} // namespace WhiskerToolbox::TypeTraits

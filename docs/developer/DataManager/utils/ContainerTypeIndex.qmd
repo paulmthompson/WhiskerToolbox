@@ -1,0 +1,22 @@
+---
+title: Container Type Index Utilities
+---
+
+## Overview
+
+Container/element type metadata for DataManager lives under `src/DataManager/utils/` in the `WhiskerToolbox::TypeTraits` namespace:
+
+- `ContainerElementMapping.hpp` — compile-time `ContainerFor` / `ElementFor` traits
+- `ContainerTypeIndex.hpp` / `.cpp` — runtime `TypeIndexMapper` (`std::type_index`, strings)
+- `DataTypeIndexBridge.hpp` / `.cpp` — `DM_DataType` ↔ `std::type_index`
+
+TransformsV2 consumes these utilities; it no longer defines its own `ContainerTraits`.
+
+## Float ambiguity
+
+`float` elements map to `RaggedAnalogTimeSeries` by default (`ContainerFor<float>`, `TypeIndexMapper::elementToContainer`). Contextual resolution to `AnalogTimeSeries` is performed in transform type-chain logic (`TypeChainResolver`).
+
+## Related
+
+- `TypeTraits/DataTypeTraits.hpp` — per-container `DataTraits` on data object classes
+- `DataManager/utils/TimeSeriesConcepts.hpp` — element interface concepts (`time()`, `id()`, etc.)

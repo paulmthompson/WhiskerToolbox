@@ -10,7 +10,7 @@ This document describes the V2 transformation architecture for WhiskerToolbox. T
 - **ElementRegistry**: Compile-time typed transform registry with TypedParamExecutor
 - **TransformPipeline**: Multi-step pipeline with execution fusion and view-based lazy evaluation
 - **Container Transforms**: Automatic lifting (element→container) and native container-to-container transforms
-- **ContainerTraits**: Type mapping system (Mask2D ↔ MaskData, etc.)
+- **ContainerElementMapping / TypeIndexMapper** (`DataManager/utils`): Type mapping (Mask2D ↔ MaskData, etc.)
 - **Advanced Features**: Ragged outputs, multi-input transforms (binary via tuple), time-grouped transforms
 - **reflect-cpp Integration**: Parameter serialization with automatic validation
 - **JSON Pipeline Loading**: PipelineDescriptor, PipelineLoader with full validation

@@ -27,6 +27,7 @@ add_executable(test_data_manager
 
         utils/TimeSeriesConcepts.test.cpp
         utils/TimeSeriesFilters.test.cpp
+        utils/ContainerTypeIndex.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TimeIndexExtractor.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataManagerTemporalSubset.test.cpp
