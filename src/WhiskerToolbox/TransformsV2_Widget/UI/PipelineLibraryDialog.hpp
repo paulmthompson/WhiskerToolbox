@@ -6,7 +6,7 @@
  * @brief Dialog for browsing and managing saved TransformsV2 PipelineDescriptor files
  */
 
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include <QDialog>
 

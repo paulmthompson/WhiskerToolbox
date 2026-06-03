@@ -1,8 +1,8 @@
 // Fuzz tests for V2 Pipeline Loader
 // Tests robust JSON parsing and error handling for complete pipelines
 
-#include "core/ParameterIO.hpp"
-#include "core/PipelineLoader.hpp"
+#include "io/ParameterIO.hpp"
+#include "io/PipelineLoader.hpp"
 #include "core/RegisteredTransforms.hpp"
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"

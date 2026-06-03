@@ -9,9 +9,9 @@
 
 #include "GatherPipelineExecutor.hpp"
 
-#include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include <cmath>     // NAN
 #include <functional>

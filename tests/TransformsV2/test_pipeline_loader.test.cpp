@@ -1,7 +1,7 @@
 // Unit tests for V2 Pipeline Loader
 // Tests JSON loading, validation, and error handling
 
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/algorithms/MaskArea/MaskArea.hpp"
 
 #include <catch2/catch_test_macros.hpp>

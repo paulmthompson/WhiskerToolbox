@@ -18,7 +18,7 @@
 #include "TensorData/TensorDesigner.hpp"
 #include "TensorData/TensorInspector.hpp"
 
-#include "TransformsV2/core/PipelineLibrary.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
 #include "TimeFrameData/TimeFrameDataView.hpp"
 #include "TimeFrameData/TimeFrameInspector.hpp"
 

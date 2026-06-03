@@ -1,7 +1,7 @@
 #include "PipelineStepListWidget.hpp"
 
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
 
 #include <QHBoxLayout>

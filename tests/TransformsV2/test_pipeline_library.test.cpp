@@ -3,7 +3,8 @@
  * @brief Unit tests for TransformsV2 pipeline library file helpers
  */
 
-#include "TransformsV2/core/PipelineLibrary.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

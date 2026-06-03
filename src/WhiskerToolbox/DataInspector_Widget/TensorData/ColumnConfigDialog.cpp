@@ -13,7 +13,7 @@
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #define slots Q_SLOTS
 
 #include "EditorState/OperationContext.hpp"

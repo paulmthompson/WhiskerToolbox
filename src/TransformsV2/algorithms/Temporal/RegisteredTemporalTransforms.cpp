@@ -5,7 +5,7 @@
 #include "algorithms/Temporal/NormalizeTime.hpp"
 #include "extension/ParameterBinding.hpp"
 #include "core/ElementRegistry.hpp"
-#include "core/PipelineLoader.hpp"
+#include "io/PipelineLoader.hpp"
 
 namespace WhiskerToolbox::Transforms::V2::Temporal {
 

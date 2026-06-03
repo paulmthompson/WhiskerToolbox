@@ -4,12 +4,12 @@
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "core/ElementRegistry.hpp"
-#include "core/ParameterIO.hpp"
-#include "core/PipelineLoader.hpp"
 #include "core/RegisteredTransforms.hpp"
 #include "core/TransformPipeline.hpp"
 #include "detail/ContainerTraits.hpp"
 #include "detail/FlatZipView.hpp"
+#include "io/ParameterIO.hpp"    // loadParametersForTransform  
+#include "io/PipelineLoader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"

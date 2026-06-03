@@ -5,6 +5,8 @@
 
 #include "PipelineLibrary.hpp"
 
+#include "io/PipelineLoader.hpp"
+
 #include <rfl/json.hpp>
 
 #include <algorithm>

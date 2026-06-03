@@ -15,12 +15,6 @@ set(TRANSFORM_V2_SOURCES
         core/DataManagerIntegration.cpp
         core/ElementRegistry.cpp
         core/ElementRegistry.hpp 
-        core/ParameterIO.hpp
-        core/ParameterIO.cpp
-        core/PipelineLoader.hpp
-        core/PipelineLoader.cpp
-        core/PipelineLibrary.hpp
-        core/PipelineLibrary.cpp
         core/PipelineValueStore.hpp
         core/PipelineValueStore.cpp
         core/RangeReductionRegistry.hpp
@@ -41,6 +35,12 @@ set(TRANSFORM_V2_SOURCES
         extension/ValueProjectionTypes.hpp
         extension/ViewAdaptorTypes.hpp
 
+        io/ParameterIO.hpp
+        io/ParameterIO.cpp
+        io/PipelineLibrary.hpp
+        io/PipelineLibrary.cpp
+        io/PipelineLoader.hpp
+        io/PipelineLoader.cpp
         
         algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp
         algorithms/AnalogEventThreshold/AnalogEventThreshold.cpp

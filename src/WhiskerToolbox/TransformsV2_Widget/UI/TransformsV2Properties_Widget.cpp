@@ -11,8 +11,8 @@
 #include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "StateManagement/AppFileDialog.hpp"
-#include "TransformsV2/core/PipelineLibrary.hpp"
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 

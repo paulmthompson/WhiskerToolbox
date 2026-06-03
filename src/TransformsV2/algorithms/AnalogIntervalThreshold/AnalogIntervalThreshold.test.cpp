@@ -5,7 +5,7 @@
 #include "DataManager.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>

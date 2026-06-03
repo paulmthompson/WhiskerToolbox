@@ -9,8 +9,6 @@
  * This matches StateManager's application config root (see pipeline_library_roadmap.md).
  */
 
-#include "core/PipelineLoader.hpp"
-
 #include <rfl/Result.hpp>
 
 #include <filesystem>
@@ -19,6 +17,8 @@
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
+
+struct PipelineDescriptor;
 
 /**
  * @brief Catalog entry for a saved pipeline JSON file

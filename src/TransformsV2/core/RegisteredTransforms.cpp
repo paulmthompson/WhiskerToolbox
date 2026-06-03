@@ -30,7 +30,7 @@
 #include "algorithms/TensorWhitening/TensorWhitening.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
-#include "core/PipelineLoader.hpp"// registerPipelineStepFactoryFor
+#include "io/PipelineLoader.hpp"// registerPipelineStepFactoryFor
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"

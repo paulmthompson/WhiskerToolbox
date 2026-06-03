@@ -7,7 +7,7 @@
 #include "TransformsV2/core/ComputeContext.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 #include "DataManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>

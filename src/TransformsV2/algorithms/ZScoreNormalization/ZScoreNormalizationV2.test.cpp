@@ -1,7 +1,7 @@
 #include "TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/core/ParameterIO.hpp"
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 

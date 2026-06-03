@@ -6,7 +6,7 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "TransformsV2/algorithms/SumReduction/SumReduction.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
-#include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 #include "TransformsV2/detail/ContainerTransform.hpp" // applyElementTransform
 #include "TransformsV2/core/TransformPipeline.hpp"
 

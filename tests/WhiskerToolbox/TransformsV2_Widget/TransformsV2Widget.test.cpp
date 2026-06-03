@@ -33,7 +33,7 @@
 #include "UI/PipelineLibraryDialog.hpp"
 #include "UI/TransformsV2Properties_Widget.hpp"
 
-#include "TransformsV2/core/PipelineLibrary.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
 
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/StrongTypes.hpp"

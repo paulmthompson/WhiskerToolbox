@@ -28,7 +28,7 @@
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
 #include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"

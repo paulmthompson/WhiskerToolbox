@@ -4,7 +4,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
-#include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 
 #include "fixtures/scenarios/mask/centroid_scenarios.hpp"
