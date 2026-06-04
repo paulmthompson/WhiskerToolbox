@@ -19,27 +19,6 @@
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 
-// ============================================================================
-// Registration (would normally be in RegisteredTransforms.hpp)
-// ============================================================================
-
-namespace {
-struct RegisterAnalogEventThreshold {
-    RegisterAnalogEventThreshold() {
-        auto & registry = ElementRegistry::instance();
-        registry.registerContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
-                "AnalogEventThreshold",
-                analogEventThreshold,
-                ContainerTransformMetadata{
-                        .description = "Detect threshold crossing events with lockout period",
-                        .category = "Signal Processing",
-                        .supports_cancellation = true});
-    }
-};
-
-RegisterAnalogEventThreshold register_analog_event_threshold;
-}// namespace
-
 namespace {
 
 using analog_event_threshold_test::buildAnalogTimeSeries;

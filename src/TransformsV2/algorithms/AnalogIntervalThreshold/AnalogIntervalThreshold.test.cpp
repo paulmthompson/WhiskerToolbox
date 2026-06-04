@@ -19,10 +19,6 @@ using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
-// Note: AnalogIntervalThreshold is registered in RegisteredTransforms.cpp
-// ============================================================================
-
-// ============================================================================
 // Tests: Algorithm Correctness (using shared fixture)
 // ============================================================================
 

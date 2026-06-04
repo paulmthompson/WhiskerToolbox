@@ -22,14 +22,6 @@ using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
-// Registration: Uses singleton from RegisteredTransforms.cpp (compile-time)
-// ============================================================================
-// ClipLineAtReference is registered at compile-time via
-// RegisterBinaryTransform RAII helper in RegisteredTransforms.cpp.
-// The ElementRegistry::instance() singleton already has this transform
-// available when tests run.
-
-// ============================================================================
 // Helper Functions
 // ============================================================================
 

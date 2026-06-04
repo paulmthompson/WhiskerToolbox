@@ -19,14 +19,6 @@ using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
-// Registration: Uses singleton from RegisteredTransforms.cpp (compile-time)
-// ============================================================================
-// DigitalIntervalBoolean is registered at compile-time via
-// RegisterBinaryContainerTransform RAII helper in RegisteredTransforms.cpp.
-// The ElementRegistry::instance() singleton already has this transform
-// available when tests run.
-
-// ============================================================================
 // Tests: Algorithm Correctness using scenarios
 // ============================================================================
 

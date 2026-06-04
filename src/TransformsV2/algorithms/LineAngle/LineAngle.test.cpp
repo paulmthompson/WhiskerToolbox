@@ -22,13 +22,6 @@ using namespace WhiskerToolbox::Transforms::V2::Examples;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
-// Registration: Uses singleton from RegisteredTransforms.cpp (compile-time)
-// ============================================================================
-// CalculateLineAngle is registered at compile-time via RegisterTransform
-// RAII helper in RegisteredTransforms.cpp. The ElementRegistry::instance()
-// singleton already has this transform available when tests run.
-
-// ============================================================================
 // Helper Functions
 // ============================================================================
 
