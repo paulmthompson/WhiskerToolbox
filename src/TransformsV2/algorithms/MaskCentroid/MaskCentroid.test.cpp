@@ -5,8 +5,9 @@
 #include "Points/Point_Data.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/io/ParameterIO.hpp"
-#include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/mask/centroid_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -17,6 +18,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 
 // ============================================================================
 // Tests: MaskCentroidParams JSON Loading
@@ -426,21 +428,17 @@ TEST_CASE("TransformsV2 - Centroid DataManager JSON load via scenario",
     dm.setData("json_pipeline_basic_centroid", mask_data, TimeKey("default"));
     
     // JSON config using scenario's pre-populated data
-    nlohmann::json json_config = {
-        {"steps", {{
-            {"step_id", "centroid_step"},
-            {"transform_name", "CalculateMaskCentroid"},
-            {"input_key", "json_pipeline_basic_centroid"},
-            {"output_key", "v2_calculated_centroids"},
-            {"parameters", nlohmann::json::object()}
-        }}}
-    };
-    
-    DataManagerPipelineExecutor executor(&dm);
-    REQUIRE(executor.loadFromJson(json_config));
-    
-    auto result = executor.execute();
-    REQUIRE(result.success);
+    MaskCentroidParams params;
+    auto const pipeline = makeSingleStepPipeline(
+            "CalculateMaskCentroid",
+            "json_pipeline_basic_centroid",
+            "v2_calculated_centroids",
+            params,
+            "centroid_step");
+
+    auto const result = executeViaExecutor(dm, pipeline);
+    REQUIRE(result.load_ok);
+    REQUIRE(result.execution.success);
     
     auto centroids = dm.getData<PointData>("v2_calculated_centroids");
     REQUIRE(centroids != nullptr);
@@ -486,21 +484,17 @@ TEST_CASE("TransformsV2 - Centroid DataManager empty mask JSON via scenario",
     auto mask_data = mask_scenarios::empty_mask_data();
     dm.setData("empty_mask_data", mask_data, TimeKey("default"));
     
-    nlohmann::json json_config = {
-        {"steps", {{
-            {"step_id", "empty_centroid_step"},
-            {"transform_name", "CalculateMaskCentroid"},
-            {"input_key", "empty_mask_data"},
-            {"output_key", "v2_empty_centroids"},
-            {"parameters", nlohmann::json::object()}
-        }}}
-    };
-    
-    DataManagerPipelineExecutor executor(&dm);
-    REQUIRE(executor.loadFromJson(json_config));
-    
-    auto result = executor.execute();
-    REQUIRE(result.success);
+    MaskCentroidParams params;
+    auto const pipeline = makeSingleStepPipeline(
+            "CalculateMaskCentroid",
+            "empty_mask_data",
+            "v2_empty_centroids",
+            params,
+            "empty_centroid_step");
+
+    auto const result = executeViaExecutor(dm, pipeline);
+    REQUIRE(result.load_ok);
+    REQUIRE(result.execution.success);
     
     auto centroids = dm.getData<PointData>("v2_empty_centroids");
     REQUIRE(centroids != nullptr);
@@ -517,21 +511,17 @@ TEST_CASE("TransformsV2 - Centroid DataManager operation execute test via scenar
     auto mask_data = mask_scenarios::operation_execute_test_centroid();
     dm.setData("operation_execute_test", mask_data, TimeKey("default"));
     
-    nlohmann::json json_config = {
-        {"steps", {{
-            {"step_id", "exec_centroid_step"},
-            {"transform_name", "CalculateMaskCentroid"},
-            {"input_key", "operation_execute_test"},
-            {"output_key", "v2_exec_centroids"},
-            {"parameters", nlohmann::json::object()}
-        }}}
-    };
-    
-    DataManagerPipelineExecutor executor(&dm);
-    REQUIRE(executor.loadFromJson(json_config));
-    
-    auto result = executor.execute();
-    REQUIRE(result.success);
+    MaskCentroidParams params;
+    auto const pipeline = makeSingleStepPipeline(
+            "CalculateMaskCentroid",
+            "operation_execute_test",
+            "v2_exec_centroids",
+            params,
+            "exec_centroid_step");
+
+    auto const result = executeViaExecutor(dm, pipeline);
+    REQUIRE(result.load_ok);
+    REQUIRE(result.execution.success);
     
     auto centroids = dm.getData<PointData>("v2_exec_centroids");
     REQUIRE(centroids != nullptr);

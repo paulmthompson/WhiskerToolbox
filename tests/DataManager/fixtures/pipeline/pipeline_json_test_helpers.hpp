@@ -45,6 +45,7 @@ inline rfl::Generic parametersAsGeneric(ParamsT const & params) {
  * @brief Build a DataManager pipeline step with typed parameters
  * @tparam ParamsT Reflect-cpp parameter struct for the transform
  * @param additional_input_keys Optional keys for multi-input (binary/n-ary) transforms
+ * @param output_time_key Optional TimeKey for output data (must pre-exist in DataManager)
  */
 template<typename ParamsT>
 inline DataManagerStepDescriptor makeStep(std::string step_id,
@@ -53,7 +54,8 @@ inline DataManagerStepDescriptor makeStep(std::string step_id,
                                           std::string output_key,
                                           ParamsT const & params,
                                           std::optional<std::vector<std::string>> additional_input_keys =
-                                                  std::nullopt) {
+                                                  std::nullopt,
+                                          std::optional<std::string> output_time_key = std::nullopt) {
     return DataManagerStepDescriptor{
             .step_id = std::move(step_id),
             .transform_name = std::move(transform_name),
@@ -61,6 +63,7 @@ inline DataManagerStepDescriptor makeStep(std::string step_id,
             .additional_input_keys = std::move(additional_input_keys),
             .output_key = std::move(output_key),
             .parameters = parametersAsGeneric(params),
+            .output_time_key = std::move(output_time_key),
     };
 }
 
@@ -80,6 +83,7 @@ inline DataManagerPipelineDescriptor makePipeline(
  * @brief Build a single-step pipeline with typed parameters
  * @tparam ParamsT Reflect-cpp parameter struct for the transform
  * @param additional_input_keys Optional keys for multi-input (binary/n-ary) transforms
+ * @param output_time_key Optional TimeKey for output data (must pre-exist in DataManager)
  */
 template<typename ParamsT>
 inline DataManagerPipelineDescriptor makeSingleStepPipeline(
@@ -88,13 +92,15 @@ inline DataManagerPipelineDescriptor makeSingleStepPipeline(
         std::string output_key,
         ParamsT const & params,
         std::string step_id = "1",
-        std::optional<std::vector<std::string>> additional_input_keys = std::nullopt) {
+        std::optional<std::vector<std::string>> additional_input_keys = std::nullopt,
+        std::optional<std::string> output_time_key = std::nullopt) {
     return makePipeline({makeStep(std::move(step_id),
                                   std::move(transform_name),
                                   std::move(input_key),
                                   std::move(output_key),
                                   params,
-                                  std::move(additional_input_keys))});
+                                  std::move(additional_input_keys),
+                                  std::move(output_time_key))});
 }
 
 /**

@@ -23,16 +23,17 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
+
 #include <cmath>
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 
 // ============================================================================
 // Helpers
@@ -467,42 +468,18 @@ TEST_CASE("TensorCentralDifference DataManager pipeline integration",
     tensor->setTimeFrame(time_frame);
     dm.setData("input_tensor", tensor, TimeKey("default"));
 
-    std::filesystem::path const test_dir =
-            std::filesystem::temp_directory_path() / "tensor_central_diff_v2_test";
-    std::filesystem::create_directories(test_dir);
-
     SECTION("Execute pipeline - NaN boundary") {
-        char const * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Central Difference Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "TensorCentralDifference",
-                        "input_key": "input_tensor",
-                        "output_key": "delta_tensor",
-                        "parameters": {
-                            "boundary_policy": "NaN",
-                            "include_original": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        TensorCentralDifferenceParams params;
+        params.boundary_policy = DeltaBoundaryPolicy::NaN;
+        params.include_original = true;
 
-        std::filesystem::path const json_filepath = test_dir / "central_diff_nan.json";
-        {
-            std::ofstream f(json_filepath);
-            REQUIRE(f.is_open());
-            f << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "TensorCentralDifference",
+                "input_tensor",
+                "delta_tensor",
+                params);
 
-        auto info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto result = dm.getData<TensorData>("delta_tensor");
         REQUIRE(result != nullptr);
@@ -510,57 +487,28 @@ TEST_CASE("TensorCentralDifference DataManager pipeline integration",
         CHECK(result->numColumns() == 4);
 
         auto flat = result->materializeFlat();
-        // Row 0: delta should be NaN
         CHECK(std::isnan(flat[0 * 4 + 2]));
         CHECK(std::isnan(flat[0 * 4 + 3]));
-        // Row 2: delta = (40-20)/2 = 10
         CHECK(flat[2 * 4 + 2] == 10.0f);
         CHECK(flat[2 * 4 + 3] == 10.0f);
     }
 
     SECTION("Execute pipeline - Drop boundary") {
-        char const * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Central Difference Drop Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "TensorCentralDifference",
-                        "input_key": "input_tensor",
-                        "output_key": "delta_tensor_drop",
-                        "parameters": {
-                            "boundary_policy": "Drop",
-                            "include_original": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        TensorCentralDifferenceParams params;
+        params.boundary_policy = DeltaBoundaryPolicy::Drop;
+        params.include_original = true;
 
-        std::filesystem::path const json_filepath = test_dir / "central_diff_drop.json";
-        {
-            std::ofstream f(json_filepath);
-            REQUIRE(f.is_open());
-            f << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "TensorCentralDifference",
+                "input_tensor",
+                "delta_tensor_drop",
+                params);
 
-        auto info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto result = dm.getData<TensorData>("delta_tensor_drop");
         REQUIRE(result != nullptr);
-        // Rows 0 and 4 dropped -> 3 surviving rows
         CHECK(result->numRows() == 3);
         CHECK(result->numColumns() == 4);
-    }
-
-    // Cleanup
-    try {
-        std::filesystem::remove_all(test_dir);
-    } catch (...) {
     }
 }

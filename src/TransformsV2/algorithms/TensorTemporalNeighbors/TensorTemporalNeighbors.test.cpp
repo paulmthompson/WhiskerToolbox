@@ -23,16 +23,17 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
+
 #include <cmath>
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 
 // ============================================================================
 // Helpers
@@ -625,109 +626,55 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
     tensor->setTimeFrame(time_frame);
     dm.setData("input_tensor", tensor, TimeKey("default"));
 
-    std::filesystem::path test_dir =
-            std::filesystem::temp_directory_path() / "tensor_temporal_neighbors_v2_test";
-    std::filesystem::create_directories(test_dir);
-
     SECTION("Execute pipeline - NaN boundary") {
-        char const * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Temporal Neighbors Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "TensorTemporalNeighbors",
-                        "input_key": "input_tensor",
-                        "output_key": "augmented_tensor",
-                        "parameters": {
-                            "lag_range": 1,
-                            "lag_step": 1,
-                            "lead_range": 1,
-                            "lead_step": 1,
-                            "boundary_policy": "NaN",
-                            "include_original": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        TensorTemporalNeighborParams params;
+        params.lag_range = 1;
+        params.lag_step = 1;
+        params.lead_range = 1;
+        params.lead_step = 1;
+        params.boundary_policy = BoundaryPolicy::NaN;
+        params.include_original = true;
 
-        std::filesystem::path json_filepath = test_dir / "temporal_neighbors_nan.json";
-        {
-            std::ofstream f(json_filepath);
-            REQUIRE(f.is_open());
-            f << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "TensorTemporalNeighbors",
+                "input_tensor",
+                "augmented_tensor",
+                params);
 
-        auto info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto result = dm.getData<TensorData>("augmented_tensor");
         REQUIRE(result != nullptr);
         CHECK(result->numRows() == 5);
-        // 2 original + 2 offsets x 2 cols = 6
         CHECK(result->numColumns() == 6);
 
         auto flat = result->materializeFlat();
-        // Row 0: lag-1 should be NaN
         CHECK(std::isnan(flat[0 * 6 + 2]));
         CHECK(std::isnan(flat[0 * 6 + 3]));
-        // Row 0: lag+1 should be row 1 values
         CHECK(flat[0 * 6 + 4] == 20.0f);
         CHECK(flat[0 * 6 + 5] == 21.0f);
     }
 
     SECTION("Execute pipeline - Drop boundary") {
-        char const * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Temporal Neighbors Drop Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "TensorTemporalNeighbors",
-                        "input_key": "input_tensor",
-                        "output_key": "augmented_tensor_drop",
-                        "parameters": {
-                            "lag_range": 1,
-                            "lag_step": 1,
-                            "lead_range": 1,
-                            "lead_step": 1,
-                            "boundary_policy": "Drop",
-                            "include_original": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        TensorTemporalNeighborParams params;
+        params.lag_range = 1;
+        params.lag_step = 1;
+        params.lead_range = 1;
+        params.lead_step = 1;
+        params.boundary_policy = BoundaryPolicy::Drop;
+        params.include_original = true;
 
-        std::filesystem::path json_filepath = test_dir / "temporal_neighbors_drop.json";
-        {
-            std::ofstream f(json_filepath);
-            REQUIRE(f.is_open());
-            f << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "TensorTemporalNeighbors",
+                "input_tensor",
+                "augmented_tensor_drop",
+                params);
 
-        auto info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto result = dm.getData<TensorData>("augmented_tensor_drop");
         REQUIRE(result != nullptr);
-        // Rows 0 and 4 dropped -> 3 surviving rows
         CHECK(result->numRows() == 3);
         CHECK(result->numColumns() == 6);
-    }
-
-    // Cleanup
-    try {
-        std::filesystem::remove_all(test_dir);
-    } catch (...) {
     }
 }

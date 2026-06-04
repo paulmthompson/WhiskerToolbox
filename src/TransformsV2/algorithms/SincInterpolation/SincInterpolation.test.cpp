@@ -29,19 +29,19 @@
 #include "DataManager/utils/DerivedTimeFrame.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <memory>
 #include <numbers>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 
 // ============================================================================
 // Helper: default ComputeContext
@@ -395,15 +395,22 @@ TEST_CASE("SincInterpolation works via DataManager pipeline JSON",
     dm->setTime(TimeKey("upsampled_time"), upsampled_tf);
 
     // Pipeline JSON
-    nlohmann::json const config = {
-            {"steps", {{{"step_id", "upsample"}, {"transform_name", "SincInterpolation"}, {"input_key", "ramp"}, {"output_key", "ramp_upsampled"}, {"output_time_key", "upsampled_time"}, {"parameters", {{"upsampling_factor", 4}}}}}}};
+    SincInterpolationParams params;
+    params.upsampling_factor = 4;
 
-    DataManagerPipelineExecutor executor(dm.get());
-    REQUIRE(executor.loadFromJson(config));
+    auto const pipeline = makeSingleStepPipeline(
+            "SincInterpolation",
+            "ramp",
+            "ramp_upsampled",
+            params,
+            "upsample",
+            std::nullopt,
+            "upsampled_time");
 
-    auto const result = executor.execute();
-    INFO("Error: " << result.error_message);
-    REQUIRE(result.success);
+    auto const result = executeViaExecutor(*dm, pipeline);
+    INFO("Error: " << result.execution.error_message);
+    REQUIRE(result.load_ok);
+    REQUIRE(result.execution.success);
 
     // Verify output exists and has the right size
     auto const output = dm->getData<AnalogTimeSeries>("ramp_upsampled");
@@ -700,8 +707,6 @@ TEST_CASE("SincInterpolation loadPipelineFromJson",
 TEST_CASE("SincInterpolation load_data_from_json_config_v2",
           "[transforms][v2][sinc][json_config]") {
 
-    using namespace WhiskerToolbox::Transforms::V2;
-
     DataManager dm;
 
     // Create a time frame and input data
@@ -722,44 +727,20 @@ TEST_CASE("SincInterpolation load_data_from_json_config_v2",
     auto const up_tf = std::make_shared<TimeFrame>(up_times);
     dm.setTime(TimeKey("sinc_upsampled_time"), up_tf);
 
-    // Create temporary directory for JSON config files
-    std::filesystem::path const test_dir =
-            std::filesystem::temp_directory_path() / "sinc_interpolation_v2_test";
-    std::filesystem::create_directories(test_dir);
-
     SECTION("Basic sinc interpolation via JSON config") {
-        char const * json_config =
-                "[\n"
-                "{\n"
-                "    \"transformations\": {\n"
-                "        \"metadata\": {\n"
-                "            \"name\": \"Sinc Interpolation Pipeline\",\n"
-                "            \"version\": \"2.0\"\n"
-                "        },\n"
-                "        \"steps\": [\n"
-                "            {\n"
-                "                \"step_id\": \"upsample\",\n"
-                "                \"transform_name\": \"SincInterpolation\",\n"
-                "                \"input_key\": \"sinc_ramp\",\n"
-                "                \"output_key\": \"sinc_ramp_upsampled\",\n"
-                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
-                "                \"parameters\": {\n"
-                "                    \"upsampling_factor\": 4\n"
-                "                }\n"
-                "            }\n"
-                "        ]\n"
-                "    }\n"
-                "}\n"
-                "]";
+        SincInterpolationParams params;
+        params.upsampling_factor = 4;
 
-        std::filesystem::path const json_filepath = test_dir / "sinc_basic_config.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "SincInterpolation",
+                "sinc_ramp",
+                "sinc_ramp_upsampled",
+                params,
+                "upsample",
+                std::nullopt,
+                "sinc_upsampled_time");
 
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_upsampled");
         REQUIRE(output != nullptr);
@@ -779,37 +760,22 @@ TEST_CASE("SincInterpolation load_data_from_json_config_v2",
     }
 
     SECTION("Sinc interpolation with all parameters via JSON config") {
-        char const * json_config =
-                "[\n"
-                "{\n"
-                "    \"transformations\": {\n"
-                "        \"steps\": [\n"
-                "            {\n"
-                "                \"step_id\": \"upsample_full\",\n"
-                "                \"transform_name\": \"SincInterpolation\",\n"
-                "                \"input_key\": \"sinc_ramp\",\n"
-                "                \"output_key\": \"sinc_ramp_full_params\",\n"
-                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
-                "                \"parameters\": {\n"
-                "                    \"upsampling_factor\": 4,\n"
-                "                    \"kernel_half_width\": 12,\n"
-                "                    \"window_type\": \"Hann\",\n"
-                "                    \"boundary_mode\": \"SymmetricExtension\"\n"
-                "                }\n"
-                "            }\n"
-                "        ]\n"
-                "    }\n"
-                "}\n"
-                "]";
+        SincInterpolationParams params;
+        params.upsampling_factor = 4;
+        params.kernel_half_width = 12;
+        params.window_type = SincWindowType::Hann;
+        params.boundary_mode = BoundaryMode::SymmetricExtension;
 
-        std::filesystem::path const json_filepath = test_dir / "sinc_full_params_config.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "SincInterpolation",
+                "sinc_ramp",
+                "sinc_ramp_full_params",
+                params,
+                "upsample_full",
+                std::nullopt,
+                "sinc_upsampled_time");
 
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_full_params");
         REQUIRE(output != nullptr);
@@ -824,35 +790,20 @@ TEST_CASE("SincInterpolation load_data_from_json_config_v2",
     }
 
     SECTION("Sinc interpolation with zero-pad boundary via JSON config") {
-        char const * json_config =
-                "[\n"
-                "{\n"
-                "    \"transformations\": {\n"
-                "        \"steps\": [\n"
-                "            {\n"
-                "                \"step_id\": \"upsample_zeropad\",\n"
-                "                \"transform_name\": \"SincInterpolation\",\n"
-                "                \"input_key\": \"sinc_ramp\",\n"
-                "                \"output_key\": \"sinc_ramp_zeropad\",\n"
-                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
-                "                \"parameters\": {\n"
-                "                    \"upsampling_factor\": 4,\n"
-                "                    \"boundary_mode\": \"ZeroPad\"\n"
-                "                }\n"
-                "            }\n"
-                "        ]\n"
-                "    }\n"
-                "}\n"
-                "]";
+        SincInterpolationParams params;
+        params.upsampling_factor = 4;
+        params.boundary_mode = BoundaryMode::ZeroPad;
 
-        std::filesystem::path const json_filepath = test_dir / "sinc_zeropad_config.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-        }
+        auto const pipeline = makeSingleStepPipeline(
+                "SincInterpolation",
+                "sinc_ramp",
+                "sinc_ramp_zeropad",
+                params,
+                "upsample_zeropad",
+                std::nullopt,
+                "sinc_upsampled_time");
 
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_zeropad");
         REQUIRE(output != nullptr);
@@ -864,13 +815,6 @@ TEST_CASE("SincInterpolation load_data_from_json_config_v2",
             INFO("Sample " << i);
             REQUIRE(std::isfinite(out[i]));
         }
-    }
-
-    // Cleanup
-    try {
-        std::filesystem::remove_all(test_dir);
-    } catch (std::exception const & e) {
-        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }
 
@@ -951,21 +895,22 @@ TEST_CASE("SincInterpolation output aligns with createUpsampledTimeFrame",
         dm->setTime(TimeKey("upsampled"), upsampled_tf);
 
         // Execute sinc interpolation via DataManagerPipelineExecutor
-        nlohmann::json const config = {
-                {"steps",
-                 {{{"step_id", "upsample_signal"},
-                   {"transform_name", "SincInterpolation"},
-                   {"input_key", "signal"},
-                   {"output_key", "signal_upsampled"},
-                   {"output_time_key", "upsampled"},
-                   {"parameters", {{"upsampling_factor", factor}}}}}}};
+        SincInterpolationParams params;
+        params.upsampling_factor = factor;
 
-        DataManagerPipelineExecutor executor(dm.get());
-        REQUIRE(executor.loadFromJson(config));
+        auto const pipeline = makeSingleStepPipeline(
+                "SincInterpolation",
+                "signal",
+                "signal_upsampled",
+                params,
+                "upsample_signal",
+                std::nullopt,
+                "upsampled");
 
-        auto const result = executor.execute();
-        INFO("Error: " << result.error_message);
-        REQUIRE(result.success);
+        auto const exec_result = executeViaExecutor(*dm, pipeline);
+        INFO("Error: " << exec_result.execution.error_message);
+        REQUIRE(exec_result.load_ok);
+        REQUIRE(exec_result.execution.success);
 
         // Verify stored under correct TimeKey
         TimeKey const stored_tk = dm->getTimeKey("signal_upsampled");
