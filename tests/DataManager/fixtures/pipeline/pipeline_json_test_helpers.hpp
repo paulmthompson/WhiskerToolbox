@@ -44,17 +44,21 @@ inline rfl::Generic parametersAsGeneric(ParamsT const & params) {
 /**
  * @brief Build a DataManager pipeline step with typed parameters
  * @tparam ParamsT Reflect-cpp parameter struct for the transform
+ * @param additional_input_keys Optional keys for multi-input (binary/n-ary) transforms
  */
 template<typename ParamsT>
 inline DataManagerStepDescriptor makeStep(std::string step_id,
                                           std::string transform_name,
                                           std::string input_key,
                                           std::string output_key,
-                                          ParamsT const & params) {
+                                          ParamsT const & params,
+                                          std::optional<std::vector<std::string>> additional_input_keys =
+                                                  std::nullopt) {
     return DataManagerStepDescriptor{
             .step_id = std::move(step_id),
             .transform_name = std::move(transform_name),
             .input_key = std::move(input_key),
+            .additional_input_keys = std::move(additional_input_keys),
             .output_key = std::move(output_key),
             .parameters = parametersAsGeneric(params),
     };
@@ -75,18 +79,22 @@ inline DataManagerPipelineDescriptor makePipeline(
 /**
  * @brief Build a single-step pipeline with typed parameters
  * @tparam ParamsT Reflect-cpp parameter struct for the transform
+ * @param additional_input_keys Optional keys for multi-input (binary/n-ary) transforms
  */
 template<typename ParamsT>
-inline DataManagerPipelineDescriptor makeSingleStepPipeline(std::string transform_name,
-                                                            std::string input_key,
-                                                            std::string output_key,
-                                                            ParamsT const & params,
-                                                            std::string step_id = "1") {
+inline DataManagerPipelineDescriptor makeSingleStepPipeline(
+        std::string transform_name,
+        std::string input_key,
+        std::string output_key,
+        ParamsT const & params,
+        std::string step_id = "1",
+        std::optional<std::vector<std::string>> additional_input_keys = std::nullopt) {
     return makePipeline({makeStep(std::move(step_id),
                                   std::move(transform_name),
                                   std::move(input_key),
                                   std::move(output_key),
-                                  params)});
+                                  params,
+                                  std::move(additional_input_keys))});
 }
 
 /**

@@ -1,22 +1,19 @@
 #include "DigitalIntervalBoolean.hpp"
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
 
+#include "DataManager.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/io/ParameterIO.hpp"
-#include "DataManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/digital/digital_interval_boolean_scenarios.hpp"
-
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -36,25 +33,25 @@ using namespace WhiskerToolbox::Transforms::V2::Examples;
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operation",
           "[transforms][v2][binary_container][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
     params.operation = "and";
-    ComputeContext ctx;
+    ComputeContext const ctx;
 
     SECTION("Basic AND - overlapping intervals") {
         auto [input, other] = and_overlapping();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -69,15 +66,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         auto [input, other] = and_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -87,15 +84,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         auto [input, other] = and_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -108,15 +105,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         auto [input, other] = and_subset();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -129,25 +126,25 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operation",
           "[transforms][v2][binary_container][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
     params.operation = "or";
-    ComputeContext ctx;
+    ComputeContext const ctx;
 
     SECTION("Basic OR - separate intervals") {
         auto [input, other] = or_separate();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -162,15 +159,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
         auto [input, other] = or_overlapping_merge();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -183,15 +180,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
         auto [input, other] = or_multiple_with_gaps();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -208,25 +205,25 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operation",
           "[transforms][v2][binary_container][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
     params.operation = "xor";
-    ComputeContext ctx;
+    ComputeContext const ctx;
 
     SECTION("Basic XOR - no overlap") {
         auto [input, other] = xor_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -241,15 +238,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         auto [input, other] = xor_partial_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -264,15 +261,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         auto [input, other] = xor_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -282,15 +279,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         auto [input, other] = xor_complex();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -307,26 +304,26 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operation",
           "[transforms][v2][binary_container][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
     params.operation = "not";
-    ComputeContext ctx;
+    ComputeContext const ctx;
 
     SECTION("NOT - single interval") {
         auto input = not_single_interval();
-        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
+        auto other = DigitalIntervalSeriesBuilder().build();// Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -334,18 +331,18 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
 
     SECTION("NOT - intervals with gaps") {
         auto input = not_with_gaps();
-        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
+        auto other = DigitalIntervalSeriesBuilder().build();// Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -356,18 +353,18 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
 
     SECTION("NOT - multiple gaps") {
         auto input = not_multiple_gaps();
-        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
+        auto other = DigitalIntervalSeriesBuilder().build();// Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -382,25 +379,25 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Operation",
           "[transforms][v2][binary_container][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
     params.operation = "and_not";
-    ComputeContext ctx;
+    ComputeContext const ctx;
 
     SECTION("AND_NOT - subtract overlapping portion") {
         auto [input, other] = and_not_subtract_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -413,15 +410,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         auto [input, other] = and_not_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -434,15 +431,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         auto [input, other] = and_not_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -452,15 +449,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         auto [input, other] = and_not_punch_holes();
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
@@ -477,8 +474,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
 TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases",
           "[transforms][v2][binary_container][digital_interval_boolean][edge_cases]") {
     using namespace digital_interval_boolean_scenarios;
-    
-    auto& registry = ElementRegistry::instance();
+
+    auto & registry = ElementRegistry::instance();
     ComputeContext ctx;
 
     SECTION("Empty input series") {
@@ -488,15 +485,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         params.operation = "or";
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         // OR with empty input and non-empty other should give the other
@@ -510,15 +507,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         params.operation = "and";
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -532,15 +529,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         params.operation = "not";
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -556,15 +553,15 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         ctx.progress = [&](int p) { progress_val = p; };
 
         auto result = registry.executeBinaryContainerTransform<
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalSeries,
-            DigitalIntervalBooleanParams>(
-            "DigitalIntervalBoolean",
-            *input,
-            *other,
-            params,
-            ctx);
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalBooleanParams>(
+                "DigitalIntervalBoolean",
+                *input,
+                *other,
+                params,
+                ctx);
 
         REQUIRE(result != nullptr);
         REQUIRE(progress_val == 100);
@@ -579,7 +576,7 @@ TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Loading",
           "[transforms][v2][params][json]") {
 
     SECTION("Load valid JSON with operation") {
-        std::string json = R"({
+        std::string const json = R"({
             "operation": "xor"
         })";
 
@@ -592,21 +589,21 @@ TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Loading",
     }
 
     SECTION("Load empty JSON (uses defaults)") {
-        std::string json = "{}";
+        std::string const json = "{}";
 
         auto result = loadParametersFromJson<DigitalIntervalBooleanParams>(json);
 
         REQUIRE(result);
         auto params = result.value();
-        REQUIRE(params.getOperation() == "and");  // Default
+        REQUIRE(params.getOperation() == "and");// Default
         REQUIRE(params.isValidOperation());
     }
 
     SECTION("All valid operations") {
-        std::vector<std::string> valid_ops = {"and", "or", "xor", "not", "and_not"};
+        std::vector<std::string> const valid_ops = {"and", "or", "xor", "not", "and_not"};
 
-        for (auto const& op : valid_ops) {
-            std::string json = R"({"operation": ")" + op + R"("})";
+        for (auto const & op: valid_ops) {
+            std::string const json = R"({"operation": ")" + op + R"("})";
 
             auto result = loadParametersFromJson<DigitalIntervalBooleanParams>(json);
             REQUIRE(result);
@@ -631,61 +628,34 @@ TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Loading",
 TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_from_json_config_v2",
           "[transforms][v2][datamanager][digital_interval_boolean]") {
     using namespace digital_interval_boolean_scenarios;
-    
+    using namespace pipeline_json_test;
+
     DataManager dm;
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
-    
-    // Populate DataManager with test data
+
     auto [and_input, and_other] = and_overlapping();
     dm.setData("and_overlapping_input", and_input, TimeKey("default"));
     dm.setData("and_overlapping_other", and_other, TimeKey("default"));
-    
+
     auto [or_input, or_other] = or_overlapping_merge();
     dm.setData("or_overlapping_merge_input", or_input, TimeKey("default"));
     dm.setData("or_overlapping_merge_other", or_other, TimeKey("default"));
 
     SECTION("AND operation through JSON pipeline") {
-        // Create temporary JSON config file
-        std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "v2_boolean_test";
-        std::filesystem::create_directories(test_dir);
-        std::filesystem::path json_filepath = test_dir / "and_pipeline.json";
+        DigitalIntervalBooleanParams params;
+        params.operation = "and";
 
-        // Uses additional_input_keys for multi-input (binary) transforms
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Boolean AND Test Pipeline",
-                    "version": "1.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "boolean_and",
-                        "transform_name": "DigitalIntervalBoolean",
-                        "input_key": "and_overlapping_input",
-                        "additional_input_keys": ["and_overlapping_other"],
-                        "output_key": "and_result",
-                        "parameters": {
-                            "operation": "and"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        auto const pipeline = makeSingleStepPipeline(
+                "DigitalIntervalBoolean",
+                "and_overlapping_input",
+                "and_result",
+                params,
+                "boolean_and",
+                std::vector<std::string>{"and_overlapping_other"});
 
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
-        // Execute the V2 pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-
-        // Verify result was stored
         auto result = dm.getData<DigitalIntervalSeries>("and_result");
         REQUIRE(result != nullptr);
 
@@ -695,52 +665,21 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
         REQUIRE(result_intervals[0].value().end == 5);
         REQUIRE(result_intervals[1].value().start == 12);
         REQUIRE(result_intervals[1].value().end == 15);
-
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 
     SECTION("OR operation through JSON pipeline") {
-        std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "v2_boolean_or_test";
-        std::filesystem::create_directories(test_dir);
-        std::filesystem::path json_filepath = test_dir / "or_pipeline.json";
+        DigitalIntervalBooleanParams params;
+        params.operation = "or";
 
-        // Uses additional_input_keys for multi-input (binary) transforms
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Boolean OR Test Pipeline",
-                    "version": "1.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "boolean_or",
-                        "transform_name": "DigitalIntervalBoolean",
-                        "input_key": "or_overlapping_merge_input",
-                        "additional_input_keys": ["or_overlapping_merge_other"],
-                        "output_key": "or_result",
-                        "parameters": {
-                            "operation": "or"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
+        auto const pipeline = makeSingleStepPipeline(
+                "DigitalIntervalBoolean",
+                "or_overlapping_merge_input",
+                "or_result",
+                params,
+                "boolean_or",
+                std::vector<std::string>{"or_overlapping_merge_other"});
 
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
 
         auto result = dm.getData<DigitalIntervalSeries>("or_result");
         REQUIRE(result != nullptr);
@@ -749,11 +688,5 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
         REQUIRE(result->size() == 1);
         REQUIRE(result_intervals[0].value().start == 1);
         REQUIRE(result_intervals[0].value().end == 15);
-
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
