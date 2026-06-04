@@ -11,15 +11,14 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/point_extraction_scenarios.hpp"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -286,269 +285,122 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
     multiple_timesteps_data->setTimeFrame(time_frame);
     dm.setData("multiple_timesteps_line", multiple_timesteps_data, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_point_extraction_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("Single diagonal line - middle position") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Point Extraction Pipeline",
-                    "description": "Test line point extraction",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLinePoint",
-                        "input_key": "diagonal_line",
-                        "output_key": "v2_extracted_points",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "Direct",
-                            "use_interpolation": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "diagonal_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+        LinePointExtractionParams params;
+        params.position = 0.5f;
+        params.method = "Direct";
+        params.use_interpolation = true;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLinePoint",
+                "diagonal_line",
+                "v2_extracted_points",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_points = dm.getData<PointData>("v2_extracted_points");
         REQUIRE(result_points != nullptr);
-        
-        // Check we have 1 result at t=100
         REQUIRE(result_points->getTimesWithData().size() == 1);
-        
-        // Verify point value at 50% position of diagonal line
+
         auto const& points_t100 = result_points->getAtTime(TimeFrameIndex(100));
         REQUIRE(points_t100.size() == 1);
         REQUIRE_THAT(points_t100[0].x, WithinAbs(1.5f, 0.001f));
         REQUIRE_THAT(points_t100[0].y, WithinAbs(1.5f, 0.001f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Multiple timesteps pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Multiple Timesteps Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLinePoint",
-                        "input_key": "multiple_timesteps_line",
-                        "output_key": "v2_multi_points",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "Direct"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "multiple_timesteps_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LinePointExtractionParams params;
+        params.position = 0.5f;
+        params.method = "Direct";
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLinePoint",
+                "multiple_timesteps_line",
+                "v2_multi_points",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_points = dm.getData<PointData>("v2_multi_points");
         REQUIRE(result_points != nullptr);
         REQUIRE(result_points->getTimesWithData().size() == 2);
-        
-        // Check t=500: Diagonal line (0,0) to (4,4), 3 points
-        // At 50%, should be at (2, 2)
+
         auto const& points_t500 = result_points->getAtTime(TimeFrameIndex(500));
         REQUIRE(points_t500.size() == 1);
         REQUIRE_THAT(points_t500[0].x, WithinAbs(2.0f, 0.001f));
         REQUIRE_THAT(points_t500[0].y, WithinAbs(2.0f, 0.001f));
-        
-        // Check t=600: Horizontal line (0,0) to (2,0), 3 points
-        // At 50%, should be at (1, 0)
+
         auto const& points_t600 = result_points->getAtTime(TimeFrameIndex(600));
         REQUIRE(points_t600.size() == 1);
         REQUIRE_THAT(points_t600[0].x, WithinAbs(1.0f, 0.001f));
         REQUIRE_THAT(points_t600[0].y, WithinAbs(0.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Parametric method pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Parametric Method Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLinePoint",
-                        "input_key": "diagonal_line",
-                        "output_key": "v2_parametric_points",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "Parametric",
-                            "polynomial_order": 3
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "parametric_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LinePointExtractionParams params;
+        params.position = 0.5f;
+        params.method = "Parametric";
+        params.polynomial_order = 3;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLinePoint",
+                "diagonal_line",
+                "v2_parametric_points",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_points = dm.getData<PointData>("v2_parametric_points");
         REQUIRE(result_points != nullptr);
         REQUIRE(result_points->getTimesWithData().size() == 1);
-        
-        // Verify parametric extraction produces valid result
+
         auto const& points_t100 = result_points->getAtTime(TimeFrameIndex(100));
         REQUIRE(points_t100.size() == 1);
         REQUIRE_THAT(points_t100[0].x, WithinAbs(1.5f, 0.1f));
         REQUIRE_THAT(points_t100[0].y, WithinAbs(1.5f, 0.1f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Start and end position pipeline") {
-        // Test with start position (0.0)
-        const char* json_config_start = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Start Position Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLinePoint",
-                        "input_key": "diagonal_line",
-                        "output_key": "v2_start_point",
-                        "parameters": {
-                            "position": 0.0,
-                            "method": "Direct"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath_start = test_dir / "start_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath_start);
-            REQUIRE(json_file.is_open());
-            json_file << json_config_start;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath_start.string());
-        
+        LinePointExtractionParams start_params;
+        start_params.position = 0.0f;
+        start_params.method = "Direct";
+
+        auto const start_pipeline = makeSingleStepPipeline(
+                "ExtractLinePoint",
+                "diagonal_line",
+                "v2_start_point",
+                start_params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, start_pipeline);
+
         auto start_points = dm.getData<PointData>("v2_start_point");
         REQUIRE(start_points != nullptr);
-        
+
         auto const& points_start = start_points->getAtTime(TimeFrameIndex(100));
         REQUIRE(points_start.size() == 1);
         REQUIRE_THAT(points_start[0].x, WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(points_start[0].y, WithinAbs(0.0f, 0.001f));
-        
-        // Test with end position (1.0)
-        const char* json_config_end = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "End Position Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLinePoint",
-                        "input_key": "diagonal_line",
-                        "output_key": "v2_end_point",
-                        "parameters": {
-                            "position": 1.0,
-                            "method": "Direct"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath_end = test_dir / "end_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath_end);
-            REQUIRE(json_file.is_open());
-            json_file << json_config_end;
-            json_file.close();
-        }
-        
-        data_info_list = load_data_from_json_config_v2(&dm, json_filepath_end.string());
-        
+
+        LinePointExtractionParams end_params;
+        end_params.position = 1.0f;
+        end_params.method = "Direct";
+
+        auto const end_pipeline = makeSingleStepPipeline(
+                "ExtractLinePoint",
+                "diagonal_line",
+                "v2_end_point",
+                end_params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, end_pipeline);
+
         auto end_points = dm.getData<PointData>("v2_end_point");
         REQUIRE(end_points != nullptr);
-        
+
         auto const& points_end = end_points->getAtTime(TimeFrameIndex(100));
         REQUIRE(points_end.size() == 1);
         REQUIRE_THAT(points_end[0].x, WithinAbs(3.0f, 0.001f));
         REQUIRE_THAT(points_end[0].y, WithinAbs(3.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
 

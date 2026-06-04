@@ -11,15 +11,14 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/clip_scenarios.hpp"
 
 #include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -393,218 +392,100 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     no_intersect_ref->addAtTime(TimeFrameIndex(300), far_vertical, NotifyObservers::No);
     dm.setData("no_intersect_ref", no_intersect_ref, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_clip_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("KeepBase clipping via JSON pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Clip KeepBase Pipeline",
-                    "description": "Test line clipping with KeepBase",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ClipLineAtReference",
-                        "input_key": "line_to_clip",
-                        "additional_input_keys": ["reference_line"],
-                        "output_key": "v2_clipped_lines_keep_base",
-                        "parameters": {
-                            "clip_side": "KeepBase"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "keep_base_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+        LineClipParams params;
+        params.clip_side = "KeepBase";
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ClipLineAtReference",
+                "line_to_clip",
+                "v2_clipped_lines_keep_base",
+                params,
+                "1",
+                std::vector<std::string>{"reference_line"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_clipped_lines_keep_base");
         REQUIRE(result_lines != nullptr);
-        
-        // Check we have results at t=100
+
         auto clipped = result_lines->getAtTime(TimeFrameIndex(100));
         REQUIRE(clipped.size() == 1);
-        
-        // Verify clipping - line should end at x=2.5
+
         REQUIRE(clipped[0].back().x == Catch::Approx(2.5f).margin(0.001f));
         REQUIRE(clipped[0].back().y == Catch::Approx(2.0f).margin(0.001f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("KeepDistal clipping via JSON pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Clip KeepDistal Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ClipLineAtReference",
-                        "input_key": "line_to_clip",
-                        "additional_input_keys": ["reference_line"],
-                        "output_key": "v2_clipped_lines_keep_distal",
-                        "parameters": {
-                            "clip_side": "KeepDistal"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "keep_distal_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineClipParams params;
+        params.clip_side = "KeepDistal";
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ClipLineAtReference",
+                "line_to_clip",
+                "v2_clipped_lines_keep_distal",
+                params,
+                "1",
+                std::vector<std::string>{"reference_line"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_clipped_lines_keep_distal");
         REQUIRE(result_lines != nullptr);
-        
+
         auto clipped = result_lines->getAtTime(TimeFrameIndex(100));
         REQUIRE(clipped.size() == 1);
-        
-        // Verify clipping - line should start at x=2.5 and end at x=4.0
+
         REQUIRE(clipped[0].front().x == Catch::Approx(2.5f).margin(0.001f));
         REQUIRE(clipped[0].front().y == Catch::Approx(2.0f).margin(0.001f));
         REQUIRE(clipped[0].back().x == Catch::Approx(4.0f).margin(0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Diagonal line clipping via JSON pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Diagonal Line Clip Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ClipLineAtReference",
-                        "input_key": "diagonal_line",
-                        "additional_input_keys": ["reference_line_2"],
-                        "output_key": "v2_diagonal_clipped",
-                        "parameters": {
-                            "clip_side": "KeepBase"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "diagonal_clip_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineClipParams params;
+        params.clip_side = "KeepBase";
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ClipLineAtReference",
+                "diagonal_line",
+                "v2_diagonal_clipped",
+                params,
+                "1",
+                std::vector<std::string>{"reference_line_2"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_diagonal_clipped");
         REQUIRE(result_lines != nullptr);
-        
-        // Diagonal line is at t=200
+
         auto clipped = result_lines->getAtTime(TimeFrameIndex(200));
         REQUIRE(clipped.size() == 1);
-        
-        // Should be clipped at x=2.0, y=2.0
+
         REQUIRE(clipped[0].back().x == Catch::Approx(2.0f).margin(0.001f));
         REQUIRE(clipped[0].back().y == Catch::Approx(2.0f).margin(0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("No intersection via JSON pipeline - line unchanged") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "No Intersection Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ClipLineAtReference",
-                        "input_key": "no_intersect_line",
-                        "additional_input_keys": ["no_intersect_ref"],
-                        "output_key": "v2_no_intersection_result",
-                        "parameters": {}
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "no_intersection_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineClipParams params;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ClipLineAtReference",
+                "no_intersect_line",
+                "v2_no_intersection_result",
+                params,
+                "1",
+                std::vector<std::string>{"no_intersect_ref"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_no_intersection_result");
         REQUIRE(result_lines != nullptr);
-        
-        // No intersection line is at t=300
+
         auto clipped = result_lines->getAtTime(TimeFrameIndex(300));
         REQUIRE(clipped.size() == 1);
-        
-        // Line should be unchanged - 4 points from (0,2) to (3,2)
+
         REQUIRE(clipped[0].size() == 4);
         REQUIRE(clipped[0].front().x == Catch::Approx(0.0f).margin(0.001f));
         REQUIRE(clipped[0].back().x == Catch::Approx(3.0f).margin(0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }

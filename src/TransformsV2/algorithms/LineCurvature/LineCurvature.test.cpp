@@ -12,15 +12,14 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/curvature_scenarios.hpp"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -338,253 +337,124 @@ TEST_CASE("V2 DataManager Integration: LineCurvature via load_data_from_json_con
     multiple_curvatures_data->setTimeFrame(time_frame);
     dm.setData("json_pipeline_multiple_curvatures_line", multiple_curvatures_data, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_curvature_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("Two timesteps pipeline - parabola and straight line") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Curvature Pipeline",
-                    "description": "Test line curvature calculation",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineCurvature",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_line_curvatures",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "PolynomialFit",
-                            "polynomial_order": 3,
-                            "fitting_window_percentage": 0.1
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "two_timesteps_curvature_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineCurvatureParams params;
+        params.position = 0.5f;
+        params.method = "PolynomialFit";
+        params.polynomial_order = 3;
+        params.fitting_window_percentage = 0.1f;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineCurvature",
+                "json_pipeline_two_timesteps_line",
+                "v2_line_curvatures",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_curvatures = dm.getData<RaggedAnalogTimeSeries>("v2_line_curvatures");
         REQUIRE(result_curvatures != nullptr);
-        
-        // Check we have 2 results (t=100 and t=200)
         REQUIRE(result_curvatures->getNumTimePoints() == 2);
-        
-        // Verify curvature values
-        // t=100: parabola (should have non-zero curvature)
-        // t=200: straight line (should have near-zero curvature)
+
         auto values_t100 = result_curvatures->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE(!std::isnan(values_t100[0]));
-        // Parabola should have positive curvature
         REQUIRE(values_t100[0] != 0.0f);
-        
+
         auto values_t200 = result_curvatures->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE(!std::isnan(values_t200[0]));
-        // Straight line should have near-zero curvature
         REQUIRE(std::abs(values_t200[0]) < 0.1f);
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Multiple curvatures pipeline with three timesteps") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Multiple Curvatures Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineCurvature",
-                        "input_key": "json_pipeline_multiple_curvatures_line",
-                        "output_key": "v2_multiple_curvatures",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "PolynomialFit",
-                            "polynomial_order": 3,
-                            "fitting_window_percentage": 0.1
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "multiple_curvatures_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineCurvatureParams params;
+        params.position = 0.5f;
+        params.method = "PolynomialFit";
+        params.polynomial_order = 3;
+        params.fitting_window_percentage = 0.1f;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineCurvature",
+                "json_pipeline_multiple_curvatures_line",
+                "v2_multiple_curvatures",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_curvatures = dm.getData<RaggedAnalogTimeSeries>("v2_multiple_curvatures");
         REQUIRE(result_curvatures != nullptr);
         REQUIRE(result_curvatures->getNumTimePoints() == 3);
-        
-        // Verify all values are valid
+
         auto values_t100 = result_curvatures->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE(!std::isnan(values_t100[0]));
-        
+
         auto values_t200 = result_curvatures->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE(!std::isnan(values_t200[0]));
-        
+
         auto values_t300 = result_curvatures->getDataAtTime(TimeFrameIndex(300));
         REQUIRE(values_t300.size() == 1);
         REQUIRE(!std::isnan(values_t300[0]));
-        
-        // Straight line at t=200 should have smallest curvature
+
         REQUIRE(std::abs(values_t200[0]) < std::abs(values_t100[0]));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Different polynomial order via JSON") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Polynomial Order Test Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineCurvature",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_poly4_curvatures",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "PolynomialFit",
-                            "polynomial_order": 4,
-                            "fitting_window_percentage": 0.15
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "polynomial_order_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineCurvatureParams params;
+        params.position = 0.5f;
+        params.method = "PolynomialFit";
+        params.polynomial_order = 4;
+        params.fitting_window_percentage = 0.15f;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineCurvature",
+                "json_pipeline_two_timesteps_line",
+                "v2_poly4_curvatures",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_curvatures = dm.getData<RaggedAnalogTimeSeries>("v2_poly4_curvatures");
         REQUIRE(result_curvatures != nullptr);
         REQUIRE(result_curvatures->getNumTimePoints() == 2);
-        
-        // Both values should be valid
+
         auto values_t100 = result_curvatures->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE(!std::isnan(values_t100[0]));
-        
+
         auto values_t200 = result_curvatures->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE(!std::isnan(values_t200[0]));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Different position via JSON") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Position Test Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineCurvature",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_position_curvatures",
-                        "parameters": {
-                            "position": 0.25,
-                            "method": "PolynomialFit",
-                            "polynomial_order": 3,
-                            "fitting_window_percentage": 0.1
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "position_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineCurvatureParams params;
+        params.position = 0.25f;
+        params.method = "PolynomialFit";
+        params.polynomial_order = 3;
+        params.fitting_window_percentage = 0.1f;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineCurvature",
+                "json_pipeline_two_timesteps_line",
+                "v2_position_curvatures",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_curvatures = dm.getData<RaggedAnalogTimeSeries>("v2_position_curvatures");
         REQUIRE(result_curvatures != nullptr);
         REQUIRE(result_curvatures->getNumTimePoints() == 2);
-        
-        // Both values should be valid
+
         auto values_t100 = result_curvatures->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE(!std::isnan(values_t100[0]));
-        
+
         auto values_t200 = result_curvatures->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE(!std::isnan(values_t200[0]));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
 

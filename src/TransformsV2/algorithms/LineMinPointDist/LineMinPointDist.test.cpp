@@ -3,23 +3,22 @@
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "transforms/v2/core/ComputeContext.hpp"
-#include "transforms/v2/core/DataManagerIntegration.hpp"
-#include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/ParameterIO.hpp"
+#include "TransformsV2/core/ComputeContext.hpp"
+#include "TransformsV2/core/DataManagerIntegration.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/distance_scenarios.hpp"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -268,62 +267,29 @@ TEST_CASE("V2 DataManager Integration: LineMinPointDist via load_data_from_json_
     dm.setData("horizontal_line_point_above_line", line_data_horiz, TimeKey("default"));
     dm.setData("horizontal_line_point_above_point", point_data_horiz, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_min_point_dist_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("Two timesteps pipeline") {
-        // Uses additional_input_keys for multi-input (binary) transforms
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Min Point Distance Pipeline",
-                    "description": "Test line to point minimum distance calculation",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineMinPointDistance",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "additional_input_keys": ["json_pipeline_two_timesteps_point"],
-                        "output_key": "v2_line_point_distances",
-                        "parameters": {
-                            "use_first_line_only": true,
-                            "return_squared_distance": false
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "two_timesteps_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+        LineMinPointDistParams params;
+        params.use_first_line_only = true;
+        params.return_squared_distance = false;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineMinPointDistance",
+                "json_pipeline_two_timesteps_line",
+                "v2_line_point_distances",
+                params,
+                "1",
+                std::vector<std::string>{"json_pipeline_two_timesteps_point"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_line_point_distances");
         REQUIRE(result_distances != nullptr);
-        
-        // Check we have 2 results (t=100 and t=200)
         REQUIRE(result_distances->getNumSamples() == 2);
-        
-        // Verify distance values
-        // t=100: horizontal line (0,0)-(10,0) with point (5,5), distance = 5.0
-        // t=200: vertical line (5,0)-(5,10) with point (8,5), distance = 3.0
+
         auto all_samples = result_distances->getAllSamples();
         bool found_100 = false;
         bool found_200 = false;
-        
+
         for (auto const& sample : all_samples) {
             if (sample.time_frame_index == TimeFrameIndex(100)) {
                 REQUIRE(!sample.value.empty());
@@ -335,113 +301,54 @@ TEST_CASE("V2 DataManager Integration: LineMinPointDist via load_data_from_json_
                 found_200 = true;
             }
         }
-        
+
         REQUIRE(found_100);
         REQUIRE(found_200);
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Point on line edge case") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Point On Line Test",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineMinPointDistance",
-                        "input_key": "json_pipeline_point_on_line_line",
-                        "additional_input_keys": ["json_pipeline_point_on_line_point"],
-                        "output_key": "v2_point_on_line_distances",
-                        "parameters": {}
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "point_on_line_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineMinPointDistParams params;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineMinPointDistance",
+                "json_pipeline_point_on_line_line",
+                "v2_point_on_line_distances",
+                params,
+                "1",
+                std::vector<std::string>{"json_pipeline_point_on_line_point"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_point_on_line_distances");
         REQUIRE(result_distances != nullptr);
         REQUIRE(result_distances->getNumSamples() == 1);
-        
-        // Distance should be 0 for point exactly on line
+
         auto all_samples = result_distances->getAllSamples();
         REQUIRE(!all_samples.empty());
         REQUIRE(!all_samples.front().value.empty());
         REQUIRE_THAT(all_samples.front().value[0], WithinAbs(0.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Basic horizontal line test") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Horizontal Line Test",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineMinPointDistance",
-                        "input_key": "horizontal_line_point_above_line",
-                        "additional_input_keys": ["horizontal_line_point_above_point"],
-                        "output_key": "v2_horizontal_distances",
-                        "parameters": {}
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "horizontal_line_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineMinPointDistParams params;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineMinPointDistance",
+                "horizontal_line_point_above_line",
+                "v2_horizontal_distances",
+                params,
+                "1",
+                std::vector<std::string>{"horizontal_line_point_above_point"});
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_horizontal_distances");
         REQUIRE(result_distances != nullptr);
         REQUIRE(result_distances->getNumSamples() == 1);
-        
-        // Distance should be 5.0 (point at y=5, line at y=0)
+
         auto all_samples = result_distances->getAllSamples();
         REQUIRE(!all_samples.empty());
         REQUIRE(!all_samples.front().value.empty());
         REQUIRE_THAT(all_samples.front().value[0], WithinAbs(5.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }

@@ -11,15 +11,14 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/resample_scenarios.hpp"
 
 #include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -383,115 +382,48 @@ TEST_CASE("V2 DataManager Integration: LineResample via load_data_from_json_conf
     dense_line->setTimeFrame(time_frame);
     dm.setData("dense_nearly_straight_line", dense_line, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_resample_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("FixedSpacing pipeline") {
-        const char * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Resample Pipeline",
-                    "description": "Test FixedSpacing resampling",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ResampleLine",
-                        "input_key": "two_diagonal_lines",
-                        "output_key": "v2_resampled_lines",
-                        "parameters": {
-                            "method": "FixedSpacing",
-                            "target_spacing": 15.0
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "fixed_spacing_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
-        // LineData → LineData (element-wise Line2D → Line2D)
+        LineResampleParams params;
+        params.method = "FixedSpacing";
+        params.target_spacing = rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>(15.0f);
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ResampleLine",
+                "two_diagonal_lines",
+                "v2_resampled_lines",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_resampled_lines");
         REQUIRE(result_lines != nullptr);
-        
-        // Check we have 2 results (t=100 and t=200)
+
         auto times = result_lines->getTimesWithData();
         REQUIRE(times.size() == 2);
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (std::exception const & e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("DouglasPeucker pipeline") {
-        const char * json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Douglas-Peucker Simplification Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ResampleLine",
-                        "input_key": "dense_nearly_straight_line",
-                        "output_key": "v2_simplified_lines",
-                        "parameters": {
-                            "method": "DouglasPeucker",
-                            "epsilon": 0.5
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "douglas_peucker_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
+        LineResampleParams params;
+        params.method = "DouglasPeucker";
+        params.epsilon = rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>(0.5f);
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ResampleLine",
+                "dense_nearly_straight_line",
+                "v2_simplified_lines",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_lines = dm.getData<LineData>("v2_simplified_lines");
         REQUIRE(result_lines != nullptr);
-        
-        // Get the simplified line at t=100
+
         auto simplified = result_lines->getAtTime(TimeFrameIndex(100));
         REQUIRE(!simplified.empty());
-        
-        // Original had 11 points, simplified should have fewer
+
         auto original = dense_line->getAtTime(TimeFrameIndex(100));
         REQUIRE(!original.empty());
         REQUIRE(simplified[0].size() < original[0].size());
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (std::exception const & e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
 

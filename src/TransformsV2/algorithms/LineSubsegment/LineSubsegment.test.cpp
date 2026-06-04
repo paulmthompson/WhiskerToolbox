@@ -1,7 +1,9 @@
 #include "LineSubsegment.hpp"
 
+#include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
+#include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -9,6 +11,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "fixtures/builders/LineDataBuilder.hpp"
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/subsegment_scenarios.hpp"
 
 #include <cmath>
@@ -17,6 +20,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace pipeline_json_test;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================
@@ -449,14 +453,6 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Registry Integration",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "DataManager.hpp"
-#include "TransformsV2/core/DataManagerIntegration.hpp"
-
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-
 TEST_CASE("V2 DataManager Integration: LineSubsegment via load_data_from_json_config_v2",
           "[transforms][v2][datamanager][line_subsegment]") {
     
@@ -474,222 +470,112 @@ TEST_CASE("V2 DataManager Integration: LineSubsegment via load_data_from_json_co
     test_line->setTimeFrame(time_frame);
     dm.setData("test_line", test_line, TimeKey("default"));
     
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_subsegment_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
     SECTION("Direct method pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Subsegment Extraction Pipeline",
-                    "description": "Test line subsegment extraction",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLineSubsegment",
-                        "input_key": "test_line",
-                        "output_key": "v2_extracted_subsegments",
-                        "parameters": {
-                            "start_position": 0.2,
-                            "end_position": 0.8,
-                            "method": "Direct",
-                            "preserve_original_spacing": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "direct_method_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+        LineSubsegmentParams params;
+        params.start_position = 0.2f;
+        params.end_position = 0.8f;
+        params.method = "Direct";
+        params.preserve_original_spacing = true;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLineSubsegment",
+                "test_line",
+                "v2_extracted_subsegments",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_subsegments = dm.getData<LineData>("v2_extracted_subsegments");
         REQUIRE(result_subsegments != nullptr);
-        
-        // Verify the subsegment extraction results
+
         auto const & subsegments = result_subsegments->getAtTime(TimeFrameIndex(100));
         REQUIRE(subsegments.size() == 1);
-        
+
         auto const & subsegment = subsegments[0];
         REQUIRE(subsegment.size() >= 2);
-        
-        // First point should be the first original point within range (position 1.0)
+
         REQUIRE_THAT(subsegment[0].x, WithinAbs(1.0f, 0.001f));
         REQUIRE_THAT(subsegment[0].y, WithinAbs(1.0f, 0.001f));
-        
-        // Last point should be the last original point within range (position 3.0)
         REQUIRE_THAT(subsegment.back().x, WithinAbs(3.0f, 0.001f));
         REQUIRE_THAT(subsegment.back().y, WithinAbs(3.0f, 0.001f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
     
     SECTION("Parametric method pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Subsegment Parametric Pipeline",
-                    "description": "Test parametric subsegment extraction",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLineSubsegment",
-                        "input_key": "test_line",
-                        "output_key": "v2_parametric_subsegments",
-                        "parameters": {
-                            "start_position": 0.3,
-                            "end_position": 0.7,
-                            "method": "Parametric",
-                            "polynomial_order": 3,
-                            "output_points": 20
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "parametric_method_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+        LineSubsegmentParams params;
+        params.start_position = 0.3f;
+        params.end_position = 0.7f;
+        params.method = "Parametric";
+        params.polynomial_order = 3;
+        params.output_points = 20;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLineSubsegment",
+                "test_line",
+                "v2_parametric_subsegments",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_subsegments = dm.getData<LineData>("v2_parametric_subsegments");
         REQUIRE(result_subsegments != nullptr);
-        
-        // Verify the subsegment extraction results
+
         auto const & subsegments = result_subsegments->getAtTime(TimeFrameIndex(100));
         REQUIRE(subsegments.size() == 1);
-        
+
         auto const & subsegment = subsegments[0];
-        REQUIRE(subsegment.size() == 20);  // Exactly output_points
-        
-        // Check that the subsegment is within the specified range
-        float total_length = 4.0f;
-        float start_distance = 0.3f * total_length; // 1.2
-        float end_distance = 0.7f * total_length;   // 2.8
-        
-        // First point should be at start_distance
-        REQUIRE_THAT(subsegment[0].x, WithinAbs(1.2f, 0.1f));
-        REQUIRE_THAT(subsegment[0].y, WithinAbs(1.2f, 0.1f));
-        
-        // Last point should be at end_distance
-        REQUIRE_THAT(subsegment.back().x, WithinAbs(2.8f, 0.1f));
-        REQUIRE_THAT(subsegment.back().y, WithinAbs(2.8f, 0.1f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
+        REQUIRE(subsegment.size() == 20);
+
+        float const total_length = 4.0f;
+        float const start_distance = 0.3f * total_length;
+        float const end_distance = 0.7f * total_length;
+
+        REQUIRE_THAT(subsegment[0].x, WithinAbs(start_distance, 0.1f));
+        REQUIRE_THAT(subsegment[0].y, WithinAbs(start_distance, 0.1f));
+        REQUIRE_THAT(subsegment.back().x, WithinAbs(end_distance, 0.1f));
+        REQUIRE_THAT(subsegment.back().y, WithinAbs(end_distance, 0.1f));
     }
     
     SECTION("Multiple timesteps pipeline") {
-        // Create test line data with multiple timesteps
         auto multi_line = LineDataBuilder()
             .withCoords(100, 
                 {0.0f, 1.0f, 2.0f, 3.0f, 4.0f},
                 {0.0f, 1.0f, 2.0f, 3.0f, 4.0f})
             .withCoords(200, 
                 {0.0f, 2.0f, 4.0f, 6.0f, 8.0f},
-                {0.0f, 0.0f, 0.0f, 0.0f, 0.0f})  // Horizontal line
+                {0.0f, 0.0f, 0.0f, 0.0f, 0.0f})
             .build();
         multi_line->setTimeFrame(time_frame);
         dm.setData("multi_line", multi_line, TimeKey("default"));
-        
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Multi-Timestep Subsegment Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "ExtractLineSubsegment",
-                        "input_key": "multi_line",
-                        "output_key": "v2_multi_subsegments",
-                        "parameters": {
-                            "start_position": 0.25,
-                            "end_position": 0.75,
-                            "method": "Direct",
-                            "preserve_original_spacing": true
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "multi_timestep_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
+
+        LineSubsegmentParams params;
+        params.start_position = 0.25f;
+        params.end_position = 0.75f;
+        params.method = "Direct";
+        params.preserve_original_spacing = true;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "ExtractLineSubsegment",
+                "multi_line",
+                "v2_multi_subsegments",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_subsegments = dm.getData<LineData>("v2_multi_subsegments");
         REQUIRE(result_subsegments != nullptr);
-        
-        // Check we have results at both timesteps
+
         auto times = result_subsegments->getTimesWithData();
         REQUIRE(times.size() == 2);
-        
-        // Verify t=100 subsegment (diagonal line)
+
         auto const & subsegments_t100 = result_subsegments->getAtTime(TimeFrameIndex(100));
         REQUIRE(subsegments_t100.size() == 1);
         REQUIRE(subsegments_t100[0].size() >= 2);
-        
-        // Verify t=200 subsegment (horizontal line)
+
         auto const & subsegments_t200 = result_subsegments->getAtTime(TimeFrameIndex(200));
         REQUIRE(subsegments_t200.size() == 1);
         REQUIRE(subsegments_t200[0].size() >= 2);
-        
-        // Y values should be 0 for horizontal line
+
         REQUIRE_THAT(subsegments_t200[0][0].y, WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(subsegments_t200[0].back().y, WithinAbs(0.0f, 0.001f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
