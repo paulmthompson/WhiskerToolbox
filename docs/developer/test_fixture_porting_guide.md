@@ -30,6 +30,8 @@ tests/DataManager/fixtures/
 │   └── analog/
 │       ├── analog_event_threshold_vectors.hpp
 │       └── analog_event_threshold_test_helpers.hpp
+├── pipeline/                          # Typed pipeline JSON builders for integration tests
+│   └── pipeline_json_test_helpers.hpp
 ├── scenarios/                         # Input-only factory functions (legacy / simple cases)
 │   └── analog/
 │       └── interval_threshold_scenarios.hpp
@@ -130,6 +132,50 @@ for (auto const& tc : my_transform_vectors::algorithmCases()) {
 ```
 
 JSON `input_key` values must match `Case::dm_key`. Assert pipeline output with `findCaseByDmKey("positive_no_lockout")` and `requireEventTimes`.
+
+### Step 4b: Typed pipeline JSON (no filesystem)
+
+Avoid hand-written JSON strings and temp files. Use [`pipeline_json_test_helpers.hpp`](../../tests/DataManager/fixtures/pipeline/pipeline_json_test_helpers.hpp) to build `DataManagerPipelineDescriptor` from typed reflect-cpp parameter structs and execute in memory.
+
+```cpp
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
+
+using namespace pipeline_json_test;
+
+// Params come from your vector adapter or a local helper — not duplicated in JSON
+auto const params = toAnalogEventThresholdParams(tc);
+auto const pipeline = makeSingleStepPipeline(
+    "AnalogEventThreshold",
+    std::string(tc.dm_key),
+    "v2_" + std::string(tc.dm_key) + "_out",
+    params);
+
+// V1-compatible loader path (load_data_from_json_config_v2)
+executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
+// Or direct executor path (DataManagerPipelineExecutor)
+auto const result = executeViaExecutor(dm, pipeline);
+REQUIRE(result.load_ok);
+REQUIRE(result.execution.success);
+```
+
+**How it works:** `parametersAsGeneric()` calls `saveParametersToJson<ParamsT>()` then wraps the result in `rfl::Generic` for `DataManagerStepDescriptor::parameters`. The descriptor serializes via reflect-cpp; execution uses existing in-memory overloads (`loadFromJson`, `load_data_from_json_config_v2(dm, json, "")`).
+
+**Table-driven JSON tests:** Loop the same `algorithmCases()` as algorithm correctness tests — each row gets a unique `output_key` (e.g. `"v2_" + dm_key + "_out"`) so cases do not overwrite each other in one `DataManager`.
+
+**Binary / multi-input transforms:** Pass secondary input keys via the optional `additional_input_keys` argument on `makeStep` / `makeSingleStepPipeline`:
+
+```cpp
+auto const pipeline = makeSingleStepPipeline(
+    "DigitalIntervalBoolean",
+    "and_overlapping_input",
+    "and_result",
+    params,
+    "boolean_and",
+    std::vector<std::string>{"and_overlapping_other"});
+```
+
+Reference: [`AnalogEventThreshold.test.cpp`](../../src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp) (full vector loop), [`AnalogIntervalThreshold.test.cpp`](../../src/TransformsV2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp) (scenario-based sections with `toIntervalThresholdParams` helper), [`DigitalIntervalBoolean.test.cpp`](../../src/TransformsV2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp) (binary transform with `additional_input_keys`).
 
 ### Step 5: What stays out of the vector
 

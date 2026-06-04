@@ -12,11 +12,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/geometry_scenarios.hpp"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 
 using namespace WhiskerToolbox::Transforms::V2;
@@ -439,264 +437,133 @@ TEST_CASE("V2 Element Transform: LineAngle Registry Integration",
 
 TEST_CASE("V2 DataManager Integration: LineAngle via load_data_from_json_config_v2",
           "[transforms][v2][datamanager][line_angle]") {
-    
-    // Create DataManager and populate with test data
+
+    using namespace pipeline_json_test;
+
     DataManager dm;
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
-    
-    // Populate with scenario data
+
     auto two_timesteps_data = line_scenarios::json_pipeline_two_timesteps();
     two_timesteps_data->setTimeFrame(time_frame);
     dm.setData("json_pipeline_two_timesteps_line", two_timesteps_data, TimeKey("default"));
-    
+
     auto multiple_angles_data = line_scenarios::json_pipeline_multiple_angles();
     multiple_angles_data->setTimeFrame(time_frame);
     dm.setData("json_pipeline_multiple_angles_line", multiple_angles_data, TimeKey("default"));
-    
-    // Create temporary directory for JSON config files
-    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_angle_v2_test";
-    std::filesystem::create_directories(test_dir);
-    
+
     SECTION("Two timesteps pipeline - horizontal and diagonal") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Line Angle Pipeline",
-                    "description": "Test line angle calculation",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineAngle",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_line_angles",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "DirectPoints"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "two_timesteps_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // Verify the transformation was executed and results are available
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineAngleParams params;
+        params.position = 0.5f;
+        params.method = LineAngleMethod::DirectPoints;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineAngle",
+                "json_pipeline_two_timesteps_line",
+                "v2_line_angles",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_line_angles");
         REQUIRE(result_angles != nullptr);
-        
-        // Check we have 2 results (t=100 and t=200)
         REQUIRE(result_angles->getNumTimePoints() == 2);
-        
-        // Verify angle values
-        // t=100: horizontal line (0 degrees)
-        // t=200: 45-degree line (45 degrees)
+
         auto values_t100 = result_angles->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE_THAT(values_t100[0], WithinAbs(0.0f, 0.001f));
-        
+
         auto values_t200 = result_angles->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE_THAT(values_t200[0], WithinAbs(45.0f, 0.001f));
-        
-        // Cleanup
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Multiple angles pipeline with three timesteps") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Multiple Angles Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineAngle",
-                        "input_key": "json_pipeline_multiple_angles_line",
-                        "output_key": "v2_multiple_angles",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "DirectPoints"
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "multiple_angles_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineAngleParams params;
+        params.position = 0.5f;
+        params.method = LineAngleMethod::DirectPoints;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineAngle",
+                "json_pipeline_multiple_angles_line",
+                "v2_multiple_angles",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_multiple_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 3);
-        
-        // Verify angle values
-        // t=100: horizontal (0°), t=200: vertical (90°), t=300: 45-degree (45°)
+
         auto values_t100 = result_angles->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE_THAT(values_t100[0], WithinAbs(0.0f, 0.001f));
-        
+
         auto values_t200 = result_angles->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE_THAT(values_t200[0], WithinAbs(90.0f, 0.001f));
-        
+
         auto values_t300 = result_angles->getDataAtTime(TimeFrameIndex(300));
         REQUIRE(values_t300.size() == 1);
         REQUIRE_THAT(values_t300[0], WithinAbs(45.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Polynomial fit pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Polynomial Fit Pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineAngle",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_poly_angles",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "PolynomialFit",
-                            "polynomial_order": 2
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "polynomial_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineAngleParams params;
+        params.position = 0.5f;
+        params.method = LineAngleMethod::PolynomialFit;
+        params.polynomial_order = 2;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineAngle",
+                "json_pipeline_two_timesteps_line",
+                "v2_poly_angles",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_poly_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 2);
-        
-        // Both angles should be valid
+
         auto values_t100 = result_angles->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE(values_t100[0] >= -180.0f);
         REQUIRE(values_t100[0] <= 180.0f);
-        
+
         auto values_t200 = result_angles->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE(values_t200[0] >= -180.0f);
         REQUIRE(values_t200[0] <= 180.0f);
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
-    
+
     SECTION("Custom coordinate frame pipeline") {
-        const char* json_config = R"([
-        {
-            "transformations": {
-                "metadata": {
-                    "name": "Coordinate frame pipeline",
-                    "version": "2.0"
-                },
-                "steps": [
-                    {
-                        "step_id": "1",
-                        "transform_name": "CalculateLineAngle",
-                        "input_key": "json_pipeline_two_timesteps_line",
-                        "output_key": "v2_vertical_ref_angles",
-                        "parameters": {
-                            "position": 0.5,
-                            "method": "DirectPoints",
-                            "axis_x_x": 0.0,
-                            "axis_x_y": 1.0,
-                            "axis_y_x": -1.0,
-                            "axis_y_y": 0.0
-                        }
-                    }
-                ]
-            }
-        }
-        ])";
-        
-        std::filesystem::path json_filepath = test_dir / "reference_vector_pipeline.json";
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-            json_file.close();
-        }
-        
-        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
-        
-        // LineData is ragged, so output is RaggedAnalogTimeSeries
+        LineAngleParams params;
+        params.position = 0.5f;
+        params.method = LineAngleMethod::DirectPoints;
+        params.axis_x_x = 0.0f;
+        params.axis_x_y = 1.0f;
+        params.axis_y_x = -1.0f;
+        params.axis_y_y = 0.0f;
+
+        auto const pipeline = makeSingleStepPipeline(
+                "CalculateLineAngle",
+                "json_pipeline_two_timesteps_line",
+                "v2_vertical_ref_angles",
+                params);
+
+        executeViaLoadDataFromJsonConfigV2(dm, pipeline);
+
         auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_vertical_ref_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 2);
-        
-        // With measured +X along world +Y:
-        // t=100: horizontal line - angle = -90 degrees
-        // t=200: 45-degree line - angle = -45 degrees
+
         auto values_t100 = result_angles->getDataAtTime(TimeFrameIndex(100));
         REQUIRE(values_t100.size() == 1);
         REQUIRE_THAT(values_t100[0], WithinAbs(-90.0f, 0.001f));
-        
+
         auto values_t200 = result_angles->getDataAtTime(TimeFrameIndex(200));
         REQUIRE(values_t200.size() == 1);
         REQUIRE_THAT(values_t200[0], WithinAbs(-45.0f, 0.001f));
-        
-        try {
-            std::filesystem::remove_all(test_dir);
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
-        }
     }
 }
