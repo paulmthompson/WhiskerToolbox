@@ -30,20 +30,11 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * ```
  */
 struct LineMinPointDistParams {
-    // Whether to use only the first line (true) or all lines (false)
-    std::optional<bool> use_first_line_only;
+    /// Whether to use only the first line (true) or all lines (false)
+    bool use_first_line_only = true;
 
-    // Whether to return squared distance (faster, no sqrt)
-    std::optional<bool> return_squared_distance;
-
-    // Helper methods with defaults
-    bool getUseFirstLineOnly() const {
-        return use_first_line_only.value_or(true);
-    }
-
-    bool getReturnSquaredDistance() const {
-        return return_squared_distance.value_or(false);
-    }
+    /// Whether to return squared distance (faster, no sqrt)
+    bool return_squared_distance = false;
 };
 
 // ============================================================================

@@ -97,7 +97,7 @@ float calculateLineMinPointDistance(
     float distance_squared = pointToLineMinDistance2(point, line);
 
     // Return squared or actual distance based on parameters
-    if (params.getReturnSquaredDistance()) {
+    if (params.return_squared_distance) {
         return distance_squared;
     } else {
         return std::sqrt(distance_squared);

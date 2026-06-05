@@ -17,13 +17,8 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 // ============================================================================
 
 void LinePointExtractionParams::validate() {
-    // Clamp position to [0, 1]
-    float pos = getPosition();
-    position = std::max(0.0f, std::min(pos, 1.0f));
-
-    // Clamp polynomial order to valid range [1, 9]
-    int order = getPolynomialOrder();
-    polynomial_order = std::max(1, std::min(order, 9));
+    position = std::max(0.0f, std::min(position, 1.0f));
+    polynomial_order = std::max(1, std::min(polynomial_order, 9));
 }
 
 // ============================================================================
@@ -43,12 +38,12 @@ Point2D<float> extractLinePoint(
         return Point2D<float>(line[0].x, line[0].y);
     }
 
-    if (params.getMethod() == LinePointExtractionMethod::Direct) {
+    if (params.method == LinePointExtractionMethod::Direct) {
         // Use distance-based extraction from CoreGeometry
         auto result = point_at_fractional_position(
-            line, 
-            params.getPosition(), 
-            params.getUseInterpolation());
+                line,
+                params.position,
+                params.use_interpolation);
         
         if (result.has_value()) {
             return result.value();
@@ -58,18 +53,18 @@ Point2D<float> extractLinePoint(
     } else {
         // Use parametric polynomial fitting
         auto result = extract_parametric_point(
-            line, 
-            params.getPosition(), 
-            params.getPolynomialOrder());
+                line,
+                params.position,
+                params.polynomial_order);
         
         if (result.has_value()) {
             return result.value();
         }
         // Fallback to direct method if parametric fails
         auto direct_result = point_at_fractional_position(
-            line, 
-            params.getPosition(), 
-            params.getUseInterpolation());
+                line,
+                params.position,
+                params.use_interpolation);
         
         if (direct_result.has_value()) {
             return direct_result.value();

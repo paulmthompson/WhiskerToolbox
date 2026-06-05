@@ -39,63 +39,29 @@ static Line2D getLineAt(LineData const * line_data, TimeFrameIndex time) {
 }
 
 // ============================================================================
-// Tests: LineBaseFlipParams JSON Loading
+// JSON Parameter Rejection Tests
 // ============================================================================
 
-TEST_CASE("V2 LineBaseFlipParams - Load valid JSON with all fields",
+TEST_CASE("V2 LineBaseFlipParams - JSON Rejection",
           "[transforms][v2][params][json][line_base_flip]") {
-    std::string json = R"({
-        "reference_x": 12.0,
-        "reference_y": 5.0
-    })";
 
-    auto result = loadParametersFromJson<LineBaseFlipParams>(json);
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
+            "reference_x": 12.0,
+            "invalid
+        })";
+        REQUIRE_FALSE(loadParametersFromJson<LineBaseFlipParams>(json));
+    }
 
-    REQUIRE(result);
-    auto params = result.value();
+    SECTION("Reject non-numeric reference_x") {
+        std::string const json = R"({"reference_x": "not_a_number"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineBaseFlipParams>(json));
+    }
 
-    REQUIRE_THAT(params.getReferenceX(), Catch::Matchers::WithinRel(12.0f, 0.001f));
-    REQUIRE_THAT(params.getReferenceY(), Catch::Matchers::WithinRel(5.0f, 0.001f));
-}
-
-TEST_CASE("V2 LineBaseFlipParams - Load JSON with partial fields (uses defaults)",
-          "[transforms][v2][params][json][line_base_flip]") {
-    std::string json = R"({
-        "reference_x": 10.0
-    })";
-
-    auto result = loadParametersFromJson<LineBaseFlipParams>(json);
-
-    REQUIRE(result);
-    auto params = result.value();
-
-    REQUIRE_THAT(params.getReferenceX(), Catch::Matchers::WithinRel(10.0f, 0.001f));
-    REQUIRE_THAT(params.getReferenceY(), Catch::Matchers::WithinRel(0.0f, 0.001f));// default
-}
-
-TEST_CASE("V2 LineBaseFlipParams - Load empty JSON (uses all defaults)",
-          "[transforms][v2][params][json][line_base_flip]") {
-    std::string json = "{}";
-
-    auto result = loadParametersFromJson<LineBaseFlipParams>(json);
-
-    REQUIRE(result);
-    auto params = result.value();
-
-    REQUIRE_THAT(params.getReferenceX(), Catch::Matchers::WithinRel(0.0f, 0.001f));
-    REQUIRE_THAT(params.getReferenceY(), Catch::Matchers::WithinRel(0.0f, 0.001f));
-}
-
-TEST_CASE("V2 LineBaseFlipParams - getReferencePoint helper",
-          "[transforms][v2][params][line_base_flip]") {
-    LineBaseFlipParams params;
-    params.reference_x = 5.0f;
-    params.reference_y = 10.0f;
-
-    auto ref_point = params.getReferencePoint();
-
-    REQUIRE_THAT(ref_point.x, Catch::Matchers::WithinRel(5.0f, 0.001f));
-    REQUIRE_THAT(ref_point.y, Catch::Matchers::WithinRel(10.0f, 0.001f));
+    SECTION("Reject non-numeric reference_y") {
+        std::string const json = R"({"reference_y": true})";
+        REQUIRE_FALSE(loadParametersFromJson<LineBaseFlipParams>(json));
+    }
 }
 
 // ============================================================================

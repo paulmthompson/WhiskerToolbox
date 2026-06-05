@@ -4,9 +4,6 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-#include <optional>
-#include <string>
-
 class Line2D;
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -40,32 +37,21 @@ enum class LineCurvatureMethod {
  * ```
  */
 struct LineCurvatureParams {
-    // Position along the line (0.0-1.0) where 0 is start, 1 is end
-    std::optional<float> position;
+    /// Position along the line (0.0–1.0) where 0 is start, 1 is end
+    float position = 0.5f;
 
-    // Curvature calculation method: "PolynomialFit"
-    std::optional<std::string> method;
+    /// Curvature calculation method
+    LineCurvatureMethod method = LineCurvatureMethod::PolynomialFit;
 
-    // Polynomial order for fitting (2-9)
-    std::optional<int> polynomial_order;
+    /// Polynomial order for fitting (2–9)
+    int polynomial_order = 3;
 
-    // Fitting window as percentage of line length (0.0-1.0)
-    std::optional<float> fitting_window_percentage;
-
-    // Helper methods with defaults
-    float getPosition() const { return position.value_or(0.5f); }
-    
-    LineCurvatureMethod getMethod() const {
-        auto m = method.value_or("PolynomialFit");
-        return LineCurvatureMethod::PolynomialFit;  // Only method for now
-    }
-    
-    int getPolynomialOrder() const { return polynomial_order.value_or(3); }
-    float getFittingWindowPercentage() const { return fitting_window_percentage.value_or(0.1f); }
+    /// Fitting window as percentage of line length (0.0–1.0)
+    float fitting_window_percentage = 0.1f;
 
     /**
      * @brief Normalize and clamp parameters in-place
-     * 
+     *
      * Call once before batch processing to:
      * - Clamp position to [0, 1]
      * - Clamp fitting_window_percentage to [0, 1]

@@ -5,7 +5,6 @@
 #include "core/ComputeContext.hpp"
 
 #include <cmath>
-#include <iostream>
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 

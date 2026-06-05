@@ -56,7 +56,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Core Functionality",
         REQUIRE(!line.empty());
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Should keep from start to intersection (x=0 to x=2.5)
@@ -80,7 +80,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Core Functionality",
         REQUIRE(!line.empty());
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepDistal";
+        params.clip_side = ClipSide::KeepDistal;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Should keep from intersection to end (x=2.5 to x=4.0)
@@ -108,7 +108,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Core Functionality",
         REQUIRE(!line.empty());
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Line should remain unchanged
@@ -136,7 +136,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Core Functionality",
         REQUIRE(!line.empty());
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Should keep from start to intersection at x=2.0
@@ -164,7 +164,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Edge Cases",
         REQUIRE(line.size() == 1);
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Single point lines can't intersect meaningfully - should return as-is
@@ -178,7 +178,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Edge Cases",
         TimeFrameIndex ref_time(0);
         auto reference_line = getLineAt(reference_data.get(), ref_time);
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(empty_line, reference_line, params);
         
         REQUIRE(clipped.empty());
@@ -191,7 +191,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Edge Cases",
         TimeFrameIndex line_time(100);
         auto line = getLineAt(line_data.get(), line_time);
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, empty_reference, params);
         
         // No intersection possible, original line returned
@@ -211,7 +211,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Edge Cases",
         REQUIRE(!line.empty());
         REQUIRE(!reference_line.empty());
         
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
         auto clipped = clipLineAtReference(line, reference_line, params);
         
         // Parallel lines don't intersect - original returned
@@ -219,35 +219,30 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Edge Cases",
     }
 }
 
-TEST_CASE("V2 Binary Element Transform: LineClip - Parameter Serialization",
-          "[transforms][v2][binary_element][line_clip][serialization]") {
-    
-    SECTION("Default parameters") {
-        LineClipParams params;
-        REQUIRE(params.getClipSide() == ClipSide::KeepBase);
+TEST_CASE("V2 LineClipParams - JSON Rejection",
+          "[transforms][v2][params][json][line_clip]") {
+
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
+            "clip_side": "KeepBase",
+            "invalid
+        })";
+        REQUIRE_FALSE(loadParametersFromJson<LineClipParams>(json));
     }
-    
-    SECTION("KeepBase parameter") {
-        LineClipParams params;
-        params.clip_side = "KeepBase";
-        REQUIRE(params.getClipSide() == ClipSide::KeepBase);
+
+    SECTION("Reject unknown clip_side") {
+        std::string const json = R"({"clip_side": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineClipParams>(json));
     }
-    
-    SECTION("KeepDistal parameter") {
-        LineClipParams params;
-        params.clip_side = "KeepDistal";
-        REQUIRE(params.getClipSide() == ClipSide::KeepDistal);
+
+    SECTION("Reject wrong casing for clip_side") {
+        std::string const json = R"({"clip_side": "keepbase"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineClipParams>(json));
     }
-    
-    SECTION("JSON serialization round-trip") {
-        LineClipParams original;
-        original.clip_side = "KeepDistal";
-        
-        std::string json = rfl::json::write(original);
-        auto parsed = rfl::json::read<LineClipParams>(json);
-        
-        REQUIRE(parsed);
-        REQUIRE(parsed.value().getClipSide() == ClipSide::KeepDistal);
+
+    SECTION("Reject non-string clip_side") {
+        std::string const json = R"({"clip_side": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LineClipParams>(json));
     }
 }
 
@@ -282,7 +277,7 @@ TEST_CASE("V2 Binary Element Transform: LineClip - Context-aware version",
           "[transforms][v2][binary_element][line_clip]") {
     
     LineClipParams params;
-    params.clip_side = "KeepBase";
+    params.clip_side = ClipSide::KeepBase;
     ComputeContext ctx;
     
     SECTION("Context-aware version produces same result") {
@@ -386,7 +381,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     
     SECTION("KeepBase clipping via JSON pipeline") {
         LineClipParams params;
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
 
         auto const pipeline = makeSingleStepPipeline(
                 "ClipLineAtReference",
@@ -410,7 +405,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
 
     SECTION("KeepDistal clipping via JSON pipeline") {
         LineClipParams params;
-        params.clip_side = "KeepDistal";
+        params.clip_side = ClipSide::KeepDistal;
 
         auto const pipeline = makeSingleStepPipeline(
                 "ClipLineAtReference",
@@ -435,7 +430,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
 
     SECTION("Diagonal line clipping via JSON pipeline") {
         LineClipParams params;
-        params.clip_side = "KeepBase";
+        params.clip_side = ClipSide::KeepBase;
 
         auto const pipeline = makeSingleStepPipeline(
                 "ClipLineAtReference",

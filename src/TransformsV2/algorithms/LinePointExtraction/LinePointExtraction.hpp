@@ -4,9 +4,6 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-#include <optional>
-#include <string>
-
 class Line2D;
 template<typename T>
 struct Point2D;
@@ -43,33 +40,21 @@ enum class LinePointExtractionMethod {
  * ```
  */
 struct LinePointExtractionParams {
-    // Position along the line (0.0-1.0) where 0 is start, 1 is end
-    std::optional<float> position;
+    /// Position along the line (0.0–1.0) where 0 is start, 1 is end
+    float position = 0.5f;
 
-    // Extraction method: "Direct" or "Parametric"
-    std::optional<std::string> method;
+    /// Extraction method
+    LinePointExtractionMethod method = LinePointExtractionMethod::Direct;
 
-    // Polynomial order for Parametric method (1-9)
-    std::optional<int> polynomial_order;
+    /// Polynomial order for Parametric method (1–9)
+    int polynomial_order = 3;
 
-    // Whether to interpolate between points (for Direct method) vs use nearest
-    std::optional<bool> use_interpolation;
-
-    // Helper methods with defaults
-    float getPosition() const { return position.value_or(0.5f); }
-    
-    LinePointExtractionMethod getMethod() const {
-        auto m = method.value_or("Direct");
-        return (m == "Parametric") ? LinePointExtractionMethod::Parametric 
-                                   : LinePointExtractionMethod::Direct;
-    }
-    
-    int getPolynomialOrder() const { return polynomial_order.value_or(3); }
-    bool getUseInterpolation() const { return use_interpolation.value_or(true); }
+    /// Whether to interpolate between points (Direct method) vs use nearest
+    bool use_interpolation = true;
 
     /**
      * @brief Normalize and clamp parameters in-place
-     * 
+     *
      * Call once before batch processing to:
      * - Clamp position to [0, 1]
      * - Clamp polynomial_order to valid range

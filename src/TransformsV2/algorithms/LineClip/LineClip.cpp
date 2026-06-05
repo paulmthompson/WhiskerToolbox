@@ -19,7 +19,7 @@ Line2D clipLineAtReference(
         LineClipParams const & params) {
     
     // Use the existing CoreGeometry function for clipping
-    return clip_line_at_intersection(line, reference_line, params.getClipSide());
+    return clip_line_at_intersection(line, reference_line, params.clip_side);
 }
 
 /**

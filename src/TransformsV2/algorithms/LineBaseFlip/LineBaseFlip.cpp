@@ -14,7 +14,7 @@ Line2D flipLineBase(
         return line;
     }
 
-    Point2D<float> const reference_point = params.getReferencePoint();
+    Point2D<float> const reference_point{params.reference_x, params.reference_y};
 
     if (is_distal_end_closer(line, reference_point)) {
         return reverse_line(line);

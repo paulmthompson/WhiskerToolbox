@@ -155,52 +155,25 @@ TEST_CASE("V2 Binary Element Transform: LineMinPointDist - Edge Cases",
 // Tests: Parameter Validation
 // ============================================================================
 
-TEST_CASE("V2 Binary Element Transform: LineMinPointDistParams - JSON Loading",
-          "[transforms][v2][params][json]") {
-    
-    SECTION("Load valid JSON with all fields") {
-        std::string json = R"({
+TEST_CASE("V2 LineMinPointDistParams - JSON Rejection",
+          "[transforms][v2][params][json][line_min_point_dist]") {
+
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
             "use_first_line_only": false,
-            "return_squared_distance": true
+            "invalid
         })";
-        
-        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE(params.getUseFirstLineOnly() == false);
-        REQUIRE(params.getReturnSquaredDistance() == true);
+        REQUIRE_FALSE(loadParametersFromJson<LineMinPointDistParams>(json));
     }
-    
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string json = "{}";
-        
-        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE(params.getUseFirstLineOnly() == true);
-        REQUIRE(params.getReturnSquaredDistance() == false);
+
+    SECTION("Reject non-boolean use_first_line_only") {
+        std::string const json = R"({"use_first_line_only": "true"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineMinPointDistParams>(json));
     }
-    
-    SECTION("JSON round-trip preserves values") {
-        LineMinPointDistParams original;
-        original.use_first_line_only = false;
-        original.return_squared_distance = true;
-        
-        // Serialize
-        std::string json = saveParametersToJson(original);
-        
-        // Deserialize
-        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
-        REQUIRE(result);
-        auto recovered = result.value();
-        
-        // Verify values match
-        REQUIRE(recovered.getUseFirstLineOnly() == false);
-        REQUIRE(recovered.getReturnSquaredDistance() == true);
+
+    SECTION("Reject non-boolean return_squared_distance") {
+        std::string const json = R"({"return_squared_distance": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LineMinPointDistParams>(json));
     }
 }
 

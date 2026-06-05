@@ -40,7 +40,6 @@
 #include <rfl/json.hpp>
 
 #include <memory>
-#include <optional>
 #include <string>
 
 class AnalogTimeSeries;
@@ -76,40 +75,20 @@ struct IntervalReductionParams {
      * - AnalogTimeSeries → TimeValuePoint reductions (MeanValue, MaxValue, etc.)
      * - DigitalEventSeries → EventWithId reductions (EventCount, EventPresence, etc.)
      * - DigitalIntervalSeries → IntervalWithId reductions (IntervalCount, etc.)
-     *
-     * Default: "MeanValue"
      */
-    std::optional<std::string> reduction_name;
+    std::string reduction_name = "MeanValue";
 
     /**
      * @brief JSON string for reduction-specific parameters
      *
      * Most built-in reductions are stateless and don't need parameters.
-     * Pass "{}" or omit for stateless reductions.
-     *
-     * Default: "{}"
      */
-    std::optional<std::string> reduction_params_json;
+    std::string reduction_params_json = "{}";
 
     /**
      * @brief Name of the output column in the produced TensorData
-     *
-     * Default: "value"
      */
-    std::optional<std::string> column_name;
-
-    // Helper methods with defaults
-    [[nodiscard]] std::string getReductionName() const {
-        return reduction_name.value_or("MeanValue");
-    }
-
-    [[nodiscard]] std::string getReductionParamsJson() const {
-        return reduction_params_json.value_or("{}");
-    }
-
-    [[nodiscard]] std::string getColumnName() const {
-        return column_name.value_or("value");
-    }
+    std::string column_name = "value";
 };
 
 // ============================================================================

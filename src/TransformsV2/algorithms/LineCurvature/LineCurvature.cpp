@@ -16,17 +16,9 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 // ============================================================================
 
 void LineCurvatureParams::validate() {
-    // Clamp position to [0, 1]
-    float pos = getPosition();
-    position = std::max(0.0f, std::min(pos, 1.0f));
-
-    // Clamp fitting_window_percentage to [0, 1]
-    float window = getFittingWindowPercentage();
-    fitting_window_percentage = std::max(0.0f, std::min(window, 1.0f));
-
-    // Clamp polynomial_order to [2, 9]
-    int order = getPolynomialOrder();
-    polynomial_order = std::max(2, std::min(order, 9));
+    position = std::max(0.0f, std::min(position, 1.0f));
+    fitting_window_percentage = std::max(0.0f, std::min(fitting_window_percentage, 1.0f));
+    polynomial_order = std::max(2, std::min(polynomial_order, 9));
 }
 
 // ============================================================================
@@ -43,10 +35,10 @@ float calculateLineCurvature(
 
     // Use the existing parametric polynomial curvature utility
     auto curvature_opt = calculate_polynomial_curvature(
-        line,
-        params.getPosition(),
-        params.getPolynomialOrder(),
-        params.getFittingWindowPercentage());
+            line,
+            params.position,
+            params.polynomial_order,
+            params.fitting_window_percentage);
 
     if (curvature_opt.has_value()) {
         return curvature_opt.value();

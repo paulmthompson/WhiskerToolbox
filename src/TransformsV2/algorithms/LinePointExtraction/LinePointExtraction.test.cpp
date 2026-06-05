@@ -49,7 +49,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         params.use_interpolation = true;
         
         auto point = extractLinePoint(line, params);
@@ -65,7 +65,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.0f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         params.use_interpolation = true;
         
         auto point = extractLinePoint(line, params);
@@ -81,7 +81,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 1.0f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         params.use_interpolation = true;
         
         auto point = extractLinePoint(line, params);
@@ -97,7 +97,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "Parametric";
+        params.method = LinePointExtractionMethod::Parametric;
         params.polynomial_order = 3;
         
         auto point = extractLinePoint(line, params);
@@ -113,7 +113,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         params.use_interpolation = true;
         
         auto point = extractLinePoint(line, params);
@@ -129,7 +129,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Edge Cases",
     
     LinePointExtractionParams params;
     params.position = 0.5f;
-    params.method = "Direct";
+    params.method = LinePointExtractionMethod::Direct;
     
     SECTION("Empty line returns (0, 0)") {
         Line2D empty_line;
@@ -168,7 +168,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Edge Cases",
         TimeFrameIndex timestamp(500);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.method = "Parametric";
+        params.method = LinePointExtractionMethod::Parametric;
         params.polynomial_order = 3;  // Requires more than 2 points
         
         auto point = extractLinePoint(line, params);
@@ -183,62 +183,45 @@ TEST_CASE("V2 Element Transform: LinePointExtraction - Edge Cases",
 // Tests: Parameter Validation
 // ============================================================================
 
-TEST_CASE("V2 Element Transform: LinePointExtractionParams - JSON Loading",
+TEST_CASE("V2 LinePointExtractionParams - JSON Rejection",
           "[transforms][v2][params][json][line_point_extraction]") {
-    
-    SECTION("Load valid JSON with all fields") {
-        std::string json = R"({
+
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
             "position": 0.5,
-            "method": "Parametric",
-            "polynomial_order": 5,
-            "use_interpolation": true
+            "invalid
         })";
-        
-        auto result = loadParametersFromJson<LinePointExtractionParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.5f, 0.001f));
-        REQUIRE(params.getMethod() == LinePointExtractionMethod::Parametric);
-        REQUIRE(params.getPolynomialOrder() == 5);
-        REQUIRE(params.getUseInterpolation() == true);
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
     }
-    
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string json = "{}";
-        
-        auto result = loadParametersFromJson<LinePointExtractionParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.5f, 0.001f));
-        REQUIRE(params.getMethod() == LinePointExtractionMethod::Direct);
-        REQUIRE(params.getPolynomialOrder() == 3);
-        REQUIRE(params.getUseInterpolation() == true);
+
+    SECTION("Reject non-numeric position") {
+        std::string const json = R"({"position": "half"})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
     }
-    
-    SECTION("JSON round-trip preserves values") {
-        LinePointExtractionParams original;
-        original.position = 0.75f;
-        original.method = "Parametric";
-        original.polynomial_order = 4;
-        original.use_interpolation = false;
-        
-        // Serialize
-        std::string json = saveParametersToJson(original);
-        
-        // Deserialize
-        auto result = loadParametersFromJson<LinePointExtractionParams>(json);
-        REQUIRE(result);
-        auto recovered = result.value();
-        
-        // Verify values match
-        REQUIRE_THAT(recovered.getPosition(), WithinAbs(0.75f, 0.001f));
-        REQUIRE(recovered.getMethod() == LinePointExtractionMethod::Parametric);
-        REQUIRE(recovered.getPolynomialOrder() == 4);
-        REQUIRE(recovered.getUseInterpolation() == false);
+
+    SECTION("Reject unknown method") {
+        std::string const json = R"({"method": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
+    }
+
+    SECTION("Reject wrong casing for method") {
+        std::string const json = R"({"method": "direct"})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
+    }
+
+    SECTION("Reject non-string method") {
+        std::string const json = R"({"method": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
+    }
+
+    SECTION("Reject non-integer polynomial_order") {
+        std::string const json = R"({"polynomial_order": "three"})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
+    }
+
+    SECTION("Reject non-boolean use_interpolation") {
+        std::string const json = R"({"use_interpolation": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LinePointExtractionParams>(json));
     }
 }
 
@@ -288,7 +271,7 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
     SECTION("Single diagonal line - middle position") {
         LinePointExtractionParams params;
         params.position = 0.5f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         params.use_interpolation = true;
 
         auto const pipeline = makeSingleStepPipeline(
@@ -312,7 +295,7 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
     SECTION("Multiple timesteps pipeline") {
         LinePointExtractionParams params;
         params.position = 0.5f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
 
         auto const pipeline = makeSingleStepPipeline(
                 "ExtractLinePoint",
@@ -340,7 +323,7 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
     SECTION("Parametric method pipeline") {
         LinePointExtractionParams params;
         params.position = 0.5f;
-        params.method = "Parametric";
+        params.method = LinePointExtractionMethod::Parametric;
         params.polynomial_order = 3;
 
         auto const pipeline = makeSingleStepPipeline(
@@ -364,7 +347,7 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
     SECTION("Start and end position pipeline") {
         LinePointExtractionParams start_params;
         start_params.position = 0.0f;
-        start_params.method = "Direct";
+        start_params.method = LinePointExtractionMethod::Direct;
 
         auto const start_pipeline = makeSingleStepPipeline(
                 "ExtractLinePoint",
@@ -384,7 +367,7 @@ TEST_CASE("V2 DataManager Integration: LinePointExtraction via load_data_from_js
 
         LinePointExtractionParams end_params;
         end_params.position = 1.0f;
-        end_params.method = "Direct";
+        end_params.method = LinePointExtractionMethod::Direct;
 
         auto const end_pipeline = makeSingleStepPipeline(
                 "ExtractLinePoint",
@@ -418,7 +401,7 @@ TEST_CASE("V2 Element Transform: LinePointExtraction Context-Aware",
         
         LinePointExtractionParams params;
         params.position = 0.5f;
-        params.method = "Direct";
+        params.method = LinePointExtractionMethod::Direct;
         
         int last_progress = -1;
         ComputeContext ctx;

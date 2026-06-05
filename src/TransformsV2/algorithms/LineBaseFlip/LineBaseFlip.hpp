@@ -1,12 +1,8 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_BASE_FLIP_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_BASE_FLIP_TRANSFORM_HPP
 
-#include "CoreGeometry/points.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
-
-#include <optional>
 
 class Line2D;
 
@@ -32,22 +28,11 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * ```
  */
 struct LineBaseFlipParams {
-    // X coordinate of the reference point
-    std::optional<float> reference_x;
-    
-    // Y coordinate of the reference point
-    std::optional<float> reference_y;
+    /// X coordinate of the reference point
+    float reference_x = 0.0f;
 
-    // Helper methods with defaults
-    float getReferenceX() const { return reference_x.value_or(0.0f); }
-    float getReferenceY() const { return reference_y.value_or(0.0f); }
-    
-    /**
-     * @brief Get reference point as Point2D
-     */
-    Point2D<float> getReferencePoint() const {
-        return Point2D<float>{getReferenceX(), getReferenceY()};
-    }
+    /// Y coordinate of the reference point
+    float reference_y = 0.0f;
 };
 
 // ============================================================================

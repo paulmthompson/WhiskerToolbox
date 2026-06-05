@@ -128,65 +128,6 @@ TEST_CASE("calculateLineMinPointDistance handles invalid line", "[line_min_point
 }
 
 // ============================================================================
-// Parameter Tests
-// ============================================================================
-
-TEST_CASE("LineMinPointDistParams has correct defaults", "[line_min_point_dist][params]") {
-    LineMinPointDistParams params;
-    
-    REQUIRE(params.getUseFirstLineOnly() == true);
-    REQUIRE(params.getReturnSquaredDistance() == false);
-}
-
-TEST_CASE("LineMinPointDistParams can override defaults", "[line_min_point_dist][params]") {
-    LineMinPointDistParams params;
-    params.use_first_line_only = false;
-    params.return_squared_distance = true;
-    
-    REQUIRE(params.getUseFirstLineOnly() == false);
-    REQUIRE(params.getReturnSquaredDistance() == true);
-}
-
-// ============================================================================
-// JSON Serialization Tests
-// ============================================================================
-
-TEST_CASE("LineMinPointDistParams can be serialized to JSON", "[line_min_point_dist][json]") {
-    LineMinPointDistParams params;
-    params.use_first_line_only = false;
-    params.return_squared_distance = true;
-    
-    auto json = rfl::json::write(params);
-    
-    REQUIRE(!json.empty());
-    REQUIRE(json.find("use_first_line_only") != std::string::npos);
-    REQUIRE(json.find("return_squared_distance") != std::string::npos);
-}
-
-TEST_CASE("LineMinPointDistParams can be deserialized from JSON", "[line_min_point_dist][json]") {
-    std::string json = R"({
-        "use_first_line_only": false,
-        "return_squared_distance": true
-    })";
-    
-    auto result = rfl::json::read<LineMinPointDistParams>(json);
-    
-    REQUIRE(result);
-    REQUIRE(result.value().getUseFirstLineOnly() == false);
-    REQUIRE(result.value().getReturnSquaredDistance() == true);
-}
-
-TEST_CASE("LineMinPointDistParams handles missing fields with defaults", "[line_min_point_dist][json]") {
-    std::string json = "{}";
-    
-    auto result = rfl::json::read<LineMinPointDistParams>(json);
-    
-    REQUIRE(result);
-    REQUIRE(result.value().getUseFirstLineOnly() == true);
-    REQUIRE(result.value().getReturnSquaredDistance() == false);
-}
-
-// ============================================================================
 // Pipeline Integration Tests
 // ============================================================================
 

@@ -50,7 +50,7 @@ TEST_CASE("V2 Element Transform: LineCurvature - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
         
@@ -67,7 +67,7 @@ TEST_CASE("V2 Element Transform: LineCurvature - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
         
@@ -83,7 +83,7 @@ TEST_CASE("V2 Element Transform: LineCurvature - Core Functionality",
         TimeFrameIndex timestamp(100);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
         
@@ -103,7 +103,7 @@ TEST_CASE("V2 Element Transform: LineCurvature - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.fitting_window_percentage = 0.1f;
         
         // Test different polynomial orders
@@ -120,7 +120,7 @@ TEST_CASE("V2 Element Transform: LineCurvature - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         
         // Test different fitting window percentages
@@ -190,62 +190,45 @@ TEST_CASE("V2 Element Transform: LineCurvature - Edge Cases",
 // Tests: Parameter Validation
 // ============================================================================
 
-TEST_CASE("V2 Element Transform: LineCurvatureParams - JSON Loading",
+TEST_CASE("V2 LineCurvatureParams - JSON Rejection",
           "[transforms][v2][params][json][line_curvature]") {
-    
-    SECTION("Load valid JSON with all fields") {
-        std::string json = R"({
+
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
             "position": 0.5,
-            "method": "PolynomialFit",
-            "polynomial_order": 4,
-            "fitting_window_percentage": 0.2
+            "invalid
         })";
-        
-        auto result = loadParametersFromJson<LineCurvatureParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.5f, 0.001f));
-        REQUIRE(params.getMethod() == LineCurvatureMethod::PolynomialFit);
-        REQUIRE(params.getPolynomialOrder() == 4);
-        REQUIRE_THAT(params.getFittingWindowPercentage(), WithinAbs(0.2f, 0.001f));
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
     }
-    
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string json = "{}";
-        
-        auto result = loadParametersFromJson<LineCurvatureParams>(json);
-        
-        REQUIRE(result);
-        auto params = result.value();
-        
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.5f, 0.001f));
-        REQUIRE(params.getMethod() == LineCurvatureMethod::PolynomialFit);
-        REQUIRE(params.getPolynomialOrder() == 3);
-        REQUIRE_THAT(params.getFittingWindowPercentage(), WithinAbs(0.1f, 0.001f));
+
+    SECTION("Reject non-numeric position") {
+        std::string const json = R"({"position": "not_a_number"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
     }
-    
-    SECTION("JSON round-trip preserves values") {
-        LineCurvatureParams original;
-        original.position = 0.75f;
-        original.method = "PolynomialFit";
-        original.polynomial_order = 5;
-        original.fitting_window_percentage = 0.15f;
-        
-        // Serialize
-        std::string json = saveParametersToJson(original);
-        
-        // Deserialize
-        auto result = loadParametersFromJson<LineCurvatureParams>(json);
-        REQUIRE(result);
-        auto recovered = result.value();
-        
-        // Verify values match
-        REQUIRE_THAT(recovered.getPosition(), WithinAbs(0.75f, 0.001f));
-        REQUIRE(recovered.getMethod() == LineCurvatureMethod::PolynomialFit);
-        REQUIRE(recovered.getPolynomialOrder() == 5);
-        REQUIRE_THAT(recovered.getFittingWindowPercentage(), WithinAbs(0.15f, 0.001f));
+
+    SECTION("Reject unknown method") {
+        std::string const json = R"({"method": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
+    }
+
+    SECTION("Reject wrong casing for method") {
+        std::string const json = R"({"method": "polynomialfit"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
+    }
+
+    SECTION("Reject non-string method") {
+        std::string const json = R"({"method": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
+    }
+
+    SECTION("Reject non-integer polynomial_order") {
+        std::string const json = R"({"polynomial_order": "three"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
+    }
+
+    SECTION("Reject non-numeric fitting_window_percentage") {
+        std::string const json = R"({"fitting_window_percentage": true})";
+        REQUIRE_FALSE(loadParametersFromJson<LineCurvatureParams>(json));
     }
 }
 
@@ -260,33 +243,33 @@ TEST_CASE("V2 Element Transform: LineCurvatureParams - validate()",
         LineCurvatureParams params;
         params.position = -0.5f;
         params.validate();
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.position, WithinAbs(0.0f, 0.001f));
         
         params.position = 1.5f;
         params.validate();
-        REQUIRE_THAT(params.getPosition(), WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.position, WithinAbs(1.0f, 0.001f));
     }
     
     SECTION("Clamps fitting_window_percentage to [0, 1]") {
         LineCurvatureParams params;
         params.fitting_window_percentage = -0.1f;
         params.validate();
-        REQUIRE_THAT(params.getFittingWindowPercentage(), WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.fitting_window_percentage, WithinAbs(0.0f, 0.001f));
         
         params.fitting_window_percentage = 1.5f;
         params.validate();
-        REQUIRE_THAT(params.getFittingWindowPercentage(), WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.fitting_window_percentage, WithinAbs(1.0f, 0.001f));
     }
     
     SECTION("Clamps polynomial_order to [2, 9]") {
         LineCurvatureParams params;
         params.polynomial_order = 0;
         params.validate();
-        REQUIRE(params.getPolynomialOrder() == 2);
+        REQUIRE(params.polynomial_order == 2);
         
         params.polynomial_order = 15;
         params.validate();
-        REQUIRE(params.getPolynomialOrder() == 9);
+        REQUIRE(params.polynomial_order == 9);
     }
 }
 
@@ -340,7 +323,7 @@ TEST_CASE("V2 DataManager Integration: LineCurvature via load_data_from_json_con
     SECTION("Two timesteps pipeline - parabola and straight line") {
         LineCurvatureParams params;
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
 
@@ -370,7 +353,7 @@ TEST_CASE("V2 DataManager Integration: LineCurvature via load_data_from_json_con
     SECTION("Multiple curvatures pipeline with three timesteps") {
         LineCurvatureParams params;
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
 
@@ -404,7 +387,7 @@ TEST_CASE("V2 DataManager Integration: LineCurvature via load_data_from_json_con
     SECTION("Different polynomial order via JSON") {
         LineCurvatureParams params;
         params.position = 0.5f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 4;
         params.fitting_window_percentage = 0.15f;
 
@@ -432,7 +415,7 @@ TEST_CASE("V2 DataManager Integration: LineCurvature via load_data_from_json_con
     SECTION("Different position via JSON") {
         LineCurvatureParams params;
         params.position = 0.25f;
-        params.method = "PolynomialFit";
+        params.method = LineCurvatureMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
 

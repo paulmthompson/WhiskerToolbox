@@ -13,7 +13,6 @@
 #include "TimeFrame/interval_data.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <span>
 #include <utility>
@@ -78,7 +77,7 @@ std::vector<TimeFrameInterval> buildTimeFrameIntervals(
     auto const & interval_data = intervals.view();
     std::vector<TimeFrameInterval> tf_intervals;
     tf_intervals.reserve(interval_data.size());
-    for (auto const & interval : interval_data) {
+    for (auto const & interval: interval_data) {
         tf_intervals.push_back(TimeFrameInterval{
                 TimeFrameIndex(interval.value().start),
                 TimeFrameIndex(interval.value().end)});
@@ -149,7 +148,7 @@ std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
     std::vector<Interval> converted;
     converted.reserve(interval_data.size());
 
-    for (auto const & iv : interval_data) {
+    for (auto const & iv: interval_data) {
         auto [new_start, new_end] = convertTimeFrameRange(
                 TimeFrameIndex(iv.interval.start),
                 TimeFrameIndex(iv.interval.end),
@@ -193,8 +192,8 @@ std::shared_ptr<TensorData> analogIntervalReduction(
 
     // Resolve range reduction
     auto & registry = RangeReductionRegistry::instance();
-    std::string const reduction_name = params.getReductionName();
-    std::any reduction_params = ensureReductionParams(params.getReductionParamsJson());
+    std::string const reduction_name = params.reduction_name;
+    std::any reduction_params = ensureReductionParams(params.reduction_params_json);
 
     using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
 
@@ -206,14 +205,14 @@ std::shared_ptr<TensorData> analogIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<TimeValuePoint, float> factory =
+    Gather::ReducerFactoryV2<TimeValuePoint, float> const factory =
             [&reduction_name, &reduction_params](
                     PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<TimeValuePoint, float> {
         return [&reduction_name, &reduction_params](
                        std::span<TimeValuePoint const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
-            std::any input_any{input};
-            std::any result = reg.executeErased(
+            std::any const input_any{input};
+            std::any const result = reg.executeErased(
                     reduction_name, typeid(TimeValuePoint), input_any, reduction_params);
             return castReductionResult(result);
         };
@@ -235,7 +234,7 @@ std::shared_ptr<TensorData> analogIntervalReduction(
                     1,
                     std::move(tf_intervals),
                     time_frame,
-                    {params.getColumnName()}));
+                    {params.column_name}));
 
     ctx.reportProgress(100);
     return result;
@@ -270,8 +269,8 @@ std::shared_ptr<TensorData> eventIntervalReduction(
 
     // Resolve range reduction
     auto & registry = RangeReductionRegistry::instance();
-    std::string const reduction_name = params.getReductionName();
-    std::any reduction_params = ensureReductionParams(params.getReductionParamsJson());
+    std::string const reduction_name = params.reduction_name;
+    std::any reduction_params = ensureReductionParams(params.reduction_params_json);
 
     using EventElement = WhiskerToolbox::Gather::element_type_of_t<DigitalEventSeries>;
 
@@ -283,14 +282,14 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<EventElement, float> factory =
+    Gather::ReducerFactoryV2<EventElement, float> const factory =
             [&reduction_name, &reduction_params](
                     PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<EventElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<EventElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
-            std::any input_any{input};
-            std::any result = reg.executeErased(
+            std::any const input_any{input};
+            std::any const result = reg.executeErased(
                     reduction_name, typeid(EventElement), input_any, reduction_params);
             return castReductionResult(result);
         };
@@ -312,7 +311,7 @@ std::shared_ptr<TensorData> eventIntervalReduction(
                     1,
                     std::move(tf_intervals),
                     time_frame,
-                    {params.getColumnName()}));
+                    {params.column_name}));
 
     ctx.reportProgress(100);
     return result;
@@ -347,8 +346,8 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
 
     // Resolve range reduction
     auto & registry = RangeReductionRegistry::instance();
-    std::string const reduction_name = params.getReductionName();
-    std::any reduction_params = ensureReductionParams(params.getReductionParamsJson());
+    std::string const reduction_name = params.reduction_name;
+    std::any reduction_params = ensureReductionParams(params.reduction_params_json);
 
     using IntervalElement = WhiskerToolbox::Gather::element_type_of_t<DigitalIntervalSeries>;
 
@@ -360,14 +359,14 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<IntervalElement, float> factory =
+    Gather::ReducerFactoryV2<IntervalElement, float> const factory =
             [&reduction_name, &reduction_params](
                     PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<IntervalElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<IntervalElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
-            std::any input_any{input};
-            std::any result = reg.executeErased(
+            std::any const input_any{input};
+            std::any const result = reg.executeErased(
                     reduction_name, typeid(IntervalElement), input_any, reduction_params);
             return castReductionResult(result);
         };
@@ -389,7 +388,7 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
                     1,
                     std::move(tf_intervals),
                     time_frame,
-                    {params.getColumnName()}));
+                    {params.column_name}));
 
     ctx.reportProgress(100);
     return result;

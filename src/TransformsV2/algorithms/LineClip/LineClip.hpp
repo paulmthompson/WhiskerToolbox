@@ -27,19 +27,8 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * ```
  */
 struct LineClipParams {
-    // Which side of the intersection to keep
-    // "KeepBase" = keep from line start to intersection
-    // "KeepDistal" = keep from intersection to line end
-    std::optional<std::string> clip_side;
-
-    // Helper methods with defaults
-    ClipSide getClipSide() const {
-        auto const side = clip_side.value_or("KeepBase");
-        if (side == "KeepDistal") {
-            return ClipSide::KeepDistal;
-        }
-        return ClipSide::KeepBase;
-    }
+    /// Which side of the intersection to keep
+    ClipSide clip_side = ClipSide::KeepBase;
 };
 
 // ============================================================================
