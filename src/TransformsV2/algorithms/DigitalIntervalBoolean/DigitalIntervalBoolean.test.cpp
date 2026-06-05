@@ -28,7 +28,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
 
     auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
-    params.operation = "and";
+    params.operation = DigitalIntervalBooleanParams::Operation::And;
     ComputeContext const ctx;
 
     SECTION("Basic AND - overlapping intervals") {
@@ -121,7 +121,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
 
     auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
-    params.operation = "or";
+    params.operation = DigitalIntervalBooleanParams::Operation::Or;
     ComputeContext const ctx;
 
     SECTION("Basic OR - separate intervals") {
@@ -200,7 +200,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
 
     auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
-    params.operation = "xor";
+    params.operation = DigitalIntervalBooleanParams::Operation::Xor;
     ComputeContext const ctx;
 
     SECTION("Basic XOR - no overlap") {
@@ -299,7 +299,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
 
     auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
-    params.operation = "not";
+    params.operation = DigitalIntervalBooleanParams::Operation::Not;
     ComputeContext const ctx;
 
     SECTION("NOT - single interval") {
@@ -374,7 +374,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
 
     auto & registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
-    params.operation = "and_not";
+    params.operation = DigitalIntervalBooleanParams::Operation::and_not;
     ComputeContext const ctx;
 
     SECTION("AND_NOT - subtract overlapping portion") {
@@ -474,7 +474,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         auto [input, other] = empty_input();
 
         DigitalIntervalBooleanParams params;
-        params.operation = "or";
+        params.operation = DigitalIntervalBooleanParams::Operation::Or;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -496,7 +496,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         auto [input, other] = both_empty();
 
         DigitalIntervalBooleanParams params;
-        params.operation = "and";
+        params.operation = DigitalIntervalBooleanParams::Operation::And;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -518,7 +518,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         auto other = DigitalIntervalSeriesBuilder().build();
 
         DigitalIntervalBooleanParams params;
-        params.operation = "not";
+        params.operation = DigitalIntervalBooleanParams::Operation::Not;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -539,7 +539,7 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
         auto [input, other] = large_intervals();
 
         DigitalIntervalBooleanParams params;
-        params.operation = "and";
+        params.operation = DigitalIntervalBooleanParams::Operation::And;
 
         int progress_val = -1;
         ctx.progress = [&](int p) { progress_val = p; };
@@ -561,55 +561,25 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases"
 }
 
 // ============================================================================
-// Tests: JSON Parameter Loading
+// Tests: JSON Parameter Rejection
 // ============================================================================
 
-TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Loading",
+TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Rejection",
           "[transforms][v2][params][json]") {
 
-    SECTION("Load valid JSON with operation") {
-        std::string const json = R"({
-            "operation": "xor"
-        })";
-
-        auto result = loadParametersFromJson<DigitalIntervalBooleanParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-        REQUIRE(params.getOperation() == "xor");
-        REQUIRE(params.isValidOperation());
+    SECTION("Reject unknown operation") {
+        std::string const json = R"({"operation": "invalid_op"})";
+        REQUIRE_FALSE(loadParametersFromJson<DigitalIntervalBooleanParams>(json));
     }
 
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string const json = "{}";
-
-        auto result = loadParametersFromJson<DigitalIntervalBooleanParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-        REQUIRE(params.getOperation() == "and");// Default
-        REQUIRE(params.isValidOperation());
+    SECTION("Reject all-caps operation name") {
+        std::string const json = R"({"operation": "AND"})";
+        REQUIRE_FALSE(loadParametersFromJson<DigitalIntervalBooleanParams>(json));
     }
 
-    SECTION("All valid operations") {
-        std::vector<std::string> const valid_ops = {"and", "or", "xor", "not", "and_not"};
-
-        for (auto const & op: valid_ops) {
-            std::string const json = R"({"operation": ")" + op + R"("})";
-
-            auto result = loadParametersFromJson<DigitalIntervalBooleanParams>(json);
-            REQUIRE(result);
-            auto params = result.value();
-            REQUIRE(params.getOperation() == op);
-            REQUIRE(params.isValidOperation());
-        }
-    }
-
-    SECTION("Invalid operation name - validation fails") {
-        DigitalIntervalBooleanParams params;
-        params.operation = "invalid_op";
-
-        REQUIRE_FALSE(params.isValidOperation());
+    SECTION("Reject non-string operation") {
+        std::string const json = R"({"operation": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<DigitalIntervalBooleanParams>(json));
     }
 }
 
@@ -636,7 +606,7 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
 
     SECTION("AND operation through JSON pipeline") {
         DigitalIntervalBooleanParams params;
-        params.operation = "and";
+        params.operation = DigitalIntervalBooleanParams::Operation::And;
 
         auto const pipeline = makeSingleStepPipeline(
                 "DigitalIntervalBoolean",
@@ -661,7 +631,7 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
 
     SECTION("OR operation through JSON pipeline") {
         DigitalIntervalBooleanParams params;
-        params.operation = "or";
+        params.operation = DigitalIntervalBooleanParams::Operation::Or;
 
         auto const pipeline = makeSingleStepPipeline(
                 "DigitalIntervalBoolean",

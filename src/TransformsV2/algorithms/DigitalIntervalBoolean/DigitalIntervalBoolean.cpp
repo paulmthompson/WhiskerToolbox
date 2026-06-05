@@ -5,13 +5,17 @@
 #include "TimeFrame/interval_data.hpp"
 #include "core/ComputeContext.hpp"
 
+#include <rfl/Result.hpp>
+#include <rfl/internal/enums/StringConverter.hpp>
+
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <string>
 #include <vector>
 
 namespace {
+
+using WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams;
 
 /// Extract plain Interval values from a DigitalIntervalSeries view
 std::vector<Interval> extract_intervals(auto const & view_data) {
@@ -67,7 +71,7 @@ struct SweepEvent {
 std::vector<Interval> sweep_line_boolean(
         std::vector<Interval> const & input_intervals,
         std::vector<Interval> const & other_intervals,
-        std::string const & operation) {
+        DigitalIntervalBooleanParams::Operation operation) {
 
     std::vector<SweepEvent> events;
     events.reserve((input_intervals.size() + other_intervals.size()) * 2);
@@ -85,11 +89,19 @@ std::vector<Interval> sweep_line_boolean(
         return a.time < b.time;
     });
 
-    auto evaluate = [&operation](bool a, bool b) -> bool {
-        if (operation == "and") { return a && b; }
-        if (operation == "or") { return a || b; }
-        if (operation == "xor") { return a != b; }
-        if (operation == "and_not") { return a && !b; }
+    auto evaluate = [operation](bool a, bool b) -> bool {
+        switch (operation) {
+            case DigitalIntervalBooleanParams::Operation::And:
+                return a && b;
+            case DigitalIntervalBooleanParams::Operation::Or:
+                return a || b;
+            case DigitalIntervalBooleanParams::Operation::Xor:
+                return a != b;
+            case DigitalIntervalBooleanParams::Operation::and_not:
+                return a && !b;
+            case DigitalIntervalBooleanParams::Operation::Not:
+                return false;
+        }
         return false;
     };
 
@@ -134,14 +146,8 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
         DigitalIntervalBooleanParams const & params,
         ComputeContext const & ctx) {
 
-    // Validate parameters
-    if (!params.isValidOperation()) {
-        std::cerr << "digitalIntervalBoolean: Invalid operation: " << params.getOperation() << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
-    }
-
     auto input_timeframe = input_series.getTimeFrame();
-    std::string const operation = params.getOperation();
+    auto const operation = params.operation;
 
     ctx.reportProgress(0);
 
@@ -150,7 +156,7 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
     ctx.reportProgress(10);
 
     // NOT: compute gaps in the sorted/merged input intervals
-    if (operation == "not") {
+    if (operation == DigitalIntervalBooleanParams::Operation::Not) {
         auto result_intervals = compute_not(input_ivs);
 
         ctx.reportProgress(100);
@@ -197,3 +203,48 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
 }
 
 }// namespace WhiskerToolbox::Transforms::V2
+
+namespace rfl::internal::enums {
+
+template <>
+class StringConverter<WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams::Operation> {
+public:
+    using Operation = WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams::Operation;
+
+    static std::string enum_to_string(Operation const op) {
+        switch (op) {
+            case Operation::And:
+                return "and";
+            case Operation::Or:
+                return "or";
+            case Operation::Xor:
+                return "xor";
+            case Operation::Not:
+                return "not";
+            case Operation::and_not:
+                return "and_not";
+        }
+        return {};
+    }
+
+    static rfl::Result<Operation> string_to_enum(std::string const & str) {
+        if (str == "and") {
+            return Operation::And;
+        }
+        if (str == "or") {
+            return Operation::Or;
+        }
+        if (str == "xor") {
+            return Operation::Xor;
+        }
+        if (str == "not") {
+            return Operation::Not;
+        }
+        if (str == "and_not") {
+            return Operation::and_not;
+        }
+        return rfl::Error("Invalid operation: " + str);
+    }
+};
+
+}// namespace rfl::internal::enums

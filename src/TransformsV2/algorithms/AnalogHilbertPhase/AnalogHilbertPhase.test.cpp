@@ -194,7 +194,7 @@ TEST_CASE("V2 Container Transform: Analog Hilbert Phase - Happy Path",
     SECTION("Amplitude extraction - simple sine wave") {
         auto ats = hilbert_scenarios::amplitude_sine_2_5();
         constexpr float amplitude = 2.5f;
-        params.output_type = "amplitude";
+        params.output_type = AnalogHilbertPhaseParams::OutputType::amplitude;
 
         auto result_amplitude = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
                 "AnalogHilbertPhase", *ats, params, ctx);
@@ -222,7 +222,7 @@ TEST_CASE("V2 Container Transform: Analog Hilbert Phase - Happy Path",
 
     SECTION("Amplitude extraction - amplitude modulated signal") {
         auto ats = hilbert_scenarios::amplitude_modulated();
-        params.output_type = "amplitude";
+        params.output_type = AnalogHilbertPhaseParams::OutputType::amplitude;
 
         auto result_amplitude = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
                 "AnalogHilbertPhase", *ats, params, ctx);
@@ -322,97 +322,45 @@ TEST_CASE("V2 Container Transform: Analog Hilbert Phase - Edge Cases",
 }
 
 // ============================================================================
-// Tests: JSON Parameter Loading
+// Tests: JSON Parameter Rejection
 // ============================================================================
 
-TEST_CASE("V2 Container Transform: AnalogHilbertPhaseParams - JSON Loading",
+TEST_CASE("V2 Container Transform: AnalogHilbertPhaseParams - JSON Rejection",
           "[transforms][v2][params][json]") {
 
-    SECTION("Load valid JSON with all fields") {
-        std::string const json = R"({
-            "output_type": "amplitude",
-            "discontinuity_threshold": 500,
-            "max_chunk_size": 50000,
-            "overlap_fraction": 0.3,
-            "use_windowing": false,
-            "apply_bandpass_filter": true,
-            "filter_low_freq": 2.0,
-            "filter_high_freq": 20.0,
-            "filter_order": 6,
-            "sampling_rate": 500.0
-        })";
-
-        auto result = loadParametersFromJson<AnalogHilbertPhaseParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getOutputType() == "amplitude");
-        REQUIRE(params.getDiscontinuityThreshold() == 500);
-        REQUIRE(params.getMaxChunkSize() == 50000);
-        REQUIRE(params.getOverlapFraction() == Catch::Approx(0.3));
-        REQUIRE(params.getUseWindowing() == false);
-        REQUIRE(params.getApplyBandpassFilter() == true);
-        REQUIRE(params.getFilterLowFreq() == Catch::Approx(2.0));
-        REQUIRE(params.getFilterHighFreq() == Catch::Approx(20.0));
-        REQUIRE(params.getFilterOrder() == 6);
-        REQUIRE(params.getSamplingRate() == Catch::Approx(500.0));
+    SECTION("Reject zero discontinuity_threshold") {
+        std::string const json = R"({"discontinuity_threshold": 0})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
     }
 
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string const json = "{}";
-
-        auto result = loadParametersFromJson<AnalogHilbertPhaseParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getOutputType() == "phase");
-        REQUIRE(params.getDiscontinuityThreshold() == 1000);
-        REQUIRE(params.getMaxChunkSize() == 100000);
-        REQUIRE(params.getOverlapFraction() == Catch::Approx(0.25));
-        REQUIRE(params.getUseWindowing() == true);
-        REQUIRE(params.getApplyBandpassFilter() == false);
-        REQUIRE(params.getFilterLowFreq() == Catch::Approx(5.0));
-        REQUIRE(params.getFilterHighFreq() == Catch::Approx(15.0));
-        REQUIRE(params.getFilterOrder() == 4);
-        REQUIRE(params.getSamplingRate() == Catch::Approx(1000.0));
+    SECTION("Reject negative overlap_fraction") {
+        std::string const json = R"({"overlap_fraction": -0.1})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
     }
 
-    SECTION("Load with only some fields") {
-        std::string const json = R"({
-            "output_type": "phase",
-            "discontinuity_threshold": 200
-        })";
-
-        auto result = loadParametersFromJson<AnalogHilbertPhaseParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getOutputType() == "phase");
-        REQUIRE(params.getDiscontinuityThreshold() == 200);
-        REQUIRE(params.getMaxChunkSize() == 100000);// Default
+    SECTION("Reject negative filter_low_freq") {
+        std::string const json = R"({"filter_low_freq": -1.0})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
     }
 
-    SECTION("JSON round-trip preserves values") {
-        AnalogHilbertPhaseParams original;
-        original.output_type = "amplitude";
-        original.discontinuity_threshold = 750;
-        original.apply_bandpass_filter = true;
+    SECTION("Reject zero filter_order") {
+        std::string const json = R"({"filter_order": 0})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
+    }
 
-        // Serialize
-        std::string const json = saveParametersToJson(original);
+    SECTION("Reject unknown output_type") {
+        std::string const json = R"({"output_type": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
+    }
 
-        // Deserialize
-        auto result = loadParametersFromJson<AnalogHilbertPhaseParams>(json);
-        REQUIRE(result);
-        auto recovered = result.value();
+    SECTION("Reject wrong casing for output_type") {
+        std::string const json = R"({"output_type": "Phase"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
+    }
 
-        // Verify values match
-        REQUIRE(recovered.getOutputType() == "amplitude");
-        REQUIRE(recovered.getDiscontinuityThreshold() == 750);
-        REQUIRE(recovered.getApplyBandpassFilter() == true);
+    SECTION("Reject non-string output_type") {
+        std::string const json = R"({"output_type": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogHilbertPhaseParams>(json));
     }
 }
 
@@ -484,8 +432,8 @@ TEST_CASE("V2 Container Transform: AnalogHilbertPhase - load_data_from_json_conf
 
     SECTION("Execute V2 pipeline via load_data_from_json_config_v2 - phase extraction") {
         AnalogHilbertPhaseParams params;
-        params.output_type = "phase";
-        params.discontinuity_threshold = rfl::Validator<size_t, rfl::Minimum<1>>(1000);
+        params.output_type = AnalogHilbertPhaseParams::OutputType::phase;
+        params.discontinuity_threshold = 1000;
 
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogHilbertPhase", "pipeline_test_signal", "v2_phase_signal", params);
@@ -505,8 +453,8 @@ TEST_CASE("V2 Container Transform: AnalogHilbertPhase - load_data_from_json_conf
 
     SECTION("Execute V2 pipeline with amplitude extraction") {
         AnalogHilbertPhaseParams params;
-        params.output_type = "amplitude";
-        params.discontinuity_threshold = rfl::Validator<size_t, rfl::Minimum<1>>(1000);
+        params.output_type = AnalogHilbertPhaseParams::OutputType::amplitude;
+        params.discontinuity_threshold = 1000;
 
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogHilbertPhase", "amplitude_sine_2_5", "v2_amplitude_signal", params);
@@ -534,12 +482,12 @@ TEST_CASE("V2 Container Transform: AnalogHilbertPhase - load_data_from_json_conf
 
     SECTION("Execute V2 pipeline with bandpass filter") {
         AnalogHilbertPhaseParams params;
-        params.output_type = "phase";
+        params.output_type = AnalogHilbertPhaseParams::OutputType::phase;
         params.apply_bandpass_filter = true;
-        params.filter_low_freq = rfl::Validator<double, rfl::Minimum<0.0>>(5.0);
-        params.filter_high_freq = rfl::Validator<double, rfl::Minimum<0.0>>(15.0);
-        params.filter_order = rfl::Validator<int, rfl::Minimum<1>>(4);
-        params.sampling_rate = rfl::Validator<double, rfl::Minimum<0.0>>(100.0);
+        params.filter_low_freq = 5.0;
+        params.filter_high_freq = 15.0;
+        params.filter_order = 4;
+        params.sampling_rate = 100.0;
 
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogHilbertPhase", "pipeline_test_signal", "v2_phase_filtered", params);
@@ -559,8 +507,8 @@ TEST_CASE("V2 Container Transform: AnalogHilbertPhase - load_data_from_json_conf
 
     SECTION("Execute V2 pipeline with discontinuous signal") {
         AnalogHilbertPhaseParams params;
-        params.output_type = "phase";
-        params.discontinuity_threshold = rfl::Validator<size_t, rfl::Minimum<1>>(100);
+        params.output_type = AnalogHilbertPhaseParams::OutputType::phase;
+        params.discontinuity_threshold = 100;
 
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogHilbertPhase", "discontinuous_large_gap", "v2_phase_discontinuous", params);

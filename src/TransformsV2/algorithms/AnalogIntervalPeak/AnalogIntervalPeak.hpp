@@ -5,7 +5,6 @@
 #include <rfl/json.hpp>
 
 #include <memory>
-#include <optional>
 
 class AnalogTimeSeries;
 class DigitalEventSeries;
@@ -19,10 +18,10 @@ namespace WhiskerToolbox::Transforms::V2 {
 
 /**
  * @brief Parameters for analog interval peak detection
- * 
+ *
  * This transform finds peak (min/max) values in an analog signal within
  * time intervals defined by a digital interval series.
- * 
+ *
  * Example JSON:
  * ```json
  * {
@@ -34,34 +33,22 @@ namespace WhiskerToolbox::Transforms::V2 {
 struct AnalogIntervalPeakParams {
     /**
      * @brief Type of peak to find
-     * - "minimum": Find minimum value within each interval
-     * - "maximum": Find maximum value within each interval
      */
-    std::optional<std::string> peak_type;
+    enum class PeakType {
+        minimum,///< Find minimum value within each interval
+        maximum ///< Find maximum value within each interval
+    };
 
     /**
      * @brief Search mode for intervals
-     * - "within_intervals": Search from interval start to interval end
-     * - "between_starts": Search from one interval start to the next interval start
      */
-    std::optional<std::string> search_mode;
+    enum class SearchMode {
+        within_intervals,///< Search from interval start to interval end
+        between_starts   ///< Search from one interval start to the next interval start
+    };
 
-    // Helper methods with defaults
-    std::string getPeakType() const {
-        return peak_type.value_or("maximum");
-    }
-
-    std::string getSearchMode() const {
-        return search_mode.value_or("within_intervals");
-    }
-
-    bool isMaximum() const {
-        return getPeakType() == "maximum";
-    }
-
-    bool isWithinIntervals() const {
-        return getSearchMode() == "within_intervals";
-    }
+    PeakType peak_type = PeakType::maximum;
+    SearchMode search_mode = SearchMode::within_intervals;
 };
 
 // ============================================================================
@@ -70,17 +57,17 @@ struct AnalogIntervalPeakParams {
 
 /**
  * @brief Find peak values in analog signal within intervals
- * 
+ *
  * This is a **binary container transform** because:
  * - Requires temporal alignment between intervals and analog data
  * - Must search within time bounds of each interval
  * - Cannot be decomposed into simple element operations
- * 
+ *
  * The transform handles:
  * - TimeFrame conversion between interval and analog coordinate systems
  * - Searching for min/max within each interval
  * - Two search modes: within intervals or between interval starts
- * 
+ *
  * @param intervals Digital interval series defining search ranges
  * @param analog Analog time series to search for peaks
  * @param params Parameters controlling peak type and search mode

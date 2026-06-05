@@ -44,7 +44,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
     // Build search ranges based on search mode
     std::vector<std::pair<int64_t, int64_t>> search_ranges;
 
-    if (params.isWithinIntervals()) {
+    if (params.search_mode == AnalogIntervalPeakParams::SearchMode::within_intervals) {
         // Search within each interval: [start, end]
         for (auto const & interval: interval_data) {
             search_ranges.emplace_back(interval.value().start, interval.value().end);
@@ -107,7 +107,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         // Find the peak value and its index within the span
         size_t peak_idx_in_span = 0;
 
-        if (params.isMaximum()) {
+        if (params.peak_type == AnalogIntervalPeakParams::PeakType::maximum) {
             auto max_it = std::ranges::max_element(data_span);
             peak_idx_in_span = static_cast<size_t>(std::distance(data_span.begin(), max_it));
         } else {

@@ -1,6 +1,7 @@
 #include "AnalogIntervalPeak.hpp"
 
 #include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -16,6 +17,7 @@
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[transforms][v2][analog_interval_peak]") {
     auto & registry = ElementRegistry::instance();
@@ -24,8 +26,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
         auto [ats, dis] = analog_interval_peak_scenarios::basic_max_within();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -52,8 +54,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
         auto [ats, dis] = analog_interval_peak_scenarios::max_with_progress();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         int progress_val = -1;
         ComputeContext ctx;
@@ -83,8 +85,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
         auto [ats, dis] = analog_interval_peak_scenarios::multiple_intervals_varying();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -113,8 +115,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[tra
         auto [ats, dis] = analog_interval_peak_scenarios::basic_min_within();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "minimum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::minimum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -138,8 +140,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[tra
         auto [ats, dis] = analog_interval_peak_scenarios::min_with_negative();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "minimum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::minimum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -167,8 +169,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Between Interval Starts", "[tran
         auto [ats, dis] = analog_interval_peak_scenarios::max_between_starts();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "between_starts";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::between_starts;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -197,8 +199,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Between Interval Starts", "[tran
         auto [ats, dis] = analog_interval_peak_scenarios::min_between_starts();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "minimum";
-        params.search_mode = "between_starts";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::minimum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::between_starts;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -231,8 +233,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
         auto [ats, dis] = analog_interval_peak_scenarios::empty_intervals();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -252,8 +254,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
         auto [ats, dis] = analog_interval_peak_scenarios::no_data_interval();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -274,8 +276,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
         auto [ats, dis] = analog_interval_peak_scenarios::single_point();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -298,8 +300,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
         auto [ats, dis] = analog_interval_peak_scenarios::mixed_data_availability();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -328,8 +330,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transfo
         auto [ats, dis, signal_tf, interval_tf] = analog_interval_peak_scenarios::different_timeframes();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -355,8 +357,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transfo
         auto [ats, dis, tf] = analog_interval_peak_scenarios::same_timeframe();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -397,8 +399,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Operation Interface", "[transfor
         auto [ats, dis] = analog_interval_peak_scenarios::operation_interface();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         auto result = registry.executeBinaryContainerTransform<
                 DigitalIntervalSeries,
@@ -422,8 +424,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Operation Interface", "[transfor
         auto [ats, dis] = analog_interval_peak_scenarios::operation_progress();
 
         AnalogIntervalPeakParams params;
-        params.peak_type = "maximum";
-        params.search_mode = "within_intervals";
+        params.peak_type = AnalogIntervalPeakParams::PeakType::maximum;
+        params.search_mode = AnalogIntervalPeakParams::SearchMode::within_intervals;
 
         int progress_val = -1;
         ComputeContext ctx;
@@ -442,5 +444,29 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Operation Interface", "[transfor
 
         REQUIRE(progress_val == 100);
         REQUIRE(result != nullptr);
+    }
+}
+
+TEST_CASE("TransformsV2: Analog Interval Peak - JSON Rejection",
+          "[transforms][v2][analog_interval_peak][params][json]") {
+
+    SECTION("Reject unknown peak_type") {
+        std::string const json = R"({"peak_type": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalPeakParams>(json));
+    }
+
+    SECTION("Reject wrong casing for peak_type") {
+        std::string const json = R"({"peak_type": "Maximum"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalPeakParams>(json));
+    }
+
+    SECTION("Reject unknown search_mode") {
+        std::string const json = R"({"search_mode": "between_intervals"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalPeakParams>(json));
+    }
+
+    SECTION("Reject non-string peak_type") {
+        std::string const json = R"({"peak_type": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalPeakParams>(json));
     }
 }

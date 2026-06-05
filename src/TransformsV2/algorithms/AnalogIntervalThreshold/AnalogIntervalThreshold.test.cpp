@@ -42,10 +42,10 @@ TEST_CASE(
     SECTION("Positive threshold - simple case") {
         auto ats = analog_scenarios::positive_simple();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -67,10 +67,10 @@ TEST_CASE(
     SECTION("Negative threshold") {
         auto ats = analog_scenarios::negative_threshold();
         params.threshold_value = -1.0f;
-        params.direction = "negative";
+        params.direction = AnalogIntervalThresholdParams::Direction::negative;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -88,10 +88,10 @@ TEST_CASE(
     SECTION("Absolute threshold") {
         auto ats = analog_scenarios::absolute_threshold();
         params.threshold_value = 1.0f;
-        params.direction = "absolute";
+        params.direction = AnalogIntervalThresholdParams::Direction::absolute;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -109,10 +109,10 @@ TEST_CASE(
     SECTION("With lockout time") {
         auto ats = analog_scenarios::with_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 100.0f;// 100 time units lockout
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -132,10 +132,10 @@ TEST_CASE(
     SECTION("With minimum duration") {
         auto ats = analog_scenarios::with_min_duration();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 150.0f;// Minimum 150 time units
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -151,10 +151,10 @@ TEST_CASE(
     SECTION("Signal ends while above threshold") {
         auto ats = analog_scenarios::ends_above_threshold();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -170,10 +170,10 @@ TEST_CASE(
     SECTION("No intervals detected") {
         auto ats = analog_scenarios::no_intervals();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -186,10 +186,10 @@ TEST_CASE(
     SECTION("Complex signal with multiple parameters") {
         auto ats = analog_scenarios::complex_signal();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 50.0f;
         params.min_duration = 100.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -217,7 +217,7 @@ TEST_CASE(
     SECTION("Empty analog time series") {
         auto ats = analog_scenarios::empty_signal();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
 
@@ -231,10 +231,10 @@ TEST_CASE(
     SECTION("Single sample above threshold") {
         auto ats = analog_scenarios::single_above();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -249,10 +249,10 @@ TEST_CASE(
     SECTION("Single sample below threshold") {
         auto ats = analog_scenarios::single_below();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -264,10 +264,10 @@ TEST_CASE(
     SECTION("All values above threshold") {
         auto ats = analog_scenarios::all_above();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -282,7 +282,7 @@ TEST_CASE(
     SECTION("Cancellation support") {
         auto ats = analog_scenarios::positive_simple();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
 
@@ -300,10 +300,10 @@ TEST_CASE(
     SECTION("Very large lockout time") {
         auto ats = analog_scenarios::large_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 10000.0f;// Much larger than series
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -316,10 +316,10 @@ TEST_CASE(
     SECTION("Very large minimum duration") {
         auto ats = analog_scenarios::large_min_duration();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 10000.0f;// Much larger than any interval
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -341,10 +341,10 @@ TEST_CASE(
     SECTION("Missing data treated as zero - positive threshold") {
         auto ats = analog_scenarios::missing_data_positive();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "treat_as_zero";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::treat_as_zero;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -358,10 +358,10 @@ TEST_CASE(
     SECTION("Missing data ignore mode") {
         auto ats = analog_scenarios::missing_data_ignore();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "ignore";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::ignore;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -375,10 +375,10 @@ TEST_CASE(
     SECTION("No gaps in data") {
         auto ats = analog_scenarios::no_gaps();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogIntervalThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         params.min_duration = 0.0f;
-        params.missing_data_mode = "treat_as_zero";
+        params.missing_data_mode = AnalogIntervalThresholdParams::MissingDataMode::treat_as_zero;
 
         result_intervals = registry.executeContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
                 "AnalogIntervalThreshold", *ats, params, ctx);
@@ -391,160 +391,40 @@ TEST_CASE(
 }
 
 // ============================================================================
-// Tests: JSON Parameter Loading
+// Tests: JSON Parameter Rejection
 // ============================================================================
 
-TEST_CASE("V2 Container Transform: AnalogIntervalThresholdParams - JSON Loading",
+TEST_CASE("V2 Container Transform: AnalogIntervalThresholdParams - JSON Rejection",
           "[transforms][v2][params][json]") {
 
-    SECTION("Load valid JSON with all fields") {
-        std::string const json = R"({
-            "threshold_value": 2.5,
-            "direction": "negative",
-            "lockout_time": 100.0,
-            "min_duration": 50.0,
-            "missing_data_mode": "treat_as_zero"
-        })";
-
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getThresholdValue() == 2.5f);
-        REQUIRE(params.getDirection() == "negative");
-        REQUIRE(params.getLockoutTime() == 100.0f);
-        REQUIRE(params.getMinDuration() == 50.0f);
-        REQUIRE(params.getMissingDataMode() == "treat_as_zero");
-    }
-
-    SECTION("Load empty JSON (uses defaults)") {
-        std::string const json = "{}";
-
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getThresholdValue() == 1.0f);
-        REQUIRE(params.getDirection() == "positive");
-        REQUIRE(params.getLockoutTime() == 0.0f);
-        REQUIRE(params.getMinDuration() == 0.0f);
-        REQUIRE(params.getMissingDataMode() == "treat_as_zero");
-    }
-
-    SECTION("Load with only some fields") {
-        std::string const json = R"({
-            "threshold_value": 3.0,
-            "direction": "absolute"
-        })";
-
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-
-        REQUIRE(result);
-        auto params = result.value();
-
-        REQUIRE(params.getThresholdValue() == 3.0f);
-        REQUIRE(params.getDirection() == "absolute");
-        REQUIRE(params.getLockoutTime() == 0.0f);// Default
-        REQUIRE(params.getMinDuration() == 0.0f);// Default
-    }
-
     SECTION("Reject negative lockout time") {
-        std::string const json = R"({
-            "lockout_time": -10.0
-        })";
-
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-
-        // Should fail validation
-        REQUIRE_FALSE(result);
+        std::string const json = R"({"lockout_time": -10.0})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 
     SECTION("Reject negative min_duration") {
-        std::string const json = R"({
-            "min_duration": -5.0
-        })";
-
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-
-        // Should fail validation
-        REQUIRE_FALSE(result);
+        std::string const json = R"({"min_duration": -5.0})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 
-    SECTION("JSON round-trip preserves values") {
-        AnalogIntervalThresholdParams original;
-        original.threshold_value = 1.5f;
-        original.direction = "positive";
-        original.lockout_time = rfl::Validator<float, rfl::Minimum<0.0f>>(50.0f);
-        original.min_duration = rfl::Validator<float, rfl::Minimum<0.0f>>(25.0f);
-        original.missing_data_mode = "ignore";
-
-        // Serialize
-        std::string const json = saveParametersToJson(original);
-
-        // Deserialize
-        auto result = loadParametersFromJson<AnalogIntervalThresholdParams>(json);
-        REQUIRE(result);
-
-        auto loaded = result.value();
-        REQUIRE(loaded.getThresholdValue() == 1.5f);
-        REQUIRE(loaded.getDirection() == "positive");
-        REQUIRE(loaded.getLockoutTime() == 50.0f);
-        REQUIRE(loaded.getMinDuration() == 25.0f);
-        REQUIRE(loaded.getMissingDataMode() == "ignore");
-    }
-}
-
-// ============================================================================
-// Tests: Parameter Validation
-// ============================================================================
-
-TEST_CASE("V2 Container Transform: AnalogIntervalThresholdParams - Validation",
-          "[transforms][v2][params][validation]") {
-
-    AnalogIntervalThresholdParams params;
-
-    SECTION("Valid direction values") {
-        params.direction = "positive";
-        REQUIRE(params.isValidDirection());
-
-        params.direction = "negative";
-        REQUIRE(params.isValidDirection());
-
-        params.direction = "absolute";
-        REQUIRE(params.isValidDirection());
+    SECTION("Reject unknown direction") {
+        std::string const json = R"({"direction": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 
-    SECTION("Invalid direction values") {
-        params.direction = "invalid";
-        REQUIRE_FALSE(params.isValidDirection());
-
-        params.direction = "POSITIVE";// Case sensitive
-        REQUIRE_FALSE(params.isValidDirection());
+    SECTION("Reject wrong casing for direction") {
+        std::string const json = R"({"direction": "Positive"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 
-    SECTION("Valid missing data mode values") {
-        params.missing_data_mode = "ignore";
-        REQUIRE(params.isValidMissingDataMode());
-
-        params.missing_data_mode = "treat_as_zero";
-        REQUIRE(params.isValidMissingDataMode());
+    SECTION("Reject unknown missing_data_mode") {
+        std::string const json = R"({"missing_data_mode": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 
-    SECTION("Invalid missing data mode values") {
-        params.missing_data_mode = "invalid";
-        REQUIRE_FALSE(params.isValidMissingDataMode());
-    }
-
-    SECTION("Default direction is valid") {
-        AnalogIntervalThresholdParams const default_params;
-        REQUIRE(default_params.isValidDirection());
-    }
-
-    SECTION("Default missing data mode is valid") {
-        AnalogIntervalThresholdParams const default_params;
-        REQUIRE(default_params.isValidMissingDataMode());
+    SECTION("Reject non-string direction") {
+        std::string const json = R"({"direction": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<AnalogIntervalThresholdParams>(json));
     }
 }
 
@@ -587,18 +467,19 @@ namespace {
 
 struct IntervalThresholdTestParams {
     float threshold;
-    std::string direction;
+    AnalogIntervalThresholdParams::Direction direction = AnalogIntervalThresholdParams::Direction::positive;
     float lockout = 0.0f;
     float min_duration = 0.0f;
-    std::string missing_data_mode = "ignore";
+    AnalogIntervalThresholdParams::MissingDataMode missing_data_mode =
+            AnalogIntervalThresholdParams::MissingDataMode::ignore;
 };
 
-AnalogIntervalThresholdParams toIntervalThresholdParams(IntervalThresholdTestParams const& cfg) {
+AnalogIntervalThresholdParams toIntervalThresholdParams(IntervalThresholdTestParams const & cfg) {
     AnalogIntervalThresholdParams params;
     params.threshold_value = cfg.threshold;
     params.direction = cfg.direction;
-    params.lockout_time = rfl::Validator<float, rfl::Minimum<0.0f>>(cfg.lockout);
-    params.min_duration = rfl::Validator<float, rfl::Minimum<0.0f>>(cfg.min_duration);
+    params.lockout_time = cfg.lockout;
+    params.min_duration = cfg.min_duration;
     params.missing_data_mode = cfg.missing_data_mode;
     return params;
 }
@@ -618,7 +499,7 @@ TEST_CASE(
         dm.setTime(TimeKey("default"), time_frame);
         dm.setData("positive_simple", ats, TimeKey("default"));
 
-        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = "positive"});
+        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = AnalogIntervalThresholdParams::Direction::positive});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold",
                 "positive_simple",
@@ -650,7 +531,7 @@ TEST_CASE(
         dm.setData("complex_signal", ats, TimeKey("default"));
 
         auto const params = toIntervalThresholdParams(
-                {.threshold = 1.0f, .direction = "positive", .lockout = 50.0f, .min_duration = 100.0f});
+                {.threshold = 1.0f, .direction = AnalogIntervalThresholdParams::Direction::positive, .lockout = 50.0f, .min_duration = 100.0f});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold",
                 "complex_signal",
@@ -681,7 +562,7 @@ TEST_CASE(
         dm.setTime(TimeKey("default"), time_frame);
         dm.setData("absolute_threshold", ats, TimeKey("default"));
 
-        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = "absolute"});
+        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = AnalogIntervalThresholdParams::Direction::absolute});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold",
                 "absolute_threshold",
@@ -712,7 +593,7 @@ TEST_CASE(
         dm.setTime(TimeKey("default"), time_frame);
         dm.setData("negative_threshold", ats, TimeKey("default"));
 
-        auto const params = toIntervalThresholdParams({.threshold = -1.0f, .direction = "negative"});
+        auto const params = toIntervalThresholdParams({.threshold = -1.0f, .direction = AnalogIntervalThresholdParams::Direction::negative});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold",
                 "negative_threshold",
@@ -750,7 +631,7 @@ TEST_CASE(
         dm.setTime(TimeKey("default"), time_frame);
         dm.setData("test_signal", test_analog, TimeKey("default"));
 
-        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = "positive"});
+        auto const params = toIntervalThresholdParams({.threshold = 1.0f, .direction = AnalogIntervalThresholdParams::Direction::positive});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold", "test_signal", "v2_detected_intervals", params);
 
@@ -776,7 +657,7 @@ TEST_CASE(
         dm.setData("test_signal", test_analog, TimeKey("default"));
 
         auto const params = toIntervalThresholdParams(
-                {.threshold = 1.0f, .direction = "positive", .lockout = 100.0f, .min_duration = 150.0f});
+                {.threshold = 1.0f, .direction = AnalogIntervalThresholdParams::Direction::positive, .lockout = 100.0f, .min_duration = 150.0f});
         auto const pipeline = makeSingleStepPipeline(
                 "AnalogIntervalThreshold",
                 "test_signal",

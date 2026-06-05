@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -16,19 +15,6 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
         AnalogTimeSeries const & input,
         AnalogIntervalThresholdParams const & params,
         ComputeContext const & ctx) {
-
-    // Validate parameters
-    if (!params.isValidDirection()) {
-        std::cerr << "analogIntervalThreshold: Invalid direction parameter: " 
-                  << params.getDirection() << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
-    }
-
-    if (!params.isValidMissingDataMode()) {
-        std::cerr << "analogIntervalThreshold: Invalid missing_data_mode parameter: " 
-                  << params.getMissingDataMode() << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
-    }
 
     auto const & timestamps = input.getTimeSeries();
     auto const & values = input.getAnalogTimeSeries();
@@ -40,11 +26,12 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
 
     ctx.reportProgress(10);
 
-    auto const threshold = params.getThresholdValue();
-    double const minDuration = static_cast<double>(params.getMinDuration());
-    double const lockoutTime = static_cast<double>(params.getLockoutTime());
-    bool const treatMissingAsZero = params.treatMissingAsZero();
-    std::string const direction = params.getDirection();
+    auto const threshold = params.threshold_value;
+    double const minDuration = static_cast<double>(params.min_duration.value());
+    double const lockoutTime = static_cast<double>(params.lockout_time.value());
+    bool const treatMissingAsZero =
+            params.missing_data_mode == AnalogIntervalThresholdParams::MissingDataMode::treat_as_zero;
+    auto const direction = params.direction;
     
     std::vector<Interval> intervals;
 
@@ -65,14 +52,13 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
 
     // Lambda to check if value meets threshold criteria
     auto meetsThreshold = [&direction, threshold](float value) -> bool {
-        if (direction == "positive") {
+        if (direction == AnalogIntervalThresholdParams::Direction::positive) {
             return value > threshold;
-        } else if (direction == "negative") {
-            return value < threshold;
-        } else if (direction == "absolute") {
-            return std::abs(value) > std::abs(threshold);
         }
-        return false;
+        if (direction == AnalogIntervalThresholdParams::Direction::negative) {
+            return value < threshold;
+        }
+        return std::abs(value) > std::abs(threshold);
     };
 
     // Check if zero meets threshold (for missing data handling)
