@@ -109,7 +109,7 @@ TEST_CASE("extractParameterSchema - MaskAreaParams", "[transforms][v2][schema][e
     REQUIRE(sf != nullptr);
     CHECK(sf->display_name == "Scale Factor");
     CHECK(sf->type_name == "float");
-    CHECK(sf->is_optional);
+    CHECK_FALSE(sf->is_optional);
     // Should have exclusive minimum constraint from rfl::ExclusiveMinimum
     CHECK(hasValidator(sf->raw_type_name));
     CHECK(sf->is_exclusive_min);
@@ -118,7 +118,7 @@ TEST_CASE("extractParameterSchema - MaskAreaParams", "[transforms][v2][schema][e
     REQUIRE(ma != nullptr);
     CHECK(ma->display_name == "Min Area");
     CHECK(ma->type_name == "float");
-    CHECK(ma->is_optional);
+    CHECK_FALSE(ma->is_optional);
     // Should have inclusive minimum constraint from rfl::Minimum
     CHECK(hasValidator(ma->raw_type_name));
     CHECK_FALSE(ma->is_exclusive_min);
@@ -127,7 +127,7 @@ TEST_CASE("extractParameterSchema - MaskAreaParams", "[transforms][v2][schema][e
     REQUIRE(eh != nullptr);
     CHECK(eh->display_name == "Exclude Holes");
     CHECK(eh->type_name == "bool");
-    CHECK(eh->is_optional);
+    CHECK_FALSE(eh->is_optional);
     CHECK_FALSE(hasValidator(eh->raw_type_name));
 }
 

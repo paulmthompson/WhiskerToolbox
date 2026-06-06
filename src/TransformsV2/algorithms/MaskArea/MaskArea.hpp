@@ -18,7 +18,6 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * @brief Parameters for mask area calculation
  * 
  * Uses reflect-cpp for automatic JSON serialization/deserialization with validation.
- * Optional fields can be omitted from JSON and will use default values.
  * 
  * Example JSON:
  * ```json
@@ -30,29 +29,16 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * ```
  */
 struct MaskAreaParams {
-    // Scale factor to multiply area by (e.g., convert pixels to mm²)
-    // Must be strictly positive (> 0)
-    std::optional<rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>> scale_factor;
+    /// Scale factor to multiply area by (e.g., convert pixels to mm²)
+    /// Must be strictly positive (> 0)
+    rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>> scale_factor = 1.0f;
 
-    // Minimum area threshold - masks below this are reported as 0
-    // Must be non-negative (>= 0)
-    std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> min_area;
+    /// Minimum area threshold - masks below this are reported as 0
+    /// Must be non-negative (>= 0)
+    rfl::Validator<float, rfl::Minimum<0.0f>> min_area = 0.0f;
 
-    // Whether to exclude holes when calculating area
-    std::optional<bool> exclude_holes;
-
-    // Helper methods to get values with defaults
-    float getScaleFactor() const {
-        return scale_factor.has_value() ? scale_factor.value().value() : 1.0f;
-    }
-
-    float getMinArea() const {
-        return min_area.has_value() ? min_area.value().value() : 0.0f;
-    }
-
-    bool getExcludeHoles() const {
-        return exclude_holes.value_or(false);
-    }
+    /// Whether to exclude holes when calculating area
+    bool exclude_holes = false;
 };
 
 /**

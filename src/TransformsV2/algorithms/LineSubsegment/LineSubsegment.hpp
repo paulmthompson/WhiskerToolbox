@@ -4,9 +4,6 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-#include <optional>
-#include <string>
-
 class Line2D;
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -45,44 +42,31 @@ enum class LineSubsegmentMethod {
  * ```
  */
 struct LineSubsegmentParams {
-    // Start position as fraction of arc length (0.0 to 1.0)
-    std::optional<float> start_position;
-    
-    // End position as fraction of arc length (0.0 to 1.0)
-    std::optional<float> end_position;
-    
-    // Extraction method: "Direct" or "Parametric"
-    std::optional<std::string> method;
-    
-    // Polynomial order for Parametric method (1-9)
-    std::optional<int> polynomial_order;
-    
-    // Number of output points for Parametric method
-    std::optional<int> output_points;
-    
-    // For Direct method: whether to preserve original point spacing
-    std::optional<bool> preserve_original_spacing;
+    /// Start position as fraction of arc length (0.0 to 1.0)
+    float start_position = 0.3f;
 
-    // Helper methods with defaults
-    float getStartPosition() const { return start_position.value_or(0.3f); }
-    float getEndPosition() const { return end_position.value_or(0.7f); }
-    
-    LineSubsegmentMethod getMethod() const {
-        auto m = method.value_or("Parametric");
-        return (m == "Direct") ? LineSubsegmentMethod::Direct : LineSubsegmentMethod::Parametric;
-    }
-    
-    int getPolynomialOrder() const { return polynomial_order.value_or(3); }
-    int getOutputPoints() const { return output_points.value_or(50); }
-    bool getPreserveOriginalSpacing() const { return preserve_original_spacing.value_or(true); }
+    /// End position as fraction of arc length (0.0 to 1.0)
+    float end_position = 0.7f;
+
+    /// Extraction method
+    LineSubsegmentMethod method = LineSubsegmentMethod::Parametric;
+
+    /// Polynomial order for Parametric method (1-9)
+    int polynomial_order = 3;
+
+    /// Number of output points for Parametric method
+    int output_points = 50;
+
+    /// For Direct method: whether to preserve original point spacing
+    bool preserve_original_spacing = true;
 
     /**
      * @brief Validate and clamp parameters in-place
      * 
      * Call once before batch processing to:
      * - Clamp positions to [0, 1]
-     * - Ensure start < end
-     * - Clamp polynomial order to valid range
+     * - Clamp polynomial order to [1, 9]
+     * - Clamp output points to [2, 1000]
      */
     void validate();
 };

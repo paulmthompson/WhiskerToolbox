@@ -52,15 +52,15 @@ TEST_CASE("ZScoreNormalizationV2 - Parameter Deserialization", "[transforms][zsc
     INFO("Transform metadata found");
     INFO("params_type name: " << metadata->params_type.name());
     
-    // Check if the deserializer exists by trying direct rfl::json::read
+    // Partial JSON omits bound fields (mean/std_dev); DefaultIfMissing supplies defaults
     std::string const params_json = R"({"clamp_outliers": false, "outlier_threshold": 3.0, "epsilon": 0.00000001})";
-    
-    auto direct_result = rfl::json::read<ZScoreNormalizationParamsV2>(params_json);
+
+    auto direct_result = loadParametersFromJson<ZScoreNormalizationParamsV2>(params_json);
     if (direct_result) {
-        INFO("Direct rfl::json::read succeeded");
-        INFO("Direct result clamp_outliers: " << direct_result.value().getClampOutliers());
+        INFO("Parameter JSON load succeeded");
+        INFO("clamp_outliers: " << direct_result.value().clamp_outliers);
     } else {
-        FAIL("Direct rfl::json::read FAILED: " << direct_result.error()->what());
+        FAIL("Parameter JSON load FAILED: " << direct_result.error()->what());
     }
     REQUIRE(direct_result);
 
@@ -74,8 +74,8 @@ TEST_CASE("ZScoreNormalizationV2 - Parameter Deserialization", "[transforms][zsc
     
     // Try to cast to the correct type
     auto params = std::any_cast<ZScoreNormalizationParamsV2>(params_any);
-    CHECK(params.getClampOutliers() == false);
-    CHECK(params.getOutlierThreshold() == 3.0f);
+    CHECK(params.clamp_outliers == false);
+    CHECK(params.outlier_threshold == 3.0f);
 }
 
 TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v2]") {
@@ -164,8 +164,8 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
 
         // Last value should be clamped to threshold
         auto const & result_data = result->getAnalogTimeSeries();
-        REQUIRE(result_data[4] <= params.getOutlierThreshold());
-        REQUIRE(result_data[4] >= -params.getOutlierThreshold());
+        REQUIRE(result_data[4] <= params.outlier_threshold);
+        REQUIRE(result_data[4] >= -params.outlier_threshold);
     }
 
     SECTION("V2 manual value injection (without pre-reductions)") {
@@ -307,6 +307,43 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
             REQUIRE(val <= 2.0f);
             REQUIRE(val >= -2.0f);
         }
+    }
+}
+
+TEST_CASE("V2 ZScoreNormalizationParamsV2 - JSON Rejection",
+          "[transforms][v2][params][json][zscore]") {
+
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
+            "clamp_outliers": false,
+            "invalid
+        })";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
+    }
+
+    SECTION("Reject non-numeric mean") {
+        std::string const json = R"({"mean": "zero"})";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
+    }
+
+    SECTION("Reject non-numeric std_dev") {
+        std::string const json = R"({"std_dev": "one"})";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
+    }
+
+    SECTION("Reject non-boolean clamp_outliers") {
+        std::string const json = R"({"clamp_outliers": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
+    }
+
+    SECTION("Reject non-numeric outlier_threshold") {
+        std::string const json = R"({"outlier_threshold": "three"})";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
+    }
+
+    SECTION("Reject non-numeric epsilon") {
+        std::string const json = R"({"epsilon": "small"})";
+        REQUIRE_FALSE(loadParametersFromJson<ZScoreNormalizationParamsV2>(json));
     }
 }
 

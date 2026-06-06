@@ -17,13 +17,11 @@ float calculateMaskArea(
 
     float area = static_cast<float>(count);
 
-    // Apply minimum area threshold
-    if (area < params.getMinArea()) {
+    if (area < params.min_area.value()) {
         return 0.0f;
     }
 
-    // Apply scale factor
-    return area * params.getScaleFactor();
+    return area * params.scale_factor.value();
 }
 
 float calculateMaskAreaWithContext(

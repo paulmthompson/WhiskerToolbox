@@ -5,8 +5,6 @@
 #include <rfl/json.hpp>
 
 #include <algorithm>
-#include <optional>
-#include <string>
 
 class Line2D;
 
@@ -20,9 +18,9 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * @brief Line simplification algorithm selection
  */
 enum class LineResampleMethod {
-    FixedSpacing,    ///< Resample to target spacing between points
-    DouglasPeucker,  ///< Simplify using Douglas-Peucker algorithm
-    PolynomialSmooth ///< Smooth via parametric polynomial fit and resample
+    FixedSpacing,   ///< Resample to target spacing between points
+    DouglasPeucker, ///< Simplify using Douglas-Peucker algorithm
+    PolynomialSmooth///< Smooth via parametric polynomial fit and resample
 };
 
 /**
@@ -44,45 +42,26 @@ enum class LineResampleMethod {
  * ```
  */
 struct LineResampleParams {
-    // Algorithm to use: "FixedSpacing", "DouglasPeucker", or "PolynomialSmooth"
-    std::optional<std::string> method;
+    /// Algorithm to use
+    LineResampleMethod method = LineResampleMethod::FixedSpacing;
 
-    // Target spacing between points in pixels (for FixedSpacing and PolynomialSmooth)
-    // Must be strictly positive (> 0)
-    std::optional<rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>> target_spacing;
+    /// Target spacing between points in pixels (for FixedSpacing and PolynomialSmooth)
+    /// Must be strictly positive (> 0)
+    rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>> target_spacing = 5.0f;
 
-    // Maximum perpendicular distance tolerance for point removal (for DouglasPeucker)
-    // Must be strictly positive (> 0)
-    std::optional<rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>> epsilon;
+    /// Maximum perpendicular distance tolerance for point removal (for DouglasPeucker)
+    /// Must be strictly positive (> 0)
+    rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>> epsilon = 2.0f;
 
-    // Polynomial order for PolynomialSmooth (1-9)
-    std::optional<int> polynomial_order;
+    /// Polynomial order for PolynomialSmooth (1-9)
+    int polynomial_order = 3;
 
-    /// @brief Resolve method string to enum
-    [[nodiscard]] LineResampleMethod getMethod() const {
-        auto const m = method.value_or("FixedSpacing");
-        if (m == "DouglasPeucker" || m == "Douglas-Peucker") {
-            return LineResampleMethod::DouglasPeucker;
-        }
-        if (m == "PolynomialSmooth" || m == "Polynomial Smooth") {
-            return LineResampleMethod::PolynomialSmooth;
-        }
-        return LineResampleMethod::FixedSpacing;
-    }
-
-    [[nodiscard]] float getTargetSpacing() const {
-        return target_spacing.has_value() ? target_spacing.value().value() : 5.0f;
-    }
-
-    [[nodiscard]] float getEpsilon() const {
-        return epsilon.has_value() ? epsilon.value().value() : 2.0f;
-    }
-
-    /// @brief Polynomial order clamped to [1, 9], default 3
-    [[nodiscard]] int getPolynomialOrder() const {
-        int const order = polynomial_order.value_or(3);
-        return std::max(1, std::min(order, 9));
-    }
+    /**
+     * @brief Normalize and clamp parameters in-place
+     *
+     * Call once before batch processing to clamp polynomial_order to [1, 9].
+     */
+    void validate();
 };
 
 // ============================================================================

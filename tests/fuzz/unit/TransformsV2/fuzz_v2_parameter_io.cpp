@@ -53,7 +53,7 @@ void FuzzMaskAreaParamsValidScaleFactor(float scale_factor) {
     if (result) {
         auto recovered = result.value();
         // Use EXPECT_NEAR to account for JSON serialization precision loss
-        EXPECT_NEAR(recovered.getScaleFactor(), scale_factor, 1e-5f);
+        EXPECT_NEAR(recovered.scale_factor.value(), scale_factor, 1e-5f);
     }
 }
 FUZZ_TEST(MaskAreaParamsFuzz, FuzzMaskAreaParamsValidScaleFactor)
@@ -81,7 +81,7 @@ void FuzzMaskAreaParamsValidMinArea(float min_area) {
         if (result) {
             auto recovered = result.value();
             // Use EXPECT_NEAR to account for JSON serialization precision loss
-            EXPECT_NEAR(recovered.getMinArea(), min_area, 1e-5f);
+            EXPECT_NEAR(recovered.min_area.value(), min_area, 1e-5f);
         }
     } else {
         // For invalid values, construct JSON manually to bypass serialization validation
@@ -110,7 +110,7 @@ void FuzzMaskAreaParamsExcludeHoles(bool exclude_holes) {
     EXPECT_TRUE(result);
     if (result) {
         auto recovered = result.value();
-        EXPECT_EQ(recovered.getExcludeHoles(), exclude_holes);
+        EXPECT_EQ(recovered.exclude_holes, exclude_holes);
     }
 }
 FUZZ_TEST(MaskAreaParamsFuzz, FuzzMaskAreaParamsExcludeHoles);
@@ -147,9 +147,9 @@ void FuzzMaskAreaParamsComplete(float scale_factor, float min_area, bool exclude
     if (result) {
         auto recovered = result.value();
         // Use EXPECT_NEAR to account for JSON serialization precision loss
-        EXPECT_NEAR(recovered.getScaleFactor(), scale_factor, 1e-5f);
-        EXPECT_NEAR(recovered.getMinArea(), min_area, 1e-5f);
-        EXPECT_EQ(recovered.getExcludeHoles(), exclude_holes);
+        EXPECT_NEAR(recovered.scale_factor.value(), scale_factor, 1e-5f);
+        EXPECT_NEAR(recovered.min_area.value(), min_area, 1e-5f);
+        EXPECT_EQ(recovered.exclude_holes, exclude_holes);
     }
 }
 FUZZ_TEST(MaskAreaParamsFuzz, FuzzMaskAreaParamsComplete)

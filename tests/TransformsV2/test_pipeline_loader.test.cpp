@@ -94,8 +94,8 @@ TEST_CASE("loadStepFromDescriptor loads valid step with parameters", "[pipeline]
     
     // Verify parameters were loaded correctly
     auto const& params = std::any_cast<MaskAreaParams const&>(step.params);
-    REQUIRE(params.getScaleFactor() == 2.5f);
-    REQUIRE(params.getMinArea() == 10.0f);
+    REQUIRE(params.scale_factor.value() == 2.5f);
+    REQUIRE(params.min_area.value() == 10.0f);
 }
 
 TEST_CASE("loadStepFromDescriptor rejects unknown transform", "[pipeline][step][error]") {

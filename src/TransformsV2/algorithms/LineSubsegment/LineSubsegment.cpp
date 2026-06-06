@@ -16,25 +16,10 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 // ============================================================================
 
 void LineSubsegmentParams::validate() {
-    // Clamp positions to [0, 1]
-    float start = getStartPosition();
-    float end = getEndPosition();
-    
-    start = std::max(0.0f, std::min(start, 1.0f));
-    end = std::max(0.0f, std::min(end, 1.0f));
-    
-    start_position = start;
-    end_position = end;
-    
-    // Clamp polynomial order to reasonable range
-    int order = getPolynomialOrder();
-    order = std::max(1, std::min(order, 9));
-    polynomial_order = order;
-    
-    // Clamp output points to reasonable range
-    int points = getOutputPoints();
-    points = std::max(2, std::min(points, 1000));
-    output_points = points;
+    start_position = std::max(0.0f, std::min(start_position, 1.0f));
+    end_position = std::max(0.0f, std::min(end_position, 1.0f));
+    polynomial_order = std::max(1, std::min(polynomial_order, 9));
+    output_points = std::max(2, std::min(output_points, 1000));
 }
 
 // ============================================================================
@@ -54,37 +39,29 @@ Line2D extractLineSubsegment(
         return line;
     }
     
-    float start_pos = params.getStartPosition();
-    float end_pos = params.getEndPosition();
-    
-    // Clamp positions to valid range
-    start_pos = std::max(0.0f, std::min(start_pos, 1.0f));
-    end_pos = std::max(0.0f, std::min(end_pos, 1.0f));
-    
-    // Invalid range check
+    float start_pos = std::max(0.0f, std::min(params.start_position, 1.0f));
+    float end_pos = std::max(0.0f, std::min(params.end_position, 1.0f));
+
     if (start_pos >= end_pos) {
         return Line2D{};
     }
-    
-    if (params.getMethod() == LineSubsegmentMethod::Direct) {
+
+    if (params.method == LineSubsegmentMethod::Direct) {
         auto result = extract_line_subsegment_by_distance(
-            line,
-            start_pos,
-            end_pos,
-            params.getPreserveOriginalSpacing()
-        );
-        return Line2D(std::move(result));
-    } else {
-        // Parametric method
-        auto result = extract_parametric_subsegment(
-            line,
-            start_pos,
-            end_pos,
-            params.getPolynomialOrder(),
-            params.getOutputPoints()
-        );
+                line,
+                start_pos,
+                end_pos,
+                params.preserve_original_spacing);
         return Line2D(std::move(result));
     }
+
+    auto result = extract_parametric_subsegment(
+            line,
+            start_pos,
+            end_pos,
+            params.polynomial_order,
+            params.output_points);
+    return Line2D(std::move(result));
 }
 
 Line2D extractLineSubsegmentWithContext(

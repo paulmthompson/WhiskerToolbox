@@ -27,134 +27,49 @@ using namespace pipeline_json_test;
 
 
 // ============================================================================
-// Tests: MaskAreaParams JSON Loading
+// Tests: MaskAreaParams JSON Validation
 // ============================================================================
 
-TEST_CASE("MaskAreaParams - Load valid JSON with all fields", "[transforms][v2][params][json]") {
-    std::string json = R"({
-        "scale_factor": 2.5,
-        "min_area": 10.0,
-        "exclude_holes": true
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(result);
-    auto params = result.value();
-    
-    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(2.5f, 0.001f));
-    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(10.0f, 0.001f));
-    REQUIRE(params.getExcludeHoles() == true);
-}
+TEST_CASE("V2 MaskAreaParams - JSON Rejection",
+          "[transforms][v2][params][json][mask_area]") {
 
-TEST_CASE("MaskAreaParams - Load JSON with partial fields (uses defaults)", "[transforms][v2][params][json]") {
-    std::string json = R"({
-        "scale_factor": 3.0
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(result);
-    auto params = result.value();
-    
-    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(3.0f, 0.001f));
-    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(0.0f, 0.001f)); // default
-    REQUIRE(params.getExcludeHoles() == false); // default
-}
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
+            "scale_factor": 1.0,
+            "invalid
+        })";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Load empty JSON (uses all defaults)", "[transforms][v2][params][json]") {
-    std::string json = "{}";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(result);
-    auto params = result.value();
-    
-    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(1.0f, 0.001f));
-    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(0.0f, 0.001f));
-    REQUIRE(params.getExcludeHoles() == false);
-}
+    SECTION("Reject non-numeric scale_factor") {
+        std::string const json = R"({"scale_factor": "not_a_number"})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Reject negative scale_factor", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "scale_factor": -1.0
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(!result); // Should fail validation
-}
+    SECTION("Reject negative scale_factor") {
+        std::string const json = R"({"scale_factor": -1.0})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Reject zero scale_factor", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "scale_factor": 0.0
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(!result); // Should fail validation (ExclusiveMinimum<true>)
-}
+    SECTION("Reject zero scale_factor") {
+        std::string const json = R"({"scale_factor": 0.0})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Reject negative min_area", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "min_area": -5.0
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(!result); // Should fail validation
-}
+    SECTION("Reject non-numeric min_area") {
+        std::string const json = R"({"min_area": "small"})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Accept zero min_area", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "min_area": 0.0
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(result); // Zero should be valid for min_area
-}
+    SECTION("Reject negative min_area") {
+        std::string const json = R"({"min_area": -5.0})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 
-TEST_CASE("MaskAreaParams - Reject invalid JSON", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "scale_factor": "not_a_number"
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(!result);
-}
-
-TEST_CASE("MaskAreaParams - Reject malformed JSON", "[transforms][v2][params][json][validation]") {
-    std::string json = R"({
-        "scale_factor": 1.0,
-        "invalid
-    })";
-    
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    
-    REQUIRE(!result);
-}
-
-
-TEST_CASE("MaskAreaParams - JSON round-trip preserves values", "[transforms][v2][params][json]") {
-    MaskAreaParams original;
-    original.scale_factor = 2.5f;
-    original.min_area = 15.0f;
-    original.exclude_holes = true;
-    
-    // Serialize
-    std::string json = saveParametersToJson(original);
-    
-    // Deserialize
-    auto result = loadParametersFromJson<MaskAreaParams>(json);
-    REQUIRE(result);
-    auto recovered = result.value();
-    
-    // Verify values match
-    REQUIRE_THAT(recovered.getScaleFactor(), Catch::Matchers::WithinRel(2.5f, 0.001f));
-    REQUIRE_THAT(recovered.getMinArea(), Catch::Matchers::WithinRel(15.0f, 0.001f));
-    REQUIRE(recovered.getExcludeHoles() == true);
+    SECTION("Reject non-boolean exclude_holes") {
+        std::string const json = R"({"exclude_holes": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<MaskAreaParams>(json));
+    }
 }
 
 // ============================================================================

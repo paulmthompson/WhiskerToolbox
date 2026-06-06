@@ -5,6 +5,7 @@
 #include "TransformsV2/core/ComputeContext.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/io/ParameterIO.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -44,7 +45,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Direct Method",
           "[transforms][v2][element][line_subsegment]") {
     
     LineSubsegmentParams params;
-    params.method = "Direct";
+    params.method = LineSubsegmentMethod::Direct;
     
     SECTION("Middle subsegment with preserve_original_spacing") {
         auto line_data = subsegment_scenarios::diagonal_5_points();
@@ -100,7 +101,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Parametric Method",
           "[transforms][v2][element][line_subsegment]") {
     
     LineSubsegmentParams params;
-    params.method = "Parametric";
+    params.method = LineSubsegmentMethod::Parametric;
     
     SECTION("Middle subsegment with polynomial interpolation") {
         auto line_data = subsegment_scenarios::diagonal_5_points_at_300();
@@ -166,7 +167,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Edge Cases",
           "[transforms][v2][element][line_subsegment]") {
     
     LineSubsegmentParams params;
-    params.method = "Direct";
+    params.method = LineSubsegmentMethod::Direct;
     
     SECTION("Empty line") {
         Line2D empty_line;
@@ -232,7 +233,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Edge Cases",
         TimeFrameIndex timestamp(100);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.method = "Parametric";
+        params.method = LineSubsegmentMethod::Parametric;
         params.start_position = 0.2f;
         params.end_position = 0.8f;
         params.polynomial_order = 3;  // Requires at least 4 points
@@ -274,8 +275,8 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Parameter Validation",
         
         params.validate();
         
-        REQUIRE_THAT(params.getStartPosition(), WithinAbs(0.0f, 0.001f));
-        REQUIRE_THAT(params.getEndPosition(), WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.start_position, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.end_position, WithinAbs(1.0f, 0.001f));
     }
 
     SECTION("validate() clamps polynomial order") {
@@ -284,8 +285,8 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Parameter Validation",
         
         params.validate();
         
-        REQUIRE(params.getPolynomialOrder() <= 9);
-        REQUIRE(params.getPolynomialOrder() >= 1);
+        REQUIRE(params.polynomial_order <= 9);
+        REQUIRE(params.polynomial_order >= 1);
     }
 
     SECTION("validate() clamps output points") {
@@ -294,18 +295,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Parameter Validation",
         
         params.validate();
         
-        REQUIRE(params.getOutputPoints() >= 2);
-    }
-
-    SECTION("Default values") {
-        LineSubsegmentParams params;
-        
-        REQUIRE_THAT(params.getStartPosition(), WithinAbs(0.3f, 0.001f));
-        REQUIRE_THAT(params.getEndPosition(), WithinAbs(0.7f, 0.001f));
-        REQUIRE(params.getMethod() == LineSubsegmentMethod::Parametric);
-        REQUIRE(params.getPolynomialOrder() == 3);
-        REQUIRE(params.getOutputPoints() == 50);
-        REQUIRE(params.getPreserveOriginalSpacing() == true);
+        REQUIRE(params.output_points >= 2);
     }
 }
 
@@ -324,7 +314,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Context-Aware Execution",
         LineSubsegmentParams params;
         params.start_position = 0.2f;
         params.end_position = 0.8f;
-        params.method = "Direct";
+        params.method = LineSubsegmentMethod::Direct;
         
         int progress = 0;
         ComputeContext ctx;
@@ -344,7 +334,7 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Context-Aware Execution",
         LineSubsegmentParams params;
         params.start_position = 0.2f;
         params.end_position = 0.8f;
-        params.method = "Direct";
+        params.method = LineSubsegmentMethod::Direct;
         
         ComputeContext ctx;
         ctx.is_cancelled = []() { return true; };  // Always cancelled
@@ -357,69 +347,58 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Context-Aware Execution",
 }
 
 // ============================================================================
-// Tests: JSON Serialization
+// Tests: JSON Parameter Validation
 // ============================================================================
 
-TEST_CASE("V2 Element Transform: LineSubsegment - JSON Serialization",
-          "[transforms][v2][element][line_subsegment][json]") {
-    
-    SECTION("Serialize default parameters") {
-        LineSubsegmentParams params;
-        params.start_position = 0.2f;
-        params.end_position = 0.8f;
-        params.method = "Direct";
-        params.preserve_original_spacing = true;
-        
-        std::string json = rfl::json::write(params);
-        
-        REQUIRE(!json.empty());
-        REQUIRE(json.find("start_position") != std::string::npos);
-        REQUIRE(json.find("end_position") != std::string::npos);
-        REQUIRE(json.find("method") != std::string::npos);
-    }
+TEST_CASE("V2 LineSubsegmentParams - JSON Rejection",
+          "[transforms][v2][params][json][line_subsegment]") {
 
-    SECTION("Deserialize parameters from JSON") {
-        std::string json = R"({
-            "start_position": 0.25,
-            "end_position": 0.75,
-            "method": "Parametric",
-            "polynomial_order": 4,
-            "output_points": 100,
-            "preserve_original_spacing": false
+    SECTION("Reject malformed JSON") {
+        std::string const json = R"({
+            "start_position": 0.2,
+            "invalid
         })";
-        
-        auto result = rfl::json::read<LineSubsegmentParams>(json);
-        REQUIRE(result);
-        
-        auto params = result.value();
-        REQUIRE_THAT(params.getStartPosition(), WithinAbs(0.25f, 0.001f));
-        REQUIRE_THAT(params.getEndPosition(), WithinAbs(0.75f, 0.001f));
-        REQUIRE(params.getMethod() == LineSubsegmentMethod::Parametric);
-        REQUIRE(params.getPolynomialOrder() == 4);
-        REQUIRE(params.getOutputPoints() == 100);
-        REQUIRE(params.getPreserveOriginalSpacing() == false);
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
     }
 
-    SECTION("Round-trip serialization") {
-        LineSubsegmentParams original;
-        original.start_position = 0.1f;
-        original.end_position = 0.9f;
-        original.method = "Parametric";
-        original.polynomial_order = 5;
-        original.output_points = 75;
-        original.preserve_original_spacing = false;
-        
-        std::string json = rfl::json::write(original);
-        auto result = rfl::json::read<LineSubsegmentParams>(json);
-        REQUIRE(result);
-        
-        auto restored = result.value();
-        REQUIRE_THAT(restored.getStartPosition(), WithinAbs(0.1f, 0.001f));
-        REQUIRE_THAT(restored.getEndPosition(), WithinAbs(0.9f, 0.001f));
-        REQUIRE(restored.getMethod() == LineSubsegmentMethod::Parametric);
-        REQUIRE(restored.getPolynomialOrder() == 5);
-        REQUIRE(restored.getOutputPoints() == 75);
-        REQUIRE(restored.getPreserveOriginalSpacing() == false);
+    SECTION("Reject non-numeric start_position") {
+        std::string const json = R"({"start_position": "start"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject non-numeric end_position") {
+        std::string const json = R"({"end_position": "end"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject unknown method") {
+        std::string const json = R"({"method": "invalid"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject wrong casing for method") {
+        std::string const json = R"({"method": "direct"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject non-string method") {
+        std::string const json = R"({"method": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject non-integer polynomial_order") {
+        std::string const json = R"({"polynomial_order": "three"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject non-integer output_points") {
+        std::string const json = R"({"output_points": "many"})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
+    }
+
+    SECTION("Reject non-boolean preserve_original_spacing") {
+        std::string const json = R"({"preserve_original_spacing": 1})";
+        REQUIRE_FALSE(loadParametersFromJson<LineSubsegmentParams>(json));
     }
 }
 
@@ -474,7 +453,7 @@ TEST_CASE("V2 DataManager Integration: LineSubsegment via load_data_from_json_co
         LineSubsegmentParams params;
         params.start_position = 0.2f;
         params.end_position = 0.8f;
-        params.method = "Direct";
+        params.method = LineSubsegmentMethod::Direct;
         params.preserve_original_spacing = true;
 
         auto const pipeline = makeSingleStepPipeline(
@@ -504,7 +483,7 @@ TEST_CASE("V2 DataManager Integration: LineSubsegment via load_data_from_json_co
         LineSubsegmentParams params;
         params.start_position = 0.3f;
         params.end_position = 0.7f;
-        params.method = "Parametric";
+        params.method = LineSubsegmentMethod::Parametric;
         params.polynomial_order = 3;
         params.output_points = 20;
 
@@ -550,7 +529,7 @@ TEST_CASE("V2 DataManager Integration: LineSubsegment via load_data_from_json_co
         LineSubsegmentParams params;
         params.start_position = 0.25f;
         params.end_position = 0.75f;
-        params.method = "Direct";
+        params.method = LineSubsegmentMethod::Direct;
         params.preserve_original_spacing = true;
 
         auto const pipeline = makeSingleStepPipeline(
