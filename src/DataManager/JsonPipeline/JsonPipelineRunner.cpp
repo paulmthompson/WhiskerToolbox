@@ -9,7 +9,7 @@
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/Core/VariableSubstitution.hpp"
-#include "Commands/Core/register_core_commands.hpp"
+#include "Commands/register_core_commands.hpp"
 
 #include "DataManager.hpp"
 

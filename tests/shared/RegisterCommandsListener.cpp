@@ -5,7 +5,7 @@
  *        (createCommand, executeSequence, etc.) to ensure the registry is populated.
  */
 
-#include "Commands/Core/register_core_commands.hpp"
+#include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 
 #include <catch2/reporters/catch_reporter_event_listener.hpp>

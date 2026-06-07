@@ -3,7 +3,7 @@
  * @brief Headless executable for running DataManager JSON pipeline configs.
  */
 
-#include "Commands/Core/register_core_commands.hpp"
+#include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "DataManager.hpp"
 #include "JsonPipeline/JsonPipelineRunner.hpp"

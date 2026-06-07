@@ -6,8 +6,8 @@
 #ifndef COMMAND_UI_HINTS_HPP
 #define COMMAND_UI_HINTS_HPP
 
-#include "AddInterval.hpp"
-#include "ClearLineDataAtTime.hpp"
+#include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
+#include "DataObjects/Lines/ClearLineDataAtTime.hpp"
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"

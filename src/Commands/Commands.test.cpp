@@ -3,7 +3,7 @@
  * @brief Unit tests for MoveByTimeRange, CopyByTimeRange, AddInterval, and ForEachKey commands
  */
 
-#include "Commands/AddInterval.hpp"
+#include "Commands/DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandFactory.hpp"
 #include "Commands/CopyByTimeRange.hpp"

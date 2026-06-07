@@ -5,7 +5,7 @@
 
 #include "TriageSession/TriageSession.hpp"
 
-#include "Commands/AddInterval.hpp"
+#include "Commands/DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/MoveByTimeRange.hpp"

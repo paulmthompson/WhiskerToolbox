@@ -135,7 +135,7 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         widget.setSchema(*schema);
 
         auto checkboxes = widget.findChildren<QCheckBox *>();
-        // Should have checkboxes (at minimum for optional gates + bool field)
+        // Should have checkbox for bool field
         CHECK_FALSE(checkboxes.isEmpty());
     }
 

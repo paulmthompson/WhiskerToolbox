@@ -5,7 +5,7 @@
 
 #include "Validation.hpp"
 
-#include "AddInterval.hpp"
+#include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "CommandContext.hpp"
 #include "CommandDescriptor.hpp"
 #include "CommandFactory.hpp"

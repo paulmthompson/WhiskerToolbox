@@ -78,7 +78,7 @@
 #include "StateManagement/WorkspaceManager.hpp"
 
 #include "Commands/Core/CommandRecorder.hpp"
-#include "Commands/Core/register_core_commands.hpp"
+#include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"

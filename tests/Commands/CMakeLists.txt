@@ -15,22 +15,26 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_commands
 
         ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandFactory.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRegistry.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandInfo.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/Core/VariableSubstitution.test.cpp
+        
         ${CMAKE_SOURCE_DIR}/src/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Commands.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/AdvanceFrame.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/SetEventAtTime.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/ClearLineDataAtTime.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/Commands/DataObjects/DigitalTimeSeries/SetEventAtTime.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/DataObjects/Lines/ClearLineDataAtTime.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalEvent.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalInterval.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataAnalog.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/LoadData.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/Validation.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRecorder.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandFactory.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRegistry.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandInfo.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/Core/VariableSubstitution.test.cpp
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands)

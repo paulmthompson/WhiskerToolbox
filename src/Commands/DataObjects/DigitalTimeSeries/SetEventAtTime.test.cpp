@@ -3,13 +3,13 @@
  * @brief Tests for SetEventAtTime, FlipEventAtTime, and triage-style command sequences
  */
 
-#include "Commands/SetEventAtTime.hpp"
+#include "Commands/DataObjects/DigitalTimeSeries/SetEventAtTime.hpp"
 #include "Commands/AdvanceFrame.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/CommandFactory.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
-#include "Commands/FlipEventAtTime.hpp"
+#include "Commands/DataObjects/DigitalTimeSeries/FlipEventAtTime.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"

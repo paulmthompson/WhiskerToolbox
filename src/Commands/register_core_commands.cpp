@@ -3,21 +3,21 @@
  * @brief Registers all built-in commands with the CommandRegistry singleton
  */
 
-#include "Core/register_core_commands.hpp"
+#include "register_core_commands.hpp"
 
 #include "CommandUIHints.hpp"
 #include "Core/CommandRegistry.hpp"
-
-#include "AddInterval.hpp"
-#include "AdvanceFrame.hpp"
-#include "ClearLineDataAtTime.hpp"
-#include "CopyByTimeRange.hpp"
-#include "FlipEventAtTime.hpp"
-#include "ForEachKey.hpp"
+#include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
+#include "DataObjects/DigitalTimeSeries/FlipEventAtTime.hpp"
+#include "DataObjects/DigitalTimeSeries/SetEventAtTime.hpp"
+#include "DataObjects/Lines/ClearLineDataAtTime.hpp"
 #include "IO/LoadData.hpp"
 #include "IO/SaveData.hpp"
+
+#include "AdvanceFrame.hpp"
+#include "CopyByTimeRange.hpp"
+#include "ForEachKey.hpp"
 #include "MoveByTimeRange.hpp"
-#include "SetEventAtTime.hpp"
 
 namespace commands {
 

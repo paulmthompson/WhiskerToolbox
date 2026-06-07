@@ -3,7 +3,7 @@
  * @brief Tests for ClearLineDataAtTime command
  */
 
-#include "Commands/ClearLineDataAtTime.hpp"
+#include "Commands/DataObjects/Lines/ClearLineDataAtTime.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/CommandFactory.hpp"

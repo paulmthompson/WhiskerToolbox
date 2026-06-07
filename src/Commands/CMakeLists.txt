@@ -1,18 +1,20 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(COMMAND_SOURCES
+
+    register_core_commands.cpp
+    register_core_commands.hpp
+    CommandUIHints.hpp
+
     Core/CommandResult.hpp
     Core/CommandContext.hpp
     Core/CommandDescriptor.hpp
     Core/CommandInfo.hpp
-        CommandUIHints.hpp
     Core/ICommand.hpp
     Core/CommandFactory.hpp
     Core/CommandFactory.cpp
     Core/CommandRegistry.hpp
     Core/CommandRegistry.cpp
-    Core/register_core_commands.hpp
-    register_core_commands.cpp
     Core/VariableSubstitution.hpp #Detail?
     Core/VariableSubstitution.cpp #Detail?
     Core/SequenceExecution.hpp
@@ -22,22 +24,24 @@ set(COMMAND_SOURCES
     Core/CommandRecorder.hpp
     Core/CommandRecorder.cpp
 
+    DataObjects/DigitalTimeSeries/AddInterval.hpp
+    DataObjects/DigitalTimeSeries/AddInterval.cpp
+    DataObjects/DigitalTimeSeries/FlipEventAtTime.hpp
+    DataObjects/DigitalTimeSeries/FlipEventAtTime.cpp
+    DataObjects/DigitalTimeSeries/SetEventAtTime.hpp
+    DataObjects/DigitalTimeSeries/SetEventAtTime.cpp
+
+    DataObjects/Lines/ClearLineDataAtTime.hpp
+    DataObjects/Lines/ClearLineDataAtTime.cpp
+
         GetEntityIdsInRange.hpp
         GetEntityIdsInRange.cpp
         MoveByTimeRange.hpp
         MoveByTimeRange.cpp
         CopyByTimeRange.hpp
         CopyByTimeRange.cpp
-        AddInterval.hpp
-        AddInterval.cpp
         AdvanceFrame.hpp
         AdvanceFrame.cpp
-        FlipEventAtTime.hpp
-        FlipEventAtTime.cpp
-        SetEventAtTime.hpp
-        SetEventAtTime.cpp
-        ClearLineDataAtTime.hpp
-        ClearLineDataAtTime.cpp
         ForEachKey.hpp
         ForEachKey.cpp
 
