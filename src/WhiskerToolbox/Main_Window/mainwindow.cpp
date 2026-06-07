@@ -79,6 +79,7 @@
 
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/Core/register_core_commands.hpp"
+#include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 #include "utils/DataLoadUtils.hpp"
@@ -199,6 +200,7 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Register all commands with the CommandRegistry (before any command usage)
     commands::register_core_commands();
+    WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
 
     // Wire the openEditor callback so ContextActions can open/focus editors
     _editor_registry->setOpenEditorCallback([this](EditorTypeId const & type_id)

@@ -1,10 +1,14 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
 add_library(DataSynthesizer STATIC
+    Commands/SynthesizeData.hpp
+    Commands/SynthesizeData.cpp
     GeneratorTypes.hpp
     GeneratorRegistry.hpp
     GeneratorRegistry.cpp
     Registration.hpp
+    register_datasynthesizer_commands.hpp
+    register_datasynthesizer_commands.cpp
     Generators/Analog/SineWaveGenerator.cpp
     Generators/Analog/SquareWaveGenerator.cpp
     Generators/Analog/TriangleWaveGenerator.cpp
@@ -43,6 +47,7 @@ target_include_directories(DataSynthesizer PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
+target_link_libraries(DataSynthesizer PUBLIC Commands)
 target_link_libraries(DataSynthesizer PUBLIC DataManager) # DataTypeVariant
 target_link_libraries(DataSynthesizer PUBLIC WhiskerToolbox::ParameterSchema)
 target_link_libraries(DataSynthesizer PUBLIC reflectcpp::reflectcpp)

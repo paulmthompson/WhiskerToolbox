@@ -11,10 +11,13 @@ enables data synthesis to participate in command sequences, pipelines, and scrip
 
 **Source files:**
 
-- `src/Commands/SynthesizeData.hpp` / `.cpp`
-- `src/Commands/SynthesizeData.test.cpp`
+- `src/DataSynthesizer/Commands/SynthesizeData.hpp` / `.cpp`
+- `src/DataSynthesizer/register_datasynthesizer_commands.hpp` / `.cpp`
+- `tests/DataSynthesizer/SynthesizeDataCommand.test.cpp`
 
-All code lives in the `commands` namespace with no Qt dependency.
+All command code lives in the `commands` namespace with no Qt dependency. Registration is
+owned by the DataSynthesizer library via `WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands()`,
+which must be called from the application composition root alongside `register_core_commands()`.
 
 ## Parameters
 
@@ -91,9 +94,23 @@ library with `--whole-archive` (Linux), `-force_load` (macOS), or `/WHOLEARCHIVE
 Without this, the linker discards "unused" translation units and generators will not be
 registered at runtime.
 
+## Command Registration
+
+`SynthesizeData` is registered by `register_datasynthesizer_commands()` in the DataSynthesizer
+library, not by `register_core_commands()`. Call both at startup:
+
+```cpp
+commands::register_core_commands();
+WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+```
+
+`JsonPipelineRunner` cannot call `register_datasynthesizer_commands()` directly (would create a
+circular DataManager ↔ DataSynthesizer dependency). Callers such as `DataManagerPipelineRunner`
+must register domain commands before executing pipelines that use `SynthesizeData`.
+
 ## Testing
 
-Tests are in `src/Commands/SynthesizeData.test.cpp` and exercise:
+Tests are in `tests/DataSynthesizer/SynthesizeDataCommand.test.cpp` and exercise:
 
 - Factory creation from JSON and `rfl::Generic`
 - Execution with a SineWave generator

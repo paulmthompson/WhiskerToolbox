@@ -34,6 +34,7 @@ target_link_libraries(test_data_inspector_widget PRIVATE
     GroupManagementWidget
     Entity
     Commands
+    DataSynthesizer
     Qt6::Widgets
     Qt6::Core
     Qt6::Test

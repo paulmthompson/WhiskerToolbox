@@ -4,6 +4,7 @@
  */
 
 #include "Commands/Core/register_core_commands.hpp"
+#include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "DataManager.hpp"
 #include "JsonPipeline/JsonPipelineRunner.hpp"
 
@@ -157,6 +158,7 @@ int main(int argc, char ** argv) {
 
     try {
         commands::register_core_commands();
+        WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
 
         DataManager data_manager;
         auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(

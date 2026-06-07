@@ -31,7 +31,6 @@ add_executable(test_commands
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/Validation.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRecorder.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/Commands/SynthesizeData.test.cpp
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands)

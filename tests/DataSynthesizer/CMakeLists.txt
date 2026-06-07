@@ -9,6 +9,8 @@ if (WIN32)
 endif()
 
 add_executable(test_DataSynthesizer
+    ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
+    SynthesizeDataCommand.test.cpp
     GeneratorRegistry.test.cpp
     SineWaveGenerator.test.cpp
     SquareWaveGenerator.test.cpp
@@ -38,6 +40,7 @@ target_include_directories(test_DataSynthesizer PRIVATE
 )
 
 target_link_libraries(test_DataSynthesizer PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(test_DataSynthesizer PRIVATE Commands)
 target_link_libraries(test_DataSynthesizer PRIVATE DataManager)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)

@@ -18,7 +18,6 @@
 #include "IO/SaveData.hpp"
 #include "MoveByTimeRange.hpp"
 #include "SetEventAtTime.hpp"
-#include "SynthesizeData.hpp"
 
 namespace commands {
 
@@ -119,15 +118,6 @@ void register_core_commands() {
              .category = "persistence",
              .supports_undo = true,
              .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries", "TensorData"}});
-
-    registerTypedCommand<SynthesizeData, SynthesizeDataParams>(
-            reg,
-            "SynthesizeData",
-            {.name = "SynthesizeData",
-             .description = "Generate synthetic data using a registered generator and store it in DataManager",
-             .category = "data_generation",
-             .supports_undo = false,
-             .supported_data_types = {"AnalogTimeSeries"}});
 }
 
 }// namespace commands

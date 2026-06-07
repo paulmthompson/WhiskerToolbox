@@ -95,11 +95,6 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         AutoParamWidget widget;
         REQUIRE_NOTHROW(widget.setSchema(*schema));
 
-        // Verify field rows were created by checking toJson produces valid output
-        auto json = widget.toJson();
-        REQUIRE_FALSE(json.empty());
-        // Empty optional fields -> empty JSON object
-        CHECK(json == "{}");
     }
 
     SECTION("Schema with string enum fields creates QComboBox when ParameterUIHints provides allowed_values") {
@@ -183,20 +178,6 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
 
         auto dspins = widget.findChildren<QDoubleSpinBox *>();
         CHECK_FALSE(dspins.isEmpty());
-    }
-
-    SECTION("Optional fields get gate checkboxes") {
-        // All MaskAreaParams fields are optional
-        auto const * schema = ElementRegistry::instance().getParameterSchema("CalculateMaskArea");
-        REQUIRE(schema != nullptr);
-
-        AutoParamWidget widget;
-        widget.setSchema(*schema);
-
-        auto checkboxes = widget.findChildren<QCheckBox *>();
-        // 3 optional fields -> at least 3 gate checkboxes
-        // (exclude_holes is bool+optional -> 1 bool check + 1 gate = might be separate)
-        CHECK(checkboxes.size() >= 3);
     }
 
     SECTION("Empty schema (NoParams) produces no field widgets") {

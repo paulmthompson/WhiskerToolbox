@@ -6,8 +6,8 @@
 #ifndef SYNTHESIZE_DATA_COMMAND_HPP
 #define SYNTHESIZE_DATA_COMMAND_HPP
 
-#include "Core/CommandResult.hpp"
-#include "Core/ICommand.hpp"
+#include "Commands/Core/CommandResult.hpp"
+#include "Commands/Core/ICommand.hpp"
 
 #include <optional>
 #include <string>

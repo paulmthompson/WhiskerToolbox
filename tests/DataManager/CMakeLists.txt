@@ -202,7 +202,7 @@ if(ENABLE_OPENCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()
 
-target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager Commands)
+target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager Commands DataSynthesizer)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE DataManagerNumpy)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)

@@ -27,6 +27,7 @@ target_link_libraries(test_keymap_system PRIVATE
     Catch2::Catch2WithMain
     Commands
     DataManager
+    DataSynthesizer
     EditorState
     Qt6::Core
     Qt6::Gui

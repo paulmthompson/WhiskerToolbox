@@ -44,7 +44,8 @@ WhiskerToolbox needs a built-in data synthesis system to:
 
 - **Registry**: `src/DataSynthesizer/GeneratorRegistry.hpp`, `Registration.hpp`, `GeneratorTypes.hpp`
 - **Generators**: `src/DataSynthesizer/Generators/Analog/` (SineWave, SquareWave, TriangleWave, GaussianNoise, UniformNoise)
-- **Command**: `src/Commands/SynthesizeData.hpp` / `.cpp`
+- **Command**: `src/DataSynthesizer/Commands/SynthesizeData.hpp` / `.cpp`
+- **Registration**: `src/DataSynthesizer/register_datasynthesizer_commands.hpp` / `.cpp`
 - **Docs**: `GeneratorRegistry.qmd`, `Generators/Analog.qmd`
 - **Tests**: `tests/DataSynthesizer/` — one test file per generator, plus `GeneratorRegistry.test.cpp` and `SynthesizeDataCommand.test.cpp`
 

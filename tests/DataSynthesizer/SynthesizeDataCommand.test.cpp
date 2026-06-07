@@ -1,11 +1,11 @@
 /**
- * @file SynthesizeData.test.cpp
+ * @file SynthesizeDataCommand.test.cpp
  * @brief Unit tests for the SynthesizeData command
  */
 
-#include "Commands/SynthesizeData.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandFactory.hpp"
+#include "DataSynthesizer/Commands/SynthesizeData.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"

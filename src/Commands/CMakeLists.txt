@@ -40,8 +40,6 @@ set(COMMAND_SOURCES
         ClearLineDataAtTime.cpp
         ForEachKey.hpp
         ForEachKey.cpp
-        SynthesizeData.hpp
-        SynthesizeData.cpp
 
         IO/SaveData.hpp
         IO/SaveData.cpp
@@ -63,7 +61,6 @@ target_include_directories(Commands PUBLIC
 target_link_libraries(Commands PRIVATE DataManager)
 target_link_libraries(Commands PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(Commands PRIVATE DataManagerIO)
-target_link_libraries(Commands PRIVATE WhiskerToolbox::DataSynthesizer)
 target_link_libraries(Commands PUBLIC reflectcpp::reflectcpp)
 
 target_link_libraries(Commands PRIVATE WhiskerToolbox::AnalogTimeSeries)

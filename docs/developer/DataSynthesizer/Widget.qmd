@@ -91,7 +91,7 @@ Registered via `DataSynthesizerWidgetModule::registerTypes()` with:
 - `AutoParamWidget` — dynamic parameter form generation
 - `DataSynthesizer` — generator registry and execution
 - `ParameterSchema` — schema extraction
-- `Commands` — `SynthesizeData` command execution
+- `DataSynthesizer` — `SynthesizeData` command; `Commands` — sequence execution
 - `PlottingOpenGL` — `SceneRenderer` for GPU rendering
 - `CorePlotting` — `SceneBuilder`, `TimeSeriesMapper`, `SeriesLayout`
 

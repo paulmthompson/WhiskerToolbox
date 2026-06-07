@@ -14,7 +14,8 @@ modifying a central switch statement.
 - `src/Commands/Core/CommandRegistry.hpp` — class declaration and `registerTypedCommand<>` helper
 - `src/Commands/Core/CommandRegistry.cpp` — singleton implementation
 - `src/Commands/Core/register_core_commands.hpp` — declaration of the built-in dispatcher
-- `src/Commands/register_core_commands.cpp` — registers all 7 core commands
+- `src/Commands/register_core_commands.cpp` — registers core commands
+- `src/DataSynthesizer/register_datasynthesizer_commands.hpp` / `.cpp` — registers DataSynthesizer-owned commands (e.g., `SynthesizeData`)
 
 ## Design
 
@@ -23,8 +24,10 @@ The registry follows the **Explicit Dispatcher** pattern (see
 
 1. Each library defines a free function (e.g., `register_core_commands()`) that calls
    `registerTypedCommand<>` for each command it owns.
-2. The application's composition root (`MainWindow` constructor) calls each library's
-   registration function once at startup.
+2. The application's composition root (`MainWindow` constructor, pipeline runners, test
+   listeners) calls each library's registration function once at startup. For example,
+   `MainWindow` calls both `register_core_commands()` and
+   `WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands()`.
 3. `CommandFactory.cpp` free functions (`isKnownCommandName`, `createCommandFromJson`,
    `getAvailableCommands`, `getCommandInfo`) are thin wrappers delegating to
    `CommandRegistry::instance()`.
@@ -78,9 +81,10 @@ registerTypedCommand<MyNewCommand, MyNewCommand::Params>(
 ## Test Registration
 
 Test binaries that execute commands (via `createCommandFromJson`, `executeSequence`, etc.)
-must call `register_core_commands()` before tests run. A reusable Catch2 event listener
-is provided at `tests/shared/RegisterCommandsListener.cpp`. Add it to your test
-executable's source list in CMake:
+must register all required command libraries before tests run. A reusable Catch2 event listener
+is provided at `tests/shared/RegisterCommandsListener.cpp` (calls both `register_core_commands()`
+and `register_datasynthesizer_commands()`). Test executables using this listener must link
+`DataSynthesizer`. Add the listener to your test executable's source list in CMake:
 
 ```cmake
 add_executable(my_test

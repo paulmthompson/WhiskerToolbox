@@ -14,7 +14,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
-#include "Commands/SynthesizeData.hpp"
+#include "DataSynthesizer/Commands/SynthesizeData.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

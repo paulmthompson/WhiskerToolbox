@@ -3,9 +3,9 @@
  * @brief Implementation of the SynthesizeData command
  */
 
-#include "SynthesizeData.hpp"
+#include "DataSynthesizer/Commands/SynthesizeData.hpp"
 
-#include "Core/CommandContext.hpp"
+#include "Commands/Core/CommandContext.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
