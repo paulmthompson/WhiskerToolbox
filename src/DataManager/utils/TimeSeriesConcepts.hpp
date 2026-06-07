@@ -54,9 +54,12 @@
  */
 
 #include "Entity/EntityTypes.hpp"
+#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <concepts>
+#include <cstddef>
+#include <optional>
 #include <type_traits>
 #include <unordered_set>
 
@@ -74,7 +77,7 @@ namespace WhiskerToolbox::Concepts {
  * - `t.time()` must return a value convertible to `TimeFrameIndex`
  */
 template<typename T>
-concept TimeSeriesElement = requires(T const& t) {
+concept TimeSeriesElement = requires(T const & t) {
     { t.time() } -> std::convertible_to<TimeFrameIndex>;
 };
 
@@ -92,7 +95,7 @@ concept TimeSeriesElement = requires(T const& t) {
  * - `t.id()` must return a value convertible to `EntityId`
  */
 template<typename T>
-concept EntityElement = TimeSeriesElement<T> && requires(T const& t) {
+concept EntityElement = TimeSeriesElement<T> && requires(T const & t) {
     { t.id() } -> std::convertible_to<EntityId>;
 };
 
@@ -111,7 +114,7 @@ concept EntityElement = TimeSeriesElement<T> && requires(T const& t) {
  * - `t.value()` must return a value convertible to `V`
  */
 template<typename T, typename V>
-concept ValueElement = TimeSeriesElement<T> && requires(T const& t) {
+concept ValueElement = TimeSeriesElement<T> && requires(T const & t) {
     { t.value() } -> std::convertible_to<V>;
 };
 
@@ -126,6 +129,18 @@ concept ValueElement = TimeSeriesElement<T> && requires(T const& t) {
  */
 template<typename T, typename V>
 concept FullElement = EntityElement<T> && ValueElement<T, V>;
+
+/**
+ * @brief Concept for data containers that support overwrite-merge into another instance
+ *
+ * @tparam T Container type (const source, mutable target)
+ */
+template<typename T>
+concept MergeOverwriteCapable = requires(T const & source, T & target) {
+    {
+        source.mergeOverwriteTo(target, NotifyObservers::Yes)
+    } -> std::same_as<std::optional<std::size_t>>;
+};
 
 // ========== Type Traits for Concept Detection ==========
 
@@ -157,7 +172,7 @@ inline constexpr bool is_entity_element_v = is_entity_element<T>::value;
  * @return TimeFrameIndex The time value
  */
 template<TimeSeriesElement T>
-[[nodiscard]] constexpr TimeFrameIndex getTime(T const& elem) {
+[[nodiscard]] constexpr TimeFrameIndex getTime(T const & elem) {
     return elem.time();
 }
 
@@ -169,7 +184,7 @@ template<TimeSeriesElement T>
  * @return EntityId The entity identifier
  */
 template<EntityElement T>
-[[nodiscard]] constexpr EntityId getEntityId(T const& elem) {
+[[nodiscard]] constexpr EntityId getEntityId(T const & elem) {
     return elem.id();
 }
 
@@ -184,9 +199,9 @@ template<EntityElement T>
  */
 template<TimeSeriesElement T>
 [[nodiscard]] constexpr bool isInTimeRange(
-    T const& elem, 
-    TimeFrameIndex start, 
-    TimeFrameIndex end) {
+        T const & elem,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
     auto const time = elem.time();
     return time >= start && time <= end;
 }
@@ -201,11 +216,11 @@ template<TimeSeriesElement T>
  */
 template<EntityElement T>
 [[nodiscard]] bool isInEntitySet(
-    T const& elem,
-    std::unordered_set<EntityId> const& ids) {
+        T const & elem,
+        std::unordered_set<EntityId> const & ids) {
     return ids.contains(elem.id());
 }
 
-} // namespace WhiskerToolbox::Concepts
+}// namespace WhiskerToolbox::Concepts
 
-#endif // TIME_SERIES_CONCEPTS_HPP
+#endif// TIME_SERIES_CONCEPTS_HPP

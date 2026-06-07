@@ -31,6 +31,7 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TimeIndexExtractor.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataManagerTemporalSubset.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataManagerMerge.test.cpp
 
         test_filename_timeframe.cpp
         test_upsampled_timeframe.cpp

@@ -15,6 +15,7 @@
 #include "TimeFrame/interval_data.hpp"//
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -539,6 +540,77 @@ public:
             notifyObservers();
         }
         return to_move.size();
+    }
+
+    /**
+     * @brief Merge all entries from this series into the target with per-time overwrite
+     *
+     * For every time present in the source, any existing target entries at that time
+     * are removed and replaced with the source entries. Times present only in the
+     * target are left unchanged. Source EntityIds are preserved in the target.
+     * The source is not modified.
+     *
+     * @pre @p target must not be the same object as @c *this
+     * @pre @c getTimeFrame() and @c target.getTimeFrame() must be non-null and refer to
+     *      the same @c TimeFrame object (@c shared_ptr identity)
+     * @post For every @c t in @c getTimesWithData(), target content at @c t equals
+     *       source content at @c t (same data and EntityIds)
+     * @post Times present only in the target are unchanged
+     * @post The source is unchanged
+     *
+     * @tparam DerivedTarget The derived class type (LineData, MaskData, or PointData)
+     * @param target The target to merge into
+     * @param notify If true, the target will notify its observers after the operation
+     * @return Number of entries copied on success; @c std::nullopt on precondition violation
+     */
+    template<typename DerivedTarget>
+    [[nodiscard]] std::optional<std::size_t>
+    mergeOverwriteTo(DerivedTarget & target, NotifyObservers notify) const {
+        if (&target == this) {
+            return std::nullopt;
+        }
+
+        auto const source_time_frame = getTimeFrame();
+        auto const target_time_frame = target.getTimeFrame();
+        assert(source_time_frame != nullptr &&
+               "mergeOverwriteTo: source TimeFrame must not be null");
+        assert(target_time_frame != nullptr &&
+               "mergeOverwriteTo: target TimeFrame must not be null");
+        if (!source_time_frame || !target_time_frame ||
+            source_time_frame != target_time_frame) {
+            return std::nullopt;
+        }
+
+        target._ensureOwningStorage();
+
+        std::vector<std::tuple<TimeFrameIndex, TData, EntityId>> all_entries;
+        all_entries.reserve(_storage.size());
+        std::unordered_set<EntityId> source_entity_ids;
+        source_entity_ids.reserve(_storage.size());
+
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            EntityId const entity_id = _storage.getEntityId(i);
+            source_entity_ids.insert(entity_id);
+            all_entries.emplace_back(_storage.getTime(i), _storage.getData(i), entity_id);
+        }
+
+        if (all_entries.empty()) {
+            return std::size_t{0};
+        }
+
+        target.clearByEntityIds(source_entity_ids, NotifyObservers::No);
+
+        std::vector<TimeFrameIndex> source_times;
+        source_times.reserve(_storage.getTimeCount());
+        for (TimeFrameIndex const time: getTimesWithData()) {
+            source_times.push_back(time);
+        }
+        for (TimeFrameIndex const time: source_times) {
+            target._clearAtTime(time, NotifyObservers::No);
+        }
+
+        target._appendPreservedEntries(all_entries, notify);
+        return all_entries.size();
     }
 
     // ========== Entity Lookup Methods ==========
@@ -1276,6 +1348,22 @@ protected:
                           "TData must be Line2D, Mask2D, or Point2D<float>");
             return EntityKind::LineEntity;// Never reached, but needed for compilation
         }
+    }
+
+    /**
+     * @brief Materialize View/Lazy storage to owning storage in-place
+     *
+     * Mutation operations require owning storage. If the current backend is a
+     * view or lazy storage, replaces @c _storage with a materialized copy.
+     */
+    void _ensureOwningStorage() {
+        if (isStorageContiguous()) {
+            return;
+        }
+        auto const materialized = materialize();
+        _invalidateStorageCache();
+        _storage = std::move(materialized->_storage);
+        _updateStorageCache();
     }
 
     /**

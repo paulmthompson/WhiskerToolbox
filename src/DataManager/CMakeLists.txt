@@ -35,6 +35,8 @@ set(DATAMANAGER_SOURCES
         utils/DataManagerKeys.cpp
         utils/DataManagerTemporalSubset.hpp
         utils/DataManagerTemporalSubset.cpp
+        utils/DataManagerMerge.hpp
+        utils/DataManagerMerge.cpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp

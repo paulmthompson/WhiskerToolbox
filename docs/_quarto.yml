@@ -173,6 +173,7 @@ website:
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd
             - developer/DataManager/generic_time_series.qmd
+            - developer/DataManager/merge_data.qmd
             - developer/DataManager/utils/ContainerTypeIndex.qmd
             - developer/DataManager/storage_architecture.qmd
             - developer/DataManager/storage_testing_roadmap.qmd
