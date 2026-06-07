@@ -3,15 +3,21 @@
  * @brief Tests for storeOutputData overwrite-merge when output_key already exists.
  */
 
+#include "TransformsV2/algorithms/LineResample/LineResample.hpp"
 #include "TransformsV2/algorithms/MaskArea/MaskArea.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager.hpp"
+#include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/DataManagerMerge.hpp"
+
+#include "fixtures/builders/LineDataBuilder.hpp"
+#include "fixtures/scenarios/line/resample_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -19,8 +25,17 @@
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 namespace {
+
+[[nodiscard]] Line2D get_first_line_at(LineData const * line_data, TimeFrameIndex time) {
+    for (auto const & line: line_data->getAtTime(time)) {
+        return line;
+    }
+    return Line2D{};
+}
+
 
 [[nodiscard]] Mask2D make_mask(int point_count) {
     std::vector<Point2D<uint32_t>> points;
@@ -122,4 +137,68 @@ TEST_CASE("executeStep replaces existing non-mergeable output key",
     REQUIRE(new_ptr.get() != old_ptr.get());
     REQUIRE(new_ptr->getNumTimePoints() == 5);
     REQUIRE(new_ptr->getValuesAtTimeVec(TimeFrameIndex(0))[0] == 1.0f);
+}
+
+TEST_CASE("executeStep merge-overwrites existing LineData via ResampleLine",
+          "[transforms][v2][executor][merge][line]") {
+    auto dm = std::make_unique<DataManager>();
+    auto const time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+
+    auto const input_lines = resample_scenarios::two_diagonal_lines();
+    input_lines->setTimeFrame(time_frame);
+    dm->setData("input_lines", input_lines, TimeKey("default"));
+
+    auto const existing = std::make_shared<LineData>();
+    existing->setTimeFrame(time_frame);
+    existing->addAtTime(
+            TimeFrameIndex(100),
+            line_shapes::horizontal(0.0f, 100.0f, 5.0f, 20),
+            NotifyObservers::No);
+    existing->addAtTime(
+            TimeFrameIndex(300),
+            line_shapes::horizontal(0.0f, 50.0f, 25.0f, 4),
+            NotifyObservers::No);
+    dm->setData<LineData>("output_lines", existing, TimeKey("default"));
+
+    nlohmann::json const config = {
+            {"steps",
+             {{{"step_id", "resample"},
+               {"transform_name", "ResampleLine"},
+               {"input_key", "input_lines"},
+               {"output_key", "output_lines"},
+               {"parameters",
+                {{"method", "FixedSpacing"},
+                 {"target_spacing", 15.0},
+                 {"epsilon", 2.0},
+                 {"polynomial_order", 3}}}}}}};
+
+    DataManagerPipelineExecutor executor(dm.get());
+    REQUIRE(executor.loadFromJson(config));
+
+    auto const step_result = executor.executeStep(0);
+    INFO("Error: " << step_result.error_message);
+    REQUIRE(step_result.success);
+
+    auto const result = dm->getData<LineData>("output_lines");
+    REQUIRE(result.get() == existing.get());
+
+    Line2D const preserved_at_300 = get_first_line_at(result.get(), TimeFrameIndex(300));
+    REQUIRE(preserved_at_300.size() == 4);
+
+    LineResampleParams params;
+    params.method = LineResampleMethod::FixedSpacing;
+    params.target_spacing = 15.0f;
+
+    Line2D const input_at_100 = get_first_line_at(input_lines.get(), TimeFrameIndex(100));
+    Line2D const expected_at_100 = resampleLine(input_at_100, params);
+    Line2D const merged_at_100 = get_first_line_at(result.get(), TimeFrameIndex(100));
+    REQUIRE(merged_at_100.size() == expected_at_100.size());
+    REQUIRE(merged_at_100.size() < 20);
+
+    Line2D const input_at_200 = get_first_line_at(input_lines.get(), TimeFrameIndex(200));
+    Line2D const expected_at_200 = resampleLine(input_at_200, params);
+    Line2D const merged_at_200 = get_first_line_at(result.get(), TimeFrameIndex(200));
+    REQUIRE(merged_at_200.size() == expected_at_200.size());
+    REQUIRE(result->getAtTime(TimeFrameIndex(200)).size() == 1);
 }
