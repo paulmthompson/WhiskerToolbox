@@ -51,7 +51,9 @@ DataTypeVariant pipeline_output = /* transform result */;
 auto merged = mergeOverwriteData(dm, "output_key", pipeline_output, error);
 ```
 
-The variant overload is intended for `storeOutputData`-style flows where transform output should overwrite times in an existing object rather than replacing it wholesale via `setData`.
+The variant overload is used by `DataManagerPipelineExecutor::storeOutputData()`: when the
+`output_key` already exists and the type supports merge (`supportsMergeOverwrite()`),
+pipeline output is merged in place; otherwise the previous `setData` replace behavior applies.
 
 Return value: entry count on success; `std::nullopt` on precondition or validation failure. A successful merge of zero entries returns `0`.
 

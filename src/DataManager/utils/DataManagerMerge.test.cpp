@@ -9,6 +9,7 @@
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "utils/DataManagerMerge.hpp"
 
 #include <memory>
@@ -24,6 +25,14 @@ namespace {
 }
 
 }// namespace
+
+TEST_CASE("supportsMergeOverwrite - ragged types only", "[DataManagerMerge]") {
+    REQUIRE(supportsMergeOverwrite(DataTypeVariant{std::make_shared<LineData>()}));
+    REQUIRE(supportsMergeOverwrite(DataTypeVariant{std::make_shared<MaskData>()}));
+    REQUIRE(supportsMergeOverwrite(DataTypeVariant{std::make_shared<PointData>()}));
+    REQUIRE_FALSE(supportsMergeOverwrite(DataTypeVariant{std::make_shared<AnalogTimeSeries>(
+            std::vector<float>{1.0f}, std::vector<TimeFrameIndex>{TimeFrameIndex(0)})}));
+}
 
 TEST_CASE("mergeOverwriteData - success for LineData", "[DataManagerMerge][Line]") {
     auto dm = makeDataManagerWithTimeFrame();

@@ -115,6 +115,22 @@ mergeOverwriteDataImpl(DataManager & dm,
 
 }// namespace
 
+bool supportsMergeOverwrite(DataTypeVariant const & source) {
+    return std::visit(
+            [](auto const & src_ptr) -> bool {
+                if (!src_ptr) {
+                    return false;
+                }
+                using DataT = std::decay_t<decltype(*src_ptr)>;
+                return requires(DataT const & source, DataT & target) {
+                    {
+                        source.mergeOverwriteTo(target, NotifyObservers::Yes)
+                    } -> std::same_as<std::optional<std::size_t>>;
+                };
+            },
+            source);
+}
+
 std::optional<std::size_t>
 mergeOverwriteData(DataManager & dm,
                    std::string const & target_key,

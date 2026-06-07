@@ -1,14 +1,16 @@
 #include "DataManagerIntegration.hpp"
 
+#include "DataManager/utils/DataManagerMerge.hpp"
+
+#include "DataManager/utils/ContainerElementMapping.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/RegisteredTransforms.hpp"
 #include "core/TransformPipeline.hpp"
-#include "DataManager/utils/ContainerElementMapping.hpp"
 #include "detail/FlatZipView.hpp"
-#include "io/ParameterIO.hpp"    // loadParametersForTransform  
+#include "io/ParameterIO.hpp"// loadParametersForTransform
 #include "io/PipelineLoader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -406,6 +408,27 @@ std::string DataManagerPipelineExecutor::storeOutputData(
         TimeKey const input_time_key = data_manager_->getTimeKey(input_key);
         if (!input_time_key.empty()) {
             time_key = input_time_key;
+        }
+    }
+
+    auto const existing = data_manager_->getDataVariant(output_key);
+    if (existing.has_value()) {
+        if (existing->index() != data.index()) {
+            return "Step '" + step_id + "': output_key '" + output_key +
+                   "' already exists with a different data type";
+        }
+
+        if (supportsMergeOverwrite(data)) {
+            std::string merge_error;
+            auto const merged =
+                    mergeOverwriteData(*data_manager_, output_key, data, merge_error);
+            if (!merged.has_value()) {
+                if (merge_error.empty()) {
+                    merge_error = "mergeOverwriteData failed";
+                }
+                return "Step '" + step_id + "': " + merge_error;
+            }
+            return {};
         }
     }
 

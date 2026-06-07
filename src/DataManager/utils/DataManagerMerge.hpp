@@ -15,6 +15,9 @@
 
 class DataManager;
 
+/// @brief Check whether @p source supports overwrite-merge into an existing object.
+[[nodiscard]] bool supportsMergeOverwrite(DataTypeVariant const & source);
+
 /// @brief Overwrite-merge all entries from a source data object into a target.
 ///
 /// Supported types in v1: MaskData, LineData, PointData (via RaggedTimeSeries).

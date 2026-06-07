@@ -486,6 +486,11 @@ private:
      * @param input_key Primary input key (used to propagate TimeKey when output_time_key is empty)
      * @param output_time_key If set, the output is stored under this TimeKey (must pre-exist).
      *                        If empty, the input's TimeKey is propagated.
+     *
+     * When @p output_key already exists and the output type supports overwrite-merge
+     * (MaskData, LineData, PointData), entries are merged into the existing object
+     * instead of replacing it via @c setData. Other types keep the replace behavior.
+     *
      * @return Empty string on success, or an error message on failure
      */
     std::string storeOutputData(std::string const & output_key,
@@ -497,7 +502,7 @@ private:
     /**
      * @brief Execute a transform on the input data using the V2 system
      */
-    std::optional<DataTypeVariant> executeTransform(
+    static std::optional<DataTypeVariant> executeTransform(
             std::string const & transform_name,
             DataTypeVariant const & input_data,
             std::optional<rfl::Generic> const & parameters);
