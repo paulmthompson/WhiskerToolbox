@@ -42,10 +42,16 @@ Before appending, the target removes:
 std::optional<std::size_t> merged =
     source->mergeOverwriteTo(*target, NotifyObservers::Yes);
 
-// DataManager type-erased dispatch
+// DataManager: both objects already registered by key
 std::string error;
 auto merged = mergeOverwriteData(dm, "target_key", "source_key", error);
+
+// DataManager: pipeline output variant into an existing key (source not in dm)
+DataTypeVariant pipeline_output = /* transform result */;
+auto merged = mergeOverwriteData(dm, "output_key", pipeline_output, error);
 ```
+
+The variant overload is intended for `storeOutputData`-style flows where transform output should overwrite times in an existing object rather than replacing it wholesale via `setData`.
 
 Return value: entry count on success; `std::nullopt` on precondition or validation failure. A successful merge of zero entries returns `0`.
 

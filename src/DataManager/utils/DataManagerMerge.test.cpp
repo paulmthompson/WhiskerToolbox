@@ -134,3 +134,74 @@ TEST_CASE("mergeOverwriteData - self-merge rejected", "[DataManagerMerge]") {
     REQUIRE_FALSE(merged.has_value());
     REQUIRE_FALSE(error.empty());
 }
+
+TEST_CASE("mergeOverwriteData - variant source into existing target", "[DataManagerMerge][Variant]") {
+    auto dm = makeDataManagerWithTimeFrame();
+    auto const time_frame = dm->getTime(TimeKey("test_time"));
+
+    dm->setData<LineData>("output", TimeKey("test_time"));
+    auto target = dm->getData<LineData>("output");
+    target->addAtTime(TimeFrameIndex(10),
+                      Line2D(std::vector<float>{1.0f}, std::vector<float>{1.0f}),
+                      NotifyObservers::No);
+    target->addAtTime(TimeFrameIndex(20),
+                      Line2D(std::vector<float>{9.0f}, std::vector<float>{9.0f}),
+                      NotifyObservers::No);
+
+    auto pipeline_output = std::make_shared<LineData>();
+    pipeline_output->setTimeFrame(time_frame);
+    pipeline_output->addAtTime(TimeFrameIndex(10),
+                               Line2D(std::vector<float>{2.0f}, std::vector<float>{2.0f}),
+                               NotifyObservers::No);
+    pipeline_output->addAtTime(TimeFrameIndex(30),
+                               Line2D(std::vector<float>{3.0f}, std::vector<float>{3.0f}),
+                               NotifyObservers::No);
+
+    DataTypeVariant const source_variant{pipeline_output};
+
+    std::string error;
+    auto const merged = mergeOverwriteData(*dm, "output", source_variant, error);
+
+    REQUIRE(merged.has_value());
+    REQUIRE(*merged == 2);
+    REQUIRE(error.empty());
+    REQUIRE(target->getAtTime(TimeFrameIndex(10)).size() == 1);
+    REQUIRE(target->getAtTime(TimeFrameIndex(20)).size() == 1);
+    REQUIRE(target->getAtTime(TimeFrameIndex(30)).size() == 1);
+    REQUIRE(pipeline_output->getAtTime(TimeFrameIndex(10)).size() == 1);
+}
+
+TEST_CASE("mergeOverwriteData - variant source type mismatch", "[DataManagerMerge][Variant]") {
+    auto dm = makeDataManagerWithTimeFrame();
+    dm->setData<LineData>("output", TimeKey("test_time"));
+
+    auto pipeline_output = std::make_shared<MaskData>();
+    pipeline_output->setTimeFrame(dm->getTime(TimeKey("test_time")));
+    DataTypeVariant const source_variant{pipeline_output};
+
+    std::string error;
+    auto const merged = mergeOverwriteData(*dm, "output", source_variant, error);
+
+    REQUIRE_FALSE(merged.has_value());
+    REQUIRE_FALSE(error.empty());
+}
+
+TEST_CASE("mergeOverwriteData - variant source TimeFrame mismatch", "[DataManagerMerge][Variant]") {
+    auto dm = makeDataManagerWithTimeFrame();
+    dm->setData<LineData>("output", TimeKey("test_time"));
+
+    auto pipeline_output = std::make_shared<LineData>();
+    pipeline_output->setTimeFrame(
+            std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30}));
+    pipeline_output->addAtTime(TimeFrameIndex(10),
+                               Line2D(std::vector<float>{2.0f}, std::vector<float>{2.0f}),
+                               NotifyObservers::No);
+
+    DataTypeVariant const source_variant{pipeline_output};
+
+    std::string error;
+    auto const merged = mergeOverwriteData(*dm, "output", source_variant, error);
+
+    REQUIRE_FALSE(merged.has_value());
+    REQUIRE(error.find("TimeFrame") != std::string::npos);
+}
