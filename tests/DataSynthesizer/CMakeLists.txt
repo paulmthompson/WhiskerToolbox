@@ -42,6 +42,7 @@ target_include_directories(test_DataSynthesizer PRIVATE
 target_link_libraries(test_DataSynthesizer PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_DataSynthesizer PRIVATE Commands)
 target_link_libraries(test_DataSynthesizer PRIVATE DataManager)
+target_link_libraries(test_DataSynthesizer PRIVATE TransformsV2)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::MaskData)

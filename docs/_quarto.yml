@@ -114,6 +114,7 @@ website:
                 - developer/transforms_v2/tensor_whitening.qmd
                 - developer/transforms_v2/pipeline_library.qmd
                 - developer/transforms_v2/pipeline_library_roadmap.md
+                - developer/transforms_v2/command_registration.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
               contents:

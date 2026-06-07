@@ -28,6 +28,7 @@ target_link_libraries(test_keymap_system PRIVATE
     Commands
     DataManager
     DataSynthesizer
+    TransformsV2
     EditorState
     Qt6::Core
     Qt6::Gui

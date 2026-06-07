@@ -82,6 +82,7 @@
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
+#include "TransformsV2/register_transformsv2_commands.hpp"
 #include "utils/DataLoadUtils.hpp"
 
 #include <QCloseEvent>
@@ -201,6 +202,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Register all commands with the CommandRegistry (before any command usage)
     commands::register_core_commands();
     WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+    WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
 
     // Wire the openEditor callback so ContextActions can open/focus editors
     _editor_registry->setOpenEditorCallback([this](EditorTypeId const & type_id)

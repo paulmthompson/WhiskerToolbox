@@ -16,6 +16,7 @@ modifying a central switch statement.
 - `src/Commands/Core/register_core_commands.hpp` — declaration of the built-in dispatcher
 - `src/Commands/register_core_commands.cpp` — registers core commands
 - `src/DataSynthesizer/register_datasynthesizer_commands.hpp` / `.cpp` — registers DataSynthesizer-owned commands (e.g., `SynthesizeData`)
+- `src/TransformsV2/register_transformsv2_commands.hpp` / `.cpp` — registers TransformsV2-owned commands (e.g., future `RunTransformPipeline`)
 
 ## Design
 
@@ -26,8 +27,8 @@ The registry follows the **Explicit Dispatcher** pattern (see
    `registerTypedCommand<>` for each command it owns.
 2. The application's composition root (`MainWindow` constructor, pipeline runners, test
    listeners) calls each library's registration function once at startup. For example,
-   `MainWindow` calls both `register_core_commands()` and
-   `WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands()`.
+   `MainWindow` calls `register_core_commands()`, `register_datasynthesizer_commands()`,
+   and `WhiskerToolbox::Transforms::V2::register_transformsv2_commands()`.
 3. `CommandFactory.cpp` free functions (`isKnownCommandName`, `createCommandFromJson`,
    `getAvailableCommands`, `getCommandInfo`) are thin wrappers delegating to
    `CommandRegistry::instance()`.
@@ -82,9 +83,10 @@ registerTypedCommand<MyNewCommand, MyNewCommand::Params>(
 
 Test binaries that execute commands (via `createCommandFromJson`, `executeSequence`, etc.)
 must register all required command libraries before tests run. A reusable Catch2 event listener
-is provided at `tests/shared/RegisterCommandsListener.cpp` (calls both `register_core_commands()`
-and `register_datasynthesizer_commands()`). Test executables using this listener must link
-`DataSynthesizer`. Add the listener to your test executable's source list in CMake:
+is provided at `tests/shared/RegisterCommandsListener.cpp` (calls `register_core_commands()`,
+`register_datasynthesizer_commands()`, and `register_transformsv2_commands()`). Test
+executables using this listener must link `DataSynthesizer` and `TransformsV2`. Add the
+listener to your test executable's source list in CMake:
 
 ```cmake
 add_executable(my_test

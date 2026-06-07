@@ -1,0 +1,51 @@
+---
+title: "Command Registration"
+---
+
+## Overview
+
+TransformsV2 contributes commands to the shared `CommandRegistry` via an explicit
+dispatcher function, following the same pattern as DataSynthesizer. Transform algorithm
+registration (`ElementRegistry`) remains separate and uses static RAII registration with
+`--whole-archive` linking.
+
+**Source files:**
+
+- `src/TransformsV2/register_transformsv2_commands.hpp` — public registration API
+- `src/TransformsV2/register_transformsv2_commands.cpp` — dispatcher implementation
+- `src/TransformsV2/Commands/` — future home for TransformsV2-owned `ICommand` types
+
+## Dependency Direction
+
+`TransformsV2` links `Commands` (PUBLIC). `Commands` does **not** link `TransformsV2`.
+Application composition roots call `register_transformsv2_commands()` at startup alongside
+`register_core_commands()` and other domain dispatchers.
+
+## Call Sites
+
+| Location | When |
+|----------|------|
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | GUI startup (`MainWindow` constructor) |
+| `src/DataManagerPipelineRunner/main.cpp` | Headless JSON pipeline CLI |
+| `tests/shared/RegisterCommandsListener.cpp` | Catch2 test binaries using commands |
+
+`JsonPipelineRunner` in `DataManager` intentionally does **not** call this function — callers
+that execute domain commands must register at their composition root.
+
+## CMake
+
+`TransformsV2` declares `target_link_libraries(TransformsV2 PUBLIC Commands)` in
+`src/TransformsV2/CMakeLists.txt`. Consumers that call `register_transformsv2_commands()`
+must link `TransformsV2` (e.g., `DataManagerPipelineRunner`, `test_commands`).
+
+When a command delegates to `ElementRegistry` at runtime, consumers will also need
+`--whole-archive` linking for `TransformsV2` (same as the GUI executable already does).
+
+## Adding a Command
+
+1. Create the command class under `src/TransformsV2/Commands/`.
+2. Add a `registerTypedCommand<>` call in `register_transformsv2_commands.cpp`.
+3. Add an idempotent guard (`if (reg.isKnown("CommandName")) return;`) once the first
+   command is registered.
+
+See also: [Command Registry](../DataManager/Commands/command_registry.qmd).

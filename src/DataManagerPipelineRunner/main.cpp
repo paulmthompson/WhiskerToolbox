@@ -4,9 +4,10 @@
  */
 
 #include "Commands/register_core_commands.hpp"
-#include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "DataManager.hpp"
+#include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "JsonPipeline/JsonPipelineRunner.hpp"
+#include "TransformsV2/register_transformsv2_commands.hpp"
 
 #include <exception>
 #include <iostream>
@@ -159,6 +160,7 @@ int main(int argc, char ** argv) {
     try {
         commands::register_core_commands();
         WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+        WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
 
         DataManager data_manager;
         auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(

@@ -111,6 +111,9 @@ set(TRANSFORM_V2_SOURCES
         algorithms/Temporal/NormalizeTime.hpp
         algorithms/Temporal/RegisteredTemporalTransforms.hpp
         algorithms/Temporal/RegisteredTemporalTransforms.cpp
+
+        register_transformsv2_commands.hpp
+        register_transformsv2_commands.cpp
 )
 
 add_library(TransformsV2 STATIC ${TRANSFORM_V2_SOURCES})
@@ -148,6 +151,7 @@ target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::PointData)
 
 target_link_libraries(TransformsV2 PUBLIC DataManager) # DataTypeVariant, container type mapping utils
+target_link_libraries(TransformsV2 PUBLIC Commands)
 target_link_libraries(TransformsV2 PRIVATE MLCore) # TensorPCA → PCAOperation
 
 # Optional LibTorch support for GPU-accelerated tensor transforms (e.g., TensorCAR).

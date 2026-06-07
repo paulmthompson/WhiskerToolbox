@@ -4,6 +4,7 @@ add_executable(DataManagerPipelineRunner
 
 target_link_libraries(DataManagerPipelineRunner PRIVATE DataManager)
 target_link_libraries(DataManagerPipelineRunner PRIVATE Commands)
+target_link_libraries(DataManagerPipelineRunner PRIVATE TransformsV2)
 
 # MediaData and DataSynthesizer both use file-scope registration objects.
 # Force whole-archive linking so headless JSON workflows see the same registrations
