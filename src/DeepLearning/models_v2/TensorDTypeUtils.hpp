@@ -3,7 +3,7 @@
 
 #include "TensorSlotDescriptor.hpp"
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::ScalarType
 
 namespace dl {
 

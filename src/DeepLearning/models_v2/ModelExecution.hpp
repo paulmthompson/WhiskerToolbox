@@ -3,7 +3,7 @@
 
 #include "backends/InferenceBackend.hpp"
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
 
 #include <filesystem>
 #include <memory>

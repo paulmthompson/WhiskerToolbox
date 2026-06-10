@@ -11,6 +11,8 @@
 #include "Tensors/storage/LibTorchTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
 
+#include <torch/torch.h> // torch::cuda::is_available
+
 #include <algorithm>
 #include <cstddef>
 #include <numeric>

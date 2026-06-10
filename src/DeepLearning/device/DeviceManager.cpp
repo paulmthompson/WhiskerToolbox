@@ -1,5 +1,7 @@
 #include "DeviceManager.hpp"
 
+#include <torch/torch.h> // torch::cuda::is_available
+
 #include <iostream>
 
 namespace dl {

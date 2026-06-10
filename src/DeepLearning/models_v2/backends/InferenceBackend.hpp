@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
 #define WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
 
 #include <filesystem>
 #include <string>

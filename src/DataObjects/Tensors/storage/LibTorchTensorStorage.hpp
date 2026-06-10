@@ -8,7 +8,7 @@
 // torch's c10 logging defines a CHECK macro that conflicts with testing
 // frameworks (Catch2) and other libraries. Save/restore around the include.
 #pragma push_macro("CHECK")
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
 #pragma pop_macro("CHECK")
 
 #include <cstddef>

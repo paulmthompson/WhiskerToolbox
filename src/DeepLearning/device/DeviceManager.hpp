@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 #define WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor, torch::Device
 
 namespace dl {
 
