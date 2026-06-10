@@ -239,6 +239,7 @@ qt_add_executable(WhiskerToolbox
 set_target_properties(WhiskerToolbox PROPERTIES
     AUTOUIC ON
     AUTOMOC ON
+    AUTORCC ON
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL Qt6::Concurrent)
