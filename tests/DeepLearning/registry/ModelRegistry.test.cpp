@@ -4,7 +4,7 @@
 #include "models_v2/TensorSlotDescriptor.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
 
 #include <algorithm>
 #include <memory>

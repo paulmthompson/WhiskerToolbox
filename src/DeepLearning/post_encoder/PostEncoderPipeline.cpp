@@ -5,7 +5,7 @@
 
 #include "PostEncoderPipeline.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
 
 #include <cassert>
 #include <stdexcept>

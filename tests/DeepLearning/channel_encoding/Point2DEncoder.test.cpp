@@ -6,7 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <vector>
 
@@ -23,7 +24,7 @@ TEST_CASE("Point2DEncoder - single point binary mode", "[channel_encoding][Point
 
     // Source image is 100x100, tensor is 10x10
     ImageSize const src_size{100, 100};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -50,7 +51,7 @@ TEST_CASE("Point2DEncoder - multiple points binary mode", "[channel_encoding][Po
     dl::Point2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -81,7 +82,7 @@ TEST_CASE("Point2DEncoder - heatmap mode", "[channel_encoding][Point2DEncoder]")
     dl::Point2DEncoder encoder;
 
     ImageSize const src_size{20, 20};
-    auto tensor = torch::zeros({1, 1, 20, 20});
+    auto tensor = at::zeros({1, 1, 20, 20});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -118,7 +119,7 @@ TEST_CASE("Point2DEncoder - heatmap overlapping points use max", "[channel_encod
     dl::Point2DEncoder encoder;
 
     ImageSize const src_size{20, 20};
-    auto tensor = torch::zeros({1, 1, 20, 20});
+    auto tensor = at::zeros({1, 1, 20, 20});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -155,7 +156,7 @@ TEST_CASE("Point2DEncoder - scaling from larger source", "[channel_encoding][Poi
 
     // Source 200x200, tensor 10x10
     ImageSize const src_size{200, 200};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -178,7 +179,7 @@ TEST_CASE("Point2DEncoder - invalid mode throws", "[channel_encoding][Point2DEnc
     dl::Point2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.height = 10;
@@ -195,7 +196,7 @@ TEST_CASE("Point2DEncoder - batch index", "[channel_encoding][Point2DEncoder]") 
     dl::Point2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;

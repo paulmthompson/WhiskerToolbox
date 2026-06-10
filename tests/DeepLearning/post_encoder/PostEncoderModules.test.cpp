@@ -12,7 +12,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <cmath>
 #include <memory>
@@ -44,7 +45,7 @@ TEST_CASE("GlobalAvgPoolModule - apply reduces spatial dimensions",
     dl::GlobalAvgPoolModule mod;
 
     // [B=2, C=3, H=4, W=4] — constant value 2.0 per channel
-    auto feat = torch::full({2, 3, 4, 4}, 2.0f);
+    auto feat = at::full({2, 3, 4, 4}, 2.0f);
     auto out = mod.apply(feat);
 
     REQUIRE(out.dim() == 2);
@@ -68,7 +69,7 @@ TEST_CASE("GlobalAvgPoolModule - channels averaged correctly",
     // [B=1, C=2, H=2, W=2]
     // Channel 0: all 1.0
     // Channel 1: all 5.0
-    auto feat = torch::zeros({1, 2, 2, 2});
+    auto feat = at::zeros({1, 2, 2, 2});
     feat.select(1, 0).fill_(1.0f);
     feat.select(1, 1).fill_(5.0f);
 
@@ -88,7 +89,7 @@ TEST_CASE("GlobalAvgPoolModule - single spatial pixel passthrough",
     dl::GlobalAvgPoolModule mod;
 
     // [B=1, C=4, H=1, W=1]
-    auto feat = torch::arange(4.0f).view({1, 4, 1, 1});
+    auto feat = at::arange(4.0f).view({1, 4, 1, 1});
     auto out = mod.apply(feat);
     REQUIRE(out.dim() == 2);
 
@@ -128,7 +129,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct ch
 
     // [B=1, C=3, H=10, W=10]
     // Set all pixels of channel 1 to 7.0 so we always extract 7.0 from that channel
-    auto feat = torch::zeros({1, 3, 10, 10});
+    auto feat = at::zeros({1, 3, 10, 10});
     feat.select(1, 1).fill_(7.0f);
 
     // Query center of image
@@ -152,7 +153,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: top-left corner",
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
 
     // [B=1, C=1, H=4, W=4]: pixel (0,0)=3.0, all others=0.0
-    auto feat = torch::zeros({1, 1, 4, 4});
+    auto feat = at::zeros({1, 1, 4, 4});
     feat[0][0][0][0] = 3.0f;
 
     mod.setPoint({0.0f, 0.0f});
@@ -168,7 +169,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: clamping beyond boundary",
     ImageSize const src{4, 4};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
 
-    auto feat = torch::zeros({1, 1, 4, 4});
+    auto feat = at::zeros({1, 1, 4, 4});
     // Bottom-right last pixel
     feat[0][0][3][3] = 9.0f;
 
@@ -188,7 +189,7 @@ TEST_CASE("SpatialPointExtractModule - bilinear interpolation: midpoint",
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Bilinear};
 
     // [B=1, C=1, H=4, W=4]: ramp across x
-    auto feat = torch::zeros({1, 1, 4, 4});
+    auto feat = at::zeros({1, 1, 4, 4});
     for (int y = 0; y < 4; ++y) {
         for (int x = 0; x < 4; ++x) {
             feat[0][0][y][x] = static_cast<float>(x);
@@ -212,7 +213,7 @@ TEST_CASE("PostEncoderPipeline - empty pipeline is pass-through",
           "[post_encoder][PostEncoderPipeline]") {
     dl::PostEncoderPipeline pipeline;
 
-    auto feat = torch::ones({1, 4, 8, 8});
+    auto feat = at::ones({1, 4, 8, 8});
     auto out = pipeline.apply(feat);
 
     CHECK(out.equal(feat));
@@ -223,7 +224,7 @@ TEST_CASE("PostEncoderPipeline - single module delegated correctly",
     dl::PostEncoderPipeline pipeline;
     pipeline.add(std::make_unique<dl::GlobalAvgPoolModule>());
 
-    auto feat = torch::full({1, 3, 4, 4}, 2.5f);
+    auto feat = at::full({1, 3, 4, 4}, 2.5f);
     auto out = pipeline.apply(feat);
 
     REQUIRE(out.dim() == 2);

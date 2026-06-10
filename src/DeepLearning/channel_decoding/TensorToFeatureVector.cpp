@@ -3,7 +3,7 @@
 
 #include "TensorToFeatureVector.hpp"
 
-#include <torch/torch.h>
+#include <torch/types.h> // kCPU, kFloat32, at::Tensor
 
 #include <cassert>
 #include <stdexcept>

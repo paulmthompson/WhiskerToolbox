@@ -7,7 +7,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -20,7 +21,7 @@ TEST_CASE("TensorToMask2D - name and output type", "[channel_decoding][TensorToM
 TEST_CASE("TensorToMask2D - basic thresholding", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     // Set a few pixels above threshold
     tensor[0][0][2][3] = 0.8f;
     tensor[0][0][5][5] = 0.9f;
@@ -61,7 +62,7 @@ TEST_CASE("TensorToMask2D - basic thresholding", "[channel_decoding][TensorToMas
 TEST_CASE("TensorToMask2D - empty mask for zeros", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;
@@ -78,7 +79,7 @@ TEST_CASE("TensorToMask2D - empty mask for zeros", "[channel_decoding][TensorToM
 TEST_CASE("TensorToMask2D - all above threshold", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::ones({1, 1, 5, 5});// all 1.0
+    auto tensor = at::ones({1, 1, 5, 5});// all 1.0
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;
@@ -98,7 +99,7 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
     // Single pixel at (5, 5) in 10x10 tensor, upsampled via nearest-neighbor
     // to 100x100 target. Scale factor is 10x, so source pixel (5,5) maps to
     // a 10x10 block of destination pixels at x=[50..59], y=[50..59].
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
     dl::DecoderContext ctx;
@@ -130,7 +131,7 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
 TEST_CASE("TensorToMask2D - batch index", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
     tensor[0][0][2][3] = 1.0f;// batch 0: one pixel
     tensor[1][0][7][8] = 1.0f;// batch 1: different pixel
 
@@ -157,7 +158,7 @@ TEST_CASE("TensorToMask2D - batch index", "[channel_decoding][TensorToMask2D]") 
 TEST_CASE("TensorToMask2D - threshold boundary", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 5, 5});
+    auto tensor = at::zeros({1, 1, 5, 5});
     tensor[0][0][0][0] = 0.5f; // exactly at threshold (should NOT be included)
     tensor[0][0][1][1] = 0.51f;// above threshold (should be included)
     tensor[0][0][2][2] = 0.49f;// below threshold (should NOT be included)
@@ -179,7 +180,7 @@ TEST_CASE("TensorToMask2D - threshold boundary", "[channel_decoding][TensorToMas
 TEST_CASE("TensorToMask2D - channel selection", "[channel_decoding][TensorToMask2D]") {
     dl::TensorToMask2D decoder;
 
-    auto tensor = torch::zeros({1, 2, 10, 10});
+    auto tensor = at::zeros({1, 2, 10, 10});
     tensor[0][0][3][4] = 1.0f;// channel 0
     tensor[0][1][6][7] = 1.0f;// channel 1
 

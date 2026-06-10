@@ -13,7 +13,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -25,7 +26,7 @@ TEST_CASE("Round-trip: Point2D encode→decode (binary)", "[channel_decoding][ro
     ImageSize const img_size{64, 64};
     Point2D<float> const original{32.0f, 20.0f};
 
-    auto tensor = torch::zeros({1, 1, 64, 64});
+    auto tensor = at::zeros({1, 1, 64, 64});
     dl::EncoderContext enc_ctx;
     enc_ctx.target_channel = 0;
     enc_ctx.batch_index = 0;
@@ -59,7 +60,7 @@ TEST_CASE("Round-trip: Point2D encode→decode (heatmap, subpixel)", "[channel_d
     ImageSize const img_size{64, 64};
     Point2D<float> const original{25.3f, 40.7f};
 
-    auto tensor = torch::zeros({1, 1, 64, 64});
+    auto tensor = at::zeros({1, 1, 64, 64});
     dl::EncoderContext enc_ctx;
     enc_ctx.target_channel = 0;
     enc_ctx.batch_index = 0;
@@ -99,7 +100,7 @@ TEST_CASE("Round-trip: Mask2D encode→decode", "[channel_decoding][roundtrip]")
                      Point2D<uint32_t>{8, 1}});
 
     // Encode
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     dl::EncoderContext enc_ctx;
     enc_ctx.target_channel = 0;
     enc_ctx.batch_index = 0;
@@ -148,7 +149,7 @@ TEST_CASE("Round-trip: Line2D encode→decode (binary)", "[channel_decoding][rou
                      Point2D<float>{25.0f, 15.0f}});
 
     // Encode
-    auto tensor = torch::zeros({1, 1, 30, 30});
+    auto tensor = at::zeros({1, 1, 30, 30});
     dl::EncoderContext enc_ctx;
     enc_ctx.target_channel = 0;
     enc_ctx.batch_index = 0;
@@ -199,7 +200,7 @@ TEST_CASE("Round-trip: Point2D with scaling", "[channel_decoding][roundtrip]") {
     ImageSize const img_size{100, 100};
     Point2D<float> const original{60.0f, 40.0f};
 
-    auto tensor = torch::zeros({1, 1, 32, 32});
+    auto tensor = at::zeros({1, 1, 32, 32});
     dl::EncoderContext enc_ctx;
     enc_ctx.target_channel = 0;
     enc_ctx.batch_index = 0;

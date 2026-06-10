@@ -1,6 +1,6 @@
 #include "Point2DEncoder.hpp"
 
-#include "torch/torch.h"
+#include "torch/types.h" // torch::Tensor
 
 #include <algorithm>
 #include <cmath>

@@ -3,7 +3,8 @@
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 namespace {
 
@@ -148,8 +149,8 @@ TEST_CASE("ModelBase - forward pass with DummyModel", "[ModelBase]") {
     DummyModel model;
     model.loadWeights("/fake/path.pte");
 
-    auto image = torch::randn({1, 3, 64, 64});
-    auto mask = torch::ones({1, 1, 64, 64});
+    auto image = at::randn({1, 3, 64, 64});
+    auto mask = at::ones({1, 1, 64, 64});
 
     std::unordered_map<std::string, torch::Tensor> inputs{
             {"image", image},
@@ -175,7 +176,7 @@ TEST_CASE("ModelBase - forward with batch > 1", "[ModelBase]") {
     model.loadWeights("/fake/path.pte");
 
     int const batch_size = 4;
-    auto image = torch::randn({batch_size, 3, 64, 64});
+    auto image = at::randn({batch_size, 3, 64, 64});
 
     auto outputs = model.forward({{"image", image}});
 
@@ -188,6 +189,6 @@ TEST_CASE("ModelBase - forward with missing input returns empty", "[ModelBase]")
     model.loadWeights("/fake/path.pte");
 
     // No "image" key → DummyModel returns empty
-    auto outputs = model.forward({{"wrong_key", torch::randn({1, 3, 64, 64})}});
+    auto outputs = model.forward({{"wrong_key", at::randn({1, 3, 64, 64})}});
     CHECK(outputs.empty());
 }

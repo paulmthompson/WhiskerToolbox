@@ -6,7 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -19,7 +20,7 @@ TEST_CASE("TensorToPoint2D - name and output type", "[channel_decoding][TensorTo
 TEST_CASE("TensorToPoint2D - single peak argmax", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][3][7] = 1.0f;// peak at (x=7, y=3)
 
     dl::DecoderContext ctx;
@@ -39,7 +40,7 @@ TEST_CASE("TensorToPoint2D - subpixel refinement", "[channel_decoding][TensorToP
     dl::TensorToPoint2D decoder;
 
     // Create a Gaussian-like peak centered at (5.3, 4.7)
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     float const cx = 5.3f;
     float const cy = 4.7f;
     float const sigma = 1.5f;
@@ -69,7 +70,7 @@ TEST_CASE("TensorToPoint2D - subpixel refinement", "[channel_decoding][TensorToP
 TEST_CASE("TensorToPoint2D - all zeros returns origin", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;
@@ -88,7 +89,7 @@ TEST_CASE("TensorToPoint2D - scaling to target image size", "[channel_decoding][
     dl::TensorToPoint2D decoder;
 
     // Peak at (5, 5) in 10x10 tensor → should map to (50, 50) in 100x100 target
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
     dl::DecoderContext ctx;
@@ -108,7 +109,7 @@ TEST_CASE("TensorToPoint2D - scaling to target image size", "[channel_decoding][
 TEST_CASE("TensorToPoint2D - batch index", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
     tensor[0][0][2][3] = 1.0f;// batch 0: peak at (3, 2)
     tensor[1][0][7][8] = 1.0f;// batch 1: peak at (8, 7)
 
@@ -133,7 +134,7 @@ TEST_CASE("TensorToPoint2D - batch index", "[channel_decoding][TensorToPoint2D]"
 TEST_CASE("TensorToPoint2D - channel selection", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({1, 2, 10, 10});
+    auto tensor = at::zeros({1, 2, 10, 10});
     tensor[0][0][1][2] = 1.0f;// channel 0: peak at (2, 1)
     tensor[0][1][8][9] = 1.0f;// channel 1: peak at (9, 8)
 
@@ -158,7 +159,7 @@ TEST_CASE("TensorToPoint2D - channel selection", "[channel_decoding][TensorToPoi
 TEST_CASE("TensorToPoint2D - decodeMultiple finds multiple peaks", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 20, 20});
+    auto tensor = at::zeros({1, 1, 20, 20});
     // Place two well-separated Gaussians
     float const sigma = 1.5f;
     for (int y = 0; y < 20; ++y) {
@@ -199,7 +200,7 @@ TEST_CASE("TensorToPoint2D - decodeMultiple finds multiple peaks", "[channel_dec
 TEST_CASE("TensorToPoint2D - decodeMultiple empty for zeros", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;

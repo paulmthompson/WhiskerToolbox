@@ -7,7 +7,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -22,7 +23,7 @@ TEST_CASE("Mask2DEncoder - basic binary encoding", "[channel_encoding][Mask2DEnc
 
     // Source image is 10x10, tensor is 10x10 (no scaling)
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -56,7 +57,7 @@ TEST_CASE("Mask2DEncoder - empty mask", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -80,7 +81,7 @@ TEST_CASE("Mask2DEncoder - scaling from larger source", "[channel_encoding][Mask
 
     // Source is 100x100, tensor is 10x10
     ImageSize const src_size{100, 100};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -103,7 +104,7 @@ TEST_CASE("Mask2DEncoder - large mask coverage", "[channel_encoding][Mask2DEncod
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -137,7 +138,7 @@ TEST_CASE("Mask2DEncoder - invalid mode throws", "[channel_encoding][Mask2DEncod
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.height = 10;
@@ -154,7 +155,7 @@ TEST_CASE("Mask2DEncoder - batch index", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -179,7 +180,7 @@ TEST_CASE("Mask2DEncoder - target channel selection", "[channel_encoding][Mask2D
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 3, 10, 10});
+    auto tensor = at::zeros({1, 3, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 2;// write to channel 2

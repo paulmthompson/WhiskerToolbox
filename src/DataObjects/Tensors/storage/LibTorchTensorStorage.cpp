@@ -11,7 +11,9 @@
 #include "Tensors/storage/LibTorchTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
 
-#include <torch/torch.h> // torch::cuda::is_available
+#include <torch/types.h>        // torch::Tensor
+#include <ATen/cuda/CUDAContext.h> // at::cuda::is_available
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <algorithm>
 #include <cstddef>
@@ -137,7 +139,7 @@ void LibTorchTensorStorage::toCpu()
 
 void LibTorchTensorStorage::toCuda(int device)
 {
-    if (!torch::cuda::is_available()) {
+    if (!at::cuda::is_available()) {
         throw std::runtime_error(
             "LibTorchTensorStorage::toCuda: CUDA is not available");
     }

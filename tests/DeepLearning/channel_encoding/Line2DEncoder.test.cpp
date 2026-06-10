@@ -7,7 +7,8 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -21,7 +22,7 @@ TEST_CASE("Line2DEncoder - horizontal line binary", "[channel_encoding][Line2DEn
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -54,7 +55,7 @@ TEST_CASE("Line2DEncoder - vertical line binary", "[channel_encoding][Line2DEnco
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -83,7 +84,7 @@ TEST_CASE("Line2DEncoder - empty and single point lines", "[channel_encoding][Li
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -109,7 +110,7 @@ TEST_CASE("Line2DEncoder - multi-segment polyline binary", "[channel_encoding][L
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -143,7 +144,7 @@ TEST_CASE("Line2DEncoder - heatmap mode", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{20, 20};
-    auto tensor = torch::zeros({1, 1, 20, 20});
+    auto tensor = at::zeros({1, 1, 20, 20});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -185,7 +186,7 @@ TEST_CASE("Line2DEncoder - scaling from larger source", "[channel_encoding][Line
 
     // Source 100x100, tensor 10x10
     ImageSize const src_size{100, 100};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -214,7 +215,7 @@ TEST_CASE("Line2DEncoder - invalid mode throws", "[channel_encoding][Line2DEncod
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.height = 10;
@@ -231,7 +232,7 @@ TEST_CASE("Line2DEncoder - batch index", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;

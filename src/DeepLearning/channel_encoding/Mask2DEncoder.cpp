@@ -1,6 +1,6 @@
 #include "Mask2DEncoder.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
 
 #include <algorithm>
 #include <cmath>

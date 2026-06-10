@@ -4,7 +4,8 @@
 #include "models_v2/neurosam/NeuroSAMModel.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <algorithm>
 #include <string>
@@ -137,9 +138,9 @@ TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
 
     std::unordered_map<std::string, torch::Tensor> inputs{
-            {"encoder_image", torch::randn({1, 3, 256, 256})},
-            {"memory_images", torch::randn({1, 3, 256, 256})},
-            {"memory_masks", torch::randn({1, 1, 256, 256})},
+            {"encoder_image", at::randn({1, 3, 256, 256})},
+            {"memory_images", at::randn({1, 3, 256, 256})},
+            {"memory_masks", at::randn({1, 1, 256, 256})},
     };
 
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
@@ -155,8 +156,8 @@ TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][
 
     // Missing memory_masks
     std::unordered_map<std::string, torch::Tensor> incomplete_inputs{
-            {"encoder_image", torch::randn({1, 3, 256, 256})},
-            {"memory_images", torch::randn({1, 3, 256, 256})},
+            {"encoder_image", at::randn({1, 3, 256, 256})},
+            {"memory_images", at::randn({1, 3, 256, 256})},
     };
 
     // Should throw because model isn't ready AND inputs are incomplete

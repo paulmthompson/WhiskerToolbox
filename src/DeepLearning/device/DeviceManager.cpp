@@ -1,6 +1,7 @@
 #include "DeviceManager.hpp"
 
-#include <torch/torch.h> // torch::cuda::is_available
+#include <torch/types.h> // torch::Tensor
+#include <ATen/cuda/CUDAContext.h> // at::cuda::is_available
 
 #include <iostream>
 
@@ -9,7 +10,7 @@ namespace dl {
 DeviceManager::DeviceManager()
     : _device(torch::kCPU)
 {
-    if (torch::cuda::is_available()) {
+    if (at::cuda::is_available()) {
         _device = torch::Device(torch::kCUDA);
         std::cout << "[DeviceManager] CUDA is available — using GPU.\n";
     } else {

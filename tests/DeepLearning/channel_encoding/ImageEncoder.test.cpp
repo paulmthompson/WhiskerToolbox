@@ -5,7 +5,8 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <cstdint>
 #include <numeric>
@@ -30,7 +31,7 @@ TEST_CASE("ImageEncoder - grayscale uint8 basic encoding", "[channel_encoding][I
     std::vector<uint8_t> image(src_h * src_w, 255);
 
     // Target tensor: [1, 1, 4, 4]
-    auto tensor = torch::zeros({1, 1, 4, 4});
+    auto tensor = at::zeros({1, 1, 4, 4});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -63,7 +64,7 @@ TEST_CASE("ImageEncoder - grayscale replication to 3 channels", "[channel_encodi
     std::vector<uint8_t> image = {0, 128, 255, 64};
 
     // Target tensor: [1, 3, 2, 2] — 3 channels available
-    auto tensor = torch::zeros({1, 3, 2, 2});
+    auto tensor = at::zeros({1, 3, 2, 2});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -102,7 +103,7 @@ TEST_CASE("ImageEncoder - RGB uint8 encoding", "[channel_encoding][ImageEncoder]
             255, 0, 0, 0, 255, 0,
             0, 0, 255, 128, 128, 128};
 
-    auto tensor = torch::zeros({1, 3, 2, 2});
+    auto tensor = at::zeros({1, 3, 2, 2});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -134,7 +135,7 @@ TEST_CASE("ImageEncoder - resize from larger source", "[channel_encoding][ImageE
     // Uniform gray image
     std::vector<uint8_t> image(src_h * src_w, 128);
 
-    auto tensor = torch::zeros({1, 1, 4, 4});
+    auto tensor = at::zeros({1, 1, 4, 4});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -165,7 +166,7 @@ TEST_CASE("ImageEncoder - float data encoding", "[channel_encoding][ImageEncoder
 
     std::vector<float> image = {0.0f, 0.5f, 1.0f, 0.25f};
 
-    auto tensor = torch::zeros({1, 1, 2, 2});
+    auto tensor = at::zeros({1, 1, 2, 2});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -195,7 +196,7 @@ TEST_CASE("ImageEncoder - batch index writing", "[channel_encoding][ImageEncoder
     std::vector<uint8_t> image(src_h * src_w, 255);
 
     // Batch size = 2
-    auto tensor = torch::zeros({2, 1, 2, 2});
+    auto tensor = at::zeros({2, 1, 2, 2});
 
     dl::EncoderContext ctx;
     ctx.target_channel = 0;
@@ -220,7 +221,7 @@ TEST_CASE("ImageEncoder - invalid channel count throws", "[channel_encoding][Ima
     dl::ImageEncoder encoder;
 
     std::vector<uint8_t> image(16, 0);
-    auto tensor = torch::zeros({1, 1, 4, 4});
+    auto tensor = at::zeros({1, 1, 4, 4});
     dl::EncoderContext ctx;
     ctx.height = 4;
     ctx.width = 4;
@@ -234,7 +235,7 @@ TEST_CASE("ImageEncoder - size mismatch throws", "[channel_encoding][ImageEncode
 
     // 4x4 image has 16 pixels, but we pass size for 2x2
     std::vector<uint8_t> image(16, 0);
-    auto tensor = torch::zeros({1, 1, 4, 4});
+    auto tensor = at::zeros({1, 1, 4, 4});
     dl::EncoderContext ctx;
     ctx.height = 4;
     ctx.width = 4;

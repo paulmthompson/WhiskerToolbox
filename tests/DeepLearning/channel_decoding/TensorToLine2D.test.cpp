@@ -7,7 +7,8 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 using Catch::Matchers::WithinAbs;
 
@@ -20,7 +21,7 @@ TEST_CASE("TensorToLine2D - name and output type", "[channel_decoding][TensorToL
 TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     // Draw a horizontal line at y=5, from x=2 to x=7
     for (int x = 2; x <= 7; ++x) {
         tensor[0][0][5][x] = 1.0f;
@@ -50,7 +51,7 @@ TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D
 TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     // Draw a vertical line at x=4, from y=1 to y=8
     for (int y = 1; y <= 8; ++y) {
         tensor[0][0][y][4] = 1.0f;
@@ -78,7 +79,7 @@ TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]"
 TEST_CASE("TensorToLine2D - empty tensor produces empty line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;
@@ -96,7 +97,7 @@ TEST_CASE("TensorToLine2D - empty tensor produces empty line", "[channel_decodin
 TEST_CASE("TensorToLine2D - all below threshold produces empty line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::full({1, 1, 10, 10}, 0.3f);
+    auto tensor = at::full({1, 1, 10, 10}, 0.3f);
 
     dl::DecoderContext ctx;
     ctx.source_channel = 0;
@@ -114,7 +115,7 @@ TEST_CASE("TensorToLine2D - all below threshold produces empty line", "[channel_
 TEST_CASE("TensorToLine2D - thick line gets thinned", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 20, 20});
+    auto tensor = at::zeros({1, 1, 20, 20});
     // Draw a thick (3px) horizontal line at y=10
     for (int y = 9; y <= 11; ++y) {
         for (int x = 3; x <= 17; ++x) {
@@ -151,7 +152,7 @@ TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][T
     dl::TensorToLine2D decoder;
 
     // Single-pixel-wide horizontal line at y=5, x=[2..7] in 10x10
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     for (int x = 2; x <= 7; ++x) {
         tensor[0][0][5][x] = 1.0f;
     }
@@ -184,7 +185,7 @@ TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][T
 TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({2, 1, 10, 10});
+    auto tensor = at::zeros({2, 1, 10, 10});
     // Batch 0: horizontal line at y=3
     for (int x = 2; x <= 7; ++x) {
         tensor[0][0][3][x] = 1.0f;
@@ -220,7 +221,7 @@ TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]") 
 TEST_CASE("TensorToLine2D - single pixel", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
-    auto tensor = torch::zeros({1, 1, 10, 10});
+    auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
     dl::DecoderContext ctx;

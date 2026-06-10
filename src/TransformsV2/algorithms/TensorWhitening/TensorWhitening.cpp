@@ -65,7 +65,8 @@
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #pragma push_macro("CHECK")
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
+#include <ATen/cuda/CUDAContext.h> // at::cuda::is_available
 #pragma pop_macro("CHECK")
 #endif
 
@@ -355,7 +356,7 @@ auto tensorWhitening(
     }
 
 #ifdef TENSOR_BACKEND_LIBTORCH
-    bool const use_cuda = params.use_gpu && torch::cuda::is_available();
+    bool const use_cuda = params.use_gpu && at::cuda::is_available();
     if (params.use_gpu && !use_cuda) {
         ctx.logMessage("TensorWhitening: CUDA not available; using LibTorch CPU");
     }

@@ -25,7 +25,8 @@
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #pragma push_macro("CHECK")
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
+#include <ATen/cuda/CUDAContext.h> // at::cuda::is_available
 #pragma pop_macro("CHECK")
 #endif
 
@@ -131,7 +132,7 @@ auto tensorCARLibTorch(
     torch::Tensor t;
 
     auto device = torch::kCPU;
-    bool const cuda_available = use_cuda && torch::cuda::is_available();
+    bool const cuda_available = use_cuda && at::cuda::is_available();
     if (use_cuda && !cuda_available) {
         ctx.logMessage("TensorCAR: CUDA not available; using LibTorch CPU");
     }

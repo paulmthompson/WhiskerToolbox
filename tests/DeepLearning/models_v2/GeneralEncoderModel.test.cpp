@@ -7,7 +7,8 @@
 #include "models_v2/general_encoder/GeneralEncoderModel.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <algorithm>
 #include <string>
@@ -160,7 +161,7 @@ TEST_CASE("GeneralEncoderModel - not ready before loading weights", "[GeneralEnc
 TEST_CASE("GeneralEncoderModel - forward throws when not ready", "[GeneralEncoderModel]") {
     dl::GeneralEncoderModel model;
     std::unordered_map<std::string, torch::Tensor> inputs;
-    inputs["image"] = torch::randn({1, 3, 224, 224});
+    inputs["image"] = at::randn({1, 3, 224, 224});
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
 }
 
