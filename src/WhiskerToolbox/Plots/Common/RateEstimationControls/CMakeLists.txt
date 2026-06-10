@@ -15,6 +15,11 @@ set_target_properties(RateEstimationControls PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+set_target_properties(RateEstimationControls PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_link_libraries(RateEstimationControls PRIVATE
     Qt6::Widgets
     Qt6::Core
@@ -30,16 +35,6 @@ target_include_directories(RateEstimationControls PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(RateEstimationControls PRIVATE ${CLANG_OPTIONS})
-endif()
+set_target_compiler_warnings(RateEstimationControls)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(RateEstimationControls PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(RateEstimationControls PRIVATE ${MSVC_WARNINGS})
-endif()
 enable_whiskertoolbox_shared_pch(RateEstimationControls)

@@ -23,6 +23,11 @@ set(EDITOR_STATE_SOURCES
 
 add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})
 
+set_target_properties(EditorState PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_link_libraries(EditorState
     PUBLIC
         Qt6::Core

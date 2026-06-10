@@ -40,17 +40,7 @@ target_include_directories(GroupManagementWidget PUBLIC
 )
 
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(GroupManagementWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(GroupManagementWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(GroupManagementWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(GroupManagementWidget)
 
 set_target_properties(GroupManagementWidget PROPERTIES
     AUTOMOC ON

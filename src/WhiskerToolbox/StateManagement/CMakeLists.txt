@@ -26,6 +26,11 @@ set(STATE_MANAGEMENT_SOURCES
 
 add_library(StateManagement STATIC ${STATE_MANAGEMENT_SOURCES})
 
+set_target_properties(StateManagement PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_link_libraries(StateManagement
     PUBLIC
         Qt6::Core

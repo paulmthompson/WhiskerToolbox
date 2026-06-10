@@ -98,6 +98,11 @@ set(MEDIA_WIDGET_SOURCES
 
 add_library(Media_Widget STATIC ${MEDIA_WIDGET_SOURCES})
 
+set_target_properties(Media_Widget PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_link_libraries(Media_Widget PUBLIC Qt6::Widgets)
 target_link_libraries(Media_Widget PUBLIC EditorState)
 

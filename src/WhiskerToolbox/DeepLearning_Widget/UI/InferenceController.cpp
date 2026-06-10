@@ -5,11 +5,11 @@
 
 #include "InferenceController.hpp"
 
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "BatchInferenceWorker.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/ResultProcessor.hpp"
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
+#include "MultiIntervalBatchWorker.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Media/Media_Data.hpp"
@@ -19,206 +19,7 @@
 
 #include <atomic>
 #include <memory>
-
-// ════════════════════════════════════════════════════════════════════════════
-// BatchInferenceWorker — runs SlotAssembler::runBatchRangeOffline on a
-// background QThread.
-// ════════════════════════════════════════════════════════════════════════════
-
-namespace {
-
-class BatchInferenceWorker : public QThread {
-    Q_OBJECT
-
-public:
-    BatchInferenceWorker(
-            SlotAssembler * assembler,
-            DataManager * dm,
-            SlotAssembler::MediaOverrides media_overrides,
-            std::vector<SlotBindingData> input_bindings,
-            std::vector<StaticInputData> static_inputs,
-            std::vector<OutputBindingData> output_bindings,
-            int start_frame,
-            int end_frame,
-            ImageSize source_image_size,
-            int batch_size,
-            std::shared_ptr<WriteReservation> reservation,
-            std::shared_ptr<std::atomic<bool>> cancel_flag,
-            QObject * parent = nullptr)
-        : QThread(parent),
-          _assembler(assembler),
-          _dm(dm),
-          _media_overrides(std::move(media_overrides)),
-          _input_bindings(std::move(input_bindings)),
-          _static_inputs(std::move(static_inputs)),
-          _output_bindings(std::move(output_bindings)),
-          _start_frame(start_frame),
-          _end_frame(end_frame),
-          _source_image_size(source_image_size),
-          _batch_size(batch_size),
-          _reservation(std::move(reservation)),
-          _cancel_flag(std::move(cancel_flag)) {}
-
-    [[nodiscard]] bool success() const { return _success; }
-
-    [[nodiscard]] std::string const & errorMessage() const { return _error_message; }
-
-signals:
-    void progressChanged(int _t1, int _t2);
-
-protected:
-    void run() override {
-        // Ensure the CUDA runtime context is initialized on this worker
-        // thread. On Windows, CUDA per-thread state is not inherited
-        // from the main thread.
-        //SlotAssembler::initDeviceForCurrentThread();
-
-        auto result = _assembler->runBatchRangeOffline(
-                *_dm,
-                _media_overrides,
-                _input_bindings,
-                _static_inputs,
-                _output_bindings,
-                _start_frame,
-                _end_frame,
-                _source_image_size,
-                *_cancel_flag,
-                _batch_size,
-                [this](int current, int total) {
-                    emit progressChanged(current, total);
-                },
-                [this](std::vector<FrameResult> frame_results) {
-                    _reservation->push(std::move(frame_results));
-                });
-        _success = result.success;
-        _error_message = std::move(result.error_message);
-    }
-
-private:
-    SlotAssembler * _assembler;
-    DataManager * _dm;
-    SlotAssembler::MediaOverrides _media_overrides;
-    std::vector<SlotBindingData> _input_bindings;
-    std::vector<StaticInputData> _static_inputs;
-    std::vector<OutputBindingData> _output_bindings;
-    int _start_frame;
-    int _end_frame;
-    ImageSize _source_image_size;
-    int _batch_size;
-    std::shared_ptr<WriteReservation> _reservation;
-    std::shared_ptr<std::atomic<bool>> _cancel_flag;
-    bool _success = true;
-    std::string _error_message;
-};
-
-// ════════════════════════════════════════════════════════════════════════════
-// MultiIntervalBatchWorker — runs SlotAssembler::runBatchRangeOffline on a
-// background QThread for multiple frame intervals with unified progress.
-// ════════════════════════════════════════════════════════════════════════════
-
-class MultiIntervalBatchWorker : public QThread {
-    Q_OBJECT
-
-public:
-    MultiIntervalBatchWorker(
-            SlotAssembler * assembler,
-            DataManager * dm,
-            SlotAssembler::MediaOverrides media_overrides,
-            std::vector<SlotBindingData> input_bindings,
-            std::vector<StaticInputData> static_inputs,
-            std::vector<OutputBindingData> output_bindings,
-            std::vector<std::pair<int64_t, int64_t>> intervals,
-            ImageSize source_image_size,
-            int batch_size,
-            std::shared_ptr<WriteReservation> reservation,
-            std::shared_ptr<std::atomic<bool>> cancel_flag,
-            QObject * parent = nullptr)
-        : QThread(parent),
-          _assembler(assembler),
-          _dm(dm),
-          _media_overrides(std::move(media_overrides)),
-          _input_bindings(std::move(input_bindings)),
-          _static_inputs(std::move(static_inputs)),
-          _output_bindings(std::move(output_bindings)),
-          _intervals(std::move(intervals)),
-          _source_image_size(source_image_size),
-          _batch_size(batch_size),
-          _reservation(std::move(reservation)),
-          _cancel_flag(std::move(cancel_flag)) {}
-
-    [[nodiscard]] bool success() const { return _success; }
-
-    [[nodiscard]] std::string const & errorMessage() const { return _error_message; }
-
-signals:
-    void progressChanged(int _t1, int _t2);
-
-protected:
-    void run() override {
-        // Ensure CUDA context on this worker thread (see BatchInferenceWorker).
-        //SlotAssembler::initDeviceForCurrentThread();
-
-        // Compute total frame count across all intervals
-        int total_frames = 0;
-        for (auto const & [start, end]: _intervals) {
-            total_frames += static_cast<int>(end - start + 1);
-        }
-
-        int frames_completed = 0;
-
-        for (auto const & [start, end]: _intervals) {
-            if (_cancel_flag->load(std::memory_order_relaxed)) break;
-
-            int const interval_frames = static_cast<int>(end - start + 1);
-            int const offset = frames_completed;
-
-            auto result = _assembler->runBatchRangeOffline(
-                    *_dm,
-                    _media_overrides,
-                    _input_bindings,
-                    _static_inputs,
-                    _output_bindings,
-                    static_cast<int>(start),
-                    static_cast<int>(end),
-                    _source_image_size,
-                    *_cancel_flag,
-                    _batch_size,
-                    [this, offset, total_frames](int current, int /*interval_total*/) {
-                        emit progressChanged(offset + current, total_frames);
-                    },
-                    [this](std::vector<FrameResult> frame_results) {
-                        _reservation->push(std::move(frame_results));
-                    });
-
-            if (!result.success) {
-                _success = false;
-                _error_message = std::move(result.error_message);
-                return;
-            }
-
-            frames_completed += interval_frames;
-        }
-
-        emit progressChanged(total_frames, total_frames);
-    }
-
-private:
-    SlotAssembler * _assembler;
-    DataManager * _dm;
-    SlotAssembler::MediaOverrides _media_overrides;
-    std::vector<SlotBindingData> _input_bindings;
-    std::vector<StaticInputData> _static_inputs;
-    std::vector<OutputBindingData> _output_bindings;
-    std::vector<std::pair<int64_t, int64_t>> _intervals;
-    ImageSize _source_image_size;
-    int _batch_size;
-    std::shared_ptr<WriteReservation> _reservation;
-    std::shared_ptr<std::atomic<bool>> _cancel_flag;
-    bool _success = true;
-    std::string _error_message;
-};
-
-}// namespace
+#include <utility>
 
 // ════════════════════════════════════════════════════════════════════════════
 // InferenceController::Impl
@@ -552,5 +353,3 @@ void InferenceController::cancel() {
     if (!_impl->_batch_worker) return;
     _impl->_cancel_flag->store(true, std::memory_order_relaxed);
 }
-
-#include "InferenceController.moc"

@@ -17,6 +17,11 @@ set(TRIAGE_SESSION_WIDGET_SOURCES
 
 qt_add_library(TriageSession_Widget STATIC ${TRIAGE_SESSION_WIDGET_SOURCES})
 
+set_target_properties(TriageSession_Widget PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_include_directories(TriageSession_Widget PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"

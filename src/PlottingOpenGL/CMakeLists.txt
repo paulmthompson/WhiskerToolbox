@@ -51,6 +51,11 @@ set(PLOTTINGOPENGL_SOURCES
 
 add_library(PlottingOpenGL STATIC ${PLOTTINGOPENGL_SOURCES})
 
+set_target_properties(PlottingOpenGL PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_include_directories(PlottingOpenGL PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 

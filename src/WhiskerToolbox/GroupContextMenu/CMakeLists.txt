@@ -3,6 +3,11 @@ add_library(GroupContextMenu STATIC
     GroupContextMenuHandler.hpp
 )
 
+set_target_properties(GroupContextMenu PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_link_libraries(GroupContextMenu
     PUBLIC
         Qt6::Core
@@ -16,17 +21,6 @@ target_include_directories(GroupContextMenu
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
-# Apply the same compiler flags as the main project
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(GroupContextMenu PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(GroupContextMenu PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(GroupContextMenu PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(GroupContextMenu)
 
 enable_whiskertoolbox_shared_pch(GroupContextMenu)

@@ -25,8 +25,12 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
+    UI/BatchInferenceWorker.hpp
+    UI/BatchInferenceWorker.cpp
     UI/InferenceController.hpp
     UI/InferenceController.cpp
+    UI/MultiIntervalBatchWorker.hpp
+    UI/MultiIntervalBatchWorker.cpp
 
     UI/Helpers/DataSourceComboHelper.hpp
     UI/Helpers/DataSourceComboHelper.cpp
@@ -47,6 +51,11 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
+
+set_target_properties(DeepLearning_Widget PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
 
 target_link_libraries(DeepLearning_Widget PUBLIC Qt6::Widgets)
 target_link_libraries(DeepLearning_Widget PUBLIC EditorState)
@@ -71,16 +80,6 @@ target_include_directories(DeepLearning_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DeepLearning_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DeepLearning_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DeepLearning_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DeepLearning_Widget)
 
 enable_whiskertoolbox_shared_pch(DeepLearning_Widget)

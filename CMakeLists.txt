@@ -29,7 +29,7 @@ option(ENABLE_ORTOOLS "Enable OR-Tools support for min-cost flow tracking" ON)
 
 option(ENABLE_TIME_TRACE "Enable Clang -ftime-trace for build time profiling" OFF)
 
-option(ENABLE_FUZZ_TESTING "Enable fuzz testing with Google FuzzTest (Clang only)" OFF)
+option(ENABLE_FUZZ_TESTING "Enable fuzz testing with Google FuzzTest (Clang only)" ON)
 
 option(ENABLE_OPTIMIZATION_REPORTS "Enable compiler optimization reports (Clang only)" OFF)
 
@@ -122,9 +122,10 @@ From Professional CMake Chapter 11 Modules
 ]]
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
+# Turn off automatic UI generation since this project is mixed
+set(CMAKE_AUTOUIC OFF)
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTORCC OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

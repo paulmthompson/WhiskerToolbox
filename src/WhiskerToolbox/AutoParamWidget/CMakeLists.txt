@@ -7,6 +7,11 @@ set(AUTO_PARAM_WIDGET_SOURCES
 
 qt_add_library(AutoParamWidget STATIC ${AUTO_PARAM_WIDGET_SOURCES})
 
+set_target_properties(AutoParamWidget PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_include_directories(AutoParamWidget PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"

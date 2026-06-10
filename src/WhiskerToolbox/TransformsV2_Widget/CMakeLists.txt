@@ -21,6 +21,11 @@ set(TRANSFORMS_V2_WIDGET_SOURCES
 
 qt_add_library(TransformsV2_Widget STATIC ${TRANSFORMS_V2_WIDGET_SOURCES})
 
+set_target_properties(TransformsV2_Widget PROPERTIES
+    AUTOUIC ON
+    AUTOMOC ON
+)
+
 target_include_directories(TransformsV2_Widget PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
