@@ -16,25 +16,9 @@
 
 #include "models_v2/TensorSlotDescriptor.hpp"
 
-#include <QApplication>
 #include <QSignalSpy>
 
 #include <vector>
-
-// Ensure a QApplication exists for QWidget-based tests
-namespace {
-struct QtAppGuard {
-    QtAppGuard() {
-        if (QApplication::instance() == nullptr) {
-            static int argc = 1;
-            static char const * argv[] = {"test"};
-            // Intentionally leaked to avoid destruction-order issues with Catch2
-            new QApplication(argc, const_cast<char **>(argv));
-        }
-    }
-};
-QtAppGuard const s_guard;
-}// namespace
 
 /// Helper: create a minimal input TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeInputSlot(

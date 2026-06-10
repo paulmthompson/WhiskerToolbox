@@ -35,16 +35,6 @@ else()
         )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(CsvDatasetPreviewModel_test PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(CsvDatasetPreviewModel_test PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(CsvDatasetPreviewModel_test PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(CsvDatasetPreviewModel_test)
 
 enable_whiskertoolbox_shared_test_pch(CsvDatasetPreviewModel_test)

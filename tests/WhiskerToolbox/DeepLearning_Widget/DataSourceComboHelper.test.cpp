@@ -13,24 +13,7 @@
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
-#include <QApplication>
 #include <QComboBox>
-
-#include <memory>
-
-// Ensure a QApplication exists for QWidget-based tests
-namespace {
-struct QtAppGuard {
-    QtAppGuard() {
-        if (QApplication::instance() == nullptr) {
-            static int argc = 1;
-            static char const * argv[] = {"test"};
-            static auto app = std::make_unique<QApplication>(argc, const_cast<char **>(argv));
-        }
-    }
-};
-QtAppGuard const s_guard;
-}// namespace
 
 using dl::widget::DataSourceComboHelper;
 

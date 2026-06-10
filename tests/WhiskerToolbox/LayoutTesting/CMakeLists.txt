@@ -42,17 +42,7 @@ else()
     set_property(TEST test_layout_sanity_checker_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_layout_sanity_checker PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_layout_sanity_checker PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_layout_sanity_checker PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_layout_sanity_checker)
 
 enable_whiskertoolbox_shared_test_pch(test_layout_sanity_checker)
 
@@ -86,17 +76,7 @@ else()
     set_property(TEST test_colormap_controls_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_colormap_controls_layout PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_colormap_controls_layout PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_colormap_controls_layout PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_colormap_controls_layout)
 
 enable_whiskertoolbox_shared_test_pch(test_colormap_controls_layout)
 
@@ -134,17 +114,7 @@ else()
     set_property(TEST test_property_panel_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_property_panel_layout PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_property_panel_layout PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_property_panel_layout PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_property_panel_layout)
 
 enable_whiskertoolbox_shared_test_pch(test_property_panel_layout)
 
@@ -180,16 +150,6 @@ else()
     set_property(TEST test_heatmap_properties_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_heatmap_properties_layout PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_heatmap_properties_layout PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_heatmap_properties_layout PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_heatmap_properties_layout)
 
 enable_whiskertoolbox_shared_test_pch(test_heatmap_properties_layout)

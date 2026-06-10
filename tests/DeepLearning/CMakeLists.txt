@@ -12,308 +12,38 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
-add_executable(test_channel_encoding
+find_package(reflectcpp CONFIG REQUIRED)
+
+add_executable(test_DeepLearning
     channel_encoding/ImageEncoder.test.cpp
     channel_encoding/Point2DEncoder.test.cpp
     channel_encoding/Mask2DEncoder.test.cpp
     channel_encoding/Line2DEncoder.test.cpp
     channel_encoding/EncoderFactory.test.cpp
-)
 
-target_link_libraries(test_channel_encoding PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_channel_encoding PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_channel_encoding PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_channel_encoding PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_channel_encoding PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_channel_encoding
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_channel_encoding)
-    endif()
-else()
-    add_test(NAME test_channel_encoding_all
-        COMMAND test_channel_encoding
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_channel_encoding)
-
-# --- Channel Decoding Tests ---
-add_executable(test_channel_decoding
     channel_decoding/TensorToPoint2D.test.cpp
     channel_decoding/TensorToMask2D.test.cpp
     channel_decoding/TensorToLine2D.test.cpp
     channel_decoding/DecoderFactory.test.cpp
     channel_decoding/RoundTrip.test.cpp
-)
 
-target_link_libraries(test_channel_decoding PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_channel_decoding PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_channel_decoding PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_channel_decoding PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_channel_decoding PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_channel_decoding
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_channel_decoding)
-    endif()
-else()
-    add_test(NAME test_channel_decoding_all
-        COMMAND test_channel_decoding
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_channel_decoding)
-
-# --- Phase 3: Model Wrapper Tests ---
-add_executable(test_model_wrapper
     models_v2/TensorSlotDescriptor.test.cpp
     models_v2/ModelBase.test.cpp
     models_v2/ModelExecution.test.cpp
     device/DeviceManager.test.cpp
-)
 
-target_link_libraries(test_model_wrapper PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_model_wrapper PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_model_wrapper PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_model_wrapper PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_model_wrapper PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_model_wrapper
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_model_wrapper)
-    endif()
-else()
-    add_test(NAME test_model_wrapper_all
-        COMMAND test_model_wrapper
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_model_wrapper)
-
-# --- Phase 4: Model Registry Tests ---
-add_executable(test_model_registry
     registry/ModelRegistry.test.cpp
-)
 
-target_link_libraries(test_model_registry PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_model_registry PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_model_registry PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_model_registry PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_model_registry PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_model_registry
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_model_registry)
-    endif()
-else()
-    add_test(NAME test_model_registry_all
-        COMMAND test_model_registry
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_model_registry)
-
-# --- Phase 5: Runtime Model Tests ---
-find_package(reflectcpp CONFIG REQUIRED)
-
-# --- Phase 7: NeuroSAM Model Tests ---
-add_executable(test_neurosam_model
     models_v2/NeuroSAMModel.test.cpp
-)
 
-target_link_libraries(test_neurosam_model PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_neurosam_model PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_neurosam_model PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_neurosam_model PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_neurosam_model PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_neurosam_model
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_neurosam_model)
-    endif()
-else()
-    add_test(NAME test_neurosam_model_all
-        COMMAND test_neurosam_model
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_neurosam_model)
-
-# --- General Encoder Model Tests ---
-add_executable(test_general_encoder_model
     models_v2/GeneralEncoderModel.test.cpp
-)
 
-target_link_libraries(test_general_encoder_model PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_general_encoder_model PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_general_encoder_model PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_general_encoder_model PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_general_encoder_model PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_general_encoder_model
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_general_encoder_model)
-    endif()
-else()
-    add_test(NAME test_general_encoder_model_all
-        COMMAND test_general_encoder_model
-        )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_general_encoder_model)
-
-
-# --- Runtime model tests  ---
-add_executable(test_runtime_model
     runtime/RuntimeModelSpec.test.cpp
+
+    post_encoder/PostEncoderModules.test.cpp
 )
 
-target_link_libraries(test_runtime_model PRIVATE
+target_link_libraries(test_DeepLearning PRIVATE
     Catch2::Catch2WithMain
     WhiskerToolbox::DeepLearning
     NEURALYZER_GEOMETRY
@@ -321,90 +51,30 @@ target_link_libraries(test_runtime_model PRIVATE
     reflectcpp::reflectcpp
 )
 
-target_include_directories(test_runtime_model PRIVATE
+target_include_directories(test_DeepLearning PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_runtime_model PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_runtime_model PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_runtime_model PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_DeepLearning)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     if (WIN32)
-        catch_discover_tests(test_runtime_model
+        catch_discover_tests(test_DeepLearning
                 DL_PATHS
                 "$ENV{PATH}"
                 "${CMAKE_BINARY_DIR}"
         )
     else()
-        catch_discover_tests(test_runtime_model)
+        catch_discover_tests(test_DeepLearning)
     endif()
 else()
-    add_test(NAME test_runtime_model_all
-        COMMAND test_runtime_model
+    add_test(NAME test_DeepLearning_all
+        COMMAND test_DeepLearning
         )
 endif()
 
-enable_whiskertoolbox_shared_test_pch(test_runtime_model)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Post-Encoder Module Tests
-# ─────────────────────────────────────────────────────────────────────────────
-
-add_executable(test_post_encoder_modules
-    post_encoder/PostEncoderModules.test.cpp
-)
-
-target_link_libraries(test_post_encoder_modules PRIVATE
-    Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
-    NEURALYZER_GEOMETRY
-    "${TORCH_LIBRARIES}"
-)
-
-target_include_directories(test_post_encoder_modules PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
-)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_post_encoder_modules PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_post_encoder_modules PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_post_encoder_modules PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if (ENABLE_DETAILED_TEST_DISCOVERY)
-    if (WIN32)
-        catch_discover_tests(test_post_encoder_modules
-                DL_PATHS
-                "$ENV{PATH}"
-                "${CMAKE_BINARY_DIR}"
-        )
-    else()
-        catch_discover_tests(test_post_encoder_modules)
-    endif()
-else()
-    add_test(NAME test_post_encoder_modules_all
-        COMMAND test_post_encoder_modules
-    )
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_post_encoder_modules)
+enable_whiskertoolbox_shared_test_pch(test_DeepLearning)
 
 # ────────────────────────────────────────────────────────────────────────────
 # Standalone test driver for NeuroSAM debugging
@@ -425,17 +95,7 @@ target_include_directories(neurosam_test_driver PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(neurosam_test_driver PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(neurosam_test_driver PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(neurosam_test_driver PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(neurosam_test_driver)
 
 # --- Binding Data Tests (header-only, no libtorch needed) ---
 add_executable(test_binding_data
@@ -450,17 +110,7 @@ target_include_directories(test_binding_data PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_binding_data PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_binding_data PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_binding_data PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_binding_data)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     if (WIN32)
@@ -481,7 +131,6 @@ endif()
 enable_whiskertoolbox_shared_test_pch(test_binding_data)
 
 # --- Widget-Level Param Schema Tests (no libtorch needed) ---
-find_package(reflectcpp CONFIG REQUIRED)
 
 add_executable(test_dl_param_schemas
     param_schemas/DeepLearningParamSchemas.test.cpp
@@ -504,17 +153,7 @@ target_sources(test_dl_param_schemas PRIVATE
     "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_dl_param_schemas PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_dl_param_schemas PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_dl_param_schemas PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_dl_param_schemas)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     if (WIN32)

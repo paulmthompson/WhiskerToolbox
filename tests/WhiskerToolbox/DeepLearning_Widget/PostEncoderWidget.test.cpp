@@ -14,23 +14,7 @@
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
-#include <QApplication>
 #include <QSignalSpy>
-
-// Ensure a QApplication exists for QWidget-based tests
-namespace {
-struct QtAppGuard {
-    QtAppGuard() {
-        if (QApplication::instance() == nullptr) {
-            static int argc = 1;
-            static char const * argv[] = {"test"};
-            // Intentionally leaked to avoid destruction-order issues with Catch2
-            new QApplication(argc, const_cast<char **>(argv));
-        }
-    }
-};
-QtAppGuard const s_guard;
-}// namespace
 
 // ============================================================================
 // Construction

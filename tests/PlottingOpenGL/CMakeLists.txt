@@ -60,17 +60,7 @@ target_compile_definitions(test_plottingopengl PRIVATE
     TEST_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/shaders"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_plottingopengl PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_plottingopengl PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_plottingopengl PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_plottingopengl)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     catch_discover_tests(test_plottingopengl

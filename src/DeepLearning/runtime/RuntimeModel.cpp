@@ -1,5 +1,8 @@
 #include "RuntimeModel.hpp"
 
+#include "models_v2/ModelExecution.hpp"
+
+#include <filesystem>
 #include <stdexcept>
 
 namespace dl {
@@ -8,9 +11,10 @@ RuntimeModel::RuntimeModel(RuntimeModelSpec spec)
     : _spec(std::move(spec)),
       _input_slots(_spec.inputDescriptors()),
       _output_slots(_spec.outputDescriptors()),
-      _execution(_spec.backend.has_value()
-                         ? backendTypeFromString(_spec.backend.value())
-                         : BackendType::Auto) {
+      _execution(std::make_unique<ModelExecution>(
+              _spec.backend.has_value()
+                      ? backendTypeFromString(_spec.backend.value())
+                      : BackendType::Auto)) {
     _input_order.reserve(_input_slots.size());
     for (auto const & slot: _input_slots) {
         _input_order.push_back(slot.name);
@@ -23,9 +27,11 @@ RuntimeModel::RuntimeModel(RuntimeModelSpec spec)
 
     // Auto-load weights if specified in the spec
     if (_spec.weights_path.has_value() && !_spec.weights_path->empty()) {
-        _execution.load(_spec.weights_path.value());
+        _execution->load(_spec.weights_path.value());
     }
 }
+
+RuntimeModel::~RuntimeModel() = default;
 
 std::string RuntimeModel::modelId() const {
     return _spec.model_id;
@@ -48,11 +54,11 @@ std::vector<TensorSlotDescriptor> RuntimeModel::outputSlots() const {
 }
 
 void RuntimeModel::loadWeights(std::filesystem::path const & path) {
-    _execution.load(path);
+    _execution->load(path);
 }
 
 bool RuntimeModel::isReady() const {
-    return _execution.isLoaded();
+    return _execution->isLoaded();
 }
 
 int RuntimeModel::preferredBatchSize() const {
@@ -81,9 +87,9 @@ bool RuntimeModel::loadWeightsForBatchSize(int batch_size) {
             auto backend_type = variant.backend.has_value()
                                         ? backendTypeFromString(variant.backend.value())
                                         : BackendType::Auto;
-            _execution = ModelExecution(backend_type);
-            _execution.load(variant.path);
-            return _execution.isLoaded();
+            _execution = std::make_unique<ModelExecution>(backend_type);
+            _execution->load(variant.path);
+            return _execution->isLoaded();
         }
     }
     return false;
@@ -104,7 +110,7 @@ RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inp
                 "' not ready (weights not loaded)");
     }
 
-    auto output_tensors = _execution.executeNamed(inputs, _input_order);
+    auto output_tensors = _execution->executeNamed(inputs, _input_order);
 
     std::unordered_map<std::string, torch::Tensor> result;
     for (std::size_t i = 0; i < output_tensors.size() && i < _output_order.size(); ++i) {

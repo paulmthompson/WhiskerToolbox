@@ -51,16 +51,6 @@ else()
     set_property(TEST test_group_management_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_group_management_widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_group_management_widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_group_management_widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_group_management_widget)
 
 enable_whiskertoolbox_shared_test_pch(test_group_management_widget)

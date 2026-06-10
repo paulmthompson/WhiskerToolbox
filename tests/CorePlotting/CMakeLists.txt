@@ -88,16 +88,6 @@ else()
         )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_coreplotting PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_coreplotting PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_coreplotting PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_coreplotting)
 
 enable_whiskertoolbox_shared_test_pch(test_coreplotting)
