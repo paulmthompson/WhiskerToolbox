@@ -5,6 +5,16 @@ if(NOT ENABLE_FUZZ_TESTING)
     return()
 endif()
 
+if (APPLE)
+    message(STATUS "Testing Currenly not supported on MacOS")
+    return()
+endif()
+
+if (WIN32)
+    message(STATUS "Testing Currenly not supported on Windows")
+    return()
+endif()
+
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(WARNING "Fuzz testing requires Clang compiler. Skipping fuzz tests.")
     return()
