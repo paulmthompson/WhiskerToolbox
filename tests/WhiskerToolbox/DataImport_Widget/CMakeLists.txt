@@ -39,17 +39,7 @@ else()
         )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataImportWidgetState_test PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataImportWidgetState_test PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataImportWidgetState_test PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataImportWidgetState_test)
 
 enable_whiskertoolbox_shared_test_pch(DataImportWidgetState_test)
 
@@ -79,16 +69,6 @@ else()
         )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataImportTypeRegistry_test PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataImportTypeRegistry_test PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataImportTypeRegistry_test PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataImportTypeRegistry_test)
 
 enable_whiskertoolbox_shared_test_pch(DataImportTypeRegistry_test)

@@ -46,17 +46,7 @@ else()
                                            ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_editor_state PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_editor_state PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_editor_state PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_editor_state)
 
 enable_whiskertoolbox_shared_test_pch(test_editor_state)
 
@@ -101,16 +91,6 @@ else()
     )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_editor_state_integration PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_editor_state_integration PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_editor_state_integration PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_editor_state_integration)
 
 enable_whiskertoolbox_shared_test_pch(test_editor_state_integration)

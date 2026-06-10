@@ -32,17 +32,7 @@ target_include_directories(test_auto_param_widget PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_auto_param_widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_auto_param_widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_auto_param_widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_auto_param_widget)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     catch_discover_tests(test_auto_param_widget
