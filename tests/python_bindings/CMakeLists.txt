@@ -23,15 +23,23 @@ target_link_libraries(test_python_engine PRIVATE
 
 # Suppress LeakSanitizer — CPython's internal memory arena has benign leaks
 # (type registration, dict resizing) that are outside our control.
-catch_discover_tests(test_python_engine
-    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_python_engine PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+else()
+    add_test(NAME test_python_engine_all
+        COMMAND test_python_engine
+    )
+    set_property(TEST test_python_engine_all
+        PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+endif()
+
 
 set_target_compiler_warnings(test_python_engine)
 
 enable_whiskertoolbox_shared_test_pch(test_python_engine)
 
-# --- Phase 2: binding round-trip tests ---
+# --- Python bindings round-trip tests ---
 add_executable(test_python_bindings
     ${CMAKE_SOURCE_DIR}/src/python_bindings/bindings.test.cpp
 )
@@ -41,15 +49,22 @@ target_link_libraries(test_python_bindings PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_bindings
-    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_python_bindings PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+else()
+    add_test(NAME test_python_bindings_all
+        COMMAND test_python_bindings
+    )
+    set_property(TEST test_python_bindings_all
+        PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+endif()
 
 set_target_compiler_warnings(test_python_bindings)
 
 enable_whiskertoolbox_shared_test_pch(test_python_bindings)
 
-# --- Phase 3: PythonBridge integration tests ---
+# --- PythonBridge integration tests ---
 add_executable(test_python_bridge
     ${CMAKE_SOURCE_DIR}/src/python_bindings/PythonBridge.test.cpp
 )
@@ -68,15 +83,22 @@ target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::TensorData)
 
-catch_discover_tests(test_python_bridge
-    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_python_bridge PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+else()
+    add_test(NAME test_python_bridge_all
+        COMMAND test_python_bridge
+    )
+    set_property(TEST test_python_bridge_all
+        PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+endif()
 
 set_target_compiler_warnings(test_python_bridge)
 
 enable_whiskertoolbox_shared_test_pch(test_python_bridge)
 
-# --- Phase 5: Script management & environment tests ---
+# --- Script management & environment tests ---
 add_executable(test_python_phase5
     ${CMAKE_SOURCE_DIR}/src/python_bindings/Phase5.test.cpp
 )
@@ -88,15 +110,22 @@ target_link_libraries(test_python_phase5 PRIVATE
 
 target_link_libraries(test_python_phase5 PRIVATE DataManager)
 
-catch_discover_tests(test_python_phase5
-    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_python_phase5 PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+else()
+    add_test(NAME test_python_phase5_all
+        COMMAND test_python_phase5
+    )
+    set_property(TEST test_python_phase5_all
+        PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+endif()
 
 set_target_compiler_warnings(test_python_phase5)
 
 enable_whiskertoolbox_shared_test_pch(test_python_phase5)
 
-# --- Phase 6: Virtual environment support tests ---
+# --- Virtual environment support tests ---
 add_executable(test_python_phase6
     ${CMAKE_SOURCE_DIR}/src/python_bindings/Phase6.test.cpp
 )
@@ -108,9 +137,16 @@ target_link_libraries(test_python_phase6 PRIVATE
 
 target_link_libraries(test_python_phase6 PRIVATE DataManager)
 
-catch_discover_tests(test_python_phase6
-    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_python_phase6 PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+else()
+    add_test(NAME test_python_phase6_all
+        COMMAND test_python_phase6
+    )
+    set_property(TEST test_python_phase6_all
+        PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+endif()
 
 set_target_compiler_warnings(test_python_phase6)
 
