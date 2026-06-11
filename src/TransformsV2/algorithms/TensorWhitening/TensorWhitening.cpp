@@ -68,7 +68,9 @@
 #include <c10/core/Device.h>  // Device, kCPU, kCUDA
 #include <torch/cuda.h> // torch::cuda::is_available
 #include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/TensorOperators.h>
 #include <c10/core/ScalarType.h> // at::kFloat, at::Double, at::kLong
+#include <ATen/TensorIndexing.h> // at::indexing::Slice
 #pragma pop_macro("CHECK")
 #endif
 

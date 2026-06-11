@@ -102,8 +102,8 @@ std::vector<WeightsVariant> RuntimeModel::weightsVariants() const {
     return {};
 }
 
-std::unordered_map<std::string, torch::Tensor>
-RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inputs) {
+std::unordered_map<std::string, at::Tensor>
+RuntimeModel::forward(std::unordered_map<std::string, at::Tensor> const & inputs) {
     if (!isReady()) {
         throw std::runtime_error(
                 "RuntimeModel::forward(): model '" + _spec.model_id +
@@ -112,7 +112,7 @@ RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inp
 
     auto output_tensors = _execution->executeNamed(inputs, _input_order);
 
-    std::unordered_map<std::string, torch::Tensor> result;
+    std::unordered_map<std::string, at::Tensor> result;
     for (std::size_t i = 0; i < output_tensors.size() && i < _output_order.size(); ++i) {
         result[_output_order[i]] = std::move(output_tensors[i]);
     }

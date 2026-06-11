@@ -160,7 +160,7 @@ TEST_CASE("GeneralEncoderModel - not ready before loading weights", "[GeneralEnc
 
 TEST_CASE("GeneralEncoderModel - forward throws when not ready", "[GeneralEncoderModel]") {
     dl::GeneralEncoderModel model;
-    std::unordered_map<std::string, torch::Tensor> inputs;
+    std::unordered_map<std::string, at::Tensor> inputs;
     inputs["image"] = at::randn({1, 3, 224, 224});
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
 }

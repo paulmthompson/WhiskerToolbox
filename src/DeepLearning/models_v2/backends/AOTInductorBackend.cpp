@@ -100,8 +100,8 @@ std::filesystem::path AOTInductorBackend::loadedPath() const {
 // ---------------------------------------------------------------------------
 // execute (default method)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
-AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs) {
+std::vector<at::Tensor>
+AOTInductorBackend::execute(std::vector<at::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[AOTInductorBackend] No model loaded");
     }
@@ -134,9 +134,9 @@ AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs) {
 // ---------------------------------------------------------------------------
 // execute (named method — AOT Inductor only has one entry point)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
+std::vector<at::Tensor>
 AOTInductorBackend::execute(std::string const & /*method_name*/,
-                            std::vector<torch::Tensor> const & inputs) {
+                            std::vector<at::Tensor> const & inputs) {
     // AOT Inductor packages contain a single compiled model; method_name is ignored.
     return execute(inputs);
 }

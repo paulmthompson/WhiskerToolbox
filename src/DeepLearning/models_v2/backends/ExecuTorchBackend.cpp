@@ -23,7 +23,7 @@ namespace {
 /**
  * @brief Convert at::Tensor to ExecuTorch EValue (aliasing data, no copy).
  */
-executorch::runtime::EValue atTensorToEValue(torch::Tensor const & at_tensor) {
+executorch::runtime::EValue atTensorToEValue(at::Tensor const & at_tensor) {
     // Ensure contiguous CPU tensor for ExecuTorch
     auto contig = at_tensor.contiguous().to(torch::kCPU);
 
@@ -71,7 +71,7 @@ executorch::runtime::EValue atTensorToEValue(torch::Tensor const & at_tensor) {
 /**
  * @brief Convert ExecuTorch Tensor in an EValue to at::Tensor (clone, safe).
  */
-torch::Tensor eValueToAtTensor(executorch::runtime::EValue & ev) {
+at::Tensor eValueToAtTensor(executorch::runtime::EValue & ev) {
     if (!ev.isTensor()) {
         throw std::runtime_error("EValue is not a Tensor");
     }
@@ -188,23 +188,23 @@ std::filesystem::path ExecuTorchBackend::loadedPath() const {
 // ---------------------------------------------------------------------------
 // execute (default "forward" method)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
-ExecuTorchBackend::execute(std::vector<torch::Tensor> const & inputs) {
+std::vector<at::Tensor>
+ExecuTorchBackend::execute(std::vector<at::Tensor> const & inputs) {
     return execute("forward", inputs);
 }
 
 // ---------------------------------------------------------------------------
 // execute (named method)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
+std::vector<at::Tensor>
 ExecuTorchBackend::execute(std::string const & method_name,
-                           std::vector<torch::Tensor> const & inputs) {
+                           std::vector<at::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ExecuTorchBackend] No model loaded");
     }
 
     // Keep contiguous inputs alive for the duration of execution
-    std::vector<torch::Tensor> kept_alive;
+    std::vector<at::Tensor> kept_alive;
     kept_alive.reserve(inputs.size());
 
     // Convert at::Tensor → EValue
@@ -274,7 +274,7 @@ ExecuTorchBackend::execute(std::string const & method_name,
 
     // Convert output EValues → at::Tensor
     auto & output_evalues = result.get();
-    std::vector<torch::Tensor> outputs;
+    std::vector<at::Tensor> outputs;
     outputs.reserve(output_evalues.size());
     for (auto & ev: output_evalues) {
         if (ev.isTensor()) {

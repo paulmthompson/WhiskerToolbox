@@ -4,7 +4,7 @@
 #include "models_v2/TensorSlotDescriptor.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <torch/types.h> // torch::Tensor
+#include <ATen/core/Tensor.h> // at::Tensor
 
 #include <algorithm>
 #include <memory>
@@ -40,8 +40,8 @@ public:
     int preferredBatchSize() const override { return 1; }
     int maxBatchSize() const override { return 16; }
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override {
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & inputs) override {
         auto it = inputs.find("image");
         if (it == inputs.end()) { return {}; }
         auto output = it->second.mean(/*dim=*/1, /*keepdim=*/true).sigmoid();
@@ -79,8 +79,8 @@ public:
     void loadWeights(std::filesystem::path const & /*path*/) override {}
     bool isReady() const override { return false; }
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & /*inputs*/) override {
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & /*inputs*/) override {
         return {};
     }
 };
@@ -395,8 +395,8 @@ public:
     void loadWeights(std::filesystem::path const & /*path*/) override {}
     bool isReady() const override { return false; }
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & /*inputs*/) override {
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & /*inputs*/) override {
         return {};
     }
 };

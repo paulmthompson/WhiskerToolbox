@@ -6,9 +6,9 @@
 #ifndef WHISKERTOOLBOX_MODEL_EXECUTION_HPP
 #define WHISKERTOOLBOX_MODEL_EXECUTION_HPP
 
-#include "backends/InferenceBackend.hpp"
+#include "backends/BackendType.hpp"// BackendType
 
-#include <torch/types.h>// torch::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <filesystem>
 #include <memory>
@@ -18,6 +18,8 @@
 
 namespace dl {
 
+
+class InferenceBackend;
 /**
  * @brief Multi-backend model execution layer.
  *
@@ -106,8 +108,8 @@ public:
      * @return Ordered vector of output tensors.
      * @throws std::runtime_error if the model is not loaded or execution fails.
      */
-    [[nodiscard]] std::vector<torch::Tensor>
-    execute(std::vector<torch::Tensor> const & inputs);
+    [[nodiscard]] std::vector<at::Tensor>
+    execute(std::vector<at::Tensor> const & inputs);
 
     /**
      * @brief Execute a named method with ordered input tensors.
@@ -117,8 +119,8 @@ public:
      * @return Ordered vector of output tensors.
      * @throws std::runtime_error if the model is not loaded or execution fails.
      */
-    [[nodiscard]] std::vector<torch::Tensor>
-    execute(std::string const & method_name, std::vector<torch::Tensor> const & inputs);
+    [[nodiscard]] std::vector<at::Tensor>
+    execute(std::string const & method_name, std::vector<at::Tensor> const & inputs);
 
     /**
      * @brief Execute the "forward" method with named input tensors.
@@ -130,8 +132,8 @@ public:
      * @param input_order Ordered slot names matching the model's forward() signature.
      * @return Ordered vector of output tensors.
      */
-    [[nodiscard]] std::vector<torch::Tensor>
-    executeNamed(std::unordered_map<std::string, torch::Tensor> const & named_inputs,
+    [[nodiscard]] std::vector<at::Tensor>
+    executeNamed(std::unordered_map<std::string, at::Tensor> const & named_inputs,
                  std::vector<std::string> const & input_order);
 
 private:

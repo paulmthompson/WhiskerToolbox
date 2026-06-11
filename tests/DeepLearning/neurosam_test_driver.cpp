@@ -6,6 +6,7 @@
 
 #include <ATen/core/Tensor.h> // at::Tensor
 #include <ATen/Functions.h> // at::randint
+#include <c10/core/ScalarType.h> // at::kFloat, at::kByte
 
 #include <chrono>
 #include <iostream>
@@ -98,7 +99,7 @@ int main(int argc, char** argv) {
     try {
         // encoder_image: [batch, 3, 256, 256] - uint8 (model expects uint8 images)
         {
-            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
+            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, at::kByte);
             inputs["encoder_image"] = dev_mgr.toDevice(tensor);
             std::cout << "  - encoder_image: " << inputs["encoder_image"].sizes() 
                       << " dtype=" << inputs["encoder_image"].dtype()
@@ -107,7 +108,7 @@ int main(int argc, char** argv) {
 
         // memory_images: [batch, 3, 256, 256] - uint8 (model expects uint8 images)
         {
-            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
+            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, at::kByte);
             inputs["memory_images"] = dev_mgr.toDevice(tensor);
             std::cout << "  - memory_images: " << inputs["memory_images"].sizes() 
                       << " dtype=" << inputs["memory_images"].dtype()
@@ -116,7 +117,7 @@ int main(int argc, char** argv) {
 
         // memory_masks: [batch, 1, 256, 256] - float32 (model expects float masks)
         {
-            auto tensor = at::zeros({batch_size, 1, 256, 256}, torch::kFloat32);
+            auto tensor = at::zeros({batch_size, 1, 256, 256}, at::kFloat);
             // Create a simple circular mask in the center
             for (int b = 0; b < batch_size; ++b) {
                 for (int y = 100; y < 156; ++y) {

@@ -9,6 +9,8 @@
 #include "RuntimeModelSpec.hpp"
 #include "models_v2/ModelBase.hpp"
 
+#include <ATen/core/Tensor.h>// at::Tensor
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -75,8 +77,8 @@ public:
      */
     [[nodiscard]] std::vector<WeightsVariant> weightsVariants() const;
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & inputs) override;
 
     /**
      * @brief Access the underlying spec.

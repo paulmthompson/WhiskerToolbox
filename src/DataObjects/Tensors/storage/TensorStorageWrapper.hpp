@@ -54,7 +54,7 @@
  * concept/model hierarchy to recover the concrete type. This is the
  * same approach as RaggedStorageWrapper::tryGet<T>() and enables
  * zero-copy backend-specific access (e.g., Armadillo matrix for mlpack,
- * torch::Tensor for model inference).
+ * at::Tensor for model inference).
  *
  * ## Thread Safety
  *

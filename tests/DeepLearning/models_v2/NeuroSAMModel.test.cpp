@@ -137,7 +137,7 @@ TEST_CASE("NeuroSAMModel - loadWeights with nonexistent file throws", "[NeuroSAM
 TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
 
-    std::unordered_map<std::string, torch::Tensor> inputs{
+    std::unordered_map<std::string, at::Tensor> inputs{
             {"encoder_image", at::randn({1, 3, 256, 256})},
             {"memory_images", at::randn({1, 3, 256, 256})},
             {"memory_masks", at::randn({1, 1, 256, 256})},
@@ -155,7 +155,7 @@ TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][
     dl::NeuroSAMModel model;
 
     // Missing memory_masks
-    std::unordered_map<std::string, torch::Tensor> incomplete_inputs{
+    std::unordered_map<std::string, at::Tensor> incomplete_inputs{
             {"encoder_image", at::randn({1, 3, 256, 256})},
             {"memory_images", at::randn({1, 3, 256, 256})},
     };

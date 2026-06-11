@@ -8,6 +8,8 @@
 
 #include "InferenceBackend.hpp"
 
+#include <ATen/core/Tensor.h>// at::Tensor
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -19,7 +21,7 @@ namespace dl {
  * @brief ExecuTorch inference backend — loads `.pte` programs.
  *
  * This backend wraps the ExecuTorch C++ runtime to load and execute
- * ExecuTorch programs. It bridges between libtorch `torch::Tensor`
+ * ExecuTorch programs. It bridges between libtorch `at::Tensor`
  * and ExecuTorch's `EValue` execution API.
  *
  * This backend is **optional** and only available when the project is
@@ -47,12 +49,12 @@ public:
     [[nodiscard]] bool isLoaded() const override;
     [[nodiscard]] std::filesystem::path loadedPath() const override;
 
-    [[nodiscard]] std::vector<torch::Tensor>
-    execute(std::vector<torch::Tensor> const & inputs) override;
+    [[nodiscard]] std::vector<at::Tensor>
+    execute(std::vector<at::Tensor> const & inputs) override;
 
-    [[nodiscard]] std::vector<torch::Tensor>
+    [[nodiscard]] std::vector<at::Tensor>
     execute(std::string const & method_name,
-            std::vector<torch::Tensor> const & inputs) override;
+            std::vector<at::Tensor> const & inputs) override;
 
 private:
     struct Impl;

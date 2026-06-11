@@ -61,8 +61,8 @@ public:
     [[nodiscard]] int maxBatchSize() const override;
     [[nodiscard]] dl::BatchMode batchMode() const override;
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & inputs) override;
 
     /** The spatial resolution expected by the model for all image/mask inputs. */
     static constexpr int kModelSize = 256;

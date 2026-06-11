@@ -6,7 +6,9 @@
 #ifndef WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
 #define WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
 
-#include <torch/types.h>// torch::Tensor
+#include "BackendType.hpp"// BackendType
+
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cctype>
 #include <filesystem>
@@ -14,61 +16,6 @@
 #include <vector>
 
 namespace dl {
-
-/**
- * @brief Serialization format / inference backend for model execution.
- */
-enum class BackendType {
-    /** .pt files via torch::jit::load() (deprecated but functional) */
-    TorchScript,
-    /** .pt2 files via AOTIModelPackageLoader (recommended) */
-    AOTInductor,
-    /** .pte files via ExecuTorch runtime (optional, edge deployment) */
-    ExecuTorch,
-    /** Auto-detect from file extension */
-    Auto
-};
-
-/**
- * @brief Convert a BackendType to a human-readable string.
- */
-[[nodiscard]] inline std::string backendTypeToString(BackendType type) {
-    switch (type) {
-        case BackendType::TorchScript:
-            return "TorchScript";
-        case BackendType::AOTInductor:
-            return "AOTInductor";
-        case BackendType::ExecuTorch:
-            return "ExecuTorch";
-        case BackendType::Auto:
-            return "Auto";
-    }
-    return "Unknown";
-}
-
-/**
- * @brief Parse a BackendType from a string (case-insensitive).
- *
- * @return BackendType::Auto if the string is not recognized.
- */
-[[nodiscard]] inline BackendType backendTypeFromString(std::string const & str) {
-    // Simple case-insensitive compare via lowering
-    auto lower = str;
-    for (auto & c: lower) {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-
-    if (lower == "torchscript" || lower == "torch_script" || lower == "jit") {
-        return BackendType::TorchScript;
-    }
-    if (lower == "aotinductor" || lower == "aot_inductor" || lower == "inductor" || lower == "aoti") {
-        return BackendType::AOTInductor;
-    }
-    if (lower == "executorch" || lower == "exec_torch") {
-        return BackendType::ExecuTorch;
-    }
-    return BackendType::Auto;
-}
 
 /**
  * @brief Detect backend type from a file extension.
@@ -98,8 +45,8 @@ enum class BackendType {
  * @brief Abstract interface for model inference backends.
  *
  * Each backend knows how to load a model file and execute inference,
- * producing `torch::Tensor` outputs from `torch::Tensor` inputs.
- * The `torch::Tensor` type is the common currency across all backends.
+ * producing `at::Tensor` outputs from `at::Tensor` inputs.
+ * The `at::Tensor` type is the common currency across all backends.
  */
 class InferenceBackend {
 public:
@@ -141,15 +88,15 @@ public:
     /**
      * @brief Execute the default method (typically "forward") with ordered inputs.
      *
-     * All tensors are `torch::Tensor` (libtorch) — the common currency
+     * All tensors are `at::Tensor` (libtorch) — the common currency
      * across all backends.
      *
      * @param inputs Ordered vector of input tensors.
      * @return Ordered vector of output tensors.
      * @throws std::runtime_error if the model is not loaded or execution fails.
      */
-    [[nodiscard]] virtual std::vector<torch::Tensor>
-    execute(std::vector<torch::Tensor> const & inputs) = 0;
+    [[nodiscard]] virtual std::vector<at::Tensor>
+    execute(std::vector<at::Tensor> const & inputs) = 0;
 
     /**
      * @brief Execute a named method with ordered inputs.
@@ -162,9 +109,9 @@ public:
      * @return Ordered vector of output tensors.
      * @throws std::runtime_error if the model is not loaded or execution fails.
      */
-    [[nodiscard]] virtual std::vector<torch::Tensor>
+    [[nodiscard]] virtual std::vector<at::Tensor>
     execute(std::string const & method_name,
-            std::vector<torch::Tensor> const & inputs) = 0;
+            std::vector<at::Tensor> const & inputs) = 0;
 
     // Non-copyable (subclasses own heavyweight resources)
     InferenceBackend(InferenceBackend const &) = delete;

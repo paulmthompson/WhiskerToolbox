@@ -2,7 +2,7 @@
  * @file LibTorchTensorStorage.cpp
  * @brief Implementation of the LibTorch tensor storage backend
  *
- * Wraps a torch::Tensor with the TensorStorageBase CRTP interface.
+ * Wraps a at::Tensor with the TensorStorageBase CRTP interface.
  * Available only when built with TENSOR_BACKEND_LIBTORCH.
  */
 
@@ -11,7 +11,8 @@
 #include "Tensors/storage/LibTorchTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
 
-#include <torch/types.h>        // torch::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
+#include <c10/core/ScalarType.h> // at::kFloat
 #include <torch/cuda.h> // torch::cuda::is_available
 #include <ATen/Functions.h> // at::zeros, at::ones
 
@@ -27,17 +28,17 @@
 // Construction
 // =============================================================================
 
-LibTorchTensorStorage::LibTorchTensorStorage(torch::Tensor tensor)
+LibTorchTensorStorage::LibTorchTensorStorage(at::Tensor tensor)
     : _tensor(std::move(tensor))
 {
     if (!_tensor.defined()) {
         throw std::invalid_argument(
             "LibTorchTensorStorage: tensor must be defined");
     }
-    if (_tensor.scalar_type() != torch::kFloat32) {
+    if (_tensor.scalar_type() != at::kFloat) {
         throw std::invalid_argument(
             "LibTorchTensorStorage: tensor must be float32 (kFloat), got " +
-            std::string(torch::toString(_tensor.scalar_type())));
+            std::string(at::toString(_tensor.scalar_type())));
     }
     if (_tensor.dim() == 0) {
         throw std::invalid_argument(
@@ -60,10 +61,10 @@ LibTorchTensorStorage LibTorchTensorStorage::fromDense(
     }
 
     // Create tensor from data — clone to own the memory
-    torch::Tensor tensor = torch::from_blob(
+    at::Tensor tensor = at::from_blob(
         const_cast<float *>(flat.data()),
         torch_shape,
-        torch::kFloat32
+        at::kFloat
     ).clone();
 
     return LibTorchTensorStorage{std::move(tensor)};
@@ -93,10 +94,10 @@ LibTorchTensorStorage LibTorchTensorStorage::fromFlatData(
     }
 
     // Create tensor — clone to own memory
-    torch::Tensor tensor = torch::from_blob(
+    at::Tensor tensor = at::from_blob(
         const_cast<float *>(data.data()),
         torch_shape,
-        torch::kFloat32
+        at::kFloat
     ).clone();
 
     return LibTorchTensorStorage{std::move(tensor)};
@@ -106,12 +107,12 @@ LibTorchTensorStorage LibTorchTensorStorage::fromFlatData(
 // Direct Torch Access
 // =============================================================================
 
-torch::Tensor const & LibTorchTensorStorage::tensor() const noexcept
+at::Tensor const & LibTorchTensorStorage::tensor() const noexcept
 {
     return _tensor;
 }
 
-torch::Tensor & LibTorchTensorStorage::mutableTensor() noexcept
+at::Tensor & LibTorchTensorStorage::mutableTensor() noexcept
 {
     return _tensor;
 }
@@ -133,7 +134,7 @@ bool LibTorchTensorStorage::isCpu() const noexcept
 void LibTorchTensorStorage::toCpu()
 {
     if (!isCpu()) {
-        _tensor = _tensor.to(torch::kCPU);
+        _tensor = _tensor.to(at::kCPU);
     }
 }
 
@@ -143,7 +144,7 @@ void LibTorchTensorStorage::toCuda(int device)
         throw std::runtime_error(
             "LibTorchTensorStorage::toCuda: CUDA is not available");
     }
-    _tensor = _tensor.to(torch::Device(torch::kCUDA, device));
+    _tensor = _tensor.to(at::Device(at::kCUDA, device));
 }
 
 // =============================================================================
@@ -257,7 +258,7 @@ std::vector<float> LibTorchTensorStorage::getColumnImpl(std::size_t col) const
 
     ensureCpuForAccess();
 
-    // Use torch::Tensor::select on the last axis
+    // Use at::Tensor::select on the last axis
     auto selected = _tensor.select(last_axis, static_cast<int64_t>(col));
     auto contiguous = selected.contiguous();
 

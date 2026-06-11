@@ -2,6 +2,8 @@
 #include "registry/ModelRegistry.hpp"
 #include "runtime/RuntimeModel.hpp"
 
+#include <ATen/core/Tensor.h>// at::Tensor
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
@@ -498,7 +500,7 @@ TEST_CASE("RuntimeModel - forward throws when not ready", "[runtime]") {
 
     RuntimeModel model(std::move(result.value()));
 
-    std::unordered_map<std::string, torch::Tensor> inputs;
+    std::unordered_map<std::string, at::Tensor> inputs;
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
 }
 

@@ -512,7 +512,7 @@ public:
      * @brief Convert to LibTorch-backed tensor
      *
      * If already LibTorch-backed, returns a shallow copy.
-     * Otherwise, materializes flat data and wraps in torch::Tensor.
+     * Otherwise, materializes flat data and wraps in at::Tensor.
      */
     [[nodiscard]] TensorData toLibTorch() const;
 

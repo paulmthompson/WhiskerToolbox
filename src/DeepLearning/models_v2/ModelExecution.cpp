@@ -5,6 +5,7 @@
 
 #include "ModelExecution.hpp"
 
+#include "backends/InferenceBackend.hpp"
 #include "backends/AOTInductorBackend.hpp"
 #include "backends/TorchScriptBackend.hpp"
 
@@ -111,8 +112,8 @@ std::string ModelExecution::activeBackendName() const {
 // ---------------------------------------------------------------------------
 // execute (forward method, ordered inputs)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
-ModelExecution::execute(std::vector<torch::Tensor> const & inputs) {
+std::vector<at::Tensor>
+ModelExecution::execute(std::vector<at::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ModelExecution] No model loaded");
     }
@@ -122,9 +123,9 @@ ModelExecution::execute(std::vector<torch::Tensor> const & inputs) {
 // ---------------------------------------------------------------------------
 // execute (named method, ordered inputs)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
+std::vector<at::Tensor>
 ModelExecution::execute(std::string const & method_name,
-                        std::vector<torch::Tensor> const & inputs) {
+                        std::vector<at::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ModelExecution] No model loaded");
     }
@@ -134,11 +135,11 @@ ModelExecution::execute(std::string const & method_name,
 // ---------------------------------------------------------------------------
 // executeNamed
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
+std::vector<at::Tensor>
 ModelExecution::executeNamed(
-        std::unordered_map<std::string, torch::Tensor> const & named_inputs,
+        std::unordered_map<std::string, at::Tensor> const & named_inputs,
         std::vector<std::string> const & input_order) {
-    std::vector<torch::Tensor> ordered;
+    std::vector<at::Tensor> ordered;
     ordered.reserve(input_order.size());
     for (auto const & name: input_order) {
         auto it = named_inputs.find(name);

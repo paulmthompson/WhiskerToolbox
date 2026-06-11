@@ -1,6 +1,6 @@
 #include "Point2DEncoder.hpp"
 
-#include "torch/types.h" // torch::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <algorithm>
 #include <cmath>
@@ -30,7 +30,7 @@ Point2D<float> scale_point(Point2D<float> const point,
 
 /// Place a single point with Binary mode (set 1.0 at nearest pixel)
 void encode_binary(Point2D<float> const scaled_point,
-                   torch::Tensor & channel,
+                   at::Tensor & channel,
                    int const h,
                    int const w) {
     int const px = std::clamp(static_cast<int>(std::round(scaled_point.x)), 0, w - 1);
@@ -40,7 +40,7 @@ void encode_binary(Point2D<float> const scaled_point,
 
 /// Place a 2D Gaussian centered on a point (Heatmap mode)
 void encode_heatmap(Point2D<float> const scaled_point,
-                    torch::Tensor & channel,
+                    at::Tensor & channel,
                     int const h,
                     int const w,
                     float const sigma) {

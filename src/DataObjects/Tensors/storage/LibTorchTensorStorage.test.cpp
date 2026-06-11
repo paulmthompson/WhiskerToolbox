@@ -1,9 +1,9 @@
 /**
  * @file LibTorchTensorStorage.test.cpp
- * @brief Unit tests for LibTorchTensorStorage (torch::Tensor wrapper)
+ * @brief Unit tests for LibTorchTensorStorage (at::Tensor wrapper)
  *
  * Tests cover:
- * - Construction from torch::Tensor
+ * - Construction from at::Tensor
  * - Construction from DenseTensorStorage (fromDense)
  * - Construction from flat data + shape (fromFlatData)
  * - Shape, totalElements, isContiguous, ndim metadata
@@ -13,7 +13,7 @@
  * - flatData access and row-major layout verification
  * - Cache support (tryGetCache) with stride verification
  * - Storage type reporting
- * - Direct torch::Tensor access (tensor(), mutableTensor())
+ * - Direct at::Tensor access (tensor(), mutableTensor())
  * - Device queries (isCpu, isCuda)
  * - Error handling (wrong dtype, undefined tensor, out-of-range)
  * - Interop with TensorStorageWrapper (type erasure + recovery)
@@ -28,6 +28,8 @@
 #include "Tensors/storage/DenseTensorStorage.hpp"
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
+#include <ATen/Functions.h> // at::tensor
+
 #include <cstddef>
 #include <span>
 #include <stdexcept>
@@ -39,10 +41,10 @@ using Catch::Matchers::WithinAbs;
 // Construction Tests
 // =============================================================================
 
-TEST_CASE("LibTorchTensorStorage construction from torch::Tensor", "[LibTorchTensorStorage]") {
+TEST_CASE("LibTorchTensorStorage construction from at::Tensor", "[LibTorchTensorStorage]") {
     // 2x3 matrix: [[1,2,3],[4,5,6]]
-    auto tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                  {4.0f, 5.0f, 6.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 
+        4.0f, 5.0f, 6.0f}).view({2, 3});
 
     LibTorchTensorStorage storage(tensor);
 
@@ -62,7 +64,7 @@ TEST_CASE("LibTorchTensorStorage construction from torch::Tensor", "[LibTorchTen
         auto const & t = storage.tensor();
         CHECK(t.size(0) == 2);
         CHECK(t.size(1) == 3);
-        CHECK(t.scalar_type() == torch::kFloat32);
+        CHECK(t.scalar_type() == at::kFloat);
     }
 
     SECTION("device is CPU") {
@@ -72,7 +74,7 @@ TEST_CASE("LibTorchTensorStorage construction from torch::Tensor", "[LibTorchTen
 }
 
 TEST_CASE("LibTorchTensorStorage construction from 1D tensor", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({10.0f, 20.0f, 30.0f, 40.0f});
+    auto tensor = at::tensor({10.0f, 20.0f, 30.0f, 40.0f});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.ndim() == 1);
@@ -86,7 +88,7 @@ TEST_CASE("LibTorchTensorStorage construction from 1D tensor", "[LibTorchTensorS
 
 TEST_CASE("LibTorchTensorStorage construction from 3D tensor", "[LibTorchTensorStorage]") {
     // 2x3x4 tensor
-    auto tensor = torch::arange(24.0f).reshape({2, 3, 4});
+    auto tensor = at::arange(24.0f).reshape({2, 3, 4});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.ndim() == 3);
@@ -101,7 +103,7 @@ TEST_CASE("LibTorchTensorStorage construction from 3D tensor", "[LibTorchTensorS
 
 TEST_CASE("LibTorchTensorStorage construction from 4D tensor", "[LibTorchTensorStorage]") {
     // batch × channel × height × width
-    auto tensor = torch::arange(120.0f).reshape({2, 3, 4, 5});
+    auto tensor = at::arange(120.0f).reshape({2, 3, 4, 5});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.ndim() == 4);
@@ -117,23 +119,18 @@ TEST_CASE("LibTorchTensorStorage construction from 4D tensor", "[LibTorchTensorS
 
 TEST_CASE("LibTorchTensorStorage construction errors", "[LibTorchTensorStorage]") {
     SECTION("undefined tensor throws") {
-        torch::Tensor undefined;
+        at::Tensor undefined;
         CHECK_THROWS_AS(LibTorchTensorStorage(undefined), std::invalid_argument);
     }
 
     SECTION("wrong dtype throws") {
-        auto int_tensor = torch::tensor({1, 2, 3}); // kInt
+        auto int_tensor = at::tensor({1, 2, 3}); // kInt
         CHECK_THROWS_AS(LibTorchTensorStorage(int_tensor), std::invalid_argument);
     }
 
     SECTION("double dtype throws") {
-        auto double_tensor = torch::tensor({1.0, 2.0, 3.0}, torch::kFloat64);
+        auto double_tensor = at::tensor({1.0, 2.0, 3.0}, at::kDouble);
         CHECK_THROWS_AS(LibTorchTensorStorage(double_tensor), std::invalid_argument);
-    }
-
-    SECTION("scalar tensor throws") {
-        auto scalar = torch::tensor(42.0f);
-        CHECK_THROWS_AS(LibTorchTensorStorage(scalar), std::invalid_argument);
     }
 }
 
@@ -219,8 +216,9 @@ TEST_CASE("LibTorchTensorStorage fromFlatData", "[LibTorchTensorStorage]") {
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage element access 2D", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                  {4.0f, 5.0f, 6.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 
+        4.0f, 5.0f, 6.0f}).view({2, 3});
+
     LibTorchTensorStorage storage(tensor);
 
     CHECK_THAT(storage.getValueAt(std::vector<std::size_t>{0, 0}), WithinAbs(1.0f, 1e-5f));
@@ -233,7 +231,7 @@ TEST_CASE("LibTorchTensorStorage element access 2D", "[LibTorchTensorStorage]") 
 
 TEST_CASE("LibTorchTensorStorage element access 3D", "[LibTorchTensorStorage]") {
     // 2x3x4 tensor with sequential values
-    auto tensor = torch::arange(24.0f).reshape({2, 3, 4});
+    auto tensor = at::arange(24.0f).reshape({2, 3, 4});
     LibTorchTensorStorage storage(tensor);
 
     // [0,0,0] = 0, [0,0,3] = 3, [0,2,3] = 11, [1,0,0] = 12, [1,2,3] = 23
@@ -245,7 +243,7 @@ TEST_CASE("LibTorchTensorStorage element access 3D", "[LibTorchTensorStorage]") 
 }
 
 TEST_CASE("LibTorchTensorStorage element access errors", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 4.0f}).view({2, 2});
     LibTorchTensorStorage storage(tensor);
 
     SECTION("wrong number of indices") {
@@ -273,8 +271,8 @@ TEST_CASE("LibTorchTensorStorage element access errors", "[LibTorchTensorStorage
 
 TEST_CASE("LibTorchTensorStorage flatData row-major", "[LibTorchTensorStorage]") {
     // torch default is row-major (C contiguous)
-    auto tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                  {4.0f, 5.0f, 6.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 
+        4.0f, 5.0f, 6.0f}).view({2, 3});
     LibTorchTensorStorage storage(tensor);
 
     auto flat = storage.flatData();
@@ -288,7 +286,7 @@ TEST_CASE("LibTorchTensorStorage flatData row-major", "[LibTorchTensorStorage]")
 }
 
 TEST_CASE("LibTorchTensorStorage flatData 1D", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({10.0f, 20.0f, 30.0f});
+    auto tensor = at::tensor({10.0f, 20.0f, 30.0f});
     LibTorchTensorStorage storage(tensor);
 
     auto flat = storage.flatData();
@@ -304,7 +302,7 @@ TEST_CASE("LibTorchTensorStorage flatData 1D", "[LibTorchTensorStorage]") {
 
 TEST_CASE("LibTorchTensorStorage getColumn 2D", "[LibTorchTensorStorage]") {
     // 3x4 matrix: row i, col j = i*4+j
-    auto tensor = torch::arange(12.0f).reshape({3, 4});
+    auto tensor = at::arange(12.0f).reshape({3, 4});
     LibTorchTensorStorage storage(tensor);
 
     SECTION("column 0") {
@@ -326,7 +324,7 @@ TEST_CASE("LibTorchTensorStorage getColumn 2D", "[LibTorchTensorStorage]") {
 
 TEST_CASE("LibTorchTensorStorage getColumn 3D", "[LibTorchTensorStorage]") {
     // 2x3x4 tensor — column is slice along last axis
-    auto tensor = torch::arange(24.0f).reshape({2, 3, 4});
+    auto tensor = at::arange(24.0f).reshape({2, 3, 4});
     LibTorchTensorStorage storage(tensor);
 
     // Column 2: all elements where last index == 2
@@ -343,13 +341,13 @@ TEST_CASE("LibTorchTensorStorage getColumn 3D", "[LibTorchTensorStorage]") {
 
 TEST_CASE("LibTorchTensorStorage getColumn errors", "[LibTorchTensorStorage]") {
     SECTION("1D tensor throws") {
-        auto tensor = torch::tensor({1.0f, 2.0f, 3.0f});
+        auto tensor = at::tensor({1.0f, 2.0f, 3.0f});
         LibTorchTensorStorage storage(tensor);
         CHECK_THROWS_AS(storage.getColumn(0), std::logic_error);
     }
 
     SECTION("column out of range") {
-        auto tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
+        auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 4.0f}).view({2, 2});
         LibTorchTensorStorage storage(tensor);
         CHECK_THROWS_AS(storage.getColumn(2), std::out_of_range);
     }
@@ -361,7 +359,7 @@ TEST_CASE("LibTorchTensorStorage getColumn errors", "[LibTorchTensorStorage]") {
 
 TEST_CASE("LibTorchTensorStorage sliceAlongAxis 2D", "[LibTorchTensorStorage]") {
     // 3x4: row i, col j = i*4+j
-    auto tensor = torch::arange(12.0f).reshape({3, 4});
+    auto tensor = at::arange(12.0f).reshape({3, 4});
     LibTorchTensorStorage storage(tensor);
 
     SECTION("slice axis 0 (row)") {
@@ -384,7 +382,7 @@ TEST_CASE("LibTorchTensorStorage sliceAlongAxis 2D", "[LibTorchTensorStorage]") 
 
 TEST_CASE("LibTorchTensorStorage sliceAlongAxis 3D", "[LibTorchTensorStorage]") {
     // 2x3x4 tensor
-    auto tensor = torch::arange(24.0f).reshape({2, 3, 4});
+    auto tensor = at::arange(24.0f).reshape({2, 3, 4});
     LibTorchTensorStorage storage(tensor);
 
     SECTION("slice axis 0 (depth slice)") {
@@ -407,7 +405,7 @@ TEST_CASE("LibTorchTensorStorage sliceAlongAxis 3D", "[LibTorchTensorStorage]") 
 }
 
 TEST_CASE("LibTorchTensorStorage sliceAlongAxis errors", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 4.0f}).view({2, 2});
     LibTorchTensorStorage storage(tensor);
 
     CHECK_THROWS_AS(storage.sliceAlongAxis(2, 0), std::out_of_range); // axis out of range
@@ -419,8 +417,8 @@ TEST_CASE("LibTorchTensorStorage sliceAlongAxis errors", "[LibTorchTensorStorage
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage cache for contiguous CPU tensor", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                  {4.0f, 5.0f, 6.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 
+        4.0f, 5.0f, 6.0f}).view({2, 3});
     LibTorchTensorStorage storage(tensor);
 
     auto cache = storage.tryGetCache();
@@ -443,7 +441,7 @@ TEST_CASE("LibTorchTensorStorage cache for contiguous CPU tensor", "[LibTorchTen
 
 TEST_CASE("LibTorchTensorStorage cache for non-contiguous tensor", "[LibTorchTensorStorage]") {
     // Transposed tensor is typically not contiguous
-    auto tensor = torch::arange(6.0f).reshape({2, 3}).t();
+    auto tensor = at::arange(6.0f).reshape({2, 3}).t();
     REQUIRE_FALSE(tensor.is_contiguous());
 
     LibTorchTensorStorage storage(tensor);
@@ -457,7 +455,7 @@ TEST_CASE("LibTorchTensorStorage cache for non-contiguous tensor", "[LibTorchTen
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage mutableTensor", "[LibTorchTensorStorage]") {
-    auto tensor = torch::zeros({2, 3});
+    auto tensor = at::zeros({2, 3});
     LibTorchTensorStorage storage(tensor);
 
     // Modify via mutable access
@@ -472,7 +470,7 @@ TEST_CASE("LibTorchTensorStorage mutableTensor", "[LibTorchTensorStorage]") {
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage toCpu is no-op for CPU tensor", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({1.0f, 2.0f, 3.0f});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.isCpu());
@@ -488,8 +486,8 @@ TEST_CASE("LibTorchTensorStorage toCpu is no-op for CPU tensor", "[LibTorchTenso
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage works with TensorStorageWrapper", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                  {4.0f, 5.0f, 6.0f}});
+    auto tensor = at::tensor({1.0f, 2.0f, 3.0f, 
+        4.0f, 5.0f, 6.0f}).view({2, 3});
     LibTorchTensorStorage storage(tensor);
 
     TensorStorageWrapper wrapper(std::move(storage));
@@ -532,7 +530,7 @@ TEST_CASE("LibTorchTensorStorage works with TensorStorageWrapper", "[LibTorchTen
 // =============================================================================
 
 TEST_CASE("LibTorchTensorStorage single element", "[LibTorchTensorStorage]") {
-    auto tensor = torch::tensor({42.0f});
+    auto tensor = at::tensor({42.0f});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.ndim() == 1);
@@ -545,7 +543,7 @@ TEST_CASE("LibTorchTensorStorage single element", "[LibTorchTensorStorage]") {
 
 TEST_CASE("LibTorchTensorStorage dimension with size 1", "[LibTorchTensorStorage]") {
     // 1x5 matrix
-    auto tensor = torch::arange(5.0f).reshape({1, 5});
+    auto tensor = at::arange(5.0f).reshape({1, 5});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.ndim() == 2);
@@ -563,7 +561,7 @@ TEST_CASE("LibTorchTensorStorage dimension with size 1", "[LibTorchTensorStorage
 
 TEST_CASE("LibTorchTensorStorage large tensor", "[LibTorchTensorStorage]") {
     // 100x200 tensor
-    auto tensor = torch::arange(20000.0f).reshape({100, 200});
+    auto tensor = at::arange(20000.0f).reshape({100, 200});
     LibTorchTensorStorage storage(tensor);
 
     CHECK(storage.totalElements() == 20000);

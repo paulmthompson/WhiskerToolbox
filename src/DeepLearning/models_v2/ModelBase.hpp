@@ -8,7 +8,7 @@
 
 #include "TensorSlotDescriptor.hpp"
 
-#include <torch/types.h>// torch::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <filesystem>
 #include <string>
@@ -113,8 +113,8 @@ public:
      * Tensors have a leading batch dimension whose size is controlled by
      * the caller (and bounded by `maxBatchSize()`).
      */
-    virtual std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) = 0;
+    virtual std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & inputs) = 0;
 };
 
 }// namespace dl

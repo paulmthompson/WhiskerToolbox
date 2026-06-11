@@ -6,16 +6,16 @@
 #include "DeviceManager.hpp"
 
 #include <torch/cuda.h> // torch::cuda::is_available
-#include <torch/types.h>// torch::Tensor
+#include <c10/core/DeviceType.h> // at::Device
 
 #include <iostream>
 
 namespace dl {
 
 DeviceManager::DeviceManager()
-    : _device(torch::kCPU) {
+    : _device(at::kCPU) {
     if (torch::cuda::is_available()) {
-        _device = torch::Device(torch::kCUDA);
+        _device = at::Device(at::kCUDA);
         std::cout << "[DeviceManager] CUDA is available — using GPU.\n";
     } else {
         std::cout << "[DeviceManager] No GPU found — using CPU.\n";
@@ -27,11 +27,11 @@ DeviceManager & DeviceManager::instance() {
     return inst;
 }
 
-torch::Device DeviceManager::device() const {
+at::Device DeviceManager::device() const {
     return _device;
 }
 
-void DeviceManager::setDevice(torch::Device dev) {
+void DeviceManager::setDevice(at::Device dev) {
     _device = dev;
 }
 
@@ -39,7 +39,7 @@ bool DeviceManager::cudaAvailable() {
     return torch::cuda::is_available();
 }
 
-torch::Tensor DeviceManager::toDevice(torch::Tensor tensor) const {
+at::Tensor DeviceManager::toDevice(at::Tensor tensor) const {
     if (tensor.device() == _device) {
         return tensor;
     }

@@ -24,8 +24,8 @@ namespace {
 /**
  * @brief Extract tensors from a JIT IValue (single tensor, tuple, or tensor list).
  */
-std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value) {
-    std::vector<torch::Tensor> result;
+std::vector<at::Tensor> iValueToTensors(torch::jit::IValue const & value) {
+    std::vector<at::Tensor> result;
 
     if (value.isTensor()) {
         result.push_back(value.toTensor());
@@ -119,17 +119,17 @@ std::filesystem::path TorchScriptBackend::loadedPath() const {
 // ---------------------------------------------------------------------------
 // execute (default "forward" method)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
-TorchScriptBackend::execute(std::vector<torch::Tensor> const & inputs) {
+std::vector<at::Tensor>
+TorchScriptBackend::execute(std::vector<at::Tensor> const & inputs) {
     return execute("forward", inputs);
 }
 
 // ---------------------------------------------------------------------------
 // execute (named method)
 // ---------------------------------------------------------------------------
-std::vector<torch::Tensor>
+std::vector<at::Tensor>
 TorchScriptBackend::execute(std::string const & method_name,
-                            std::vector<torch::Tensor> const & inputs) {
+                            std::vector<at::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[TorchScriptBackend] No model loaded");
     }

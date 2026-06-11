@@ -8,7 +8,7 @@
 // torch's c10 logging defines a CHECK macro that conflicts with testing
 // frameworks (Catch2) and other libraries. Save/restore around the include.
 #pragma push_macro("CHECK")
-#include <torch/types.h> // torch::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
 #pragma pop_macro("CHECK")
 
 #include <cstddef>
@@ -18,14 +18,14 @@
 class DenseTensorStorage;
 
 /**
- * @brief Tensor storage backend wrapping a torch::Tensor
+ * @brief Tensor storage backend wrapping a at::Tensor
  *
  * Provides zero-copy access to LibTorch tensors for model inference.
  * Available only when built with `TENSOR_BACKEND_LIBTORCH` defined.
  *
  * ## Design
  *
- * The owned torch::Tensor is kept in its native format. The CRTP interface
+ * The owned at::Tensor is kept in its native format. The CRTP interface
  * presents row-major semantics to consumers. Since LibTorch default layout
  * is C-contiguous (row-major), this is usually transparent.
  *
@@ -41,33 +41,33 @@ class DenseTensorStorage;
  *
  * ## Ownership
  *
- * The storage owns the torch::Tensor (via value semantics — torch::Tensor is
+ * The storage owns the at::Tensor (via value semantics — at::Tensor is
  * itself a reference-counted handle to underlying TensorImpl). Copies of this
  * storage share the underlying tensor data (torch's COW semantics).
  *
  * ## Thread Safety
  *
- * Same as torch::Tensor. No additional synchronization is provided.
+ * Same as at::Tensor. No additional synchronization is provided.
  */
 class LibTorchTensorStorage : public TensorStorageBase<LibTorchTensorStorage> {
 public:
     // ========== Construction ==========
 
     /**
-     * @brief Construct from an existing torch::Tensor
+     * @brief Construct from an existing at::Tensor
      *
      * @param tensor A defined float32 tensor
      * @throws std::invalid_argument if tensor is not defined
      * @throws std::invalid_argument if tensor dtype is not kFloat
      * @throws std::invalid_argument if tensor has zero dimensions
      */
-    explicit LibTorchTensorStorage(torch::Tensor tensor);
+    explicit LibTorchTensorStorage(at::Tensor tensor);
 
     /**
-     * @brief Create from a DenseTensorStorage (copies data into a torch::Tensor)
+     * @brief Create from a DenseTensorStorage (copies data into a at::Tensor)
      *
      * The DenseTensorStorage's flat row-major data is copied into a new
-     * CPU-resident float32 torch::Tensor with the matching shape.
+     * CPU-resident float32 at::Tensor with the matching shape.
      *
      * @param dense The source DenseTensorStorage
      * @return A new LibTorchTensorStorage wrapping the converted tensor
@@ -89,16 +89,16 @@ public:
     // ========== Direct Torch Access (zero-copy for model I/O) ==========
 
     /**
-     * @brief Get const reference to the underlying torch::Tensor
+     * @brief Get const reference to the underlying at::Tensor
      */
-    [[nodiscard]] torch::Tensor const & tensor() const noexcept;
+    [[nodiscard]] at::Tensor const & tensor() const noexcept;
 
     /**
-     * @brief Get mutable reference to the underlying torch::Tensor
+     * @brief Get mutable reference to the underlying at::Tensor
      *
      * Use with care — mutation bypasses observer notifications.
      */
-    [[nodiscard]] torch::Tensor & mutableTensor() noexcept;
+    [[nodiscard]] at::Tensor & mutableTensor() noexcept;
 
     // ========== Device Management ==========
 
@@ -147,7 +147,7 @@ public:
     [[nodiscard]] TensorStorageCache tryGetCacheImpl() const;
 
 private:
-    torch::Tensor _tensor;
+    at::Tensor _tensor;
 
     /**
      * @brief Ensure the tensor is on CPU and contiguous, preparing for data access

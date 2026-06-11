@@ -3,8 +3,9 @@
 
 #include "device/DeviceManager.hpp"
 
-#include <torch/types.h> // torch::Tensor
 #include <torch/cuda.h>  // torch::cuda::is_available
+#include <c10/core/DeviceType.h> // at::kCPU, at::kCUDA
+#include <ATen/Functions.h> // at::randn
 
 TEST_CASE("DeviceManager - singleton returns same instance", "[DeviceManager]")
 {
@@ -20,7 +21,7 @@ TEST_CASE("DeviceManager - device returns valid device", "[DeviceManager]")
 
     // On CI/test machines, CUDA may or may not be available.
     // Just verify we get a valid device type.
-    CHECK((dev.type() == torch::kCPU || dev.type() == torch::kCUDA));
+    CHECK((dev.type() == at::kCPU || dev.type() == at::kCUDA));
 }
 
 TEST_CASE("DeviceManager - cudaAvailable is consistent", "[DeviceManager]")
@@ -35,8 +36,8 @@ TEST_CASE("DeviceManager - setDevice overrides", "[DeviceManager]")
     auto original = dm.device();
 
     // Force CPU
-    dm.setDevice(torch::Device(torch::kCPU));
-    CHECK(dm.device().type() == torch::kCPU);
+    dm.setDevice(at::Device(at::kCPU));
+    CHECK(dm.device().type() == at::kCPU);
 
     // Restore original
     dm.setDevice(original);
@@ -48,24 +49,24 @@ TEST_CASE("DeviceManager - toDevice moves tensor", "[DeviceManager]")
     auto & dm = dl::DeviceManager::instance();
 
     // Force CPU for reliable testing
-    dm.setDevice(torch::Device(torch::kCPU));
+    dm.setDevice(at::Device(at::kCPU));
 
-    auto tensor = torch::randn({2, 3});
+    auto tensor = at::randn({2, 3});
     auto moved = dm.toDevice(tensor);
 
-    CHECK(moved.device().type() == torch::kCPU);
+    CHECK(moved.device().type() == at::kCPU);
     CHECK(moved.sizes() == tensor.sizes());
 
     // Values should be identical (no copy needed when already on CPU)
-    CHECK(torch::allclose(moved, tensor));
+    CHECK(at::allclose(moved, tensor));
 }
 
 TEST_CASE("DeviceManager - toDevice returns same tensor when already on device", "[DeviceManager]")
 {
     auto & dm = dl::DeviceManager::instance();
-    dm.setDevice(torch::Device(torch::kCPU));
+    dm.setDevice(at::Device(at::kCPU));
 
-    auto tensor = torch::randn({4, 4});
+    auto tensor = at::randn({4, 4});
     auto moved = dm.toDevice(tensor);
 
     // Should be the same tensor (same data_ptr) since it's already on CPU

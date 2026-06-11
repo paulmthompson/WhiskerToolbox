@@ -1,6 +1,29 @@
 /**
  * @file PostEncoderModule.hpp
  * @brief Abstract interface for post-encoder feature processing modules.
+ *
+ * Post-encoder modules are the **tensor-to-tensor** stage of the inference pipeline.
+ * They transform a backbone encoder's spatial feature map (`at::Tensor`, typically
+ * `[B, C, H, W]`) into a more compact tensor representation still in the torch
+ * domain — for example a global descriptor `[B, C]` from `GlobalAvgPoolModule` or
+ * a point-sampled vector from `SpatialPointExtractModule`.
+ *
+ * Typical pipeline position:
+ * @code
+ *   encoder output [B, C, H, W]
+ *        → PostEncoderModule::apply()              // torch → torch
+ *        → TensorToFeatureVector::decode() / …     // torch → DataManager type
+ *        → DataManager::setData / addAtTime
+ * @endcode
+ *
+ * Post-encoder modules are optional. When omitted, channel decoders operate directly
+ * on the raw encoder output (required for spatial decoders such as `TensorToMask2D`).
+ * Modules chain via `PostEncoderPipeline` and are instantiated through
+ * `PostEncoderModuleFactory`.
+ *
+ * @see ChannelDecoder.hpp for the final torch-to-DataManager decoding stage
+ * @see PostEncoderModuleFactory.hpp for module registration and lookup
+ * @see PostEncoderPipeline.hpp for chaining multiple modules
  */
 
 #ifndef WHISKERTOOLBOX_POST_ENCODER_MODULE_HPP
@@ -17,21 +40,21 @@ class Tensor;
 namespace dl {
 
 /**
- * @brief Abstract base class for modules that post-process encoder feature tensors.
+ * @brief Abstract base class for tensor-to-tensor post-encoder processing.
  *
- * Post-encoder modules transform the raw spatial feature tensor produced by
- * a backbone encoder (e.g. `[B, C, H, W]`) into a more compact representation
- * — for example, a global feature descriptor `[B, C]`.
+ * Implementations expose `apply()` to transform feature tensors and `outputShape()`
+ * to propagate rank/shape metadata without running inference. Modules are stateless
+ * by default; stateful modules (e.g. `SpatialPointExtractModule`) expose setters to
+ * update per-frame query state before `apply()`.
  *
- * Modules are stateless by default. Stateful modules (e.g.
- * `SpatialPointExtractModule`) expose additional setter methods to update
- * their state between frames.
+ * @see ChannelDecoder for the complementary stage that converts torch outputs into
+ *      DataManager-compatible types
  *
  * Usage:
  * @code
  *     dl::GlobalAvgPoolModule pool;
- *     torch::Tensor features = encoder.forward(inputs)["features"];
- *     torch::Tensor pooled = pool.apply(features);  // [B, C, H, W] → [B, C]
+ *     at::Tensor features = encoder.forward(inputs)["features"];
+ *     at::Tensor pooled = pool.apply(features);  // [B, C, H, W] → [B, C]
  * @endcode
  */
 class PostEncoderModule {

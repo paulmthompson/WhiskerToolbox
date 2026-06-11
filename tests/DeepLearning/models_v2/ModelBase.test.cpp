@@ -37,8 +37,8 @@ public:
     int preferredBatchSize() const override { return 1; }
     int maxBatchSize() const override { return 8; }
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override {
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & inputs) override {
         // Simple passthrough: output = sigmoid(mean of inputs across channels)
         auto it = inputs.find("image");
         if (it == inputs.end()) {
@@ -67,8 +67,8 @@ public:
     void loadWeights(std::filesystem::path const & /*path*/) override {}
     bool isReady() const override { return false; }
 
-    std::unordered_map<std::string, torch::Tensor>
-    forward(std::unordered_map<std::string, torch::Tensor> const & /*inputs*/) override {
+    std::unordered_map<std::string, at::Tensor>
+    forward(std::unordered_map<std::string, at::Tensor> const & /*inputs*/) override {
         return {};
     }
 };
@@ -152,7 +152,7 @@ TEST_CASE("ModelBase - forward pass with DummyModel", "[ModelBase]") {
     auto image = at::randn({1, 3, 64, 64});
     auto mask = at::ones({1, 1, 64, 64});
 
-    std::unordered_map<std::string, torch::Tensor> inputs{
+    std::unordered_map<std::string, at::Tensor> inputs{
             {"image", image},
             {"mask", mask}};
 

@@ -779,7 +779,7 @@ TEST_CASE("TensorData toLibTorch strided path produces contiguous tensor",
     auto torch_tensor = tensor.toLibTorch();
     REQUIRE(torch_tensor.storage().getStorageType() == TensorStorageType::LibTorch);
 
-    // The underlying torch::Tensor must be contiguous (row-major)
+    // The underlying at::Tensor must be contiguous (row-major)
     auto const * torch_storage =
             torch_tensor.storage().tryGetAs<LibTorchTensorStorage>();
     REQUIRE(torch_storage != nullptr);

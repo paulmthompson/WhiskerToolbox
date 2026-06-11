@@ -28,6 +28,8 @@
 #include <c10/core/Device.h>  // Device, kCPU, kCUDA
 #include <torch/cuda.h> // torch::cuda::is_available
 #include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/TensorOperators.h>
+#include <ATen/Functions.h> // at::tensor
 #pragma pop_macro("CHECK")
 #endif
 
@@ -38,7 +40,7 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 namespace {
 
 /**
- * @brief Build a TensorData result from a CPU torch::Tensor preserving the
+ * @brief Build a TensorData result from a CPU at::Tensor preserving the
  *        RowDescriptor and column names from the original input.
  *
  * @pre result_tensor is contiguous, float32, on CPU, shape [num_rows, num_cols]

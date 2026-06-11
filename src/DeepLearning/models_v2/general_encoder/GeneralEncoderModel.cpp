@@ -8,6 +8,8 @@
 #include "device/DeviceManager.hpp"
 #include "registry/ModelRegistry.hpp"
 
+#include <c10/core/DeviceType.h> // at::kCPU
+
 #include <cassert>
 #include <stdexcept>
 #include <utility>
@@ -155,9 +157,9 @@ void GeneralEncoderModel::setOutputShape(std::vector<int64_t> output_shape) {
 // ---------------------------------------------------------------------------
 // Forward pass
 // ---------------------------------------------------------------------------
-std::unordered_map<std::string, torch::Tensor>
+std::unordered_map<std::string, at::Tensor>
 GeneralEncoderModel::forward(
-        std::unordered_map<std::string, torch::Tensor> const & inputs) {
+        std::unordered_map<std::string, at::Tensor> const & inputs) {
     if (!isReady()) {
         throw std::runtime_error(
                 "GeneralEncoderModel::forward(): model not ready (weights not loaded)");
@@ -172,7 +174,7 @@ GeneralEncoderModel::forward(
 
     // Move inputs to the active device
     auto & device_mgr = DeviceManager::instance();
-    std::unordered_map<std::string, torch::Tensor> device_inputs;
+    std::unordered_map<std::string, at::Tensor> device_inputs;
     device_inputs.reserve(inputs.size());
     for (auto const & [name, tensor]: inputs) {
         device_inputs[name] = device_mgr.toDevice(tensor);
@@ -187,8 +189,8 @@ GeneralEncoderModel::forward(
     }
 
     // Map the first output to the "features" slot
-    std::unordered_map<std::string, torch::Tensor> result;
-    torch::Tensor features = output_tensors[0].to(torch::kCPU);
+    std::unordered_map<std::string, at::Tensor> result;
+    at::Tensor features = output_tensors[0].to(at::kCPU);
 
     // Apply post-encoder module if configured
     if (_post_encoder_module) {

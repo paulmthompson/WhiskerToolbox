@@ -130,9 +130,9 @@ BatchMode NeuroSAMModel::batchMode() const {
 // ---------------------------------------------------------------------------
 // Forward pass
 // ---------------------------------------------------------------------------
-std::unordered_map<std::string, torch::Tensor>
+std::unordered_map<std::string, at::Tensor>
 NeuroSAMModel::forward(
-        std::unordered_map<std::string, torch::Tensor> const & inputs) {
+        std::unordered_map<std::string, at::Tensor> const & inputs) {
     if (!isReady()) {
         throw std::runtime_error(
                 "NeuroSAMModel::forward(): model not ready (weights not loaded)");
@@ -149,7 +149,7 @@ NeuroSAMModel::forward(
 
     // Move inputs to the active device
     auto & device_mgr = DeviceManager::instance();
-    std::unordered_map<std::string, torch::Tensor> device_inputs;
+    std::unordered_map<std::string, at::Tensor> device_inputs;
     device_inputs.reserve(inputs.size());
     for (auto const & [name, tensor]: inputs) {
         device_inputs[name] = device_mgr.toDevice(tensor);
@@ -159,7 +159,7 @@ NeuroSAMModel::forward(
     auto output_tensors = _execution.executeNamed(device_inputs, _input_order);
 
     // Map outputs to named slots
-    std::unordered_map<std::string, torch::Tensor> result;
+    std::unordered_map<std::string, at::Tensor> result;
     if (!output_tensors.empty()) {
         result[kProbabilityMapSlot] = std::move(output_tensors[0]);
     }

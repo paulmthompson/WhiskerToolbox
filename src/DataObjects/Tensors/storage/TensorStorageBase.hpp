@@ -31,7 +31,7 @@
 enum class TensorStorageType {
     Armadillo,  ///< arma::fvec / arma::fmat / arma::fcube (≤3D, always available)
     Dense,      ///< Flat std::vector<float> + shape (>3D fallback)
-    LibTorch,   ///< torch::Tensor (optional, behind #ifdef)
+    LibTorch,   ///< at::Tensor (optional, behind #ifdef)
     View,       ///< Zero-copy slice of another storage
     Lazy,       ///< Lazily computed columns (transforms v2 pipelines)
     MemoryMapped///< Block-cached memory-mapped interleaved binary (Phase 2)

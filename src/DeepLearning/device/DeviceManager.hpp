@@ -6,7 +6,8 @@
 #ifndef WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 #define WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 
-#include <torch/types.h>// torch::Tensor, torch::Device
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <c10/core/Device.h> // at::Device
 
 namespace dl {
 
@@ -36,12 +37,12 @@ public:
      *
      * CUDA if available, else CPU.
      */
-    [[nodiscard]] torch::Device device() const;
+    [[nodiscard]] at::Device device() const;
 
     /**
      * @brief Force a specific device (useful for testing or user preference).
      */
-    void setDevice(torch::Device dev);
+    void setDevice(at::Device dev);
 
     /**
      * @brief Whether CUDA is available on this system.
@@ -53,7 +54,7 @@ public:
      *
      * Returns the tensor unchanged if it is already on the correct device.
      */
-    [[nodiscard]] torch::Tensor toDevice(torch::Tensor tensor) const;
+    [[nodiscard]] at::Tensor toDevice(at::Tensor tensor) const;
 
     // Non-copyable, non-movable
     DeviceManager(DeviceManager const &) = delete;
@@ -63,7 +64,7 @@ public:
 
 private:
     DeviceManager();
-    torch::Device _device;
+    at::Device _device;
 };
 
 }// namespace dl

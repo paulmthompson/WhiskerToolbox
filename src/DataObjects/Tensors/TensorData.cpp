@@ -17,6 +17,8 @@
 
 #ifdef TENSOR_BACKEND_LIBTORCH
 #include "Tensors/storage/LibTorchTensorStorage.hpp"
+#include <ATen/Functions.h> // at::from_blob
+#include <c10/core/ScalarType.h> // at::kFloat
 #endif
 
 #include "TimeFrame/TimeFrame.hpp"
@@ -722,7 +724,7 @@ TensorData TensorData::toArmadillo() const {
 #ifdef TENSOR_BACKEND_LIBTORCH
     // Fast path: LibTorch 2D → Armadillo without intermediate std::vector.
     // LibTorch is row-major, Armadillo is column-major.  We read directly
-    // from the torch::Tensor data pointer into the arma::fmat, performing
+    // from the at::Tensor data pointer into the arma::fmat, performing
     // the transpose in a single pass and avoiding the 128 MB intermediate
     // flat vector that materialize() → materializeFlat() would create.
     if (_storage.isValid() &&
@@ -820,15 +822,15 @@ TensorData TensorData::toLibTorch() const {
     // Avoids the element-by-element virtual dispatch in materializeFlat().
     if (auto const * arma = _storage.getAsChecked<ArmadilloTensorStorage>(
                 TensorStorageType::Armadillo)) {
-        torch::Tensor t;
+        at::Tensor t;
 
         if (arma->ndim() == 1) {
             // 1D: layout is identical for column-major and row-major
             auto const & vec = arma->vector();
-            t = torch::from_blob(
+            t = at::from_blob(
                         const_cast<float *>(vec.memptr()),
                         {static_cast<int64_t>(vec.n_elem)},
-                        torch::kFloat32)
+                        at::kFloat)
                         .clone();
         } else if (arma->ndim() == 2) {
             // 2D: create a strided view with column-major strides, then
@@ -836,12 +838,12 @@ TensorData TensorData::toLibTorch() const {
             // its own memory.  (clone() preserves strides, so we need
             // contiguous() explicitly.)
             auto const & mat = arma->matrix();
-            t = torch::from_blob(
+            t = at::from_blob(
                         const_cast<float *>(mat.memptr()),
                         {static_cast<int64_t>(mat.n_rows),
                          static_cast<int64_t>(mat.n_cols)},
                         {1, static_cast<int64_t>(mat.n_rows)},
-                        torch::kFloat32)
+                        at::kFloat)
                         .contiguous();
         } else {
             // 3D (fcube): fall through to generic path below
@@ -867,7 +869,7 @@ TensorData TensorData::toLibTorch() const {
     }
 
 generic_path:
-    // Generic path: materialize to row-major flat data, then wrap in torch::Tensor
+    // Generic path: materialize to row-major flat data, then wrap in at::Tensor
     auto flat = materializeFlat();
 
     auto torch_storage = LibTorchTensorStorage::fromFlatData(flat, s);
@@ -913,12 +915,12 @@ TensorData TensorData::toLibTorchStrided() const {
         // Non-owning view with column-major strides.  The returned
         // TensorData keeps _storage alive (shared_ptr in wrapper),
         // so the Armadillo buffer remains valid.
-        auto t = torch::from_blob(
+        auto t = at::from_blob(
                 const_cast<float *>(mat.memptr()),
                 {static_cast<int64_t>(mat.n_rows),
                  static_cast<int64_t>(mat.n_cols)},
                 {1, static_cast<int64_t>(mat.n_rows)},
-                torch::kFloat32);
+                at::kFloat);
 
         // Build output TensorData that shares the Armadillo memory
         auto s = _dimensions.shape();
