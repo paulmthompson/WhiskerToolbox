@@ -59,8 +59,8 @@ public:
      *        (before any encoding/resizing). Used for coordinate scaling.
      * @param mode Interpolation strategy (Nearest or Bilinear).
      *
-     * @pre source_image_size.width > 0 (enforcement: assert)
-     * @pre source_image_size.height > 0 (enforcement: assert)
+     * @pre source_image_size.width > 0
+     * @pre source_image_size.height > 0
      */
     explicit SpatialPointExtractModule(
             ImageSize source_image_size,
@@ -74,19 +74,23 @@ public:
      * @param features Input tensor of shape `[B, C, H, W]`.
      * @return Tensor of shape `[B, C]`.
      *
-     * @pre features must be defined (not a default-constructed undefined tensor) (enforcement: assert)
-     * @pre features.dim() == 4 (enforcement: exception)
-     * @pre features.size(0) >= 1 (batch dim B >= 1) (enforcement: none) [IMPORTANT]
-     * @pre features.size(2) >= 1 and features.size(3) >= 1 (H and W >= 1; bilinear path divides by W-1 and H-1) (enforcement: none) [CRITICAL]
-     * @pre setPoint() should have been called with a meaningful point before apply(); default {0,0} is used otherwise (enforcement: none) [IMPORTANT]
+     * @pre features is defined
+     * @pre features.dim() == 4 (layout `[B, C, H, W]`)
+     * @pre features.size(0) >= 1
+     * @pre features.size(1) >= 1
+     * @pre features.size(2) >= 1 and features.size(3) >= 1
+     * @pre for bilinear mode: features.size(2) >= 2 and features.size(3) >= 2
+     * @pre setPoint() should have been called before apply(); default `{0, 0}` is used otherwise
      */
     [[nodiscard]] at::Tensor apply(at::Tensor const & features) const override;
 
     /**
      * @brief Returns `{C}` where C is `input_shape[0]`.
      *
-     * @pre input_shape must not be empty (enforcement: assert)
-     * @pre input_shape[0] >= 1 (channel count C must be positive) (enforcement: none) [IMPORTANT]
+     * @param input_shape Encoder output shape `[C, H, W]` excluding the batch dimension.
+     *
+     * @pre input_shape is not empty
+     * @pre input_shape[0] >= 1
      */
     [[nodiscard]] std::vector<int64_t>
     outputShape(std::vector<int64_t> const & input_shape) const override;

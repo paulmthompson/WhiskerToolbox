@@ -51,6 +51,11 @@ The header forward-declares `at::Tensor` to remain torch-free at inclusion time.
 
 Use when you want a single feature vector summarising the entire spatial map.
 
+`apply()` validates at runtime that the input is a defined 4D tensor with
+`B >= 1`, `C >= 1`, and `H, W >= 1`. `outputShape()` requires a non-empty
+`[C, H, W]` shape vector with `C >= 1`. Invalid inputs throw
+`std::invalid_argument` after logging at `spdlog::debug` level.
+
 ```cpp
 // Example
 auto mod = std::make_unique<dl::GlobalAvgPoolModule>();
@@ -67,6 +72,12 @@ Extracts the C-dimensional feature vector at a specific 2-D point in source-imag
 | `Bilinear` | Normalises point to `[-1, 1]`, creates `[B,1,1,2]` grid, calls `torch::nn::functional::grid_sample` with `align_corners=true` and border padding |
 
 The module is **stateful**: call `setPoint(Point2D<float>)` before every forward pass. When used with `SlotAssembler`, the widget calls `updateSpatialPoint()` per frame, which reads the first point from the configured `PointData` key and forwards it to the module.
+
+`apply()` validates at runtime that the input is a defined 4D tensor with `B >= 1`, `C >= 1`, and
+`H, W >= 1`. Bilinear mode additionally requires `H >= 2` and `W >= 2` because the coordinate
+normalisation divides by `H - 1` and `W - 1`. The constructor requires a positive
+`source_image_size`, and `outputShape()` requires a non-empty `[C, H, W]` shape vector with
+`C >= 1`. Invalid inputs throw `std::invalid_argument` after logging at `spdlog::debug` level.
 
 ```cpp
 ImageSize const src_size{640, 480};

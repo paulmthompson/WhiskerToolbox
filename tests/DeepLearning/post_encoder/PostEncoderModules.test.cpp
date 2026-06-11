@@ -12,11 +12,12 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::zeros, at::ones
+#include <ATen/Functions.h>  // at::zeros, at::ones
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cmath>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 using Catch::Matchers::WithinAbs;
@@ -84,6 +85,29 @@ TEST_CASE("GlobalAvgPoolModule - channels averaged correctly",
     CHECK_THAT(acc[0][1], WithinAbs(5.0f, 1e-5f));
 }
 
+TEST_CASE("GlobalAvgPoolModule - rejects non-4D tensor",
+          "[post_encoder][GlobalAvgPoolModule]") {
+    dl::GlobalAvgPoolModule mod;
+
+    auto feat = at::zeros({2, 8});
+    CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
+}
+
+TEST_CASE("GlobalAvgPoolModule - rejects invalid spatial dimensions",
+          "[post_encoder][GlobalAvgPoolModule]") {
+    dl::GlobalAvgPoolModule mod;
+
+    auto feat = at::zeros({1, 4, 0, 4});
+    CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
+}
+
+TEST_CASE("GlobalAvgPoolModule - rejects invalid output shape metadata",
+          "[post_encoder][GlobalAvgPoolModule]") {
+    dl::GlobalAvgPoolModule mod;
+
+    CHECK_THROWS_AS(mod.outputShape({0, 8, 8}), std::invalid_argument);
+}
+
 TEST_CASE("GlobalAvgPoolModule - single spatial pixel passthrough",
           "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
@@ -119,6 +143,48 @@ TEST_CASE("SpatialPointExtractModule - output shape [B,C,H,W] -> [B,C]",
     auto shape = mod.outputShape({16, 8, 8});// C=16, H=8, W=8
     REQUIRE(shape.size() == 1);
     CHECK(shape[0] == 16);
+}
+
+TEST_CASE("SpatialPointExtractModule - rejects invalid source image size",
+          "[post_encoder][SpatialPointExtractModule]") {
+    CHECK_THROWS_AS(
+            dl::SpatialPointExtractModule({0, 10}, dl::InterpolationMode::Nearest),
+            std::invalid_argument);
+}
+
+TEST_CASE("SpatialPointExtractModule - rejects non-4D tensor",
+          "[post_encoder][SpatialPointExtractModule]") {
+    ImageSize const src{10, 10};
+    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+
+    auto feat = at::zeros({2, 8});
+    CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
+}
+
+TEST_CASE("SpatialPointExtractModule - rejects invalid spatial dimensions",
+          "[post_encoder][SpatialPointExtractModule]") {
+    ImageSize const src{10, 10};
+    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+
+    auto feat = at::zeros({1, 4, 0, 4});
+    CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
+}
+
+TEST_CASE("SpatialPointExtractModule - bilinear rejects 1x1 feature map",
+          "[post_encoder][SpatialPointExtractModule]") {
+    ImageSize const src{10, 10};
+    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Bilinear};
+
+    auto feat = at::zeros({1, 4, 1, 1});
+    CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
+}
+
+TEST_CASE("SpatialPointExtractModule - rejects invalid output shape metadata",
+          "[post_encoder][SpatialPointExtractModule]") {
+    ImageSize const src{10, 10};
+    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+
+    CHECK_THROWS_AS(mod.outputShape({0, 8, 8}), std::invalid_argument);
 }
 
 TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct channel",
