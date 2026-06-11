@@ -195,69 +195,27 @@ TEST_CASE("SequenceEntryVariant JSON round-trip",
 }
 
 // ============================================================================
-// PostEncoderVariant
+// PostEncoderStepDescriptor
 // ============================================================================
 
-TEST_CASE("PostEncoderVariant schema extraction",
+TEST_CASE("PostEncoderStepDescriptor schema extraction",
           "[dl_widget][param_schema][post_encoder]") {
-    struct Wrapper {
-        dl::widget::PostEncoderVariant module = dl::widget::NoPostEncoderParams{};
-    };
-
-    auto schema = extractParameterSchema<Wrapper>();
-    auto * f = schema.field("module");
-    REQUIRE(f != nullptr);
-    CHECK(f->is_variant);
-    CHECK(f->variant_discriminator == "module");
-    REQUIRE(f->variant_alternatives.size() == 3);
-
-    CHECK(f->variant_alternatives[0].tag == "NoPostEncoderParams");
-    CHECK(f->variant_alternatives[1].tag == "GlobalAvgPoolModuleParams");
-    CHECK(f->variant_alternatives[2].tag == "SpatialPointModuleParams");
-
-    SECTION("NoPostEncoderParams has no fields") {
-        CHECK(f->variant_alternatives[0].schema->fields.empty());
-    }
-
-    SECTION("GlobalAvgPoolModuleParams has no fields") {
-        CHECK(f->variant_alternatives[1].schema->fields.empty());
-    }
-
-    SECTION("SpatialPointModuleParams has interpolation and point_key fields") {
-        auto const & s = *f->variant_alternatives[2].schema;
-        CHECK(s.fields.size() == 2);
-        auto * interp = s.field("interpolation");
-        REQUIRE(interp != nullptr);
-        CHECK(interp->type_name == "enum");
-        auto * pk = s.field("point_key");
-        REQUIRE(pk != nullptr);
-    }
+    auto schema = extractParameterSchema<dl::widget::PostEncoderStepDescriptor>();
+    CHECK(schema.field("module_key") != nullptr);
+    CHECK(schema.field("parameters_json") != nullptr);
 }
 
-TEST_CASE("PostEncoderVariant JSON round-trip",
+TEST_CASE("PostEncoderStepDescriptor JSON round-trip",
           "[dl_widget][param_schema][post_encoder][roundtrip]") {
-    SECTION("No post-encoder") {
-        dl::widget::PostEncoderVariant var{dl::widget::NoPostEncoderParams{}};
-        auto json = rfl::json::write(var);
-        auto result = rfl::json::read<dl::widget::PostEncoderVariant>(json);
-        REQUIRE(result);
-    }
+    dl::widget::PostEncoderStepDescriptor desc;
+    desc.module_key = "spatial_point";
+    desc.parameters_json = R"({"interpolation":"Bilinear","point_key":"pts/a"})";
 
-    SECTION("GlobalAvgPool") {
-        dl::widget::PostEncoderVariant var{dl::GlobalAvgPoolModuleParams{}};
-        auto json = rfl::json::write(var);
-        auto result = rfl::json::read<dl::widget::PostEncoderVariant>(json);
-        REQUIRE(result);
-    }
-
-    SECTION("SpatialPoint with Bilinear") {
-        dl::SpatialPointModuleParams params{
-                .interpolation = dl::InterpolationMode::Bilinear};
-        dl::widget::PostEncoderVariant var{params};
-        auto json = rfl::json::write(var);
-        auto result = rfl::json::read<dl::widget::PostEncoderVariant>(json);
-        REQUIRE(result);
-    }
+    auto json = rfl::json::write(desc);
+    auto result = rfl::json::read<dl::widget::PostEncoderStepDescriptor>(json);
+    REQUIRE(result);
+    CHECK(result.value().module_key == "spatial_point");
+    CHECK(result.value().parameters_json == desc.parameters_json);
 }
 
 // ============================================================================

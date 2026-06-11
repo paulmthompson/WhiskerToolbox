@@ -7,6 +7,7 @@
 #define WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
 
 #include "PostEncoderModule.hpp"
+#include "PostEncoderModuleParams.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
@@ -15,16 +16,6 @@
 #include <vector>
 
 namespace dl {
-
-/**
- * @brief Interpolation strategy for spatial feature extraction.
- */
-enum class InterpolationMode {
-    /** Round to nearest grid location (fast) */
-    Nearest,
-    /** Sub-pixel bilinear interpolation via grid_sample (accurate) */
-    Bilinear
-};
 
 /**
  * @brief Extracts the feature vector at a 2D point location within the feature map.
@@ -43,8 +34,8 @@ enum class InterpolationMode {
  * Example:
  * @code
  *     dl::SpatialPointExtractModule extractor(
- *         {640, 480},                     // source image size
- *         dl::InterpolationMode::Bilinear);
+ *         {640, 480},
+ *         dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Bilinear});
  *
  *     extractor.setPoint({320.0f, 240.0f});  // centre pixel
  *     auto vec = extractor.apply(features);  // → [B, C]
@@ -57,14 +48,14 @@ public:
      *
      * @param source_image_size Dimensions of the original source image
      *        (before any encoding/resizing). Used for coordinate scaling.
-     * @param mode Interpolation strategy (Nearest or Bilinear).
+     * @param params User-configurable module parameters (interpolation, point_key).
      *
      * @pre source_image_size.width > 0
      * @pre source_image_size.height > 0
      */
     explicit SpatialPointExtractModule(
             ImageSize source_image_size,
-            InterpolationMode mode = InterpolationMode::Nearest);
+            SpatialPointModuleParams params = {});
 
     [[nodiscard]] std::string name() const override;
 
@@ -118,9 +109,15 @@ public:
      */
     [[nodiscard]] InterpolationMode interpolationMode() const { return _mode; }
 
+    /**
+     * @brief DataManager key for per-frame PointData lookup.
+     */
+    [[nodiscard]] std::string const & pointKey() const { return _point_key; }
+
 private:
     ImageSize _source_image_size;
     InterpolationMode _mode;
+    std::string _point_key;
     Point2D<float> _current_point{0.0f, 0.0f};
 
     /**

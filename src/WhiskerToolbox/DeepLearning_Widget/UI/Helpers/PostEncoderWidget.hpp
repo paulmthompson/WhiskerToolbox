@@ -1,10 +1,8 @@
 /// @file PostEncoderWidget.hpp
 /// @brief Self-contained widget for configuring the post-encoder module section.
 ///
-/// Replaces the hand-built `_buildPostEncoderSection()` panel with a
-/// schema-driven form powered by AutoParamWidget. The widget owns a
-/// `PostEncoderSlotParams` struct and applies changes to DeepLearningState
-/// and SlotAssembler.
+/// Uses PostEncoderModuleRegistry for module discovery and schema-driven
+/// parameter editing via AutoParamWidget.
 
 #ifndef POST_ENCODER_WIDGET_HPP
 #define POST_ENCODER_WIDGET_HPP
@@ -18,7 +16,9 @@
 
 class AutoParamWidget;
 class DataManager;
-class QGroupBox;
+class QLabel;
+class QComboBox;
+class QVBoxLayout;
 class DeepLearningState;
 class SlotAssembler;
 struct ImageSize;
@@ -28,9 +28,9 @@ namespace dl::widget {
 /**
  * @brief Widget for configuring the post-encoder module.
  *
- * Wraps an AutoParamWidget driven by the `PostEncoderSlotParams` schema.
- * The module variant offers None, GlobalAvgPool, and SpatialPoint options.
- * The point_key combo (for SpatialPoint) is populated from DataManager.
+ * Presents a module combo populated from `PostEncoderModuleRegistry` and a
+ * dynamic parameter form loaded from the registry schema for the selected module.
+ * The point_key combo (for spatial_point) is populated from DataManager.
  *
  * @note Not thread-safe — must be used from the GUI thread only.
  */
@@ -81,11 +81,27 @@ private:
     /// Get source image size from primary media binding.
     [[nodiscard]] ImageSize _sourceImageSize() const;
 
+    /// Populate the module combo from the registry.
+    void _populateModuleCombo();
+
+    /// Read the currently selected module key from the combo.
+    [[nodiscard]] std::string _selectedModuleKey() const;
+
+    /// Rebuild the parameter panel for the current module selection.
+    void _rebuildParamsPanel(std::string const & params_json);
+
+    /// Clear and destroy the current parameter widget.
+    void _clearParamsPanel();
+
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<DataManager> _dm;
     SlotAssembler * _assembler;
 
+    QComboBox * _module_combo = nullptr;
+    QLabel * _description_label = nullptr;
+    QVBoxLayout * _params_layout = nullptr;
     AutoParamWidget * _auto_param = nullptr;
+    bool _suppress_signals = false;
 };
 
 }// namespace dl::widget

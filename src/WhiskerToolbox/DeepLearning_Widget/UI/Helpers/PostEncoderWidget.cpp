@@ -7,24 +7,30 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
-#include "DeepLearning/post_encoder/PostEncoderParamSchemas.hpp"
-#include "DeepLearning/post_encoder/SpatialPointExtractModule.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
+#include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 #include "Media/Media_Data.hpp"
 
-#include "ParameterSchema/ParameterSchema.hpp"
-
+#include <QComboBox>
 #include <QGroupBox>
+#include <QLabel>
 #include <QVBoxLayout>
-
-#include <rfl/json.hpp>
 
 #include <cassert>
 
 namespace dl::widget {
+
+namespace {
+
+constexpr char const * kNoneModuleKey = "none";
+
+[[nodiscard]] bool isNoneModuleKey(std::string const & key) {
+    return key.empty() || key == kNoneModuleKey;
+}
+
+}// namespace
 
 // ════════════════════════════════════════════════════════════════════════════
 // Construction / Destruction
@@ -53,22 +59,38 @@ PostEncoderWidget::PostEncoderWidget(
 
     auto * group_layout = new QVBoxLayout(group);
 
-    _auto_param = new AutoParamWidget(group);
-    group_layout->addWidget(_auto_param);
+    auto * module_label = new QLabel(tr("Module:"), group);
+    group_layout->addWidget(module_label);
 
-    auto schema =
-            extractParameterSchema<
-                    PostEncoderSlotParams>();
-    _auto_param->setSchema(schema);
+    _module_combo = new QComboBox(group);
+    _module_combo->setObjectName(QStringLiteral("post_encoder_module_combo"));
+    group_layout->addWidget(_module_combo);
 
-    setParams(_state->postEncoderParams());
+    _description_label = new QLabel(group);
+    _description_label->setWordWrap(true);
+    _description_label->setStyleSheet(QStringLiteral("color: gray; font-size: 9pt;"));
+    _description_label->setVisible(false);
+    group_layout->addWidget(_description_label);
 
-    refreshDataSources();
+    auto * params_container = new QWidget(group);
+    _params_layout = new QVBoxLayout(params_container);
+    _params_layout->setContentsMargins(0, 0, 0, 0);
+    group_layout->addWidget(params_container);
 
-    connect(_auto_param, &AutoParamWidget::parametersChanged, this, [this]() {
+    _populateModuleCombo();
+
+    connect(_module_combo, &QComboBox::currentIndexChanged, this, [this](int) {
+        if (_suppress_signals) {
+            return;
+        }
+        _rebuildParamsPanel("{}");
+        refreshDataSources();
         _applyToStateAndAssembler();
         emit bindingChanged();
     });
+
+    setParams(_state->postEncoderParams());
+    refreshDataSources();
 }
 
 PostEncoderWidget::~PostEncoderWidget() = default;
@@ -78,22 +100,45 @@ PostEncoderWidget::~PostEncoderWidget() = default;
 // ════════════════════════════════════════════════════════════════════════════
 
 PostEncoderSlotParams PostEncoderWidget::params() const {
-    auto json_str = _auto_param->toJson();
-    auto result = rfl::json::read<PostEncoderSlotParams>(json_str);
-    if (result) {
-        return result.value();
+    PostEncoderSlotParams p;
+    p.module_key = _selectedModuleKey();
+
+    if (_auto_param) {
+        p.parameters_json = _auto_param->toJson();
+    } else {
+        p.parameters_json = "{}";
     }
-    return {};
+
+    return p;
 }
 
 void PostEncoderWidget::setParams(PostEncoderSlotParams const & p) {
-    auto json = rfl::json::write(p);
-    _auto_param->fromJson(json);
+    _suppress_signals = true;
+
+    std::string const key =
+            isNoneModuleKey(p.module_key) ? kNoneModuleKey : p.module_key;
+
+    int const index = _module_combo->findData(QString::fromStdString(key));
+    if (index >= 0) {
+        _module_combo->setCurrentIndex(index);
+    } else {
+        _module_combo->setCurrentIndex(0);
+    }
+
+    _rebuildParamsPanel(p.parameters_json);
+    refreshDataSources();
+
+    _suppress_signals = false;
     _applyToStateAndAssembler();
 }
 
 void PostEncoderWidget::refreshDataSources() {
-    if (!_dm) return;
+    if (!_dm || !_auto_param) {
+        return;
+    }
+    if (_selectedModuleKey() != "spatial_point") {
+        return;
+    }
     auto const types = DataSourceComboHelper::typesFromHint("PointData");
     auto const keys = getKeysForTypes(*_dm, types);
     _auto_param->updateAllowedValues("point_key", keys);
@@ -108,7 +153,7 @@ void PostEncoderWidget::_applyToStateAndAssembler() {
     _state->setPostEncoderParams(p);
 
     if (_assembler->isModelReady()) {
-        _assembler->configurePostEncoderModule(p.module, _sourceImageSize());
+        _assembler->configurePostEncoderModule(p, _sourceImageSize());
     }
 }
 
@@ -122,6 +167,89 @@ ImageSize PostEncoderWidget::_sourceImageSize() const {
         }
     }
     return source_size;
+}
+
+void PostEncoderWidget::_populateModuleCombo() {
+    _module_combo->clear();
+    _module_combo->addItem(tr("(None)"), QString::fromStdString(kNoneModuleKey));
+
+    auto const & registry = PostEncoderModuleRegistry::instance();
+    for (auto const & key: registry.moduleKeys()) {
+        auto const meta = registry.getMetadata(key);
+        QString const label = meta
+                                      ? QString::fromStdString(meta->display_name)
+                                      : QString::fromStdString(key);
+        _module_combo->addItem(label, QString::fromStdString(key));
+    }
+}
+
+std::string PostEncoderWidget::_selectedModuleKey() const {
+    return _module_combo->currentData().toString().toStdString();
+}
+
+void PostEncoderWidget::_rebuildParamsPanel(std::string const & params_json) {
+    _clearParamsPanel();
+
+    auto const key = _selectedModuleKey();
+    if (isNoneModuleKey(key)) {
+        _description_label->clear();
+        _description_label->setVisible(false);
+        return;
+    }
+
+    auto const & registry = PostEncoderModuleRegistry::instance();
+    auto const meta = registry.getMetadata(key);
+    if (meta && !meta->description.empty()) {
+        _description_label->setText(QString::fromStdString(meta->description));
+        _description_label->setVisible(true);
+    } else {
+        _description_label->clear();
+        _description_label->setVisible(false);
+    }
+
+    auto const schema = registry.getSchema(key);
+    if (!schema || schema->fields.empty()) {
+        auto * label = new QLabel(
+                tr("This module has no configurable parameters."),
+                this);
+        label->setStyleSheet(QStringLiteral("color: gray; font-style: italic;"));
+        _params_layout->addWidget(label);
+        return;
+    }
+
+    _auto_param = new AutoParamWidget(this);
+    _auto_param->setSchema(*schema);
+
+    if (!params_json.empty() && params_json != "{}") {
+        _auto_param->fromJson(params_json);
+    }
+
+    connect(_auto_param, &AutoParamWidget::parametersChanged, this, [this]() {
+        if (_suppress_signals) {
+            return;
+        }
+        _applyToStateAndAssembler();
+        emit bindingChanged();
+    });
+
+    _params_layout->addWidget(_auto_param);
+    refreshDataSources();
+}
+
+void PostEncoderWidget::_clearParamsPanel() {
+    if (_auto_param) {
+        _params_layout->removeWidget(_auto_param);
+        _auto_param->deleteLater();
+        _auto_param = nullptr;
+    }
+
+    while (_params_layout->count() > 0) {
+        auto * item = _params_layout->takeAt(0);
+        if (auto * widget = item->widget()) {
+            widget->deleteLater();
+        }
+        delete item;
+    }
 }
 
 }// namespace dl::widget

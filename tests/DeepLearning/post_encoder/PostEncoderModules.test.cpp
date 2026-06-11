@@ -5,7 +5,10 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "post_encoder/GlobalAvgPoolModule.hpp"
-#include "post_encoder/PostEncoderModuleFactory.hpp"
+#include "post_encoder/PostEncoderModuleParams.hpp"
+#include "post_encoder/PostEncoderModuleRegistry.hpp"
+
+#include <rfl/json.hpp>
 #include "post_encoder/PostEncoderPipeline.hpp"
 #include "post_encoder/SpatialPointExtractModule.hpp"
 
@@ -131,14 +134,14 @@ TEST_CASE("GlobalAvgPoolModule - single spatial pixel passthrough",
 TEST_CASE("SpatialPointExtractModule - name",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
     CHECK(mod.name() == "spatial_point");
 }
 
 TEST_CASE("SpatialPointExtractModule - output shape [B,C,H,W] -> [B,C]",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{64, 64};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     auto shape = mod.outputShape({16, 8, 8});// C=16, H=8, W=8
     REQUIRE(shape.size() == 1);
@@ -148,14 +151,14 @@ TEST_CASE("SpatialPointExtractModule - output shape [B,C,H,W] -> [B,C]",
 TEST_CASE("SpatialPointExtractModule - rejects invalid source image size",
           "[post_encoder][SpatialPointExtractModule]") {
     CHECK_THROWS_AS(
-            dl::SpatialPointExtractModule({0, 10}, dl::InterpolationMode::Nearest),
+            dl::SpatialPointExtractModule({0, 10}, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}),
             std::invalid_argument);
 }
 
 TEST_CASE("SpatialPointExtractModule - rejects non-4D tensor",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     auto feat = at::zeros({2, 8});
     CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
@@ -164,7 +167,7 @@ TEST_CASE("SpatialPointExtractModule - rejects non-4D tensor",
 TEST_CASE("SpatialPointExtractModule - rejects invalid spatial dimensions",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     auto feat = at::zeros({1, 4, 0, 4});
     CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
@@ -173,7 +176,7 @@ TEST_CASE("SpatialPointExtractModule - rejects invalid spatial dimensions",
 TEST_CASE("SpatialPointExtractModule - bilinear rejects 1x1 feature map",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Bilinear};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Bilinear}};
 
     auto feat = at::zeros({1, 4, 1, 1});
     CHECK_THROWS_AS(mod.apply(feat), std::invalid_argument);
@@ -182,7 +185,7 @@ TEST_CASE("SpatialPointExtractModule - bilinear rejects 1x1 feature map",
 TEST_CASE("SpatialPointExtractModule - rejects invalid output shape metadata",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     CHECK_THROWS_AS(mod.outputShape({0, 8, 8}), std::invalid_argument);
 }
@@ -191,7 +194,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct ch
           "[post_encoder][SpatialPointExtractModule]") {
     // Source image 10×10, feature map 10×10 (identity scale)
     ImageSize const src{10, 10};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     // [B=1, C=3, H=10, W=10]
     // Set all pixels of channel 1 to 7.0 so we always extract 7.0 from that channel
@@ -216,7 +219,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct ch
 TEST_CASE("SpatialPointExtractModule - nearest: top-left corner",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{4, 4};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     // [B=1, C=1, H=4, W=4]: pixel (0,0)=3.0, all others=0.0
     auto feat = at::zeros({1, 1, 4, 4});
@@ -233,7 +236,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: top-left corner",
 TEST_CASE("SpatialPointExtractModule - nearest: clamping beyond boundary",
           "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{4, 4};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Nearest}};
 
     auto feat = at::zeros({1, 1, 4, 4});
     // Bottom-right last pixel
@@ -252,7 +255,7 @@ TEST_CASE("SpatialPointExtractModule - bilinear interpolation: midpoint",
           "[post_encoder][SpatialPointExtractModule]") {
     // 4×4 source, 4×4 feature map
     ImageSize const src{4, 4};
-    dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Bilinear};
+    dl::SpatialPointExtractModule mod{src, dl::SpatialPointModuleParams{.interpolation = dl::InterpolationMode::Bilinear}};
 
     // [B=1, C=1, H=4, W=4]: ramp across x
     auto feat = at::zeros({1, 1, 4, 4});
@@ -320,36 +323,46 @@ TEST_CASE("PostEncoderPipeline - empty pipeline name",
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PostEncoderModuleFactory
+// PostEncoderModuleRegistry
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("PostEncoderModuleFactory - none returns nullptr",
-          "[post_encoder][PostEncoderModuleFactory]") {
-    auto mod = dl::PostEncoderModuleFactory::create("none", {64, 64});
-    CHECK(mod == nullptr);
-
-    auto mod2 = dl::PostEncoderModuleFactory::create("", {64, 64});
-    CHECK(mod2 == nullptr);
+TEST_CASE("PostEncoderModuleRegistry - none returns nullptr",
+          "[post_encoder][PostEncoderModuleRegistry]") {
+    auto & registry = dl::PostEncoderModuleRegistry::instance();
+    CHECK(registry.create("none", "{}", {64, 64}) == nullptr);
+    CHECK(registry.create("", "{}", {64, 64}) == nullptr);
 }
 
-TEST_CASE("PostEncoderModuleFactory - global_avg_pool creates GlobalAvgPoolModule",
-          "[post_encoder][PostEncoderModuleFactory]") {
-    auto mod = dl::PostEncoderModuleFactory::create("global_avg_pool", {64, 64});
+TEST_CASE("PostEncoderModuleRegistry - global_avg_pool creates GlobalAvgPoolModule",
+          "[post_encoder][PostEncoderModuleRegistry]") {
+    auto mod = dl::PostEncoderModuleRegistry::instance().create(
+            "global_avg_pool", "{}", {64, 64});
     REQUIRE(mod != nullptr);
     CHECK(mod->name() == "global_avg_pool");
 }
 
-TEST_CASE("PostEncoderModuleFactory - spatial_point creates SpatialPointExtractModule",
-          "[post_encoder][PostEncoderModuleFactory]") {
+TEST_CASE("PostEncoderModuleRegistry - spatial_point creates SpatialPointExtractModule",
+          "[post_encoder][PostEncoderModuleRegistry]") {
     dl::SpatialPointModuleParams params{.interpolation = dl::InterpolationMode::Nearest};
+    auto const params_json = rfl::json::write(params);
 
-    auto mod = dl::PostEncoderModuleFactory::create("spatial_point", {32, 32}, params);
+    auto mod = dl::PostEncoderModuleRegistry::instance().create(
+            "spatial_point", params_json, {32, 32});
     REQUIRE(mod != nullptr);
     CHECK(mod->name() == "spatial_point");
 }
 
-TEST_CASE("PostEncoderModuleFactory - unknown key returns nullptr",
-          "[post_encoder][PostEncoderModuleFactory]") {
-    auto mod = dl::PostEncoderModuleFactory::create("does_not_exist", {64, 64});
+TEST_CASE("PostEncoderModuleRegistry - unknown key returns nullptr",
+          "[post_encoder][PostEncoderModuleRegistry]") {
+    auto mod = dl::PostEncoderModuleRegistry::instance().create(
+            "does_not_exist", "{}", {64, 64});
     CHECK(mod == nullptr);
+}
+
+TEST_CASE("PostEncoderModuleRegistry - collapsesSpatialDims metadata",
+          "[post_encoder][PostEncoderModuleRegistry]") {
+    auto & registry = dl::PostEncoderModuleRegistry::instance();
+    CHECK_FALSE(registry.collapsesSpatialDims("none"));
+    CHECK(registry.collapsesSpatialDims("global_avg_pool"));
+    CHECK(registry.collapsesSpatialDims("spatial_point"));
 }

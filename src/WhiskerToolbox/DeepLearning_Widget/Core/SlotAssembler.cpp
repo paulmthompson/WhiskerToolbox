@@ -28,7 +28,7 @@
 #include "models_v2/TensorDTypeUtils.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 #include "models_v2/general_encoder/GeneralEncoderModel.hpp"
-#include "post_encoder/GlobalAvgPoolModule.hpp"
+#include "post_encoder/PostEncoderModuleRegistry.hpp"
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
@@ -66,9 +66,6 @@ struct SlotAssembler::Impl {
     /// injected into the input slot on the next frame.
     std::unordered_map<std::string, at::Tensor> recurrent_cache;
 
-    /// DataManager key for the PointData source of the spatial_point module.
-    /// Empty if no spatial_point module is active.
-    std::string spatial_point_key;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1109,10 +1106,7 @@ void SlotAssembler::runSingleFrame(
 
     torch::NoGradGuard const no_grad;
 
-    // Update spatial-point query for the current frame if applicable
-    if (!_impl->spatial_point_key.empty()) {
-        updateSpatialPoint(dm, _impl->spatial_point_key, current_frame);
-    }
+    _updateSpatialPoint(dm, current_frame);
 
     auto inputs = assembleInputs(
             dm, *_impl->model,
@@ -1156,8 +1150,9 @@ void SlotAssembler::runBatchRange(
     }
     if (batch_size < 1) batch_size = 1;
 
-    // Spatial point module requires per-frame updates; force batch_size=1.
-    if (!_impl->spatial_point_key.empty()) {
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (enc &&
+        dynamic_cast<dl::SpatialPointExtractModule *>(enc->postEncoderModule())) {
         batch_size = 1;
     }
 
@@ -1174,10 +1169,7 @@ void SlotAssembler::runBatchRange(
             progress(frames_processed, total_frames);
         }
 
-        // Update spatial-point query for the current frame if applicable
-        if (!_impl->spatial_point_key.empty()) {
-            updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
-        }
+        _updateSpatialPoint(dm, chunk_start);
 
         auto inputs = assembleInputs(
                 dm, *_impl->model,
@@ -1243,8 +1235,9 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
     }
     if (batch_size < 1) batch_size = 1;
 
-    // Spatial point module requires per-frame updates; force batch_size=1.
-    if (!_impl->spatial_point_key.empty()) {
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (enc &&
+        dynamic_cast<dl::SpatialPointExtractModule *>(enc->postEncoderModule())) {
         batch_size = 1;
     }
 
@@ -1266,10 +1259,7 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         }
 
         try {
-            // Update spatial-point query for the current frame if applicable
-            if (!_impl->spatial_point_key.empty()) {
-                updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
-            }
+            _updateSpatialPoint(dm, chunk_start);
 
             auto inputs = assembleInputs(
                     dm, *_impl->model,
@@ -1467,10 +1457,7 @@ void SlotAssembler::runRecurrentSequence(
             progress(f, frame_count);
         }
 
-        // Update spatial-point query for the current frame if applicable
-        if (!_impl->spatial_point_key.empty()) {
-            updateSpatialPoint(dm, _impl->spatial_point_key, frame);
-        }
+        _updateSpatialPoint(dm, frame);
 
         // 1. Assemble dynamic + static inputs (batch_size = 1)
         //    In hybrid mode, assembleInputs skips recurrent-claimed positions.
@@ -1641,41 +1628,23 @@ std::string SlotAssembler::dataTypeForDecoder(std::string const & decoder_id) {
 // ════════════════════════════════════════════════════════════════════════════
 
 void SlotAssembler::configurePostEncoderModule(
-        dl::widget::PostEncoderVariant const & module_variant,
+        dl::widget::PostEncoderSlotParams const & params,
         ImageSize source_image_size) {
     if (!_impl || !_impl->model) return;
 
     auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
     if (!enc) return;
 
-    std::unique_ptr<dl::PostEncoderModule> module;
-    _impl->spatial_point_key.clear();
-
-    module_variant.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        if constexpr (std::is_same_v<T, dl::widget::NoPostEncoderParams>) {
-            module = nullptr;
-        } else if constexpr (std::is_same_v<T, dl::GlobalAvgPoolModuleParams>) {
-            module = std::make_unique<dl::GlobalAvgPoolModule>();
-        } else if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
-            auto spatial_params = mod;
-            if (spatial_params.point_key == "(None)") {
-                spatial_params.point_key.clear();
-            }
-            _impl->spatial_point_key = spatial_params.point_key;
-            module = std::make_unique<dl::SpatialPointExtractModule>(
-                    source_image_size, spatial_params.interpolation);
-        }
-    });
+    auto module = dl::PostEncoderModuleRegistry::instance().create(
+            params.module_key,
+            params.parameters_json,
+            source_image_size);
 
     enc->setPostEncoderModule(std::move(module));
 }
 
-void SlotAssembler::updateSpatialPoint(
-        DataManager & dm,
-        std::string const & point_key,
-        int frame) {
-    if (!_impl || !_impl->model || point_key.empty()) return;
+void SlotAssembler::_updateSpatialPoint(DataManager & dm, int frame) {
+    if (!_impl || !_impl->model) return;
 
     auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
     if (!enc) return;
@@ -1685,6 +1654,9 @@ void SlotAssembler::updateSpatialPoint(
 
     auto * sp = dynamic_cast<dl::SpatialPointExtractModule *>(module);
     if (!sp) return;
+
+    auto const & point_key = sp->pointKey();
+    if (point_key.empty()) return;
 
     auto point_data = dm.getData<PointData>(point_key);
     if (!point_data) return;

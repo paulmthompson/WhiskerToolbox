@@ -5,6 +5,10 @@
 
 #include "SpatialPointExtractModule.hpp"
 
+#include "PostEncoderModuleParams.hpp"
+#include "PostEncoderParamSchemas.hpp"
+#include "RegisterPostEncoderModule.hpp"
+
 #include <ATen/Functions.h>  // at::full, at::index_put_
 #include <ATen/core/Tensor.h>// at::Tensor
 #include <spdlog/spdlog.h>
@@ -110,10 +114,14 @@ void validateSpatialPointExtractOutputShapeInput(std::vector<int64_t> const & in
 
 SpatialPointExtractModule::SpatialPointExtractModule(
         ImageSize source_image_size,
-        InterpolationMode mode)
+        SpatialPointModuleParams params)
     : _source_image_size{source_image_size},
-      _mode{mode} {
+      _mode{params.interpolation},
+      _point_key{std::move(params.point_key)} {
     validateSpatialPointExtractConstruction(source_image_size);
+    if (_point_key == "(None)") {
+        _point_key.clear();
+    }
 }
 
 std::string SpatialPointExtractModule::name() const {
@@ -192,5 +200,22 @@ SpatialPointExtractModule::_extractBilinear(at::Tensor const & features) const {
     auto sampled = F::grid_sample(features, grid, opts);
     return sampled.squeeze(-1).squeeze(-1);
 }
+
+namespace {
+
+auto const register_spatial_point =
+        RegisterPostEncoderModule<SpatialPointModuleParams>(
+                "spatial_point",
+                "Spatial Point Extraction",
+                "Extract the feature vector at a 2D point location "
+                "([B,C,H,W] → [B,C]).",
+                true,
+                [](SpatialPointModuleParams const & params,
+                   ImageSize source_image_size) -> std::unique_ptr<PostEncoderModule> {
+                    return std::make_unique<SpatialPointExtractModule>(
+                            source_image_size, params);
+                });
+
+}// namespace
 
 }// namespace dl

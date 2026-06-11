@@ -3,6 +3,7 @@
 
 #include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 
+#include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"// dl::isBatchLocked, FixedBatch, DynamicBatch
 
 #include <algorithm>// std::any_of
@@ -10,19 +11,6 @@
 namespace dl::constraints {
 
 namespace {
-
-/**
- * @brief Whether the post-encoder module collapses spatial dimensions
- *        ([B,C,H,W] → [B,C]), restricting compatible output decoders.
- */
-[[nodiscard]] bool postEncoderCollapsesSpatialDims(
-        dl::widget::PostEncoderVariant const & module) {
-    return module.visit([](auto const & mod) -> bool {
-        using T = std::decay_t<decltype(mod)>;
-        return std::is_same_v<T, dl::GlobalAvgPoolModuleParams>
-               || std::is_same_v<T, dl::SpatialPointModuleParams>;
-    });
-}
 
 [[nodiscard]] std::vector<std::string> allDecoderAlternatives() {
     return {"MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
@@ -61,7 +49,8 @@ BatchSizeConstraint computeBatchSizeConstraint(
 
 std::vector<std::string> validDecodersForPostEncoder(
         dl::widget::PostEncoderSlotParams const & params) {
-    if (postEncoderCollapsesSpatialDims(params.module)) {
+    if (dl::PostEncoderModuleRegistry::instance().collapsesSpatialDims(
+                params.module_key)) {
         return {"FeatureVectorDecoderParams"};
     }
     return allDecoderAlternatives();

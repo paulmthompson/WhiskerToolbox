@@ -386,26 +386,13 @@ public:
      * Only applies when the current model is a `GeneralEncoderModel`.
      * Calling this when the model changes will reset the configuration.
      *
-     * @param module  Tagged union of post-encoder module alternatives.
+     * @param params  Registry-driven module key and JSON parameters.
      * @param source_image_size  Source image size used for spatial_point
      *        coordinate scaling.
      */
     void configurePostEncoderModule(
-            dl::widget::PostEncoderVariant const & module,
+            dl::widget::PostEncoderSlotParams const & params,
             ImageSize source_image_size = {});
-
-    /**
-     * @brief Update the spatial-point query for the current frame.
-     * 
-     * For the "spatial_point" post-encoder, reads the point at
-     * `frame` from `point_key` in DataManager and forwards it to the module.
-     * 
-     * No-op if the current module is not "spatial_point" or if `point_key`
-     * is empty.
-     */
-    void updateSpatialPoint(DataManager & dm,
-                            std::string const & point_key,
-                            int frame);
 
     // ── Model shape configuration ──────────────────────────────────────────
     /**
@@ -425,6 +412,14 @@ public:
             std::vector<int64_t> const & output_shape = {});
 
 private:
+    /**
+     * @brief Sync spatial-point post-encoder state from DataManager for `frame`.
+     *
+     * No-op unless the active module is `SpatialPointExtractModule` with a
+     * non-empty `pointKey()`.
+     */
+    void _updateSpatialPoint(DataManager & dm, int frame);
+
     struct Impl;
     std::unique_ptr<Impl> _impl;
 };

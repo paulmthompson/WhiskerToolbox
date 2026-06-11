@@ -42,15 +42,22 @@ add_executable(test_DeepLearning
     runtime/RuntimeModelSpec.test.cpp
 
     post_encoder/PostEncoderModules.test.cpp
+    post_encoder/PostEncoderModuleRegistry.test.cpp
 )
 
 target_link_libraries(test_DeepLearning PRIVATE
     Catch2::Catch2WithMain
-    WhiskerToolbox::DeepLearning
     NEURALYZER_GEOMETRY
     "${TORCH_LIBRARIES}"
     reflectcpp::reflectcpp
 )
+
+if (UNIX AND NOT APPLE)
+    target_link_libraries(test_DeepLearning PRIVATE
+        -Wl,--whole-archive DeepLearning -Wl,--no-whole-archive)
+else()
+    target_link_libraries(test_DeepLearning PRIVATE WhiskerToolbox::DeepLearning)
+endif()
 
 target_include_directories(test_DeepLearning PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"

@@ -41,6 +41,11 @@ target_link_libraries(test_dl_widgets PRIVATE
     Qt6::Test
 )
 
+if (UNIX AND NOT APPLE)
+    target_link_libraries(test_dl_widgets PRIVATE
+        -Wl,--whole-archive DeepLearning -Wl,--no-whole-archive)
+endif()
+
 target_include_directories(test_dl_widgets PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"

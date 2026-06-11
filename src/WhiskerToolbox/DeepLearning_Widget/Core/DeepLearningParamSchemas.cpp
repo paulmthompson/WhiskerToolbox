@@ -156,14 +156,3 @@ void ParameterUIHints<dl::widget::RecurrentBindingSlotParams>::annotate(
     }
 }
 
-void ParameterUIHints<dl::widget::PostEncoderSlotParams>::annotate(
-        ParameterSchema & schema) {
-    if (auto * f = schema.field("module")) {
-        f->display_name = "Module";
-        f->tooltip =
-                "Optional post-processing applied to the encoder output tensor:\n"
-                "• None: pass encoder output directly to the decoder\n"
-                "• Global Average Pooling: [B,C,H,W] → [B,C] via adaptive avg pool\n"
-                "• Spatial Point Extraction: extract features at a 2D point location";
-    }
-}

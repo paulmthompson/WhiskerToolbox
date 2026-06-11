@@ -19,10 +19,10 @@
  * Post-encoder modules are optional. When omitted, channel decoders operate directly
  * on the raw encoder output (required for spatial decoders such as `TensorToMask2D`).
  * Modules chain via `PostEncoderPipeline` and are instantiated through
- * `PostEncoderModuleFactory`.
+ * `PostEncoderModuleRegistry`.
  *
  * @see ChannelDecoder.hpp for the final torch-to-DataManager decoding stage
- * @see PostEncoderModuleFactory.hpp for module registration and lookup
+ * @see PostEncoderModuleRegistry.hpp for module registration and lookup
  * @see PostEncoderPipeline.hpp for chaining multiple modules
  */
 

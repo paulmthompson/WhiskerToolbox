@@ -5,7 +5,7 @@
 #define WHISKERTOOLBOX_POST_ENCODER_PARAM_SCHEMAS_HPP
 
 #include "ParameterSchema/ParameterSchema.hpp"
-#include "PostEncoderModuleFactory.hpp"
+#include "PostEncoderModuleParams.hpp"
 
 
 // GlobalAvgPoolModuleParams has no user-configurable fields — no hints needed.

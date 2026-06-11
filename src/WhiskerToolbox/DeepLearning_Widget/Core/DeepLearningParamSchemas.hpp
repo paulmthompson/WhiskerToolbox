@@ -11,7 +11,6 @@
 
 #include "DeepLearning/channel_decoding/ChannelDecoder.hpp"
 #include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
-#include "DeepLearning/post_encoder/PostEncoderModuleFactory.hpp"
 
 
 #include <rfl.hpp>
@@ -117,25 +116,19 @@ struct SequenceEntryParams {
 };
 
 // ============================================================================
-// Post-Encoder Module — which post-encoder module to apply
+// Post-Encoder Module — registry-driven module key + JSON parameters
 // ============================================================================
 
 /**
- * @brief No post-encoder processing (identity pass-through).
+ * @brief Descriptor for one post-encoder pipeline step.
+ *
+ * @c module_key @c "none" or empty means no post-encoder processing.
+ * Parameter schemas are resolved at runtime from `PostEncoderModuleRegistry`.
  */
-struct NoPostEncoderParams {};
-
-/**
- * @brief Tagged union discriminated by "module".
- * 
- * GlobalAvgPoolModuleParams and SpatialPointModuleParams are re-used from
- * the DeepLearning library.
- */
-using PostEncoderVariant = rfl::TaggedUnion<
-        "module",
-        NoPostEncoderParams,
-        dl::GlobalAvgPoolModuleParams,
-        dl::SpatialPointModuleParams>;
+struct PostEncoderStepDescriptor {
+    std::string module_key = "none";
+    std::string parameters_json = "{}";
+};
 
 // ============================================================================
 // Decoder — which decoder to use for an output slot
@@ -209,9 +202,7 @@ struct RecurrentBindingSlotParams {
 /**
  * @brief Full configuration for the post-encoder module section.
  */
-struct PostEncoderSlotParams {
-    PostEncoderVariant module = NoPostEncoderParams{};///< Post-encoder module variant
-};
+using PostEncoderSlotParams = PostEncoderStepDescriptor;
 
 /**
  * @brief Custom encoder input/output dimensions (UI-only, passed to

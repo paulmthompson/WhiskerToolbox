@@ -79,15 +79,17 @@ set(DEEP_LEARNING_SOURCES
     channel_decoding/TensorToFeatureVector.cpp
 
     post_encoder/PostEncoderModule.hpp
+    post_encoder/PostEncoderModuleParams.hpp
     post_encoder/PostEncoderParamSchemas.hpp
+    post_encoder/PostEncoderModuleRegistry.hpp
+    post_encoder/PostEncoderModuleRegistry.cpp
+    post_encoder/RegisterPostEncoderModule.hpp
     post_encoder/GlobalAvgPoolModule.hpp
     post_encoder/GlobalAvgPoolModule.cpp
     post_encoder/SpatialPointExtractModule.hpp
     post_encoder/SpatialPointExtractModule.cpp
     post_encoder/PostEncoderPipeline.hpp
     post_encoder/PostEncoderPipeline.cpp
-    post_encoder/PostEncoderModuleFactory.hpp
-    post_encoder/PostEncoderModuleFactory.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})

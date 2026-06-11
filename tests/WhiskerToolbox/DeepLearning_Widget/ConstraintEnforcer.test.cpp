@@ -177,10 +177,10 @@ TEST_CASE("computeBatchSizeConstraint: RecurrentOnlyBatch, active binding — al
 
 namespace {
 
-dl::widget::PostEncoderSlotParams paramsWithModule(
-        dl::widget::PostEncoderVariant module) {
+dl::widget::PostEncoderSlotParams paramsWithKey(std::string const & module_key) {
     dl::widget::PostEncoderSlotParams params;
-    params.module = std::move(module);
+    params.module_key = module_key;
+    params.parameters_json = "{}";
     return params;
 }
 
@@ -188,8 +188,7 @@ dl::widget::PostEncoderSlotParams paramsWithModule(
 
 TEST_CASE("validDecodersForPostEncoder: none returns all decoders",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForPostEncoder(
-            paramsWithModule(dl::widget::NoPostEncoderParams{}));
+    auto const decoders = validDecodersForPostEncoder(paramsWithKey("none"));
 
     REQUIRE(decoders.size() == 4);
     CHECK(std::find(decoders.begin(), decoders.end(), "MaskDecoderParams") != decoders.end());
@@ -201,8 +200,7 @@ TEST_CASE("validDecodersForPostEncoder: none returns all decoders",
 
 TEST_CASE("validDecodersForPostEncoder: global avg pool restricts to feature-vector only",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForPostEncoder(
-            paramsWithModule(dl::GlobalAvgPoolModuleParams{}));
+    auto const decoders = validDecodersForPostEncoder(paramsWithKey("global_avg_pool"));
 
     REQUIRE(decoders.size() == 1);
     CHECK(decoders[0] == "FeatureVectorDecoderParams");
@@ -210,8 +208,7 @@ TEST_CASE("validDecodersForPostEncoder: global avg pool restricts to feature-vec
 
 TEST_CASE("validDecodersForPostEncoder: spatial point restricts to feature-vector only",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForPostEncoder(
-            paramsWithModule(dl::SpatialPointModuleParams{}));
+    auto const decoders = validDecodersForPostEncoder(paramsWithKey("spatial_point"));
 
     REQUIRE(decoders.size() == 1);
     CHECK(decoders[0] == "FeatureVectorDecoderParams");

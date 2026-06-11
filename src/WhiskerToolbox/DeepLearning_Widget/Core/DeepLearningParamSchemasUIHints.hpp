@@ -35,11 +35,6 @@ struct ParameterUIHints<dl::widget::OutputSlotParams> {
 };
 
 template<>
-struct ParameterUIHints<dl::widget::PostEncoderSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
 struct ParameterUIHints<dl::widget::RecurrentBindingSlotParams> {
     static void annotate(ParameterSchema & schema);
 };

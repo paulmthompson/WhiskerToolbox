@@ -66,9 +66,9 @@ struct BatchSizeConstraint {
 /**
  * @brief Return valid decoder alternatives for the current post-encoder params.
  *
- * Modules that collapse spatial dimensions (`GlobalAvgPoolModuleParams` and
- * `SpatialPointModuleParams`, i.e. @c [B,C,H,W] → @c [B,C]) restrict output
- * decoders to `FeatureVectorDecoderParams` only. `NoPostEncoderParams` permits
+ * Modules that collapse spatial dimensions (per `PostEncoderModuleRegistry`
+ * metadata, i.e. @c [B,C,H,W] → @c [B,C]) restrict output
+ * decoders to `FeatureVectorDecoderParams` only. @c module_key @c "none" permits
  * every decoder variant.
  *
  * @param params  Post-encoder slot configuration from state or widget.

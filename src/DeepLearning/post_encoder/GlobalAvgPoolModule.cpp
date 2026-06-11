@@ -5,6 +5,9 @@
 
 #include "GlobalAvgPoolModule.hpp"
 
+#include "PostEncoderModuleParams.hpp"
+#include "RegisterPostEncoderModule.hpp"
+
 #include <ATen/Functions.h>  // at::adaptive_avg_pool2d
 #include <ATen/core/Tensor.h>// at::Tensor
 #include <spdlog/spdlog.h>
@@ -93,5 +96,21 @@ GlobalAvgPoolModule::outputShape(std::vector<int64_t> const & input_shape) const
     validateGlobalAvgPoolOutputShapeInput(input_shape);
     return {input_shape[0]};
 }
+
+namespace {
+
+auto const register_global_avg_pool =
+        RegisterPostEncoderModule<GlobalAvgPoolModuleParams>(
+                "global_avg_pool",
+                "Global Average Pooling",
+                "Collapse spatial dimensions via adaptive average pooling "
+                "([B,C,H,W] → [B,C]).",
+                true,
+                [](GlobalAvgPoolModuleParams const &,
+                   ImageSize) -> std::unique_ptr<PostEncoderModule> {
+                    return std::make_unique<GlobalAvgPoolModule>();
+                });
+
+}// namespace
 
 }// namespace dl
