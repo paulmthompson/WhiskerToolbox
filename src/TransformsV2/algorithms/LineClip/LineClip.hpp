@@ -1,10 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
 
-#include "CoreGeometry/line_geometry.hpp"
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
+#include "CoreGeometry/line_geometry.hpp" // ClipSide
 
 class Line2D;
 

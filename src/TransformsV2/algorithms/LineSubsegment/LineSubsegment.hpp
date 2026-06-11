@@ -1,9 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_SUBSEGMENT_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_SUBSEGMENT_TRANSFORM_HPP
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
 class Line2D;
 
 namespace WhiskerToolbox::Transforms::V2 {

@@ -1,9 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_DIGITAL_INTERVAL_BOOLEAN_HPP
 #define WHISKERTOOLBOX_V2_DIGITAL_INTERVAL_BOOLEAN_HPP
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
 #include <memory>
 
 class DigitalIntervalSeries;

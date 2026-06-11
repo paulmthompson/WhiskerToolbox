@@ -5,7 +5,8 @@
 
 #include "GlobalAvgPoolModule.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::adaptive_avg_pool2d
 
 #include <cassert>
 #include <stdexcept>
@@ -24,7 +25,7 @@ at::Tensor GlobalAvgPoolModule::apply(at::Tensor const & features) const {
                 std::to_string(features.dim()));
     }
     // adaptive_avg_pool2d → [B, C, 1, 1], then squeeze spatial dims
-    return torch::adaptive_avg_pool2d(features, {1, 1}).squeeze(-1).squeeze(-1);
+    return at::adaptive_avg_pool2d(features, {1, 1}).squeeze(-1).squeeze(-1);
 }
 
 std::vector<int64_t>

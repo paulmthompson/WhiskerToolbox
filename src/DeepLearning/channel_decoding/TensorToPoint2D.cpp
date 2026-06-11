@@ -1,6 +1,7 @@
 #include "TensorToPoint2D.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/TensorAccessor.h> // at::TensorAccessor
+#include <ATen/core/Tensor.h> // at::Tensor
 
 #include <algorithm>
 #include <cmath>
@@ -34,7 +35,7 @@ Point2D<float> scale_to_target(Point2D<float> const point,
 /// Parabolic subpixel refinement around a peak at (px, py).
 /// Fits a 1D parabola along each axis through the peak and its two neighbors.
 /// Returns the refined floating-point coordinate.
-Point2D<float> refine_subpixel(torch::TensorAccessor<float, 2> const & accessor,
+Point2D<float> refine_subpixel(at::TensorAccessor<float, 2> const & accessor,
                                int const px, int const py,
                                int const h, int const w) {
     auto refined_x = static_cast<float>(px);
@@ -66,7 +67,7 @@ Point2D<float> refine_subpixel(torch::TensorAccessor<float, 2> const & accessor,
 }
 
 /// Check if pixel (px, py) is a local maximum (greater than all 8 neighbors)
-bool is_local_maximum(torch::TensorAccessor<float, 2> const & accessor,
+bool is_local_maximum(at::TensorAccessor<float, 2> const & accessor,
                       int const px, int const py,
                       int const h, int const w) {
     float const val = accessor[py][px];

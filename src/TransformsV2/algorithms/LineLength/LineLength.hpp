@@ -4,10 +4,7 @@
 /**
  * @file LineLength.hpp
  * @brief Element transform computing total arc length of a Line2D
- *
- * Phase 1.4 — TableView → TensorData Refactoring
- *
- * Replaces the old LineLengthComputer in the TableView system.
+ * 
  * Uses CoreGeometry's calc_length() internally.
  *
  * Example JSON:
@@ -21,9 +18,6 @@
  * @see LineAngle.hpp for a similar Line2D → float transform
  * @see CoreGeometry/line_geometry.hpp for calc_length()
  */
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 
 class Line2D;
 

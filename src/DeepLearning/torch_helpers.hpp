@@ -4,6 +4,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <torch/torch.h>
+#include <torch/cuda.h>  // torch::cuda::is_available
 #include <torch/script.h>
 
 #include <memory>

@@ -25,8 +25,9 @@
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #pragma push_macro("CHECK")
-#include <torch/types.h> // torch::Tensor
+#include <c10/core/Device.h>  // Device, kCPU, kCUDA
 #include <torch/cuda.h> // torch::cuda::is_available
+#include <ATen/core/Tensor.h> // at::Tensor
 #pragma pop_macro("CHECK")
 #endif
 
@@ -43,7 +44,7 @@ namespace {
  * @pre result_tensor is contiguous, float32, on CPU, shape [num_rows, num_cols]
  */
 auto buildResultFromTorch(
-        torch::Tensor result_tensor,
+        at::Tensor result_tensor,
         TensorData const & input,
         std::vector<std::string> const & col_names) -> std::shared_ptr<TensorData> {
 
@@ -53,7 +54,7 @@ auto buildResultFromTorch(
 
     switch (row_desc.type()) {
         case RowType::TimeFrameIndex: {
-            // Zero-copy: wrap the torch::Tensor in LibTorchTensorStorage
+            // Zero-copy: wrap the at::Tensor in LibTorchTensorStorage
             auto storage = TensorStorageWrapper{
                     LibTorchTensorStorage{std::move(result_tensor)}};
             return std::make_shared<TensorData>(
@@ -117,7 +118,7 @@ auto tensorCARLibTorch(
 
     auto const num_cols = input.numColumns();
 
-    // Obtain a torch::Tensor from the input.
+    // Obtain a at::Tensor from the input.
     // If already LibTorch-backed, use it directly (zero-copy handle).
     // For CUDA: use toLibTorchStrided() to get a non-contiguous column-major
     // view, then upload + make contiguous on GPU (transpose at ~900 GB/s GPU
@@ -129,9 +130,9 @@ auto tensorCARLibTorch(
 
     // Keep converted TensorData alive if we need to create one
     std::optional<TensorData> converted;
-    torch::Tensor t;
+    at::Tensor t;
 
-    auto device = torch::kCPU;
+    auto device = at::kCPU;
     bool const cuda_available = use_cuda && torch::cuda::is_available();
     if (use_cuda && !cuda_available) {
         ctx.logMessage("TensorCAR: CUDA not available; using LibTorch CPU");
@@ -141,13 +142,13 @@ auto tensorCARLibTorch(
         // Already LibTorch-backed — zero-copy handle
         t = lt_storage->tensor();
         if (cuda_available) {
-            device = torch::kCUDA;
+            device = at::kCUDA;
             t = t.to(device);
         }
     } else if (cuda_available) {
         // Armadillo/Dense → strided column-major view → upload to GPU →
         // make contiguous on GPU (transpose runs on GPU memory bandwidth).
-        device = torch::kCUDA;
+        device = at::kCUDA;
         converted.emplace(input.toLibTorchStrided());
         lt_storage = converted->storage().getAsChecked<LibTorchTensorStorage>(
                 TensorStorageType::LibTorch);
@@ -174,7 +175,7 @@ auto tensorCARLibTorch(
                               excluded_set.size() >= num_cols;
 
     // Compute reference signal: shape [num_rows, 1]
-    torch::Tensor ref;
+    at::Tensor ref;
     if (all_included) {
         if (params.method == CARMethod::Mean) {
             ref = t.mean(/*dim=*/1, /*keepdim=*/true);
@@ -190,7 +191,7 @@ auto tensorCARLibTorch(
                 included_indices.push_back(static_cast<int64_t>(c));
             }
         }
-        auto idx = torch::tensor(included_indices, torch::kLong).to(device);
+        auto idx = at::tensor(included_indices, at::kLong).to(device);
         auto ref_source = t.index_select(/*dim=*/1, idx);
         if (params.method == CARMethod::Mean) {
             ref = ref_source.mean(/*dim=*/1, /*keepdim=*/true);
@@ -206,7 +207,7 @@ auto tensorCARLibTorch(
     }
 
     // Subtract reference from all channels
-    torch::Tensor result = t - ref;
+    at::Tensor result = t - ref;
 
     ctx.reportProgress(80);
 
@@ -215,8 +216,8 @@ auto tensorCARLibTorch(
     }
 
     // Download to CPU if on CUDA
-    if (result.device().type() == torch::kCUDA) {
-        result = result.to(torch::kCPU);
+    if (result.device().type() == at::kCUDA) {
+        result = result.to(at::kCPU);
 
         // Release intermediate CUDA tensor handles so the caching allocator
         // can reuse the GPU memory on subsequent transforms.

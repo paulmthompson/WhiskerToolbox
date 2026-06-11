@@ -4,7 +4,8 @@
 #include "models_v2/neurosam/NeuroSAMModel.hpp"
 #include "device/DeviceManager.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::randint
 
 #include <chrono>
 #include <iostream>
@@ -87,7 +88,7 @@ int main(int argc, char** argv) {
 
     // ── Create dummy inputs ──
     std::cout << "Creating dummy input tensors...\n";
-    std::unordered_map<std::string, torch::Tensor> inputs;
+    std::unordered_map<std::string, at::Tensor> inputs;
 
     // NOTE: AOT Inductor compiles for fixed shapes. The batch size must match
     // the batch size used during export (8 in the NeuroSAM export script).
@@ -97,7 +98,7 @@ int main(int argc, char** argv) {
     try {
         // encoder_image: [batch, 3, 256, 256] - uint8 (model expects uint8 images)
         {
-            auto tensor = torch::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
+            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
             inputs["encoder_image"] = dev_mgr.toDevice(tensor);
             std::cout << "  - encoder_image: " << inputs["encoder_image"].sizes() 
                       << " dtype=" << inputs["encoder_image"].dtype()
@@ -106,7 +107,7 @@ int main(int argc, char** argv) {
 
         // memory_images: [batch, 3, 256, 256] - uint8 (model expects uint8 images)
         {
-            auto tensor = torch::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
+            auto tensor = at::randint(0, 255, {batch_size, 3, 256, 256}, torch::kUInt8);
             inputs["memory_images"] = dev_mgr.toDevice(tensor);
             std::cout << "  - memory_images: " << inputs["memory_images"].sizes() 
                       << " dtype=" << inputs["memory_images"].dtype()
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
 
         // memory_masks: [batch, 1, 256, 256] - float32 (model expects float masks)
         {
-            auto tensor = torch::zeros({batch_size, 1, 256, 256}, torch::kFloat32);
+            auto tensor = at::zeros({batch_size, 1, 256, 256}, torch::kFloat32);
             // Create a simple circular mask in the center
             for (int b = 0; b < batch_size; ++b) {
                 for (int y = 100; y < 156; ++y) {
@@ -137,7 +138,7 @@ int main(int argc, char** argv) {
         // memory_mask (boolean): [batch, 1]
         // NOTE: Uncomment if your model uses this input
         // {
-        //     auto tensor = torch::ones({batch_size, 1}, torch::kFloat32);
+        //     auto tensor = at::ones({batch_size, 1}, torch::kFloat32);
         //     inputs["memory_mask"] = dev_mgr.toDevice(tensor);
         //     std::cout << "  - memory_mask: " << inputs["memory_mask"].sizes() 
         //               << " on " << inputs["memory_mask"].device() << "\n";
@@ -161,7 +162,7 @@ int main(int argc, char** argv) {
         constexpr int num_runs = 10;
         auto start = std::chrono::high_resolution_clock::now();
         
-        std::unordered_map<std::string, torch::Tensor> outputs;
+        std::unordered_map<std::string, at::Tensor> outputs;
         for (int i = 0; i < num_runs; ++i) {
             outputs = model.forward(inputs);
         }

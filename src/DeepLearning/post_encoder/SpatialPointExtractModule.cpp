@@ -3,7 +3,10 @@
 
 #include "SpatialPointExtractModule.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::full, at::index_put_
+#include <torch/nn/functional/vision.h> //grid_sample and GridSampleFuncOptions
+#include <torch/enum.h>                  // torch::kBilinear, torch::kBorder
 
 #include <cassert>
 #include <stdexcept>
@@ -70,8 +73,8 @@ SpatialPointExtractModule::_extractNearest(at::Tensor const & features) const {
     auto const iy_clamped = std::clamp(iy, int64_t{0}, static_cast<int64_t>(H) - 1);
 
     // Extract: features[:, :, iy, ix] → [B, C]
-    return features.index({torch::indexing::Slice(),
-                           torch::indexing::Slice(),
+    return features.index({at::indexing::Slice(),
+                           at::indexing::Slice(),
                            iy_clamped,
                            ix_clamped});
 }
@@ -95,13 +98,13 @@ SpatialPointExtractModule::_extractBilinear(at::Tensor const & features) const {
     float const y_norm = 2.0f * y_feat / (H - 1.0f) - 1.0f;
 
     // Build grid: [B, 1, 1, 2] (out_H=1, out_W=1, xy)
-    auto grid = torch::full({B, 1, 1, 2}, 0.0f, features.options());
+    auto grid = at::full({B, 1, 1, 2}, 0.0f, features.options());
     grid.index_put_(
-            {torch::indexing::Slice(), 0, 0, 0},
-            torch::full({B}, x_norm, features.options()));
+            {at::indexing::Slice(), 0, 0, 0},
+            at::full({B}, x_norm, features.options()));
     grid.index_put_(
-            {torch::indexing::Slice(), 0, 0, 1},
-            torch::full({B}, y_norm, features.options()));
+            {at::indexing::Slice(), 0, 0, 1},
+            at::full({B}, y_norm, features.options()));
 
     namespace F = torch::nn::functional;
     auto opts = F::GridSampleFuncOptions()

@@ -11,7 +11,7 @@
  * selects a different model.
  *
  * All libtorch interactions are routed through SlotAssembler (PIMPL)
- * so this header and translation unit never include <torch/torch.h>.
+ * so this header and translation unit never include torch.
  */
 
 #include "Core/SlotAssembler.hpp"// SlotAssembler, ModelDisplayInfo

@@ -1,6 +1,7 @@
 #include "Line2DEncoder.hpp"
 
-#include "torch/torch.h"
+#include <ATen/core/TensorAccessor.h> // at::TensorAccessor
+#include <ATen/core/Tensor.h> // at::Tensor
 
 #include <algorithm>
 #include <cmath>
@@ -31,7 +32,7 @@ Point2D<float> scale_point(Point2D<float> const point,
 /// Bresenham-style line rasterization between two pixel coordinates.
 /// Sets all visited pixels to 1.0 in the channel.
 void rasterize_segment_binary(int x0, int y0, int x1, int y1,
-                              torch::TensorAccessor<float, 2> & accessor,
+                              at::TensorAccessor<float, 2> & accessor,
                               int const h, int const w) {
     // Clamp endpoints
     x0 = std::clamp(x0, 0, w - 1);
@@ -64,7 +65,7 @@ void rasterize_segment_binary(int x0, int y0, int x1, int y1,
 /// For each pixel, compute the minimum distance to the line segment and
 /// apply a Gaussian weight.
 void rasterize_segment_heatmap(Point2D<float> const p0, Point2D<float> const p1,
-                               torch::TensorAccessor<float, 2> & accessor,
+                               at::TensorAccessor<float, 2> & accessor,
                                int const h, int const w,
                                float const sigma) {
     float const extent = 3.0f * sigma;

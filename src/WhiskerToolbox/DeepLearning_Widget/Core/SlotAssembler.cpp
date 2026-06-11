@@ -34,7 +34,9 @@
 
 #include "device/DeviceManager.hpp"
 
-#include <torch/torch.h>
+#include <torch/csrc/autograd/grad_mode.h> // torch::NoGradGuard
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <c10/core/Device.h>  // Device, kCPU, kCUDA
 
 #include <algorithm>
 #include <atomic>
@@ -56,13 +58,13 @@ struct SlotAssembler::Impl {
 
     /// Cached tensors for Absolute-mode static inputs.
     /// Key: "slot_name:memory_index" (from staticCacheKey()).
-    std::unordered_map<std::string, torch::Tensor> static_cache;
+    std::unordered_map<std::string, at::Tensor> static_cache;
 
     /// Cached tensors for recurrent (feedback) inputs.
     /// Key: "recurrent:input_slot_name" (from recurrentCacheKey()).
     /// Stores the output tensor from the previous frame that will be
     /// injected into the input slot on the next frame.
-    std::unordered_map<std::string, torch::Tensor> recurrent_cache;
+    std::unordered_map<std::string, at::Tensor> recurrent_cache;
 
     /// DataManager key for the PointData source of the spatial_point module.
     /// Empty if no spatial_point module is active.
@@ -176,7 +178,7 @@ void encodeDynamicSlot(
         DataManager & dm,
         SlotBindingData const & binding,
         dl::TensorSlotDescriptor const & slot,
-        torch::Tensor & tensor,
+        at::Tensor & tensor,
         int frame,
         int batch_index,
         ImageSize const & source_image_size,
@@ -313,19 +315,19 @@ recurrentClaimedPositions(
 ///      downstream error in model forward(); batch_size<0 throws from
 ///      LibTorch when creating tensors with a negative leading dimension;
 ///      all callers clamp to >= 1 before calling (enforcement: none) [IMPORTANT]
-std::unordered_map<std::string, torch::Tensor>
+std::unordered_map<std::string, at::Tensor>
 assembleInputs(
         DataManager & dm,
         dl::ModelBase const & model,
         std::vector<SlotBindingData> const & input_bindings,
         std::vector<StaticInputData> const & static_inputs,
-        std::unordered_map<std::string, torch::Tensor> const & static_cache,
+        std::unordered_map<std::string, at::Tensor> const & static_cache,
         std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
         int batch_size,
         SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
 
-    std::unordered_map<std::string, torch::Tensor> result;
+    std::unordered_map<std::string, at::Tensor> result;
     auto const input_slot_vec = model.inputSlots();
 
     // ── Detect source image size from ImageEncoder binding ──
@@ -379,7 +381,7 @@ assembleInputs(
                             slot->shape.begin(), slot->shape.end());
 
         // Use dtype from slot descriptor (model specifies expected dtype)
-        auto tensor = torch::zeros(tensor_shape, toTorchDType(slot->dtype));
+        auto tensor = at::zeros(tensor_shape, toTorchDType(slot->dtype));
         for (int b = 0; b < batch_size; ++b) {
             int const frame = computeEncodingFrame(
                     current_frame, b, binding.time_offset, max_frame);
@@ -416,7 +418,7 @@ assembleInputs(
             // Boolean mask: always create, even if no entries
             std::vector<int64_t> shape = {batch_size};
             for (auto d: slot.shape) shape.push_back(d);
-            auto tensor = torch::zeros(shape, toTorchDType(slot.dtype));
+            auto tensor = at::zeros(shape, toTorchDType(slot.dtype));
 
             // Determine which dimension the memory_index indexes into.
             // For boolean masks with sequence_dim, use sequence_dim + 1
@@ -446,7 +448,7 @@ assembleInputs(
             tensor_shape.insert(tensor_shape.end(),
                                 slot.shape.begin(), slot.shape.end());
             // Use dtype from slot descriptor
-            auto tensor = torch::zeros(tensor_shape, toTorchDType(slot.dtype));
+            auto tensor = at::zeros(tensor_shape, toTorchDType(slot.dtype));
 
             if (slot.hasSequenceDim()) {
                 // ── Sequence slot: place each entry at its memory_index ──
@@ -523,7 +525,7 @@ assembleInputs(
                     std::vector<int64_t> temp_shape = {1};
                     temp_shape.insert(temp_shape.end(),
                                       elem_shape.begin(), elem_shape.end());
-                    auto temp = torch::zeros(temp_shape, toTorchDType(slot.dtype));
+                    auto temp = at::zeros(temp_shape, toTorchDType(slot.dtype));
 
                     int const frame = computeEncodingFrame(
                             current_frame, 0, entry->time_offset, max_frame);
@@ -564,7 +566,7 @@ assembleInputs(
                 std::vector<int64_t> tensor_shape = {batch_size};
                 tensor_shape.insert(tensor_shape.end(),
                                     slot.shape.begin(), slot.shape.end());
-                result[slot.name] = torch::zeros(tensor_shape,
+                result[slot.name] = at::zeros(tensor_shape,
                                                  toTorchDType(slot.dtype));
             } else {
                 // ── Non-sequence static slot (original behavior) ──
@@ -626,7 +628,7 @@ assembleInputs(
 ///      (enforcement: none) [CRITICAL]
 void decodeOutputs(
         DataManager & dm,
-        std::unordered_map<std::string, torch::Tensor> const & outputs,
+        std::unordered_map<std::string, at::Tensor> const & outputs,
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
@@ -765,7 +767,7 @@ void decodeOutputs(
 ///      the sole caller passes loop variable b >= 0
 ///      (enforcement: none) [CRITICAL]
 std::vector<FrameResult> decodeOutputsToBuffer(
-        std::unordered_map<std::string, torch::Tensor> const & outputs,
+        std::unordered_map<std::string, at::Tensor> const & outputs,
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
@@ -918,7 +920,7 @@ std::string SlotAssembler::validateWeights() {
     }
 
     auto const input_slots = _impl->model->inputSlots();
-    std::unordered_map<std::string, torch::Tensor> dummy_inputs;
+    std::unordered_map<std::string, at::Tensor> dummy_inputs;
     dummy_inputs.reserve(input_slots.size());
 
     for (auto const & slot: input_slots) {
@@ -927,7 +929,7 @@ std::string SlotAssembler::validateWeights() {
         shape.push_back(1);// batch_size = 1
         shape.insert(shape.end(), slot.shape.begin(), slot.shape.end());
         dummy_inputs[slot.name] =
-                torch::zeros(shape, dl::toTorchDType(slot.dtype));
+                at::zeros(shape, dl::toTorchDType(slot.dtype));
     }
 
     try {
@@ -977,7 +979,7 @@ bool SlotAssembler::isCudaAvailable() {
 
 std::string SlotAssembler::currentDeviceName() {
     auto const & dev = dl::DeviceManager::instance().device();
-    if (dev.type() == torch::kCUDA) {
+    if (dev.type() == at::kCUDA) {
         return "GPU (CUDA)";
     }
     return "CPU";
@@ -985,18 +987,18 @@ std::string SlotAssembler::currentDeviceName() {
 
 void SlotAssembler::setDeviceByName(std::string const & name) {
     if (name == "cuda") {
-        dl::DeviceManager::instance().setDevice(torch::Device(torch::kCUDA));
+        dl::DeviceManager::instance().setDevice(at::Device(at::kCUDA));
     } else {
-        dl::DeviceManager::instance().setDevice(torch::Device(torch::kCPU));
+        dl::DeviceManager::instance().setDevice(at::Device(at::kCPU));
     }
 }
 
 void SlotAssembler::initDeviceForCurrentThread() {
     auto const & dev = dl::DeviceManager::instance().device();
-    if (dev.type() != torch::kCPU) {
+    if (dev.type() != at::kCPU) {
         // Allocating a small tensor on the target device forces the CUDA
         // runtime to initialize its per-thread context.
-        (void) torch::zeros({1}, torch::TensorOptions().device(dev));
+        (void) at::zeros({1}, at::TensorOptions().device(dev));
     }
 }
 
@@ -1030,7 +1032,7 @@ bool SlotAssembler::captureStaticInput(
     std::vector<int64_t> tensor_shape = {1};
     tensor_shape.insert(tensor_shape.end(),
                         encode_shape.begin(), encode_shape.end());
-    auto tensor = torch::zeros(tensor_shape, toTorchDType(slot->dtype));
+    auto tensor = at::zeros(tensor_shape, toTorchDType(slot->dtype));
 
     // Build a temporary descriptor with the encoding shape
     dl::TensorSlotDescriptor encode_slot = *slot;
@@ -1375,7 +1377,7 @@ void SlotAssembler::runRecurrentSequence(
 
         if (mode == RecurrentInitMode::Zeros) {
             _impl->recurrent_cache[key] =
-                    torch::zeros(init_shape, toTorchDType(input_slot->dtype));
+                    at::zeros(init_shape, toTorchDType(input_slot->dtype));
 
         } else if (mode == RecurrentInitMode::StaticCapture) {
             // For hybrid mode, use the target_memory_index as cache key
@@ -1409,7 +1411,7 @@ void SlotAssembler::runRecurrentSequence(
                               << rb.input_slot_name
                               << "', falling back to zeros\n";
                     _impl->recurrent_cache[key] =
-                            torch::zeros(init_shape,
+                            at::zeros(init_shape,
                                          toTorchDType(input_slot->dtype));
                 }
             }
@@ -1417,7 +1419,7 @@ void SlotAssembler::runRecurrentSequence(
         } else if (mode == RecurrentInitMode::FirstOutput) {
             // Will be filled after the first forward pass below
             _impl->recurrent_cache[key] =
-                    torch::zeros(init_shape, toTorchDType(input_slot->dtype));
+                    at::zeros(init_shape, toTorchDType(input_slot->dtype));
         }
     }
 

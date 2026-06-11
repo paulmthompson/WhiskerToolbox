@@ -3,7 +3,8 @@
 
 #include "device/DeviceManager.hpp"
 
-#include <torch/torch.h>
+#include <torch/types.h> // torch::Tensor
+#include <torch/cuda.h>  // torch::cuda::is_available
 
 TEST_CASE("DeviceManager - singleton returns same instance", "[DeviceManager]")
 {

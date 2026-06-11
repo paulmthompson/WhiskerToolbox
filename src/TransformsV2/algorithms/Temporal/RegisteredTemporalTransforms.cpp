@@ -31,7 +31,6 @@ static RegisterBindingApplicator<NormalizeTimeParamsV2> const register_binding_a
  * This enables JSON deserialization of pipelines containing temporal transforms.
  */
 bool const init_pipeline_factories = []() {
-    registerPipelineStepFactoryFor<NormalizeTimeParams>();
     registerPipelineStepFactoryFor<NormalizeTimeParamsV2>();
     return true;
 }();
@@ -58,74 +57,6 @@ struct RegisterTransform {
                 std::move(metadata));
     }
 };
-
-// ============================================================================
-// Value Projection Registrations (Return float directly)
-// ============================================================================
-
-/**
- * @brief Register NormalizeTimeValue transform (value projection)
- *
- * Transforms TimeFrameIndex → float by computing normalized time.
- * This is the fundamental temporal normalization transform.
- *
- * Use this for:
- * - Raster plot drawing: extract .time() from EventWithId, normalize, draw
- * - Range reductions (FirstPositiveLatency, etc.)
- * - Any case where you need a time offset as a float
- *
- * The caller extracts the TimeFrameIndex from their element type:
- * - EventWithId: event.time()
- * - TimeValuePoint: sample.time()
- * - Custom types: element.time()
- */
-auto const register_normalize_time_value = RegisterTransform<
-        TimeFrameIndex,
-        float,
-        NormalizeTimeParams>(
-        "NormalizeTimeValue",
-        normalizeTimeValue,
-        TransformMetadata{
-                .name = "NormalizeTimeValue",
-                .description = "Compute normalized time offset as float (value projection)",
-                .category = "Temporal",
-                .input_type = typeid(TimeFrameIndex),
-                .output_type = typeid(float),
-                .params_type = typeid(NormalizeTimeParams),
-                .lineage_type = TransformLineageType::None,  // No entity tracking for scalar output
-                .input_type_name = "TimeFrameIndex",
-                .output_type_name = "float",
-                .params_type_name = "NormalizeTimeParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
-
-/**
- * @brief Register NormalizeSampleTimeValue transform (value projection)
- *
- * Transforms TimeValuePoint → float by computing normalized time.
- * This is the value projection version for analog samples.
- */
-auto const register_normalize_sample_time_value = RegisterTransform<
-        AnalogTimeSeries::TimeValuePoint,
-        float,
-        NormalizeTimeParams>(
-        "NormalizeSampleTimeValue",
-        normalizeSampleTimeValue,
-        TransformMetadata{
-                .name = "NormalizeSampleTimeValue",
-                .description = "Compute normalized sample time as float (value projection)",
-                .category = "Temporal",
-                .input_type = typeid(AnalogTimeSeries::TimeValuePoint),
-                .output_type = typeid(float),
-                .params_type = typeid(NormalizeTimeParams),
-                .lineage_type = TransformLineageType::None,
-                .input_type_name = "TimeValuePoint",
-                .output_type_name = "float",
-                .params_type_name = "NormalizeTimeParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
 
 // ============================================================================
 // V2 Value Projection Registrations (Using param bindings)
@@ -230,8 +161,6 @@ void registerTemporalTransforms() {
     // 3. Forcing the translation unit to be linked
 
     // Force instantiation of static registrations (V1)
-    (void)register_normalize_time_value;
-    (void)register_normalize_sample_time_value;
     (void)init_pipeline_factories;
     
     // Force instantiation of V2 registrations (param bindings)

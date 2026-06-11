@@ -1,11 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_MIN_POINT_DIST_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_MIN_POINT_DIST_TRANSFORM_HPP
 
-#include "extension/ElementTransform.hpp"
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
 class Line2D;
 template<typename T>
 struct Point2D;
@@ -38,7 +33,7 @@ struct LineMinPointDistParams {
 };
 
 // ============================================================================
-// Helper Functions (declared here, defined in .cpp)
+// Helper Functions
 // ============================================================================
 
 /**

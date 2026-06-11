@@ -65,8 +65,10 @@
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #pragma push_macro("CHECK")
-#include <torch/types.h> // torch::Tensor
+#include <c10/core/Device.h>  // Device, kCPU, kCUDA
 #include <torch/cuda.h> // torch::cuda::is_available
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <c10/core/ScalarType.h> // at::kFloat, at::Double, at::kLong
 #pragma pop_macro("CHECK")
 #endif
 
@@ -109,13 +111,13 @@ auto validateIncludedChannels(
 }
 
 auto medianAlongDim(
-        torch::Tensor const & values,
+        at::Tensor const & values,
         int64_t dim,
-        bool keepdim) -> torch::Tensor {
+        bool keepdim) -> at::Tensor {
     auto sorted = std::get<0>(values.sort(dim));
     auto const axis_size = sorted.size(dim);
 
-    torch::Tensor median;
+    at::Tensor median;
     if ((axis_size % 2) == 0) {
         auto const upper_index = axis_size / 2;
         auto const lower_index = upper_index - 1;
@@ -133,11 +135,11 @@ auto medianAlongDim(
 }
 
 auto buildResultFromTorch(
-        torch::Tensor const & result_tensor,
+        at::Tensor const & result_tensor,
         TensorData const & input,
         std::vector<std::string> const & column_names) -> std::shared_ptr<TensorData> {
     assert(result_tensor.device().is_cpu());
-    assert(result_tensor.scalar_type() == torch::kFloat32);
+    assert(result_tensor.scalar_type() == at::Float);
 
     auto const & row_desc = input.rows();
     auto storage = TensorStorageWrapper{
@@ -192,13 +194,13 @@ auto tensorWhiteningLibTorch(
                     TensorStorageType::LibTorch);
 
     std::optional<TensorData> converted;
-    torch::Device device = torch::kCPU;
+    at::Device device = at::kCPU;
     if (use_cuda) {
-        device = torch::Device(torch::kCUDA);
+        device = at::Device(at::kCUDA);
         ctx.logMessage("TensorWhitening: using CUDA device");
     }
 
-    torch::Tensor input_tensor;
+    at::Tensor input_tensor;
     if (libtorch_storage != nullptr) {
         input_tensor = libtorch_storage->tensor();
         if (input_tensor.device() != device) {
@@ -221,8 +223,8 @@ auto tensorWhiteningLibTorch(
     if (!input_tensor.is_contiguous()) {
         input_tensor = input_tensor.contiguous();
     }
-    if (input_tensor.scalar_type() != torch::kFloat32) {
-        input_tensor = input_tensor.to(torch::kFloat32);
+    if (input_tensor.scalar_type() != at::kFloat) {
+        input_tensor = input_tensor.to(at::kFloat);
     }
 
     ctx.reportProgress(20);
@@ -230,18 +232,18 @@ auto tensorWhiteningLibTorch(
         return nullptr;
     }
 
-    auto channel_index_tensor = torch::tensor(
+    auto channel_index_tensor = at::tensor(
             included_channels,
-            torch::TensorOptions().dtype(torch::kLong).device(device));
+            at::TensorOptions().dtype(at::kLong).device(device));
 
-    if (!torch::isfinite(input_tensor).all().item<bool>()) {
+    if (!at::isfinite(input_tensor).all().item<bool>()) {
         ctx.logMessage("TensorWhitening: input contains NaN or Inf values");
         return nullptr;
     }
 
     auto result = input_tensor.clone();
     auto included = input_tensor.index_select(/*dim=*/1, channel_index_tensor)
-                            .to(torch::kFloat64);
+                            .to(at::kDouble);
     auto medians = medianAlongDim(included, /*dim=*/0, /*keepdim=*/true);
     auto centered = included - medians;
     included.reset();
@@ -253,7 +255,7 @@ auto tensorWhiteningLibTorch(
     }
 
     auto robust_std = medianAlongDim(centered.abs(), /*dim=*/0, /*keepdim=*/true) * 1.4826;
-    torch::Tensor covariance_source = centered;
+    at::Tensor covariance_source = centered;
     if (params.mad_threshold_multiplier > 0.0F) {
         auto thresholds = robust_std.clamp_min(static_cast<double>(params.epsilon)) *
                           static_cast<double>(params.mad_threshold_multiplier);
@@ -280,12 +282,12 @@ auto tensorWhiteningLibTorch(
 
     auto covariance = covariance_source.transpose(0, 1).matmul(covariance_source) /
                       static_cast<double>(sample_count - 1);
-    auto eigh = torch::linalg_eigh(covariance);
+    auto eigh = at::linalg_eigh(covariance);
     auto eigenvalues = std::get<0>(eigh);
     auto eigenvectors = std::get<1>(eigh);
-    auto inv_sqrt = torch::rsqrt(
+    auto inv_sqrt = at::rsqrt(
             eigenvalues.clamp_min(0.0) + static_cast<double>(params.epsilon));
-    auto whitening_matrix = eigenvectors.matmul(torch::diag(inv_sqrt))
+    auto whitening_matrix = eigenvectors.matmul(at::diag(inv_sqrt))
                                     .matmul(eigenvectors.transpose(0, 1));
 
     auto whitened = centered.matmul(whitening_matrix);
@@ -306,14 +308,14 @@ auto tensorWhiteningLibTorch(
         return nullptr;
     }
 
-    using torch::indexing::Slice;
-    result.index_put_({Slice(), channel_index_tensor}, whitened.to(torch::kFloat32));
+    using at::indexing::Slice;
+    result.index_put_({Slice(), channel_index_tensor}, whitened.to(at::kFloat));
     whitened.reset();
     input_tensor.reset();
     channel_index_tensor.reset();
 
-    if (result.device().type() == torch::kCUDA) {
-        result = result.to(torch::kCPU);
+    if (result.device().type() == at::kCUDA) {
+        result = result.to(at::kCPU);
     }
     result = result.contiguous();
 

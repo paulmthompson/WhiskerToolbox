@@ -6,7 +6,7 @@
  * @brief Bridge between UI/DataManager and the DeepLearning library.
  *
  * This class isolates all libtorch usage behind a PIMPL firewall so that
- * Qt widget code never includes <torch/torch.h> — preventing the infamous
+ * Qt widget code never includes torch — preventing
  * Qt `slots` macro conflict with libtorch.
  *
  * Instance methods manage a cached ModelBase for weights loading and

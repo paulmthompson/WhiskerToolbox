@@ -5,8 +5,6 @@
  * @file IntervalReduction.hpp
  * @brief Binary container transforms that produce TensorData from interval + source pairs
  *
- * Phase 3.4 of the TableView → TensorData refactoring plan.
- *
  * These transforms take a DigitalIntervalSeries (defining rows) and a source data
  * container, gather the source data within each interval, apply a named range reduction,
  * and produce a TensorData with interval-based RowDescriptor and a single column.
@@ -35,9 +33,6 @@
  * @see RangeReductionRegistry for available reductions
  * @see TensorData::createFromIntervals for output construction
  */
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 
 #include <memory>
 #include <string>

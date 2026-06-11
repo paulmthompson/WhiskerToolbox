@@ -1,11 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_MASK_CENTROID_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_MASK_CENTROID_TRANSFORM_HPP
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
-#include <optional>
-
 class Mask2D;
 template<typename T>
 struct Point2D;

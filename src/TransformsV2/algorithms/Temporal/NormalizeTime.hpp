@@ -22,8 +22,6 @@
  *   Event at 350 → normalized to +50
  * ```
  *
- * ## V2 Pattern (Recommended)
- *
  * Use NormalizeTimeParamsV2 with parameter bindings from PipelineValueStore:
  *
  * ```cpp
@@ -65,117 +63,9 @@ namespace WhiskerToolbox::Transforms::V2 {
 // V1 Parameters (manual alignment time setting)
 // ============================================================================
 
-/**
- * @brief Parameters for time normalization transforms
- *
- * Contains alignment time that must be set via setAlignmentTime().
- *
- * @note For the recommended V2 pattern using parameter bindings,
- * see NormalizeTimeParamsV2.
- *
- * ## Usage
- *
- * ```cpp
- * NormalizeTimeParams params;
- * params.setAlignmentTime(TimeFrameIndex{100});
- *
- * float norm_time = normalizeTimeValue(event_time, params);
- * ```
- */
-struct NormalizeTimeParams {
-    // ========== Runtime Context (NOT Serialized) ==========
-
-    /**
-     * @brief Cached alignment time
-     *
-     * Set via setAlignmentTime().
-     * rfl::Skip prevents serialization to JSON.
-     */
-    rfl::Skip<std::optional<TimeFrameIndex>> alignment_time;
-
-    // ========== Configuration Interface ==========
-
-    /**
-     * @brief Set alignment time
-     * @param time The alignment time to use as t=0 reference
-     */
-    void setAlignmentTime(TimeFrameIndex time) {
-        alignment_time.value() = time;
-    }
-
-    /**
-     * @brief Check if alignment time has been set
-     * @return true if alignment time is available
-     */
-    [[nodiscard]] bool hasAlignmentTime() const noexcept {
-        return alignment_time.value().has_value();
-    }
-
-    /**
-     * @brief Get the alignment time
-     * @return The alignment time
-     * @throws std::runtime_error if alignment time has not been set
-     */
-    [[nodiscard]] TimeFrameIndex getAlignmentTime() const {
-        if (!alignment_time.value().has_value()) {
-            throw std::runtime_error("NormalizeTimeParams: alignment time not set. "
-                                    "Call setAlignmentTime() first.");
-        }
-        return *alignment_time.value();
-    }
-};
 
 // ============================================================================
-// V1 Transform Functions
-// ============================================================================
-
-/**
- * @brief Normalize a TimeFrameIndex to float value
- *
- * Computes the offset from an alignment time as a float.
- * This is the fundamental temporal normalization transform.
- *
- * @param time Input time to normalize
- * @param params Parameters containing alignment time
- * @return float The normalized time (time - alignment_time)
- * @throws std::runtime_error if params.alignment_time is not set
- *
- * Example:
- * ```cpp
- * TimeFrameIndex event_time{125};
- * NormalizeTimeParams params;
- * params.setAlignmentTime(TimeFrameIndex{100});
- *
- * float norm_time = normalizeTimeValue(event_time, params);
- * // norm_time == 25.0f
- * ```
- */
-[[nodiscard]] inline float normalizeTimeValue(
-        TimeFrameIndex const& time,
-        NormalizeTimeParams const& params) {
-    TimeFrameIndex alignment = params.getAlignmentTime();
-    return static_cast<float>(time.getValue() - alignment.getValue());
-}
-
-/**
- * @brief Normalize analog sample time to float value
- *
- * Returns only the normalized time, not the sample value.
- *
- * @param sample Input sample with absolute time
- * @param params Parameters containing alignment time
- * @return float The normalized time (sample.time() - alignment_time)
- * @throws std::runtime_error if params.alignment_time is not set
- */
-[[nodiscard]] inline float normalizeSampleTimeValue(
-        AnalogTimeSeries::TimeValuePoint const& sample,
-        NormalizeTimeParams const& params) {
-    TimeFrameIndex alignment = params.getAlignmentTime();
-    return static_cast<float>(sample.time().getValue() - alignment.getValue());
-}
-
-// ============================================================================
-// V2 Parameters (using param bindings - Recommended)
+// V2 Parameters (using param bindings)
 // ============================================================================
 
 /**

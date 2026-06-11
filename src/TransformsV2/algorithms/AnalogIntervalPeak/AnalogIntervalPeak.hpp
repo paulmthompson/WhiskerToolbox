@@ -1,9 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
 #define WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
 #include <memory>
 
 class AnalogTimeSeries;

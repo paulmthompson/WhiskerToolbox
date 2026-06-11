@@ -3,7 +3,8 @@
 #include "models_v2/ModelExecution.hpp"
 #include "models_v2/backends/InferenceBackend.hpp"
 
-#include <torch/torch.h>
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::randn
 
 #include <filesystem>
 #include <fstream>
@@ -144,15 +145,15 @@ TEST_CASE("ModelExecution - execute without loading throws", "[ModelExecution]")
 {
     dl::ModelExecution exec;
     CHECK_THROWS_AS(
-        exec.execute({torch::randn({1, 3, 64, 64})}),
+        exec.execute({at::randn({1, 3, 64, 64})}),
         std::runtime_error);
 }
 
 TEST_CASE("ModelExecution - executeNamed with missing slot throws", "[ModelExecution]")
 {
     dl::ModelExecution exec;
-    std::unordered_map<std::string, torch::Tensor> named_inputs{
-        {"image", torch::randn({1, 3, 64, 64})}
+    std::unordered_map<std::string, at::Tensor> named_inputs{
+        {"image", at::randn({1, 3, 64, 64})}
     };
     std::vector<std::string> order{"image", "missing_slot"};
 
@@ -209,7 +210,7 @@ TEST_CASE("ModelExecution - .pte without ENABLE_EXECUTORCH fails gracefully", "[
 //     REQUIRE(exec.isLoaded());
 //     CHECK(exec.activeBackend() == dl::BackendType::TorchScript);
 //
-//     auto outputs = exec.execute({torch::randn({1, 3, 256, 256})});
+//     auto outputs = exec.execute({at::randn({1, 3, 256, 256})});
 //     REQUIRE_FALSE(outputs.empty());
 // }
 

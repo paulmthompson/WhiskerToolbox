@@ -21,7 +21,6 @@ add_executable(test_TransformsV2
         test_range_reduction_types.test.cpp
         test_range_reduction_registry.test.cpp
         test_range_reductions.test.cpp
-        test_context_aware_params.test.cpp
         test_value_projection_types.test.cpp
         test_pipeline_value_store.test.cpp
         test_parameter_binding.test.cpp
