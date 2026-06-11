@@ -1,0 +1,45 @@
+---
+title: "TensorToPoint2D"
+---
+
+## Overview
+
+`TensorToPoint2D` decodes peak locations from a spatial model output channel into `Point2D<float>`
+coordinates. It supports single-peak argmax decoding and multi-peak local-maximum detection.
+
+## Tensor Layout
+
+The decoder expects a **4D** tensor in **NCHW** order:
+
+| Dim | Name    | Indexed by              |
+|-----|---------|-------------------------|
+| 0   | Batch   | `DecoderContext::batch_index` |
+| 1   | Channel | `DecoderContext::source_channel` |
+| 2   | Height  | `DecoderContext::height` |
+| 3   | Width   | `DecoderContext::width` |
+
+`DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
+`tensor.size(3)` respectively.
+
+## Decode Modes
+
+- `decode()` — returns the global argmax location, optionally refined with parabolic subpixel
+  fitting. Returns `{0, 0}` when the selected channel is entirely non-positive.
+- `decodeMultiple()` — returns all local maxima above `PointDecoderParams::threshold`.
+
+## Coordinate Scaling
+
+When `DecoderContext::target_image_size` is non-zero, coordinates are scaled linearly from tensor
+space to the original image size. When `target_image_size` is `{0, 0}`, coordinates are returned
+in tensor pixel space.
+
+## Validation
+
+Both entry points validate at runtime:
+
+- Tensor is defined and 4-dimensional
+- `batch_index` and `source_channel` are in range
+- `height` and `width` are positive and match the tensor spatial dimensions
+
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the failure at
+`spdlog::debug` level.

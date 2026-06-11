@@ -99,6 +99,8 @@ website:
                 - developer/DeepLearning/post_encoder_modules.qmd
                 - developer/DeepLearning/channel_decoding/TensorToMask2D.qmd
                 - developer/DeepLearning/channel_decoding/TensorToFeatureVector.qmd
+                - developer/DeepLearning/channel_decoding/TensorToPoint2D.qmd
+                - developer/DeepLearning/channel_decoding/TensorToLine2D.qmd
                 - developer/DeepLearning/param_schemas.qmd
                 - developer/DeepLearning/widget_param_schemas.qmd
                 - developer/DeepLearning/device_selector.qmd

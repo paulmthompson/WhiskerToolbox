@@ -6,8 +6,10 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::zeros, at::ones
+#include <ATen/Functions.h>  // at::zeros, at::ones
+#include <ATen/core/Tensor.h>// at::Tensor
+
+#include <stdexcept>
 
 using Catch::Matchers::WithinAbs;
 
@@ -129,6 +131,53 @@ TEST_CASE("TensorToPoint2D - batch index", "[channel_decoding][TensorToPoint2D]"
     auto const pt1 = decoder.decode(tensor, ctx, params);
     CHECK_THAT(pt1.x, WithinAbs(8.0f, 1e-5f));
     CHECK_THAT(pt1.y, WithinAbs(7.0f, 1e-5f));
+}
+
+TEST_CASE("TensorToPoint2D - rejects non-4D tensor", "[channel_decoding][TensorToPoint2D]") {
+    dl::TensorToPoint2D decoder;
+
+    auto tensor = at::zeros({1, 256});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 1;
+    ctx.width = 256;
+    dl::PointDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
+    CHECK_THROWS_AS(decoder.decodeMultiple(tensor, ctx, params), std::invalid_argument);
+}
+
+TEST_CASE("TensorToPoint2D - rejects out-of-range batch index",
+          "[channel_decoding][TensorToPoint2D]") {
+    dl::TensorToPoint2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 1;
+    ctx.source_channel = 0;
+    ctx.height = 4;
+    ctx.width = 4;
+    dl::PointDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::out_of_range);
+    CHECK_THROWS_AS(decoder.decodeMultiple(tensor, ctx, params), std::out_of_range);
+}
+
+TEST_CASE("TensorToPoint2D - rejects spatial dimension mismatch",
+          "[channel_decoding][TensorToPoint2D]") {
+    dl::TensorToPoint2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 8;
+    ctx.width = 8;
+    dl::PointDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
+    CHECK_THROWS_AS(decoder.decodeMultiple(tensor, ctx, params), std::invalid_argument);
 }
 
 TEST_CASE("TensorToPoint2D - channel selection", "[channel_decoding][TensorToPoint2D]") {

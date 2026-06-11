@@ -7,8 +7,10 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::zeros, at::ones
+#include <ATen/Functions.h>  // at::zeros, at::ones, at::full
+#include <ATen/core/Tensor.h>// at::Tensor
+
+#include <stdexcept>
 
 using Catch::Matchers::WithinAbs;
 
@@ -180,6 +182,50 @@ TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][T
         CHECK(line[i].x >= 15.0f);
         CHECK(line[i].x <= 75.0f);
     }
+}
+
+TEST_CASE("TensorToLine2D - rejects non-4D tensor", "[channel_decoding][TensorToLine2D]") {
+    dl::TensorToLine2D decoder;
+
+    auto tensor = at::zeros({1, 256});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 1;
+    ctx.width = 256;
+    dl::LineDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
+}
+
+TEST_CASE("TensorToLine2D - rejects out-of-range batch index",
+          "[channel_decoding][TensorToLine2D]") {
+    dl::TensorToLine2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 1;
+    ctx.source_channel = 0;
+    ctx.height = 4;
+    ctx.width = 4;
+    dl::LineDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::out_of_range);
+}
+
+TEST_CASE("TensorToLine2D - rejects spatial dimension mismatch",
+          "[channel_decoding][TensorToLine2D]") {
+    dl::TensorToLine2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 8;
+    ctx.width = 8;
+    dl::LineDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
 }
 
 TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]") {

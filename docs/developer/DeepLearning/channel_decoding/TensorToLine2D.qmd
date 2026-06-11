@@ -1,0 +1,40 @@
+---
+title: "TensorToLine2D"
+---
+
+## Overview
+
+`TensorToLine2D` decodes a spatial model output channel into an ordered `Line2D` polyline by
+thresholding, skeletonizing with Zhang-Suen thinning, and tracing connected skeleton pixels.
+
+## Tensor Layout
+
+The decoder expects a **4D** tensor in **NCHW** order:
+
+| Dim | Name    | Indexed by              |
+|-----|---------|-------------------------|
+| 0   | Batch   | `DecoderContext::batch_index` |
+| 1   | Channel | `DecoderContext::source_channel` |
+| 2   | Height  | `DecoderContext::height` |
+| 3   | Width   | `DecoderContext::width` |
+
+`DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
+`tensor.size(3)` respectively.
+
+## Pipeline
+
+1. Threshold channel activations using `LineDecoderParams::threshold`
+2. Skeletonize the binary mask to a 1-pixel-wide centerline
+3. Trace the skeleton from an endpoint (or any pixel for closed loops) into an ordered polyline
+4. Scale coordinates to `DecoderContext::target_image_size` when non-zero
+
+## Validation
+
+`decode()` validates at runtime:
+
+- Tensor is defined and 4-dimensional
+- `batch_index` and `source_channel` are in range
+- `height` and `width` are positive and match the tensor spatial dimensions
+
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the
+failure at `spdlog::debug` level.

@@ -10,6 +10,20 @@ title: "InferenceController"
 batch, multi-interval batch, and recurrent sequence). It owns the background
 worker thread lifecycle and delegates result merging to `ResultProcessor`.
 
+## Batch Workers
+
+Batch inference runs on dedicated `QThread` worker classes so AUTOMOC can
+generate meta-object code from headers (no `.moc` include in `.cpp` files).
+
+| Class | Header | Role |
+|-------|--------|------|
+| `BatchInferenceWorker` | `UI/BatchInferenceWorker.hpp` | Single contiguous frame range |
+| `MultiIntervalBatchWorker` | `UI/MultiIntervalBatchWorker.hpp` | Multiple intervals with unified progress |
+
+Both workers call `SlotAssembler::runBatchRangeOffline()`, push decoded
+`FrameResult` entries into a shared `WriteReservation`, and emit
+`progressChanged(current, total)` for connection to `InferenceController`.
+
 ## Batch Inference
 
 ### Single Range
