@@ -1,0 +1,9 @@
+{
+  "saves": [
+    {
+      "data_key": "missing_points",
+      "format": "csv",
+      "path": "missing.csv"
+    }
+  ]
+}
