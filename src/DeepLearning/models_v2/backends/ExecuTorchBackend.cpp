@@ -1,3 +1,8 @@
+/**
+ * @file ExecuTorchBackend.cpp
+ * @brief Implementation of the ExecuTorch inference backend.
+ */
+
 #include "ExecuTorchBackend.hpp"
 
 #include <executorch/extension/module/module.h>
@@ -13,13 +18,12 @@
 
 namespace dl {
 
-// ---------------------------------------------------------------------------
-// Helper: convert at::Tensor → ExecuTorch EValue (aliasing data, no copy)
-// ---------------------------------------------------------------------------
 namespace {
 
-executorch::runtime::EValue atTensorToEValue(torch::Tensor const & at_tensor)
-{
+/**
+ * @brief Convert at::Tensor to ExecuTorch EValue (aliasing data, no copy).
+ */
+executorch::runtime::EValue atTensorToEValue(torch::Tensor const & at_tensor) {
     // Ensure contiguous CPU tensor for ExecuTorch
     auto contig = at_tensor.contiguous().to(torch::kCPU);
 
@@ -30,33 +34,44 @@ executorch::runtime::EValue atTensorToEValue(torch::Tensor const & at_tensor)
     // Map scalar type
     executorch::aten::ScalarType et_dtype = executorch::aten::ScalarType::Float;
     switch (contig.scalar_type()) {
-        case torch::kFloat32: et_dtype = executorch::aten::ScalarType::Float; break;
-        case torch::kFloat64: et_dtype = executorch::aten::ScalarType::Double; break;
-        case torch::kInt32:   et_dtype = executorch::aten::ScalarType::Int; break;
-        case torch::kInt64:   et_dtype = executorch::aten::ScalarType::Long; break;
-        case torch::kBool:    et_dtype = executorch::aten::ScalarType::Bool; break;
-        case torch::kByte:    et_dtype = executorch::aten::ScalarType::Byte; break;
+        case torch::kFloat32:
+            et_dtype = executorch::aten::ScalarType::Float;
+            break;
+        case torch::kFloat64:
+            et_dtype = executorch::aten::ScalarType::Double;
+            break;
+        case torch::kInt32:
+            et_dtype = executorch::aten::ScalarType::Int;
+            break;
+        case torch::kInt64:
+            et_dtype = executorch::aten::ScalarType::Long;
+            break;
+        case torch::kBool:
+            et_dtype = executorch::aten::ScalarType::Bool;
+            break;
+        case torch::kByte:
+            et_dtype = executorch::aten::ScalarType::Byte;
+            break;
         default:
             throw std::runtime_error(
-                "Unsupported torch dtype for ExecuTorch conversion: " +
-                std::string(toString(contig.scalar_type())));
+                    "Unsupported torch dtype for ExecuTorch conversion: " +
+                    std::string(toString(contig.scalar_type())));
     }
 
     // Create ExecuTorch TensorPtr aliasing the at::Tensor data.
     // The at::Tensor must outlive the TensorPtr — caller is responsible.
     auto tensor_ptr = executorch::extension::make_tensor_ptr(
-        std::move(et_sizes),
-        contig.data_ptr(),
-        et_dtype);
+            std::move(et_sizes),
+            contig.data_ptr(),
+            et_dtype);
 
     return executorch::runtime::EValue(std::move(*tensor_ptr));
 }
 
-// ---------------------------------------------------------------------------
-// Helper: convert ExecuTorch Tensor in an EValue → at::Tensor (clone, safe)
-// ---------------------------------------------------------------------------
-torch::Tensor eValueToAtTensor(executorch::runtime::EValue & ev)
-{
+/**
+ * @brief Convert ExecuTorch Tensor in an EValue to at::Tensor (clone, safe).
+ */
+torch::Tensor eValueToAtTensor(executorch::runtime::EValue & ev) {
     if (!ev.isTensor()) {
         throw std::runtime_error("EValue is not a Tensor");
     }
@@ -65,12 +80,24 @@ torch::Tensor eValueToAtTensor(executorch::runtime::EValue & ev)
     // Map to at:: scalar type
     at::ScalarType at_dtype = at::kFloat;
     switch (et_tensor.scalar_type()) {
-        case executorch::aten::ScalarType::Float:  at_dtype = at::kFloat; break;
-        case executorch::aten::ScalarType::Double: at_dtype = at::kDouble; break;
-        case executorch::aten::ScalarType::Int:    at_dtype = at::kInt; break;
-        case executorch::aten::ScalarType::Long:   at_dtype = at::kLong; break;
-        case executorch::aten::ScalarType::Bool:   at_dtype = at::kBool; break;
-        case executorch::aten::ScalarType::Byte:   at_dtype = at::kByte; break;
+        case executorch::aten::ScalarType::Float:
+            at_dtype = at::kFloat;
+            break;
+        case executorch::aten::ScalarType::Double:
+            at_dtype = at::kDouble;
+            break;
+        case executorch::aten::ScalarType::Int:
+            at_dtype = at::kInt;
+            break;
+        case executorch::aten::ScalarType::Long:
+            at_dtype = at::kLong;
+            break;
+        case executorch::aten::ScalarType::Bool:
+            at_dtype = at::kBool;
+            break;
+        case executorch::aten::ScalarType::Byte:
+            at_dtype = at::kByte;
+            break;
         default:
             throw std::runtime_error("Unsupported ExecuTorch dtype for at::Tensor conversion");
     }
@@ -85,14 +112,14 @@ torch::Tensor eValueToAtTensor(executorch::runtime::EValue & ev)
 
     auto options = torch::TensorOptions().dtype(at_dtype).device(torch::kCPU);
     auto alias = torch::from_blob(
-        const_cast<void *>(et_tensor.const_data_ptr()),
-        sizes,
-        options);
+            const_cast<void *>(et_tensor.const_data_ptr()),
+            sizes,
+            options);
 
     return alias.clone();
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ---------------------------------------------------------------------------
 // PIMPL
@@ -106,8 +133,7 @@ struct ExecuTorchBackend::Impl {
 // Construction / destruction / move
 // ---------------------------------------------------------------------------
 ExecuTorchBackend::ExecuTorchBackend()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 ExecuTorchBackend::~ExecuTorchBackend() = default;
@@ -124,12 +150,11 @@ std::string ExecuTorchBackend::fileExtension() const { return ".pte"; }
 // ---------------------------------------------------------------------------
 // load
 // ---------------------------------------------------------------------------
-bool ExecuTorchBackend::load(std::filesystem::path const & path)
-{
+bool ExecuTorchBackend::load(std::filesystem::path const & path) {
     try {
         auto mod = std::make_unique<executorch::extension::module::Module>(
-            path.string(),
-            executorch::extension::module::Module::LoadMode::File);
+                path.string(),
+                executorch::extension::module::Module::LoadMode::File);
 
         auto err = mod->load();
         if (err != executorch::runtime::Error::Ok) {
@@ -152,13 +177,11 @@ bool ExecuTorchBackend::load(std::filesystem::path const & path)
 // ---------------------------------------------------------------------------
 // isLoaded / loadedPath
 // ---------------------------------------------------------------------------
-bool ExecuTorchBackend::isLoaded() const
-{
+bool ExecuTorchBackend::isLoaded() const {
     return _impl->module && _impl->module->is_loaded();
 }
 
-std::filesystem::path ExecuTorchBackend::loadedPath() const
-{
+std::filesystem::path ExecuTorchBackend::loadedPath() const {
     return _impl->loaded_path;
 }
 
@@ -166,8 +189,7 @@ std::filesystem::path ExecuTorchBackend::loadedPath() const
 // execute (default "forward" method)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
-ExecuTorchBackend::execute(std::vector<torch::Tensor> const & inputs)
-{
+ExecuTorchBackend::execute(std::vector<torch::Tensor> const & inputs) {
     return execute("forward", inputs);
 }
 
@@ -176,8 +198,7 @@ ExecuTorchBackend::execute(std::vector<torch::Tensor> const & inputs)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
 ExecuTorchBackend::execute(std::string const & method_name,
-                           std::vector<torch::Tensor> const & inputs)
-{
+                           std::vector<torch::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ExecuTorchBackend] No model loaded");
     }
@@ -189,7 +210,7 @@ ExecuTorchBackend::execute(std::string const & method_name,
     // Convert at::Tensor → EValue
     std::vector<executorch::runtime::EValue> evalues;
     evalues.reserve(inputs.size());
-    for (auto const & t : inputs) {
+    for (auto const & t: inputs) {
         kept_alive.push_back(t.contiguous().to(torch::kCPU));
         evalues.push_back(atTensorToEValue(kept_alive.back()));
     }
@@ -208,25 +229,35 @@ ExecuTorchBackend::execute(std::string const & method_name,
             oss << "  Error type: ";
             switch (err) {
                 case executorch::runtime::Error::Ok:
-                    oss << "Ok"; break;
+                    oss << "Ok";
+                    break;
                 case executorch::runtime::Error::Internal:
-                    oss << "Internal"; break;
+                    oss << "Internal";
+                    break;
                 case executorch::runtime::Error::InvalidState:
-                    oss << "InvalidState"; break;
+                    oss << "InvalidState";
+                    break;
                 case executorch::runtime::Error::EndOfMethod:
-                    oss << "EndOfMethod"; break;
+                    oss << "EndOfMethod";
+                    break;
                 case executorch::runtime::Error::NotSupported:
-                    oss << "NotSupported"; break;
+                    oss << "NotSupported";
+                    break;
                 case executorch::runtime::Error::NotImplemented:
-                    oss << "NotImplemented"; break;
+                    oss << "NotImplemented";
+                    break;
                 case executorch::runtime::Error::InvalidArgument:
-                    oss << "InvalidArgument"; break;
+                    oss << "InvalidArgument";
+                    break;
                 case executorch::runtime::Error::InvalidType:
-                    oss << "InvalidType"; break;
+                    oss << "InvalidType";
+                    break;
                 case executorch::runtime::Error::OperatorMissing:
-                    oss << "OperatorMissing"; break;
+                    oss << "OperatorMissing";
+                    break;
                 default:
-                    oss << "Unknown (" << static_cast<int>(err) << ")"; break;
+                    oss << "Unknown (" << static_cast<int>(err) << ")";
+                    break;
             }
             oss << "\n";
         }
@@ -245,7 +276,7 @@ ExecuTorchBackend::execute(std::string const & method_name,
     auto & output_evalues = result.get();
     std::vector<torch::Tensor> outputs;
     outputs.reserve(output_evalues.size());
-    for (auto & ev : output_evalues) {
+    for (auto & ev: output_evalues) {
         if (ev.isTensor()) {
             outputs.push_back(eValueToAtTensor(ev));
         }
@@ -255,4 +286,4 @@ ExecuTorchBackend::execute(std::string const & method_name,
     return outputs;
 }
 
-} // namespace dl
+}// namespace dl

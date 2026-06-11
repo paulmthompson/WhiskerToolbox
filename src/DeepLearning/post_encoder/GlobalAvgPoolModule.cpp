@@ -5,8 +5,8 @@
 
 #include "GlobalAvgPoolModule.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::adaptive_avg_pool2d
+#include <ATen/Functions.h>  // at::adaptive_avg_pool2d
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cassert>
 #include <stdexcept>

@@ -1,22 +1,29 @@
+/**
+ * @file DeviceManager.hpp
+ * @brief Centralized device context for deep-learning inference.
+ */
+
 #ifndef WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 #define WHISKERTOOLBOX_DEVICE_MANAGER_HPP
 
-#include <torch/types.h> // torch::Tensor, torch::Device
+#include <torch/types.h>// torch::Tensor, torch::Device
 
 namespace dl {
 
-/// Centralized, lazily-initialized device context for all deep-learning
-/// model wrappers and inference code.
-///
-/// Usage:
-/// @code
-///   auto & dm = dl::DeviceManager::instance();
-///   auto tensor_on_device = dm.toDevice(cpu_tensor);
-///   auto dev = dm.device();  // torch::kCUDA or torch::kCPU
-/// @endcode
-///
-/// At first access, auto-detects CUDA availability and selects GPU if present.
-/// Call `setDevice()` to override (e.g. for testing or user preference).
+/**
+ * @brief Centralized, lazily-initialized device context for all deep-learning
+ *        model wrappers and inference code.
+ *
+ * Usage:
+ * @code
+ *   auto & dm = dl::DeviceManager::instance();
+ *   auto tensor_on_device = dm.toDevice(cpu_tensor);
+ *   auto dev = dm.device();  // torch::kCUDA or torch::kCPU
+ * @endcode
+ *
+ * At first access, auto-detects CUDA availability and selects GPU if present.
+ * Call `setDevice()` to override (e.g. for testing or user preference).
+ */
 class DeviceManager {
 public:
     /**
@@ -26,7 +33,7 @@ public:
 
     /**
      * @brief The active device. Determined once at first access.
-     * 
+     *
      * CUDA if available, else CPU.
      */
     [[nodiscard]] torch::Device device() const;
@@ -42,8 +49,8 @@ public:
     [[nodiscard]] static bool cudaAvailable();
 
     /**
-     * @brief Move a tensor to the active device. 
-     * 
+     * @brief Move a tensor to the active device.
+     *
      * Returns the tensor unchanged if it is already on the correct device.
      */
     [[nodiscard]] torch::Tensor toDevice(torch::Tensor tensor) const;
@@ -59,6 +66,6 @@ private:
     torch::Device _device;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_DEVICE_MANAGER_HPP
+#endif// WHISKERTOOLBOX_DEVICE_MANAGER_HPP

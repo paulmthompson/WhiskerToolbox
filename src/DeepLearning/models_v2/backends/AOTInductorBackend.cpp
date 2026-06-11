@@ -1,3 +1,8 @@
+/**
+ * @file AOTInductorBackend.cpp
+ * @brief Implementation of the AOT Inductor inference backend.
+ */
+
 #include "AOTInductorBackend.hpp"
 
 #include "device/DeviceManager.hpp"
@@ -23,8 +28,7 @@ struct AOTInductorBackend::Impl {
 // Construction / destruction / move
 // ---------------------------------------------------------------------------
 AOTInductorBackend::AOTInductorBackend()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 AOTInductorBackend::~AOTInductorBackend() = default;
@@ -41,8 +45,7 @@ std::string AOTInductorBackend::fileExtension() const { return ".pt2"; }
 // ---------------------------------------------------------------------------
 // load
 // ---------------------------------------------------------------------------
-bool AOTInductorBackend::load(std::filesystem::path const & path)
-{
+bool AOTInductorBackend::load(std::filesystem::path const & path) {
     try {
         auto & dm = DeviceManager::instance();
 
@@ -50,21 +53,21 @@ bool AOTInductorBackend::load(std::filesystem::path const & path)
         //   -1 = CPU
         //    0 = CUDA:0,  1 = CUDA:1, etc.
         c10::DeviceIndex device_idx = -1;
-        if (dm.cudaAvailable()) {
+        if (dl::DeviceManager::cudaAvailable()) {
             auto const dev = dm.device();
             if (dev.is_cuda()) {
                 device_idx = dev.has_index()
-                    ? dev.index()
-                    : static_cast<c10::DeviceIndex>(0);
+                                     ? dev.index()
+                                     : static_cast<c10::DeviceIndex>(0);
             }
         }
 
         auto loader = std::make_unique<torch::inductor::AOTIModelPackageLoader>(
-            path.string(),
-            /*model_name=*/"model",
-            /*run_single_threaded=*/false,
-            /*num_runners=*/2,
-            device_idx);
+                path.string(),
+                /*model_name=*/"model",
+                /*run_single_threaded=*/false,
+                /*num_runners=*/2,
+                device_idx);
 
         _impl->loader = std::move(loader);
         _impl->loaded_path = path;
@@ -86,13 +89,11 @@ bool AOTInductorBackend::load(std::filesystem::path const & path)
 // ---------------------------------------------------------------------------
 // isLoaded / loadedPath
 // ---------------------------------------------------------------------------
-bool AOTInductorBackend::isLoaded() const
-{
+bool AOTInductorBackend::isLoaded() const {
     return _impl->loader != nullptr;
 }
 
-std::filesystem::path AOTInductorBackend::loadedPath() const
-{
+std::filesystem::path AOTInductorBackend::loadedPath() const {
     return _impl->loaded_path;
 }
 
@@ -100,8 +101,7 @@ std::filesystem::path AOTInductorBackend::loadedPath() const
 // execute (default method)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
-AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs)
-{
+AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[AOTInductorBackend] No model loaded");
     }
@@ -111,7 +111,7 @@ AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs)
     // Move inputs to the correct device
     std::vector<at::Tensor> device_inputs;
     device_inputs.reserve(inputs.size());
-    for (auto const & t : inputs) {
+    for (auto const & t: inputs) {
         device_inputs.push_back(dm.toDevice(t));
     }
 
@@ -136,10 +136,9 @@ AOTInductorBackend::execute(std::vector<torch::Tensor> const & inputs)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
 AOTInductorBackend::execute(std::string const & /*method_name*/,
-                            std::vector<torch::Tensor> const & inputs)
-{
+                            std::vector<torch::Tensor> const & inputs) {
     // AOT Inductor packages contain a single compiled model; method_name is ignored.
     return execute(inputs);
 }
 
-} // namespace dl
+}// namespace dl

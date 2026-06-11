@@ -1,3 +1,8 @@
+/**
+ * @file ExecuTorchBackend.hpp
+ * @brief ExecuTorch inference backend for `.pte` model programs.
+ */
+
 #ifndef WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
 #define WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
 
@@ -10,19 +15,21 @@
 
 namespace dl {
 
-/// ExecuTorch inference backend — loads `.pte` programs.
-///
-/// This backend wraps the ExecuTorch C++ runtime to load and execute
-/// ExecuTorch programs. It bridges between libtorch `torch::Tensor`
-/// and ExecuTorch's `EValue` execution API.
-///
-/// This backend is **optional** and only available when the project is
-/// built with `ENABLE_EXECUTORCH=ON`. It is designed for edge/mobile
-/// deployment scenarios.
-///
-/// @note ExecuTorch operates on CPU only in the default configuration.
-///       Input tensors are converted to contiguous CPU tensors before
-///       execution.
+/**
+ * @brief ExecuTorch inference backend — loads `.pte` programs.
+ *
+ * This backend wraps the ExecuTorch C++ runtime to load and execute
+ * ExecuTorch programs. It bridges between libtorch `torch::Tensor`
+ * and ExecuTorch's `EValue` execution API.
+ *
+ * This backend is **optional** and only available when the project is
+ * built with `ENABLE_EXECUTORCH=ON`. It is designed for edge/mobile
+ * deployment scenarios.
+ *
+ * @note ExecuTorch operates on CPU only in the default configuration.
+ *       Input tensors are converted to contiguous CPU tensors before
+ *       execution.
+ */
 class ExecuTorchBackend : public InferenceBackend {
 public:
     ExecuTorchBackend();
@@ -52,6 +59,6 @@ private:
     std::unique_ptr<Impl> _impl;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
+#endif// WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP

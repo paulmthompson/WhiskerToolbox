@@ -1,3 +1,8 @@
+/**
+ * @file NeuroSAMModel.cpp
+ * @brief Implementation of the NeuroSAM model wrapper.
+ */
+
 #include "NeuroSAMModel.hpp"
 
 #include "device/DeviceManager.hpp"

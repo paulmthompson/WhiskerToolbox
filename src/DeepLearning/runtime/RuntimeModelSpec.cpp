@@ -1,3 +1,8 @@
+/**
+ * @file RuntimeModelSpec.cpp
+ * @brief Implementation of runtime model specification parsing and validation.
+ */
+
 #include "RuntimeModelSpec.hpp"
 
 #include <rfl.hpp>
@@ -61,7 +66,7 @@ RuntimeModelSpec::fromJsonFile(std::filesystem::path const & path) {
 
     // Resolve relative weights_path against the JSON file's directory
     if (spec.weights_path.has_value() && !spec.weights_path->empty()) {
-        std::filesystem::path weights_p(spec.weights_path.value());
+        std::filesystem::path const weights_p(spec.weights_path.value());
         if (weights_p.is_relative()) {
             auto resolved = path.parent_path() / weights_p;
             spec.weights_path = resolved.string();
@@ -71,7 +76,7 @@ RuntimeModelSpec::fromJsonFile(std::filesystem::path const & path) {
     // Resolve relative weights_variants paths
     if (spec.weights_variants.has_value()) {
         for (auto & variant: spec.weights_variants.value()) {
-            std::filesystem::path variant_p(variant.path);
+            std::filesystem::path const variant_p(variant.path);
             if (variant_p.is_relative()) {
                 variant.path = (path.parent_path() / variant_p).string();
             }

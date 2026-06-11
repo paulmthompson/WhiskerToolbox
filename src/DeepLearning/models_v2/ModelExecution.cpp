@@ -1,3 +1,8 @@
+/**
+ * @file ModelExecution.cpp
+ * @brief Implementation of the multi-backend model execution layer.
+ */
+
 #include "ModelExecution.hpp"
 
 #include "backends/AOTInductorBackend.hpp"
@@ -17,8 +22,7 @@ namespace dl {
 // Construction / destruction / move
 // ---------------------------------------------------------------------------
 ModelExecution::ModelExecution(BackendType backend)
-    : _requested_backend(backend)
-{
+    : _requested_backend(backend) {
 }
 
 ModelExecution::~ModelExecution() = default;
@@ -28,8 +32,7 @@ ModelExecution & ModelExecution::operator=(ModelExecution &&) noexcept = default
 // ---------------------------------------------------------------------------
 // createBackend (static factory)
 // ---------------------------------------------------------------------------
-std::unique_ptr<InferenceBackend> ModelExecution::createBackend(BackendType type)
-{
+std::unique_ptr<InferenceBackend> ModelExecution::createBackend(BackendType type) {
     switch (type) {
         case BackendType::TorchScript:
             return std::make_unique<TorchScriptBackend>();
@@ -42,14 +45,14 @@ std::unique_ptr<InferenceBackend> ModelExecution::createBackend(BackendType type
             return std::make_unique<ExecuTorchBackend>();
 #else
             throw std::runtime_error(
-                "[ModelExecution] ExecuTorch backend is not available. "
-                "Rebuild with -DENABLE_EXECUTORCH=ON to enable .pte support.");
+                    "[ModelExecution] ExecuTorch backend is not available. "
+                    "Rebuild with -DENABLE_EXECUTORCH=ON to enable .pte support.");
 #endif
 
         case BackendType::Auto:
             throw std::runtime_error(
-                "[ModelExecution] Cannot create backend with BackendType::Auto. "
-                "Call load() which resolves Auto from file extension.");
+                    "[ModelExecution] Cannot create backend with BackendType::Auto. "
+                    "Call load() which resolves Auto from file extension.");
     }
 
     throw std::runtime_error("[ModelExecution] Unknown BackendType");
@@ -58,8 +61,7 @@ std::unique_ptr<InferenceBackend> ModelExecution::createBackend(BackendType type
 // ---------------------------------------------------------------------------
 // load
 // ---------------------------------------------------------------------------
-bool ModelExecution::load(std::filesystem::path const & path)
-{
+bool ModelExecution::load(std::filesystem::path const & path) {
     // Determine which backend to use
     BackendType effective = _requested_backend;
     if (effective == BackendType::Auto) {
@@ -90,23 +92,19 @@ bool ModelExecution::load(std::filesystem::path const & path)
 // ---------------------------------------------------------------------------
 // isLoaded / loadedPath / activeBackend / activeBackendName
 // ---------------------------------------------------------------------------
-bool ModelExecution::isLoaded() const
-{
+bool ModelExecution::isLoaded() const {
     return _backend && _backend->isLoaded();
 }
 
-std::filesystem::path ModelExecution::loadedPath() const
-{
+std::filesystem::path ModelExecution::loadedPath() const {
     return _backend ? _backend->loadedPath() : std::filesystem::path{};
 }
 
-BackendType ModelExecution::activeBackend() const
-{
+BackendType ModelExecution::activeBackend() const {
     return _backend ? _backend->type() : _requested_backend;
 }
 
-std::string ModelExecution::activeBackendName() const
-{
+std::string ModelExecution::activeBackendName() const {
     return _backend ? _backend->name() : backendTypeToString(_requested_backend);
 }
 
@@ -114,8 +112,7 @@ std::string ModelExecution::activeBackendName() const
 // execute (forward method, ordered inputs)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
-ModelExecution::execute(std::vector<torch::Tensor> const & inputs)
-{
+ModelExecution::execute(std::vector<torch::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ModelExecution] No model loaded");
     }
@@ -127,8 +124,7 @@ ModelExecution::execute(std::vector<torch::Tensor> const & inputs)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
 ModelExecution::execute(std::string const & method_name,
-                        std::vector<torch::Tensor> const & inputs)
-{
+                        std::vector<torch::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[ModelExecution] No model loaded");
     }
@@ -140,20 +136,19 @@ ModelExecution::execute(std::string const & method_name,
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
 ModelExecution::executeNamed(
-    std::unordered_map<std::string, torch::Tensor> const & named_inputs,
-    std::vector<std::string> const & input_order)
-{
+        std::unordered_map<std::string, torch::Tensor> const & named_inputs,
+        std::vector<std::string> const & input_order) {
     std::vector<torch::Tensor> ordered;
     ordered.reserve(input_order.size());
-    for (auto const & name : input_order) {
+    for (auto const & name: input_order) {
         auto it = named_inputs.find(name);
         if (it == named_inputs.end()) {
             throw std::runtime_error(
-                "[ModelExecution] Missing input tensor for slot: " + name);
+                    "[ModelExecution] Missing input tensor for slot: " + name);
         }
         ordered.push_back(it->second);
     }
     return execute(ordered);
 }
 
-} // namespace dl
+}// namespace dl

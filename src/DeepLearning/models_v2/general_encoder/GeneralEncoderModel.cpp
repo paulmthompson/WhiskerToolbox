@@ -1,5 +1,7 @@
-/// @file GeneralEncoderModel.cpp
-/// @brief Implementation of the general-purpose encoder model wrapper.
+/**
+ * @file GeneralEncoderModel.cpp
+ * @brief Implementation of the general-purpose encoder model wrapper.
+ */
 
 #include "GeneralEncoderModel.hpp"
 
@@ -9,6 +11,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <utility>
+
 namespace dl {
 
 // ---------------------------------------------------------------------------

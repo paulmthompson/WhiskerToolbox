@@ -1,12 +1,14 @@
-/// @file SpatialPointExtractModule.cpp
-/// @brief Implementation of the spatial point feature extraction module.
+/**
+ * @file SpatialPointExtractModule.cpp
+ * @brief Implementation of the spatial point feature extraction module.
+ */
 
 #include "SpatialPointExtractModule.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::full, at::index_put_
-#include <torch/nn/functional/vision.h> //grid_sample and GridSampleFuncOptions
-#include <torch/enum.h>                  // torch::kBilinear, torch::kBorder
+#include <ATen/Functions.h>            // at::full, at::index_put_
+#include <ATen/core/Tensor.h>          // at::Tensor
+#include <torch/enum.h>                // torch::kBilinear, torch::kBorder
+#include <torch/nn/functional/vision.h>//grid_sample and GridSampleFuncOptions
 
 #include <cassert>
 #include <stdexcept>
@@ -16,7 +18,8 @@ namespace dl {
 SpatialPointExtractModule::SpatialPointExtractModule(
         ImageSize source_image_size,
         InterpolationMode mode)
-    : _source_image_size{source_image_size}, _mode{mode} {
+    : _source_image_size{source_image_size},
+      _mode{mode} {
     assert(source_image_size.width > 0 &&
            "SpatialPointExtractModule: source_image_size.width must be > 0");
     assert(source_image_size.height > 0 &&

@@ -1,3 +1,8 @@
+/**
+ * @file NeuroSAMModel.hpp
+ * @brief ModelBase wrapper for the NeuroSAM segment-anything-style model.
+ */
+
 #ifndef WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
 #define WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
 
@@ -12,23 +17,25 @@
 
 namespace dl {
 
-/// Concrete ModelBase subclass wrapping the NeuroSAM ExecuTorch model.
-///
-/// NeuroSAM is a Segment-Anything-style model for neural data that predicts a
-/// probability map from a current frame and a set of memory frames. It operates
-/// in a feedback loop where the output probability map is fed back as a memory
-/// mask for the next frame, requiring single-frame (batch=1) inference.
-///
-/// Input slots:
-///   - "encoder_image"  : [3, 256, 256]  — current video frame (RGB)
-///   - "memory_images"  : [3, 256, 256]  — memory encoder frames (static, per-slot)
-///   - "memory_masks"   : [1, 256, 256]  — memory ROI masks (static, per-slot)
-///
-/// Output slots:
-///   - "probability_map": [1, 256, 256]  — probability map (decode as mask or point)
-///
-/// The non-sequence variant treats each memory slot as a separate tensor input.
-/// The UI/SlotAssembler handles stacking multiple memory entries.
+/**
+ * @brief Concrete ModelBase subclass wrapping the NeuroSAM ExecuTorch model.
+ *
+ * NeuroSAM is a Segment-Anything-style model for neural data that predicts a
+ * probability map from a current frame and a set of memory frames. It operates
+ * in a feedback loop where the output probability map is fed back as a memory
+ * mask for the next frame, requiring single-frame (batch=1) inference.
+ *
+ * Input slots:
+ *   - "encoder_image"  : [3, 256, 256]  — current video frame (RGB)
+ *   - "memory_images"  : [3, 256, 256]  — memory encoder frames (static, per-slot)
+ *   - "memory_masks"   : [1, 256, 256]  — memory ROI masks (static, per-slot)
+ *
+ * Output slots:
+ *   - "probability_map": [1, 256, 256]  — probability map (decode as mask or point)
+ *
+ * The non-sequence variant treats each memory slot as a separate tensor input.
+ * The UI/SlotAssembler handles stacking multiple memory entries.
+ */
 class NeuroSAMModel : public ModelBase {
 public:
     NeuroSAMModel();
@@ -57,16 +64,16 @@ public:
     std::unordered_map<std::string, torch::Tensor>
     forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
 
-    /// The spatial resolution expected by the model for all image/mask inputs.
+    /** The spatial resolution expected by the model for all image/mask inputs. */
     static constexpr int kModelSize = 256;
 
-    /// Number of input channels for image inputs (RGB).
+    /** Number of input channels for image inputs (RGB). */
     static constexpr int kImageChannels = 3;
 
-    /// Number of channels for mask inputs.
+    /** Number of channels for mask inputs. */
     static constexpr int kMaskChannels = 1;
 
-    /// Number of channels for the output probability map.
+    /** Number of channels for the output probability map. */
     static constexpr int kOutputChannels = 1;
 
     // Slot name constants

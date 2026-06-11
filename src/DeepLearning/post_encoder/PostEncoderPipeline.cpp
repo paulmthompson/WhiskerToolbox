@@ -5,7 +5,7 @@
 
 #include "PostEncoderPipeline.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cassert>
 #include <stdexcept>

@@ -1,3 +1,8 @@
+/**
+ * @file ModelRegistry.cpp
+ * @brief Implementation of the ModelBase compile-time registry.
+ */
+
 #include "ModelRegistry.hpp"
 
 #include "runtime/RuntimeModel.hpp"
@@ -14,21 +19,21 @@ ModelRegistry & ModelRegistry::instance() {
 }
 
 void ModelRegistry::registerModel(std::string const & model_id, FactoryFn factory) {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     _factories[model_id] = std::move(factory);
     // Invalidate any cached info for this model since the factory may have changed.
     _info_cache.erase(model_id);
 }
 
 bool ModelRegistry::unregisterModel(std::string const & model_id) {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     auto const erased = _factories.erase(model_id);
     _info_cache.erase(model_id);
     return erased > 0;
 }
 
 std::vector<std::string> ModelRegistry::availableModels() const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     std::vector<std::string> ids;
     ids.reserve(_factories.size());
     for (auto const & [id, _]: _factories) {
@@ -40,17 +45,17 @@ std::vector<std::string> ModelRegistry::availableModels() const {
 }
 
 std::size_t ModelRegistry::size() const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     return _factories.size();
 }
 
 bool ModelRegistry::hasModel(std::string const & model_id) const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     return _factories.contains(model_id);
 }
 
 std::unique_ptr<ModelBase> ModelRegistry::create(std::string const & model_id) const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     auto it = _factories.find(model_id);
     if (it == _factories.end()) {
         return nullptr;
@@ -60,7 +65,7 @@ std::unique_ptr<ModelBase> ModelRegistry::create(std::string const & model_id) c
 
 std::optional<ModelRegistry::ModelInfo>
 ModelRegistry::getModelInfo(std::string const & model_id) const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     if (!_factories.contains(model_id)) {
         return std::nullopt;
     }
@@ -71,7 +76,7 @@ ModelRegistry::getModelInfo(std::string const & model_id) const {
 TensorSlotDescriptor const *
 ModelRegistry::getInputSlot(std::string const & model_id,
                             std::string const & slot_name) const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     if (!_factories.contains(model_id)) {
         return nullptr;
     }
@@ -88,7 +93,7 @@ ModelRegistry::getInputSlot(std::string const & model_id,
 TensorSlotDescriptor const *
 ModelRegistry::getOutputSlot(std::string const & model_id,
                              std::string const & slot_name) const {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     if (!_factories.contains(model_id)) {
         return nullptr;
     }
@@ -108,7 +113,9 @@ ModelRegistry::registerFromJson(std::filesystem::path const & json_path,
     auto spec_result = RuntimeModelSpec::fromJsonFile(json_path);
     if (!spec_result) {
         if (error_out != nullptr) {
-            *error_out = spec_result.error()->what();
+            if (auto const err = spec_result.error()) {
+                *error_out = err->what();
+            }
         }
         return std::nullopt;
     }
@@ -140,7 +147,7 @@ ModelRegistry::registerFromJson(std::filesystem::path const & json_path,
 }
 
 void ModelRegistry::clear() {
-    std::lock_guard lock(_mutex);
+    std::lock_guard const lock(_mutex);
     _factories.clear();
     _info_cache.clear();
 }

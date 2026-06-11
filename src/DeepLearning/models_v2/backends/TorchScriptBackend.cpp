@@ -1,3 +1,8 @@
+/**
+ * @file TorchScriptBackend.cpp
+ * @brief Implementation of the TorchScript inference backend.
+ */
+
 #include "TorchScriptBackend.hpp"
 
 #include "device/DeviceManager.hpp"
@@ -16,8 +21,10 @@ namespace dl {
 // ---------------------------------------------------------------------------
 namespace {
 
-std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value)
-{
+/**
+ * @brief Extract tensors from a JIT IValue (single tensor, tuple, or tensor list).
+ */
+std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value) {
     std::vector<torch::Tensor> result;
 
     if (value.isTensor()) {
@@ -25,7 +32,7 @@ std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value)
     } else if (value.isTuple()) {
         auto const & elements = value.toTuple()->elements();
         result.reserve(elements.size());
-        for (auto const & elem : elements) {
+        for (auto const & elem: elements) {
             if (elem.isTensor()) {
                 result.push_back(elem.toTensor());
             }
@@ -33,7 +40,7 @@ std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value)
     } else if (value.isTensorList()) {
         auto const list = value.toTensorList();
         result.reserve(list.size());
-        for (auto const & t : list) {
+        for (auto const & t: list) {
             result.push_back(t);
         }
     }
@@ -41,7 +48,7 @@ std::vector<torch::Tensor> iValueToTensors(torch::jit::IValue const & value)
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ---------------------------------------------------------------------------
 // PIMPL
@@ -56,8 +63,7 @@ struct TorchScriptBackend::Impl {
 // Construction / destruction / move
 // ---------------------------------------------------------------------------
 TorchScriptBackend::TorchScriptBackend()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 TorchScriptBackend::~TorchScriptBackend() = default;
@@ -74,8 +80,7 @@ std::string TorchScriptBackend::fileExtension() const { return ".pt"; }
 // ---------------------------------------------------------------------------
 // load
 // ---------------------------------------------------------------------------
-bool TorchScriptBackend::load(std::filesystem::path const & path)
-{
+bool TorchScriptBackend::load(std::filesystem::path const & path) {
     try {
         auto & dm = DeviceManager::instance();
         auto module = torch::jit::load(path.string(), dm.device());
@@ -103,13 +108,11 @@ bool TorchScriptBackend::load(std::filesystem::path const & path)
 // ---------------------------------------------------------------------------
 // isLoaded / loadedPath
 // ---------------------------------------------------------------------------
-bool TorchScriptBackend::isLoaded() const
-{
+bool TorchScriptBackend::isLoaded() const {
     return _impl->is_loaded;
 }
 
-std::filesystem::path TorchScriptBackend::loadedPath() const
-{
+std::filesystem::path TorchScriptBackend::loadedPath() const {
     return _impl->loaded_path;
 }
 
@@ -117,8 +120,7 @@ std::filesystem::path TorchScriptBackend::loadedPath() const
 // execute (default "forward" method)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
-TorchScriptBackend::execute(std::vector<torch::Tensor> const & inputs)
-{
+TorchScriptBackend::execute(std::vector<torch::Tensor> const & inputs) {
     return execute("forward", inputs);
 }
 
@@ -127,8 +129,7 @@ TorchScriptBackend::execute(std::vector<torch::Tensor> const & inputs)
 // ---------------------------------------------------------------------------
 std::vector<torch::Tensor>
 TorchScriptBackend::execute(std::string const & method_name,
-                            std::vector<torch::Tensor> const & inputs)
-{
+                            std::vector<torch::Tensor> const & inputs) {
     if (!isLoaded()) {
         throw std::runtime_error("[TorchScriptBackend] No model loaded");
     }
@@ -138,7 +139,7 @@ TorchScriptBackend::execute(std::string const & method_name,
     // Convert inputs to JIT IValues on the correct device
     std::vector<torch::jit::IValue> jit_inputs;
     jit_inputs.reserve(inputs.size());
-    for (auto const & t : inputs) {
+    for (auto const & t: inputs) {
         jit_inputs.emplace_back(dm.toDevice(t));
     }
 
@@ -166,4 +167,4 @@ TorchScriptBackend::execute(std::string const & method_name,
     }
 }
 
-} // namespace dl
+}// namespace dl
