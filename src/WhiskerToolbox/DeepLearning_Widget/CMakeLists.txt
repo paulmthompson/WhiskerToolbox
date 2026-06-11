@@ -40,9 +40,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/EncoderShapeWidget.cpp
     UI/Helpers/OutputSlotWidget.hpp
     UI/Helpers/OutputSlotWidget.cpp
-    UI/Helpers/OutputPipelineWidget.hpp
-    UI/Helpers/OutputPipelineWidget.cpp
-    UI/Helpers/OutputPipelineWidget.ui
     UI/Helpers/PostEncoderWidget.hpp
     UI/Helpers/PostEncoderWidget.cpp
     UI/Helpers/RecurrentBindingWidget.hpp

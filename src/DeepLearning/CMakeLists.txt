@@ -78,9 +78,6 @@ set(DEEP_LEARNING_SOURCES
     channel_decoding/TensorToFeatureVector.hpp
     channel_decoding/TensorToFeatureVector.cpp
 
-    pipeline/OutputPipeline.hpp
-    pipeline/OutputPipeline.cpp
-
     post_encoder/PostEncoderModule.hpp
     post_encoder/PostEncoderParamSchemas.hpp
     post_encoder/GlobalAvgPoolModule.hpp

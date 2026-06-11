@@ -21,13 +21,12 @@
 /// Helper: create a minimal output TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeOutputSlot(
         std::string name = "mask_out",
-        std::string terminal_step = "TensorToMask2D") {
+        std::string recommended_decoder = "TensorToMask2D") {
     dl::TensorSlotDescriptor slot;
     slot.name = std::move(name);
     slot.shape = {1, 256, 256};
     slot.description = "Test output slot";
-    slot.recommended_pipeline = {dl::OutputPipelineStepSpec{
-            .step_id = std::move(terminal_step)}};
+    slot.recommended_decoder = std::move(recommended_decoder);
     return slot;
 }
 
@@ -115,10 +114,8 @@ TEST_CASE("toOutputBindingData extracts correct fields from MaskDecoder",
     auto binding = widget.toOutputBindingData();
     CHECK(binding.slot_name == "mask_out");
     CHECK(binding.data_key == "masks/result");
-    REQUIRE(binding.pipeline.size() == 1);
-    CHECK(binding.pipeline[0].step_id == "TensorToMask2D");
-    auto const mask_params = dl::maskDecoderParamsForStep(binding.pipeline[0]);
-    CHECK(mask_params.threshold == 0.6f);
+    CHECK(binding.decoder_id == "TensorToMask2D");
+    CHECK(binding.threshold == 0.6f);
 }
 
 TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
@@ -139,11 +136,9 @@ TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
 
     auto binding = widget.toOutputBindingData();
     CHECK(binding.slot_name == "point_out");
-    REQUIRE(binding.pipeline.size() == 1);
-    CHECK(binding.pipeline[0].step_id == "TensorToPoint2D");
-    auto const point_params = dl::pointDecoderParamsForStep(binding.pipeline[0]);
-    CHECK(point_params.subpixel == false);
-    CHECK(point_params.threshold == 0.4f);
+    CHECK(binding.decoder_id == "TensorToPoint2D");
+    CHECK(binding.subpixel == false);
+    CHECK(binding.threshold == 0.4f);
 }
 
 // ============================================================================
@@ -155,10 +150,8 @@ TEST_CASE("paramsFromBinding restores MaskDecoder binding",
     OutputBindingData binding;
     binding.slot_name = "mask_out";
     binding.data_key = "masks/saved";
-    binding.pipeline = {dl::OutputPipelineStepSpec{
-            .step_id = "TensorToMask2D",
-            .parameters = dl::OutputPipelineStepParameters{
-                    dl::MaskDecoderParams{.threshold = 0.55f}}}};
+    binding.decoder_id = "TensorToMask2D";
+    binding.threshold = 0.55f;
 
     auto params = dl::widget::OutputSlotWidget::paramsFromBinding(binding);
     CHECK(params.data_key == "masks/saved");
@@ -179,10 +172,9 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
     OutputBindingData original;
     original.slot_name = "point_out";
     original.data_key = "points/restored";
-    original.pipeline = {dl::OutputPipelineStepSpec{
-            .step_id = "TensorToPoint2D",
-            .parameters = dl::OutputPipelineStepParameters{
-                    dl::PointDecoderParams{.subpixel = true, .threshold = 0.3f}}}};
+    original.decoder_id = "TensorToPoint2D";
+    original.threshold = 0.3f;
+    original.subpixel = true;
 
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
@@ -191,11 +183,9 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
 
     auto binding = widget.toOutputBindingData();
     CHECK(binding.data_key == "points/restored");
-    REQUIRE(binding.pipeline.size() == 1);
-    CHECK(binding.pipeline[0].step_id == "TensorToPoint2D");
-    auto const point_params = dl::pointDecoderParamsForStep(binding.pipeline[0]);
-    CHECK(point_params.threshold == 0.3f);
-    CHECK(point_params.subpixel == true);
+    CHECK(binding.decoder_id == "TensorToPoint2D");
+    CHECK(binding.threshold == 0.3f);
+    CHECK(binding.subpixel == true);
 }
 
 // ============================================================================

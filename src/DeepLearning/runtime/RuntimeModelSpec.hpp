@@ -30,7 +30,7 @@ struct SlotSpec {
     std::vector<int64_t> shape;
     std::optional<std::string> description;
     std::optional<std::string> recommended_encoder;
-    std::optional<std::vector<OutputPipelineStepSpec>> recommended_pipeline;
+    std::optional<std::string> recommended_decoder;
     std::optional<bool> is_static;
     std::optional<bool> is_boolean_mask;
     std::optional<int> sequence_dim;
@@ -146,11 +146,7 @@ struct PostEncoderStepSpec {
  *     { "name": "image", "shape": [3, 256, 256], "recommended_encoder": "ImageEncoder" }
  *   ],
  *   "outputs": [
- *     {
- *       "name": "heatmap",
- *       "shape": [1, 256, 256],
- *       "recommended_pipeline": [{ "step_id": "TensorToMask2D" }]
- *     }
+ *     { "name": "heatmap", "shape": [1, 256, 256], "recommended_decoder": "TensorToMask2D" }
  *   ],
  *   "post_encoder": [
  *     { "module": "global_avg_pool" }

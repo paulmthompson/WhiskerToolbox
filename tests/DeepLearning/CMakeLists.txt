@@ -41,8 +41,6 @@ add_executable(test_DeepLearning
 
     runtime/RuntimeModelSpec.test.cpp
 
-    pipeline/OutputPipeline.test.cpp
-
     post_encoder/PostEncoderModules.test.cpp
 )
 
@@ -100,7 +98,38 @@ target_include_directories(neurosam_test_driver PRIVATE
 
 set_target_compiler_warnings(neurosam_test_driver)
 
+# --- Binding Data Tests (header-only, no libtorch needed) ---
+add_executable(test_binding_data
+    binding_data/BindingData.test.cpp
+)
 
+target_link_libraries(test_binding_data PRIVATE
+    Catch2::Catch2WithMain
+)
+
+target_include_directories(test_binding_data PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+)
+
+set_target_compiler_warnings(test_binding_data)
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_binding_data
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_binding_data)
+    endif()
+else()
+    add_test(NAME test_binding_data_all
+        COMMAND test_binding_data
+        )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_binding_data)
 
 # --- Widget-Level Param Schema Tests (no libtorch needed) ---
 

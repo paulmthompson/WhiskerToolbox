@@ -96,7 +96,6 @@ website:
                 - developer/DeepLearning/background_inference_roadmap.qmd
                 - developer/DeepLearning/background_inference.qmd
                 - developer/DeepLearning/general_encoder.qmd
-                - developer/DeepLearning/pipeline/OutputPipeline.qmd
                 - developer/DeepLearning/post_encoder_modules.qmd
                 - developer/DeepLearning/channel_decoding/TensorToMask2D.qmd
                 - developer/DeepLearning/channel_decoding/TensorToFeatureVector.qmd
@@ -104,7 +103,6 @@ website:
                 - developer/DeepLearning/channel_decoding/TensorToLine2D.qmd
                 - developer/DeepLearning/param_schemas.qmd
                 - developer/DeepLearning/widget_param_schemas.qmd
-                - developer/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/OutputPipelineWidget.qmd
                 - developer/DeepLearning/device_selector.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
@@ -404,7 +402,6 @@ website:
         - section: "Deep Learning"
           contents:
             - user_guide/deep_learning/deep_learning_widget.qmd
-            - user_guide/deep_learning/output_pipeline.qmd
             - user_guide/deep_learning/export_encoder_models.qmd
             - user_guide/deep_learning/post_encoder_modules.qmd
         - section: "Machine Learning"

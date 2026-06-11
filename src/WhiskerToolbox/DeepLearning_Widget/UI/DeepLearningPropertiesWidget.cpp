@@ -8,7 +8,8 @@
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
-#include "DeepLearning_Widget/UI/Helpers/OutputPipelineWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
@@ -107,7 +108,11 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     });
 
     connect(_state.get(), &DeepLearningState::postEncoderModuleChanged, this,
-            [this] { _refreshDataSourceCombos(); });
+            [this] {
+                if (_post_encoder_widget) {
+                    _post_encoder_widget->refreshDataSources();
+                }
+            });
 }
 
 DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
@@ -496,6 +501,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     _static_input_widgets.clear();
     _sequence_slot_widgets.clear();
     _output_slot_widgets.clear();
+    _post_encoder_widget = nullptr;
     _encoder_shape_widget = nullptr;
     _recurrent_binding_widgets.clear();
     QLayoutItem * child = nullptr;
@@ -663,21 +669,30 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 new QLabel(tr("<b>Outputs</b>"), _dynamic_container));
     }
     for (auto const & slot: outputs) {
-        auto * slot_widget = new dl::widget::OutputPipelineWidget(
-                _current_info->model_id, slot, _data_manager, _dynamic_container);
+        auto * slot_widget = new dl::widget::OutputSlotWidget(
+                slot, _data_manager, _dynamic_container);
         auto const & saved = _state->outputBindings();
         auto it = std::find_if(saved.begin(), saved.end(),
                                [&slot](OutputBindingData const & b) {
                                    return b.slot_name == slot.name;
                                });
         if (it != saved.end()) {
-            slot_widget->setBinding(*it);
+            slot_widget->setParams(
+                    dl::widget::OutputSlotWidget::paramsFromBinding(*it));
         }
-        connect(slot_widget, &dl::widget::OutputPipelineWidget::bindingChanged,
+        connect(slot_widget, &dl::widget::OutputSlotWidget::bindingChanged,
                 this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
         _output_slot_widgets.push_back(slot_widget);
         _dynamic_layout->addWidget(slot_widget);
     }
+
+    // ── Post-Encoder Module ──
+    auto * post_encoder_widget = new dl::widget::PostEncoderWidget(
+            _state, _data_manager, _assembler.get(), _dynamic_container);
+    connect(post_encoder_widget, &dl::widget::PostEncoderWidget::bindingChanged,
+            this, &DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency);
+    _post_encoder_widget = post_encoder_widget;
+    _dynamic_layout->addWidget(post_encoder_widget);
 
     // Apply initial consistency (honours saved post-encoder state)
     _enforcePostEncoderDecoderConsistency();
@@ -690,7 +705,13 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 // ────────────────────────────────────────────────────────────────────────────
 
 void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
+    if (!_post_encoder_widget || !_current_info) return;
+
+    auto const module_type = _post_encoder_widget->moduleTypeForState();
+    auto const valid_decoders = dl::constraints::validDecodersForModule(module_type);
+
     for (auto * slot_widget: _output_slot_widgets) {
+        slot_widget->updateDecoderAlternatives(valid_decoders);
         slot_widget->refreshDataSources();
     }
 }
@@ -788,6 +809,11 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     for (auto * rb_widget: _recurrent_binding_widgets) {
         rb_widget->refreshDataSources();
     }
+
+    // Refresh post-encoder point_key combo
+    if (_post_encoder_widget) {
+        _post_encoder_widget->refreshDataSources();
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -811,7 +837,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     // ── Output bindings ──
     std::vector<OutputBindingData> output_bindings;
     for (auto const * w: _output_slot_widgets) {
-        auto binding = w->toOutputBindingData();
+        auto binding =
+                dl::conversion::fromOutputParams(w->slotName(), w->params());
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             output_bindings.push_back(std::move(binding));
         }

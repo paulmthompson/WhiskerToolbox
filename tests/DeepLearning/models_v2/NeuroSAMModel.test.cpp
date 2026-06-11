@@ -4,8 +4,8 @@
 #include "models_v2/neurosam/NeuroSAMModel.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <ATen/Functions.h>  // at::zeros, at::ones
-#include <ATen/core/Tensor.h>// at::Tensor
+#include <ATen/core/Tensor.h> // at::Tensor
+#include <ATen/Functions.h> // at::zeros, at::ones
 
 #include <algorithm>
 #include <string>
@@ -112,8 +112,7 @@ TEST_CASE("NeuroSAMModel - probability_map output slot", "[NeuroSAMModel]") {
     auto const expected_shape = std::vector<int64_t>{1, 256, 256};
     CHECK(slot.name == "probability_map");
     CHECK(slot.shape == expected_shape);
-    REQUIRE(slot.recommended_pipeline.size() == 1);
-    CHECK(slot.recommended_pipeline[0].step_id == "TensorToMask2D");
+    CHECK(slot.recommended_decoder == "TensorToMask2D");
     CHECK(slot.is_static == false);
     CHECK(slot.is_boolean_mask == false);
     CHECK(slot.sequence_dim == -1);
@@ -299,8 +298,7 @@ TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry
 
     auto const * prob_map = registry.getOutputSlot("neurosam", "probability_map");
     REQUIRE(prob_map != nullptr);
-    REQUIRE(prob_map->recommended_pipeline.size() == 1);
-    CHECK(prob_map->recommended_pipeline[0].step_id == "TensorToMask2D");
+    CHECK(prob_map->recommended_decoder == "TensorToMask2D");
 
     // Non-existent slot
     auto const * nonexistent = registry.getInputSlot("neurosam", "nonexistent");

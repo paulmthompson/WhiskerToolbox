@@ -25,7 +25,6 @@
 #include <rfl/json.hpp>
 
 #include <cassert>
-#include <ranges>
 #include <type_traits>
 
 namespace dl::widget {
@@ -71,14 +70,7 @@ OutputSlotWidget::OutputSlotWidget(
     : QWidget(parent),
       _slot_name(slot.name),
       _dm(std::move(dm)),
-      _recommended_terminal_step_id([&slot]() {
-          auto const it = std::ranges::find_if(
-                  slot.recommended_pipeline,
-                  [](dl::OutputPipelineStepSpec const & step) {
-                      return dl::isTerminalPipelineStep(step.step_id);
-                  });
-          return it == slot.recommended_pipeline.end() ? std::string{} : it->step_id;
-      }()) {
+      _recommended_decoder(slot.recommended_decoder) {
 
     assert(_dm && "OutputSlotWidget: DataManager must not be null");
 
@@ -109,10 +101,10 @@ OutputSlotWidget::OutputSlotWidget(
             extractParameterSchema<OutputSlotParams>();
     _auto_param->setSchema(schema);
 
-    if (!_recommended_terminal_step_id.empty()) {
+    if (!_recommended_decoder.empty()) {
         OutputSlotParams initial;
         for (auto const & [decoder_id, tag]: kDecoderIdToTag) {
-            if (_recommended_terminal_step_id == decoder_id) {
+            if (_recommended_decoder == decoder_id) {
                 if (tag == std::string("MaskDecoderParams")) {
                     initial.decoder = dl::MaskDecoderParams{};
                 } else if (tag == std::string("PointDecoderParams")) {
@@ -196,7 +188,7 @@ void OutputSlotWidget::_refreshTargetCombo() {
             _decoderIdFromTag(rfl::json::write(current.decoder));
     std::string type_hint =
             decoder_id.empty()
-                    ? SlotAssembler::dataTypeForDecoder(_recommended_terminal_step_id)
+                    ? SlotAssembler::dataTypeForDecoder(_recommended_decoder)
                     : SlotAssembler::dataTypeForDecoder(decoder_id);
     if (type_hint.empty()) {
         type_hint = "MaskData";

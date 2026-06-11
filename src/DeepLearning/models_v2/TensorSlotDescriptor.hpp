@@ -1,8 +1,6 @@
 #ifndef WHISKERTOOLBOX_TENSOR_SLOT_DESCRIPTOR_HPP
 #define WHISKERTOOLBOX_TENSOR_SLOT_DESCRIPTOR_HPP
 
-#include "pipeline/OutputPipeline.hpp"
-
 #include <cstdint>
 #include <string>
 #include <variant>
@@ -111,13 +109,13 @@ enum class TensorDType : int {
  * and hints for encoders/decoders that the UI can use for auto-configuration.
  */
 struct TensorSlotDescriptor {
-    std::string name;                                        ///< e.g. "encoder_image"
-    std::vector<int64_t> shape;                              ///< e.g. {3, 256, 256} (excluding batch)
-    std::string description;                                 ///< Human-readable description
-    std::string recommended_encoder;                         ///< e.g. "ImageEncoder" — hint for UI
-    std::vector<OutputPipelineStepSpec> recommended_pipeline;///< Ordered output pipeline hint
-    bool is_static = false;                                  ///< If true, user sets once (memory frames)
-    bool is_boolean_mask = false;                            ///< If true, values are 0/1 flags
+    std::string name;               ///< e.g. "encoder_image"
+    std::vector<int64_t> shape;     ///< e.g. {3, 256, 256} (excluding batch)
+    std::string description;        ///< Human-readable description
+    std::string recommended_encoder;///< e.g. "ImageEncoder" — hint for UI
+    std::string recommended_decoder;///< e.g. "TensorToMask2D"
+    bool is_static = false;         ///< If true, user sets once (memory frames)
+    bool is_boolean_mask = false;   ///< If true, values are 0/1 flags
 
     /// Expected tensor dtype. Default is Float32.
     /// Use Byte (uint8) for image inputs that the model normalizes internally.

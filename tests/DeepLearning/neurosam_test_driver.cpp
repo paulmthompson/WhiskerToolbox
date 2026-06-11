@@ -70,12 +70,8 @@ int main(int argc, char** argv) {
             std::cout << slot.shape[i];
         }
         std::cout << "]\n";
-        if (!slot.recommended_pipeline.empty()) {
-            std::cout << "    pipeline hint:";
-            for (auto const & step: slot.recommended_pipeline) {
-                std::cout << " " << step.step_id;
-            }
-            std::cout << "\n";
+        if (!slot.recommended_decoder.empty()) {
+            std::cout << "    decoder hint: " << slot.recommended_decoder << "\n";
         }
     }
     std::cout << "\n";

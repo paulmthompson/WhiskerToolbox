@@ -181,7 +181,7 @@ Create `toy_segmenter.json` next to the `.pt2` file:
       "name": "mask",
       "shape": [1, 256, 256],
       "description": "Predicted segmentation probability map",
-      "recommended_pipeline": [{ "step_id": "TensorToMask2D" }]
+      "recommended_decoder": "TensorToMask2D"
     }
   ]
 }
@@ -311,7 +311,7 @@ def main():
                 "name": "mask",
                 "shape": [1, 256, 256],
                 "description": "Predicted segmentation probability map",
-                "recommended_pipeline": [{"step_id": "TensorToMask2D"}],
+                "recommended_decoder": "TensorToMask2D",
             }
         ],
     }
