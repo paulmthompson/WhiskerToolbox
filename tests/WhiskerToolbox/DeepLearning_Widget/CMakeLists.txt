@@ -20,6 +20,7 @@ add_executable(test_dl_widgets
     DynamicInputSlotWidget.test.cpp
     OutputSlotWidget.test.cpp
     PostEncoderWidget.test.cpp
+    DeepLearningState.test.cpp
     EncoderShapeWidget.test.cpp
     RecurrentBindingWidget.test.cpp
     StaticInputSlotWidget.test.cpp

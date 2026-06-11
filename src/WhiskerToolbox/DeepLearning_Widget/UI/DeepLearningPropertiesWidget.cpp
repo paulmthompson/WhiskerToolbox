@@ -707,8 +707,8 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
     if (!_post_encoder_widget || !_current_info) return;
 
-    auto const module_type = _post_encoder_widget->moduleTypeForState();
-    auto const valid_decoders = dl::constraints::validDecodersForModule(module_type);
+    auto const valid_decoders = dl::constraints::validDecodersForPostEncoder(
+            _post_encoder_widget->params());
 
     for (auto * slot_widget: _output_slot_widgets) {
         slot_widget->updateDecoderAlternatives(valid_decoders);

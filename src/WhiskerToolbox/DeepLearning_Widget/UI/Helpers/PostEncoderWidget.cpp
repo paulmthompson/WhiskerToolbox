@@ -27,22 +27,6 @@
 namespace dl::widget {
 
 // ════════════════════════════════════════════════════════════════════════════
-// Variant tag ↔ state string mapping
-// ════════════════════════════════════════════════════════════════════════════
-
-namespace {
-
-/// Map reflect-cpp variant tag to SlotAssembler/state module type string.
-[[nodiscard]] std::string moduleTypeFromTag(std::string const & tag) {
-    if (tag == "NoPostEncoderParams") return "none";
-    if (tag == "GlobalAvgPoolModuleParams") return "global_avg_pool";
-    if (tag == "SpatialPointModuleParams") return "spatial_point";
-    return "none";
-}
-
-}// namespace
-
-// ════════════════════════════════════════════════════════════════════════════
 // Construction / Destruction
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -77,10 +61,7 @@ PostEncoderWidget::PostEncoderWidget(
                     PostEncoderSlotParams>();
     _auto_param->setSchema(schema);
 
-    // Restore from saved state
-    setParams(paramsFromState(
-            _state->postEncoderModuleType(),
-            _state->postEncoderPointKey()));
+    setParams(_state->postEncoderParams());
 
     refreshDataSources();
 
@@ -108,6 +89,7 @@ PostEncoderSlotParams PostEncoderWidget::params() const {
 void PostEncoderWidget::setParams(PostEncoderSlotParams const & p) {
     auto json = rfl::json::write(p);
     _auto_param->fromJson(json);
+    _applyToStateAndAssembler();
 }
 
 void PostEncoderWidget::refreshDataSources() {
@@ -117,69 +99,16 @@ void PostEncoderWidget::refreshDataSources() {
     _auto_param->updateAllowedValues("point_key", keys);
 }
 
-std::string PostEncoderWidget::moduleTypeForState() const {
-    auto const p = params();
-    auto const module_json = rfl::json::write(p.module);
-    // Extract tag from variant JSON, e.g. {"SpatialPointModuleParams": {...}}
-    for (auto const & tag:
-         {"NoPostEncoderParams", "GlobalAvgPoolModuleParams",
-          "SpatialPointModuleParams"}) {
-        if (module_json.find(tag) != std::string::npos) {
-            return moduleTypeFromTag(tag);
-        }
-    }
-    return "none";
-}
-
-PostEncoderSlotParams PostEncoderWidget::paramsFromState(
-        std::string const & module_type,
-        std::string const & point_key) {
-    PostEncoderSlotParams p;
-
-    if (module_type == "global_avg_pool") {
-        p.module = dl::GlobalAvgPoolModuleParams{};
-    } else if (module_type == "spatial_point") {
-        dl::SpatialPointModuleParams sp;
-        sp.point_key = (point_key == "(None)") ? "" : point_key;
-        p.module = sp;
-    } else {
-        p.module = NoPostEncoderParams{};
-    }
-    return p;
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // Private helpers
 // ════════════════════════════════════════════════════════════════════════════
 
 void PostEncoderWidget::_applyToStateAndAssembler() {
     auto const p = params();
-    auto const type = moduleTypeForState();
-
-    _state->setPostEncoderModuleType(type);
-
-    std::string interp = "nearest";
-    std::string point_key;
-    p.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
-            interp = (mod.interpolation == dl::InterpolationMode::Bilinear)
-                             ? "bilinear"
-                             : "nearest";
-            point_key = mod.point_key;
-        }
-    });
-
-    if (type == "spatial_point" && !point_key.empty() && point_key != "(None)") {
-        _state->setPostEncoderPointKey(point_key);
-    } else {
-        _state->setPostEncoderPointKey({});
-    }
-
-    auto const source_size = _sourceImageSize();
+    _state->setPostEncoderParams(p);
 
     if (_assembler->isModelReady()) {
-        _assembler->configurePostEncoderModule(type, source_size, interp);
+        _assembler->configurePostEncoderModule(p.module, _sourceImageSize());
     }
 }
 

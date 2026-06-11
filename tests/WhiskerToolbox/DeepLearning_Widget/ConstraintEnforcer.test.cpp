@@ -4,8 +4,7 @@
 /// Covers:
 ///   - computeBatchSizeConstraint: dynamic / fixed / recurrent-only batch modes,
 ///     active vs. inactive recurrent bindings, mixed combinations.
-///   - validDecodersForModule: spatial-collapsing vs. spatial-preserving modules,
-///     unknown / empty module type strings.
+///   - validDecodersForPostEncoder: spatial-collapsing vs. spatial-preserving modules.
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -17,7 +16,7 @@
 
 using dl::constraints::BatchSizeConstraint;
 using dl::constraints::computeBatchSizeConstraint;
-using dl::constraints::validDecodersForModule;
+using dl::constraints::validDecodersForPostEncoder;
 
 // ============================================================================
 // Helpers
@@ -173,12 +172,24 @@ TEST_CASE("computeBatchSizeConstraint: RecurrentOnlyBatch, active binding — al
 }
 
 // ============================================================================
-// validDecodersForModule
+// validDecodersForPostEncoder
 // ============================================================================
 
-TEST_CASE("validDecodersForModule: 'none' returns all decoders",
+namespace {
+
+dl::widget::PostEncoderSlotParams paramsWithModule(
+        dl::widget::PostEncoderVariant module) {
+    dl::widget::PostEncoderSlotParams params;
+    params.module = std::move(module);
+    return params;
+}
+
+}// namespace
+
+TEST_CASE("validDecodersForPostEncoder: none returns all decoders",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForModule("none");
+    auto const decoders = validDecodersForPostEncoder(
+            paramsWithModule(dl::widget::NoPostEncoderParams{}));
 
     REQUIRE(decoders.size() == 4);
     CHECK(std::find(decoders.begin(), decoders.end(), "MaskDecoderParams") != decoders.end());
@@ -188,32 +199,20 @@ TEST_CASE("validDecodersForModule: 'none' returns all decoders",
           decoders.end());
 }
 
-TEST_CASE("validDecodersForModule: 'global_avg_pool' restricts to feature-vector only",
+TEST_CASE("validDecodersForPostEncoder: global avg pool restricts to feature-vector only",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForModule("global_avg_pool");
+    auto const decoders = validDecodersForPostEncoder(
+            paramsWithModule(dl::GlobalAvgPoolModuleParams{}));
 
     REQUIRE(decoders.size() == 1);
     CHECK(decoders[0] == "FeatureVectorDecoderParams");
 }
 
-TEST_CASE("validDecodersForModule: 'spatial_point' restricts to feature-vector only",
+TEST_CASE("validDecodersForPostEncoder: spatial point restricts to feature-vector only",
           "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForModule("spatial_point");
+    auto const decoders = validDecodersForPostEncoder(
+            paramsWithModule(dl::SpatialPointModuleParams{}));
 
     REQUIRE(decoders.size() == 1);
     CHECK(decoders[0] == "FeatureVectorDecoderParams");
-}
-
-TEST_CASE("validDecodersForModule: empty string treated as no spatial collapse",
-          "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForModule("");
-
-    CHECK(decoders.size() == 4);
-}
-
-TEST_CASE("validDecodersForModule: unknown string treated as no spatial collapse",
-          "[dl_constraints][decoder_compat]") {
-    auto const decoders = validDecodersForModule("some_future_module");
-
-    CHECK(decoders.size() == 4);
 }

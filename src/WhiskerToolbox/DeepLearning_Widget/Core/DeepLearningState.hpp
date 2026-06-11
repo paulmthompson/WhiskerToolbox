@@ -16,6 +16,7 @@
  */
 
 #include "DeepLearningBindingData.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 
 #include "EditorState/EditorState.hpp"
 
@@ -35,13 +36,8 @@ struct DeepLearningStateData {
     std::vector<RecurrentBindingData> recurrent_bindings;
     std::string instance_id;
     std::string display_name = "Deep Learning";
-    /// Post-encoder module type for GeneralEncoderModel.
-    /// Accepted values: "" / "none" (pass-through), "global_avg_pool",
-    /// "spatial_point".
-    std::string post_encoder_module_type;
-    /// DataManager key of the PointData object supplying the per-frame query
-    /// point for the "spatial_point" post-encoder module.
-    std::string post_encoder_point_key;
+    /// Post-encoder module configuration.
+    dl::widget::PostEncoderSlotParams post_encoder_params;
     /// Custom input height for GeneralEncoderModel (0 = use default 224).
     int encoder_input_height = 0;
     /// Custom input width for GeneralEncoderModel (0 = use default 224).
@@ -107,11 +103,8 @@ public:
     [[nodiscard]] bool hasRecurrentBindings() const;
 
     // ── Post-Encoder Module ──
-    [[nodiscard]] std::string const & postEncoderModuleType() const;
-    void setPostEncoderModuleType(std::string const & type);
-
-    [[nodiscard]] std::string const & postEncoderPointKey() const;
-    void setPostEncoderPointKey(std::string const & key);
+    [[nodiscard]] dl::widget::PostEncoderSlotParams const & postEncoderParams() const;
+    void setPostEncoderParams(dl::widget::PostEncoderSlotParams params);
 
     // ── Encoder Shape Configuration ──
     [[nodiscard]] int encoderInputHeight() const;

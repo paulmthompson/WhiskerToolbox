@@ -40,7 +40,7 @@ class PostEncoderWidget : public QWidget {
 public:
     /**
      * @brief Construct the post-encoder widget.
-     * @param state     DeepLearningState to sync module type and point key.
+     * @param state     DeepLearningState to sync post-encoder params.
      * @param dm        Shared DataManager for populating the point_key combo.
      * @param assembler SlotAssembler for configurePostEncoderModule.
      * @param parent    Optional parent widget.
@@ -69,15 +69,6 @@ public:
 
     /// @brief Refresh the point_key combo from DataManager.
     void refreshDataSources();
-
-    /// @brief Return the module type string for decoder consistency enforcement.
-    /// Returns "none", "global_avg_pool", or "spatial_point".
-    [[nodiscard]] std::string moduleTypeForState() const;
-
-    /// @brief Build PostEncoderSlotParams from saved state (for restore).
-    [[nodiscard]] static PostEncoderSlotParams paramsFromState(
-            std::string const & module_type,
-            std::string const & point_key);
 
 signals:
     /// Emitted whenever any parameter in the post-encoder section changes.

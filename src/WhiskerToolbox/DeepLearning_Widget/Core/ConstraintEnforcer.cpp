@@ -9,6 +9,28 @@
 
 namespace dl::constraints {
 
+namespace {
+
+/**
+ * @brief Whether the post-encoder module collapses spatial dimensions
+ *        ([B,C,H,W] → [B,C]), restricting compatible output decoders.
+ */
+[[nodiscard]] bool postEncoderCollapsesSpatialDims(
+        dl::widget::PostEncoderVariant const & module) {
+    return module.visit([](auto const & mod) -> bool {
+        using T = std::decay_t<decltype(mod)>;
+        return std::is_same_v<T, dl::GlobalAvgPoolModuleParams>
+               || std::is_same_v<T, dl::SpatialPointModuleParams>;
+    });
+}
+
+[[nodiscard]] std::vector<std::string> allDecoderAlternatives() {
+    return {"MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
+            "FeatureVectorDecoderParams"};
+}
+
+}// namespace
+
 BatchSizeConstraint computeBatchSizeConstraint(
         ModelDisplayInfo const & info,
         std::vector<RecurrentBindingData> const & active_recurrent_bindings) {
@@ -37,18 +59,12 @@ BatchSizeConstraint computeBatchSizeConstraint(
     return BatchSizeConstraint{d.min_size, d.max_size, false};
 }
 
-std::vector<std::string> validDecodersForModule(std::string const & module_type) {
-    // Modules that collapse spatial dimensions ([B,C,H,W] → [B,C]) can only
-    // be decoded by the feature-vector decoder.
-    bool const spatial_dims_removed =
-            (module_type == "global_avg_pool" || module_type == "spatial_point");
-
-    if (spatial_dims_removed) {
+std::vector<std::string> validDecodersForPostEncoder(
+        dl::widget::PostEncoderSlotParams const & params) {
+    if (postEncoderCollapsesSpatialDims(params.module)) {
         return {"FeatureVectorDecoderParams"};
     }
-
-    return {"MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
-            "FeatureVectorDecoderParams"};
+    return allDecoderAlternatives();
 }
 
 }// namespace dl::constraints

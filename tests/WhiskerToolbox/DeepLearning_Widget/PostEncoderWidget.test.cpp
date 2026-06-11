@@ -2,7 +2,7 @@
 /// @brief Tests for the PostEncoderWidget.
 ///
 /// Verifies construction, parameter get/set, data source refresh,
-/// moduleTypeForState, and paramsFromState restore.
+/// state sync, and bindingChanged emission.
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -16,6 +16,18 @@
 
 #include <QSignalSpy>
 
+namespace {
+
+template<typename ExpectedModule>
+void checkModuleIs(dl::widget::PostEncoderVariant const & module) {
+    module.visit([&](auto const & mod) {
+        using T = std::decay_t<decltype(mod)>;
+        CHECK(std::is_same_v<T, ExpectedModule>);
+    });
+}
+
+}// namespace
+
 // ============================================================================
 // Construction
 // ============================================================================
@@ -28,7 +40,21 @@ TEST_CASE("PostEncoderWidget constructs with valid state, DM, and assembler",
 
     auto widget = std::make_unique<dl::widget::PostEncoderWidget>(
             state, dm, assembler.get());
-    CHECK(widget->moduleTypeForState() == "none");
+    checkModuleIs<dl::widget::NoPostEncoderParams>(widget->params().module);
+}
+
+TEST_CASE("PostEncoderWidget restores params from DeepLearningState",
+          "[dl_widget][post_encoder_widget]") {
+    auto state = std::make_shared<DeepLearningState>();
+    dl::widget::PostEncoderSlotParams saved;
+    saved.module = dl::GlobalAvgPoolModuleParams{};
+    state->setPostEncoderParams(saved);
+
+    auto dm = std::make_shared<DataManager>();
+    auto assembler = std::make_unique<SlotAssembler>();
+
+    dl::widget::PostEncoderWidget widget(state, dm, assembler.get());
+    checkModuleIs<dl::GlobalAvgPoolModuleParams>(widget.params().module);
 }
 
 // ============================================================================
@@ -47,11 +73,7 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for None",
     p.module = dl::widget::NoPostEncoderParams{};
     widget.setParams(p);
 
-    auto result = widget.params();
-    result.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        CHECK(std::is_same_v<T, dl::widget::NoPostEncoderParams>);
-    });
+    checkModuleIs<dl::widget::NoPostEncoderParams>(widget.params().module);
 }
 
 TEST_CASE("PostEncoderWidget setParams and params round-trip for GlobalAvgPool",
@@ -66,12 +88,7 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for GlobalAvgPool",
     p.module = dl::GlobalAvgPoolModuleParams{};
     widget.setParams(p);
 
-    auto result = widget.params();
-    result.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        CHECK(std::is_same_v<T, dl::GlobalAvgPoolModuleParams>);
-    });
-    CHECK(widget.moduleTypeForState() == "global_avg_pool");
+    checkModuleIs<dl::GlobalAvgPoolModuleParams>(widget.params().module);
 }
 
 TEST_CASE("PostEncoderWidget setParams and params round-trip for SpatialPoint",
@@ -90,51 +107,32 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for SpatialPoint",
     p.module = sp;
     widget.setParams(p);
 
-    auto result = widget.params();
-    result.module.visit([&](auto const & mod) {
+    widget.params().module.visit([&](auto const & mod) {
         using T = std::decay_t<decltype(mod)>;
         CHECK(std::is_same_v<T, dl::SpatialPointModuleParams>);
         if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
             CHECK(mod.point_key == "points/query");
         }
     });
-    CHECK(widget.moduleTypeForState() == "spatial_point");
 }
 
 // ============================================================================
-// paramsFromState / state restore
+// State sync
 // ============================================================================
 
-TEST_CASE("paramsFromState restores none",
+TEST_CASE("PostEncoderWidget syncs params to DeepLearningState on change",
           "[dl_widget][post_encoder_widget]") {
-    auto params = dl::widget::PostEncoderWidget::paramsFromState("none", "");
-    params.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        CHECK(std::is_same_v<T, dl::widget::NoPostEncoderParams>);
-    });
-}
+    auto state = std::make_shared<DeepLearningState>();
+    auto dm = std::make_shared<DataManager>();
+    auto assembler = std::make_unique<SlotAssembler>();
 
-TEST_CASE("paramsFromState restores global_avg_pool",
-          "[dl_widget][post_encoder_widget]") {
-    auto params =
-            dl::widget::PostEncoderWidget::paramsFromState("global_avg_pool", "");
-    params.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        CHECK(std::is_same_v<T, dl::GlobalAvgPoolModuleParams>);
-    });
-}
+    dl::widget::PostEncoderWidget widget(state, dm, assembler.get());
 
-TEST_CASE("paramsFromState restores spatial_point with point_key",
-          "[dl_widget][post_encoder_widget]") {
-    auto params = dl::widget::PostEncoderWidget::paramsFromState(
-            "spatial_point", "points/my_key");
-    params.module.visit([&](auto const & mod) {
-        using T = std::decay_t<decltype(mod)>;
-        CHECK(std::is_same_v<T, dl::SpatialPointModuleParams>);
-        if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
-            CHECK(mod.point_key == "points/my_key");
-        }
-    });
+    dl::widget::PostEncoderSlotParams p;
+    p.module = dl::GlobalAvgPoolModuleParams{};
+    widget.setParams(p);
+
+    checkModuleIs<dl::GlobalAvgPoolModuleParams>(state->postEncoderParams().module);
 }
 
 // ============================================================================
@@ -157,8 +155,7 @@ TEST_CASE("PostEncoderWidget refreshDataSources updates point_key combo",
     widget.setParams(p);
     widget.refreshDataSources();
 
-    auto result = widget.params();
-    result.module.visit([&](auto const & mod) {
+    widget.params().module.visit([&](auto const & mod) {
         using T = std::decay_t<decltype(mod)>;
         if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
             CHECK(mod.point_key == "points/a");

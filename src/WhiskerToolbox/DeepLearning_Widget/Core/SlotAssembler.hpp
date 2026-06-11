@@ -17,9 +17,10 @@
  * @see ModelBase for the model forward pass interface.
  */
 
-#include "Inference/BatchInferenceResult.hpp"    // BatchInferenceResult
+#include "Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 #include "MediaOverrides.hpp"
 #include "ModelDisplayInfo.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <atomic>
@@ -381,20 +382,17 @@ public:
 
     /**
      * @brief Configure a post-encoder module on the currently loaded model.
-     * 
+     *
      * Only applies when the current model is a `GeneralEncoderModel`.
      * Calling this when the model changes will reset the configuration.
-     * 
-     * @param module_type  Module key: "" / "none", "global_avg_pool",
-     *                     or "spatial_point".
-     * @param source_image_size  Source image size used for "spatial_point"
+     *
+     * @param module  Tagged union of post-encoder module alternatives.
+     * @param source_image_size  Source image size used for spatial_point
      *        coordinate scaling.
-     * @param interpolation  "nearest" or "bilinear" (spatial_point only).
      */
     void configurePostEncoderModule(
-            std::string const & module_type,
-            ImageSize source_image_size = {},
-            std::string const & interpolation = "nearest");
+            dl::widget::PostEncoderVariant const & module,
+            ImageSize source_image_size = {});
 
     /**
      * @brief Update the spatial-point query for the current frame.

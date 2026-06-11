@@ -7,7 +7,8 @@
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
-#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"             // ModelDisplayInfo
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 
 #include <string>
 #include <vector>
@@ -63,22 +64,17 @@ struct BatchSizeConstraint {
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
- * @brief Return the valid decoder alternative names allowed for a given post-encoder
- *        module type.
- * 
- * Modules that collapse spatial dimensions (@c global_avg_pool and
- * @c spatial_point reduce @c [B,C,H,W] → @c [B,C]) restrict output decoders
- * to @c FeatureVectorDecoderParams only. All other module types (i.e. @c "none")
- * permit every decoder variant.
- * 
- * @param module_type  Post-encoder modu        le type string as returned by
- *                     PostEncoderWidget::moduleTypeForState(), e.g.
- *                     @c "none", @c "global_avg_pool", @c "spatial_point".
- * @return Names of the DecoderVariant alternatives that are compatible with
- *         the selected post-encoder module.
+ * @brief Return valid decoder alternatives for the current post-encoder params.
+ *
+ * Modules that collapse spatial dimensions (`GlobalAvgPoolModuleParams` and
+ * `SpatialPointModuleParams`, i.e. @c [B,C,H,W] → @c [B,C]) restrict output
+ * decoders to `FeatureVectorDecoderParams` only. `NoPostEncoderParams` permits
+ * every decoder variant.
+ *
+ * @param params  Post-encoder slot configuration from state or widget.
  */
-[[nodiscard]] std::vector<std::string> validDecodersForModule(
-        std::string const & module_type);
+[[nodiscard]] std::vector<std::string> validDecodersForPostEncoder(
+        dl::widget::PostEncoderSlotParams const & params);
 
 }// namespace dl::constraints
 

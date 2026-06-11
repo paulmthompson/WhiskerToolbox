@@ -39,6 +39,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
     emit outputBindingsChanged();
     emit staticInputsChanged();
     emit recurrentBindingsChanged();
+    emit postEncoderModuleChanged();
     return true;
 }
 
@@ -141,22 +142,15 @@ bool DeepLearningState::hasRecurrentBindings() const {
     return !_data.recurrent_bindings.empty();
 }
 
-std::string const & DeepLearningState::postEncoderModuleType() const {
-    return _data.post_encoder_module_type;
+dl::widget::PostEncoderSlotParams const & DeepLearningState::postEncoderParams() const {
+    return _data.post_encoder_params;
 }
 
-void DeepLearningState::setPostEncoderModuleType(std::string const & type) {
-    _data.post_encoder_module_type = type;
-    markDirty();
-    emit postEncoderModuleChanged();
-}
-
-std::string const & DeepLearningState::postEncoderPointKey() const {
-    return _data.post_encoder_point_key;
-}
-
-void DeepLearningState::setPostEncoderPointKey(std::string const & key) {
-    _data.post_encoder_point_key = key;
+void DeepLearningState::setPostEncoderParams(dl::widget::PostEncoderSlotParams params) {
+    if (rfl::json::write(_data.post_encoder_params) == rfl::json::write(params)) {
+        return;
+    }
+    _data.post_encoder_params = std::move(params);
     markDirty();
     emit postEncoderModuleChanged();
 }

@@ -28,7 +28,7 @@
 #include "models_v2/TensorDTypeUtils.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 #include "models_v2/general_encoder/GeneralEncoderModel.hpp"
-#include "post_encoder/PostEncoderModuleFactory.hpp"
+#include "post_encoder/GlobalAvgPoolModule.hpp"
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
@@ -1641,28 +1641,34 @@ std::string SlotAssembler::dataTypeForDecoder(std::string const & decoder_id) {
 // ════════════════════════════════════════════════════════════════════════════
 
 void SlotAssembler::configurePostEncoderModule(
-        std::string const & module_type,
-        ImageSize source_image_size,
-        std::string const & interpolation) {
+        dl::widget::PostEncoderVariant const & module_variant,
+        ImageSize source_image_size) {
     if (!_impl || !_impl->model) return;
 
-    // Only GeneralEncoderModel supports post-encoder modules
     auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
     if (!enc) return;
 
-    auto const mode = (interpolation == "bilinear")
-                              ? dl::InterpolationMode::Bilinear
-                              : dl::InterpolationMode::Nearest;
-    dl::SpatialPointModuleParams const params{.interpolation = mode};
+    std::unique_ptr<dl::PostEncoderModule> module;
+    _impl->spatial_point_key.clear();
 
-    auto module = dl::PostEncoderModuleFactory::create(
-            module_type, source_image_size, params);
+    module_variant.visit([&](auto const & mod) {
+        using T = std::decay_t<decltype(mod)>;
+        if constexpr (std::is_same_v<T, dl::widget::NoPostEncoderParams>) {
+            module = nullptr;
+        } else if constexpr (std::is_same_v<T, dl::GlobalAvgPoolModuleParams>) {
+            module = std::make_unique<dl::GlobalAvgPoolModule>();
+        } else if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
+            auto spatial_params = mod;
+            if (spatial_params.point_key == "(None)") {
+                spatial_params.point_key.clear();
+            }
+            _impl->spatial_point_key = spatial_params.point_key;
+            module = std::make_unique<dl::SpatialPointExtractModule>(
+                    source_image_size, spatial_params.interpolation);
+        }
+    });
+
     enc->setPostEncoderModule(std::move(module));
-
-    // Clear the spatial point key unless spatial_point is configured
-    if (module_type != "spatial_point") {
-        _impl->spatial_point_key.clear();
-    }
 }
 
 void SlotAssembler::updateSpatialPoint(
