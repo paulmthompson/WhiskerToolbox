@@ -12,11 +12,11 @@
  * @see BatchInferenceWorker
  */
 
-#include "Core/DeepLearningBindingData.hpp"
-#include "Core/SlotAssembler.hpp"
-#include "Core/WriteReservation.hpp"
+#include "Core/DeepLearningBindingData.hpp"     // SlotBindingData, OutputBindingData, StaticInputData
+#include "Core/MediaOverrides.hpp"              // MediaOverrides
+#include "Core/WriteReservation.hpp"            // WriteReservation
 
-#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"            // ImageSize
 
 #include <QThread>
 
@@ -28,6 +28,7 @@
 #include <vector>
 
 class DataManager;
+class SlotAssembler;
 
 /// Runs offline batch inference over multiple frame intervals on a QThread.
 class MultiIntervalBatchWorker : public QThread {
@@ -42,7 +43,7 @@ public:
     MultiIntervalBatchWorker(
             SlotAssembler * assembler,
             DataManager * dm,
-            SlotAssembler::MediaOverrides media_overrides,
+            MediaOverrides media_overrides,
             std::vector<SlotBindingData> input_bindings,
             std::vector<StaticInputData> static_inputs,
             std::vector<OutputBindingData> output_bindings,
@@ -69,7 +70,7 @@ protected:
 private:
     SlotAssembler * _assembler;
     DataManager * _dm;
-    SlotAssembler::MediaOverrides _media_overrides;
+    MediaOverrides _media_overrides;
     std::vector<SlotBindingData> _input_bindings;
     std::vector<StaticInputData> _static_inputs;
     std::vector<OutputBindingData> _output_bindings;

@@ -13,8 +13,6 @@
  * @see DeepLearningViewWidget
  */
 
-#include "Core/SlotAssembler.hpp"
-
 #include <QObject>
 #include <QString>
 
@@ -26,6 +24,7 @@
 
 class DataManager;
 class DeepLearningState;
+class SlotAssembler;
 
 /// Orchestrates inference runs and owns the batch worker thread.
 class InferenceController : public QObject {

@@ -8,8 +8,10 @@
 #include "BatchInferenceWorker.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/ResultProcessor.hpp"
+#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "MultiIntervalBatchWorker.hpp"
+
 
 #include "DataManager/DataManager.hpp"
 #include "Media/Media_Data.hpp"
@@ -125,7 +127,7 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
         }
     }
 
-    SlotAssembler::MediaOverrides media_overrides;
+    MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
         if (binding.encoder_id != "ImageEncoder" || binding.data_key.empty())
             continue;
@@ -230,7 +232,7 @@ void InferenceController::runBatchIntervals(
         }
     }
 
-    SlotAssembler::MediaOverrides media_overrides;
+    MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
         if (binding.encoder_id != "ImageEncoder" || binding.data_key.empty())
             continue;

@@ -14,10 +14,10 @@
  * so this header and translation unit never include torch.
  */
 
-#include "Core/SlotAssembler.hpp"// SlotAssembler, ModelDisplayInfo
+#include "Core/ModelDisplayInfo.hpp"        // ModelDisplayInfo
 
 #include "TimeFrame/TimeFrame.hpp"           // TimePosition
-#include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor, ModelDisplayInfo
+#include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
 
 #include <QWidget>
 
@@ -39,6 +39,7 @@ class QVBoxLayout;
 class DataManager;
 class DeepLearningState;
 class InferenceController;
+class SlotAssembler;
 
 namespace KeymapSystem {
 class KeyActionAdapter;

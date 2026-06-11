@@ -5,6 +5,7 @@
 
 #include "MultiIntervalBatchWorker.hpp"
 
+#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <utility>
@@ -12,7 +13,7 @@
 MultiIntervalBatchWorker::MultiIntervalBatchWorker(
         SlotAssembler * assembler,
         DataManager * dm,
-        SlotAssembler::MediaOverrides media_overrides,
+        MediaOverrides media_overrides,
         std::vector<SlotBindingData> input_bindings,
         std::vector<StaticInputData> static_inputs,
         std::vector<OutputBindingData> output_bindings,

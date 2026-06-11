@@ -18,6 +18,8 @@
  */
 
 #include "BatchInferenceResult.hpp"
+#include "MediaOverrides.hpp"
+#include "ModelDisplayInfo.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <atomic>
@@ -37,21 +39,6 @@ struct ImageSize;
 class DataManager;
 class MediaData;
 
-/**
- * @brief Lightweight model metadata for display in the UI.
- * 
- * Mirrors dl::ModelRegistry::ModelInfo but without any libtorch dependency.
- */
-struct ModelDisplayInfo {
-    std::string model_id;
-    std::string display_name;
-    std::string description;
-    std::vector<dl::TensorSlotDescriptor> inputs;
-    std::vector<dl::TensorSlotDescriptor> outputs;
-    int preferred_batch_size = 0;
-    int max_batch_size = 0;
-    dl::BatchMode batch_mode = dl::DynamicBatch{1, 0};///< Rich batch-size constraint
-};
 
 /**
  * @brief Bridge between DataManager data and model tensor I/O.
@@ -168,15 +155,6 @@ public:
             int batch_size = 1,
             ProgressCallback const & progress = nullptr);
 
-    /**
-     * @brief Map from DataManager data_key to a cloned MediaData instance.
-     * 
-     * Used by runBatchRangeOffline() so the worker thread has its own
-     * independent MediaData (e.g. a separate VideoData with its own
-     * FFmpeg decoder state) while the UI continues using the original.
-     */
-    using MediaOverrides =
-            std::unordered_map<std::string, std::shared_ptr<MediaData>>;
     /** 
      * @brief Run independent inference over a frame range without writing to
      * DataManager.

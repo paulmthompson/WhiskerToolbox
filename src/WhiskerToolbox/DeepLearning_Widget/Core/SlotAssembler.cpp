@@ -182,7 +182,7 @@ void encodeDynamicSlot(
         int frame,
         int batch_index,
         ImageSize const & source_image_size,
-        SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
+        MediaOverrides const * media_overrides = nullptr) {
 
     auto ctx = makeEncoderContext(slot, batch_index);
 
@@ -325,7 +325,7 @@ assembleInputs(
         std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
         int batch_size,
-        SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
+        MediaOverrides const * media_overrides = nullptr) {
 
     std::unordered_map<std::string, at::Tensor> result;
     auto const input_slot_vec = model.inputSlots();
