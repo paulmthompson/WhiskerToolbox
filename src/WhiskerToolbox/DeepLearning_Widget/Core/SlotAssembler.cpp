@@ -44,6 +44,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -151,6 +152,74 @@ dl::EncoderContext makeEncoderContext(
     }
 
     return ctx;
+}
+
+dl::DecoderContext makeDecoderContext(at::Tensor const & tensor,
+                                      int batch_index,
+                                      ImageSize source_image_size) {
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = batch_index;
+    ctx.target_image_size = source_image_size;
+    if (tensor.dim() >= 4) {
+        ctx.height = static_cast<int>(tensor.size(tensor.dim() - 2));
+        ctx.width = static_cast<int>(tensor.size(tensor.dim() - 1));
+    } else if (tensor.dim() == 2) {
+        ctx.height = 1;
+        ctx.width = static_cast<int>(tensor.size(1));
+    }
+    return ctx;
+}
+
+at::Tensor applyOutputPipelineTransforms(
+        DataManager & dm,
+        at::Tensor const & tensor,
+        std::vector<dl::OutputPipelineStepSpec> const & pipeline,
+        ImageSize source_image_size,
+        int current_frame) {
+    at::Tensor current = tensor;
+    for (auto const & step: pipeline) {
+        if (dl::isTerminalPipelineStep(step.step_id)) {
+            break;
+        }
+
+        auto params = dl::spatialPointParamsForStep(step);
+
+        auto module = dl::PostEncoderModuleFactory::create(
+                step.step_id, source_image_size, params);
+        if (!module) {
+            throw std::runtime_error(
+                    "Output pipeline step is not a registered tensor transform: " +
+                    step.step_id);
+        }
+
+        if (step.step_id == "spatial_point") {
+            auto * spatial =
+                    dynamic_cast<dl::SpatialPointExtractModule *>(module.get());
+            if (spatial && !params.point_key.empty()) {
+                auto point_data = dm.getData<PointData>(params.point_key);
+                if (point_data) {
+                    auto points =
+                            point_data->getAtTime(TimeFrameIndex(current_frame));
+                    if (!points.empty()) {
+                        spatial->setPoint(*points.begin());
+                    }
+                }
+            }
+        }
+
+        current = module->apply(current);
+    }
+    return current;
+}
+
+[[nodiscard]] dl::OutputPipelineStepSpec const *
+terminalStep(std::vector<dl::OutputPipelineStepSpec> const & pipeline) {
+    auto const it = std::ranges::find_if(
+            pipeline, [](dl::OutputPipelineStepSpec const & step) {
+                return dl::isTerminalPipelineStep(step.step_id);
+            });
+    return it == pipeline.end() ? nullptr : &(*it);
 }
 
 /// Encode a dynamic (per-frame) input slot into the tensor.
@@ -646,41 +715,32 @@ void decodeOutputs(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderContext ctx;
-        ctx.source_channel = 0;
-        ctx.batch_index = batch_index;
-        ctx.target_image_size = source_image_size;
-
-        if (slot->shape.size() >= 2) {
-            ctx.height =
-                    static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            ctx.width =
-                    static_cast<int>(slot->shape[slot->shape.size() - 1]);
+        auto const & pipeline = binding.pipeline;
+        auto const validation = dl::validateOutputPipeline(slot->shape, pipeline);
+        if (!validation.valid) {
+            throw std::runtime_error("Invalid output pipeline for slot '" +
+                                     binding.slot_name + "': " +
+                                     validation.message);
         }
+        auto const * terminal = terminalStep(pipeline);
+        if (terminal == nullptr) {
+            throw std::runtime_error("Output pipeline for slot '" +
+                                     binding.slot_name +
+                                     "' has no terminal decoder");
+        }
+
+        at::Tensor decoded_tensor = applyOutputPipelineTransforms(
+                dm, tensor, pipeline, source_image_size, current_frame);
+        auto const ctx =
+                makeDecoderContext(decoded_tensor, batch_index, source_image_size);
+        auto const decoder_id = terminal->step_id;
 
         TimeFrameIndex const frame_idx(current_frame);
 
-        // Spatial decoders require 4D [B,C,H,W] tensors. Post-encoder
-        // modules like GlobalAvgPool reduce rank to 2D [B,C], making
-        // spatial decoders incompatible. Guard and skip gracefully.
-        bool const is_spatial_decoder =
-                (binding.decoder_id == "TensorToMask2D" ||
-                 binding.decoder_id == "TensorToPoint2D" ||
-                 binding.decoder_id == "TensorToLine2D");
-        if (is_spatial_decoder && tensor.dim() < 4) {
-            std::cerr << "SlotAssembler: spatial decoder '"
-                      << binding.decoder_id
-                      << "' requires 4D tensor [B,C,H,W], got dim="
-                      << tensor.dim()
-                      << " (post-encoder reduces rank). Skipping.\n";
-            continue;
-        }
-
-        if (binding.decoder_id == "TensorToMask2D") {
+        if (decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            dl::MaskDecoderParams params;
-            params.threshold = binding.threshold;
-            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
+            auto const params = dl::maskDecoderParamsForStep(*terminal);
+            auto mask = dl::TensorToMask2D::decode(decoded_tensor, ctx, params);
 
             // Get or create MaskData and add the decoded mask
             auto mask_data = dm.getData<MaskData>(binding.data_key);
@@ -693,11 +753,10 @@ void decodeOutputs(
                 mask_data->addAtTime(frame_idx, std::move(mask), NotifyObservers::Yes);
             }
 
-        } else if (binding.decoder_id == "TensorToPoint2D") {
+        } else if (decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            dl::PointDecoderParams pt_params;
-            pt_params.subpixel = binding.subpixel;
-            auto point = dl::TensorToPoint2D::decode(tensor, ctx, pt_params);
+            auto const pt_params = dl::pointDecoderParamsForStep(*terminal);
+            auto point = dl::TensorToPoint2D::decode(decoded_tensor, ctx, pt_params);
 
             auto point_data = dm.getData<PointData>(binding.data_key);
             if (!point_data) {
@@ -708,11 +767,10 @@ void decodeOutputs(
                 point_data->addAtTime(frame_idx, std::move(point), NotifyObservers::Yes);
             }
 
-        } else if (binding.decoder_id == "TensorToLine2D") {
+        } else if (decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            dl::LineDecoderParams ln_params;
-            ln_params.threshold = binding.threshold;
-            auto line = dl::TensorToLine2D::decode(tensor, ctx, ln_params);
+            auto const ln_params = dl::lineDecoderParamsForStep(*terminal);
+            auto line = dl::TensorToLine2D::decode(decoded_tensor, ctx, ln_params);
 
             auto line_data = dm.getData<LineData>(binding.data_key);
             if (!line_data) {
@@ -723,10 +781,10 @@ void decodeOutputs(
                 line_data->addAtTime(frame_idx, std::move(line), NotifyObservers::Yes);
             }
 
-        } else if (binding.decoder_id == "TensorToFeatureVector") {
+        } else if (decoder_id == "TensorToFeatureVector") {
             dl::TensorToFeatureVector const decoder;
             dl::FeatureVectorDecoderParams const fv_params;
-            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, fv_params);
+            auto vec = dl::TensorToFeatureVector::decode(decoded_tensor, ctx, fv_params);
 
             // Upsert into existing TensorData so single-frame results
             // accumulate across invocations (matching MaskData/PointData behavior).
@@ -746,7 +804,7 @@ void decodeOutputs(
 
         } else {
             std::cerr << "SlotAssembler: unknown decoder '"
-                      << binding.decoder_id << "'\n";
+                      << decoder_id << "'\n";
         }
     }
 }
@@ -786,80 +844,87 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderContext ctx;
-        ctx.source_channel = 0;
-        ctx.batch_index = batch_index;
-        ctx.target_image_size = source_image_size;
-
-        if (slot->shape.size() >= 2) {
-            ctx.height =
-                    static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            ctx.width =
-                    static_cast<int>(slot->shape[slot->shape.size() - 1]);
+        auto const & pipeline = binding.pipeline;
+        auto const validation = dl::validateOutputPipeline(slot->shape, pipeline);
+        if (!validation.valid) {
+            throw std::runtime_error("Invalid output pipeline for slot '" +
+                                     binding.slot_name + "': " +
+                                     validation.message);
+        }
+        auto const * terminal = terminalStep(pipeline);
+        if (terminal == nullptr) {
+            throw std::runtime_error("Output pipeline for slot '" +
+                                     binding.slot_name +
+                                     "' has no terminal decoder");
         }
 
-        // Rank guard: spatial decoders need 4D [B,C,H,W] tensors.
-        bool const is_spatial_decoder =
-                (binding.decoder_id == "TensorToMask2D" ||
-                 binding.decoder_id == "TensorToPoint2D" ||
-                 binding.decoder_id == "TensorToLine2D");
-        if (is_spatial_decoder && tensor.dim() < 4) {
-            std::cerr << "SlotAssembler(offline): spatial decoder '"
-                      << binding.decoder_id
-                      << "' requires 4D tensor [B,C,H,W], got dim="
-                      << tensor.dim()
-                      << " (post-encoder reduces rank). Skipping.\n";
-            continue;
+        // The offline path has no DataManager reference, so spatial_point uses
+        // the module default query point unless the live path is used.
+        at::Tensor decoded_tensor = tensor;
+        for (auto const & step: pipeline) {
+            if (dl::isTerminalPipelineStep(step.step_id)) {
+                break;
+            }
+            auto const params = dl::spatialPointParamsForStep(step);
+            auto module = dl::PostEncoderModuleFactory::create(
+                    step.step_id, source_image_size, params);
+            if (!module) {
+                throw std::runtime_error(
+                        "Output pipeline step is not a registered tensor transform: " +
+                        step.step_id);
+            }
+            decoded_tensor = module->apply(decoded_tensor);
         }
 
-        if (binding.decoder_id == "TensorToMask2D") {
+        auto const ctx =
+                makeDecoderContext(decoded_tensor, batch_index, source_image_size);
+        auto const decoder_id = terminal->step_id;
+
+        if (decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            dl::MaskDecoderParams params;
-            params.threshold = binding.threshold;
-            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
+            auto const params = dl::maskDecoderParamsForStep(*terminal);
+            auto mask = dl::TensorToMask2D::decode(decoded_tensor, ctx, params);
             if (!mask.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
                         std::move(mask),
                         binding.data_key,
-                        binding.decoder_id});
+                        decoder_id});
             }
-        } else if (binding.decoder_id == "TensorToPoint2D") {
+        } else if (decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            dl::PointDecoderParams params;
-            params.subpixel = binding.subpixel;
-            auto point = dl::TensorToPoint2D::decode(tensor, ctx, params);
+            auto const params = dl::pointDecoderParamsForStep(*terminal);
+            auto point = dl::TensorToPoint2D::decode(decoded_tensor, ctx, params);
             frame_results.push_back(FrameResult{
                     current_frame,
                     point,
                     binding.data_key,
-                    binding.decoder_id});
-        } else if (binding.decoder_id == "TensorToLine2D") {
+                    decoder_id});
+        } else if (decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            dl::LineDecoderParams params;
-            params.threshold = binding.threshold;
-            auto line = dl::TensorToLine2D::decode(tensor, ctx, params);
+            auto const params = dl::lineDecoderParamsForStep(*terminal);
+            auto line = dl::TensorToLine2D::decode(decoded_tensor, ctx, params);
             if (!line.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
                         std::move(line),
                         binding.data_key,
-                        binding.decoder_id});
+                        decoder_id});
             }
-        } else if (binding.decoder_id == "TensorToFeatureVector") {
+        } else if (decoder_id == "TensorToFeatureVector") {
             dl::TensorToFeatureVector const decoder;
             dl::FeatureVectorDecoderParams const params;
-            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, params);
+            auto vec = dl::TensorToFeatureVector::decode(decoded_tensor, ctx, params);
             if (!vec.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
                         std::move(vec),
                         binding.data_key,
-                        binding.decoder_id});
+                        decoder_id});
             }
         } else {
             std::cerr << "SlotAssembler(offline): unknown decoder '"
-                      << binding.decoder_id << "'\n";
+                      << decoder_id << "'\n";
         }
     }
 

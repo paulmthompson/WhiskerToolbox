@@ -9,7 +9,7 @@ TEST_CASE("TensorSlotDescriptor - default construction", "[TensorSlotDescriptor]
     CHECK(slot.shape.empty());
     CHECK(slot.description.empty());
     CHECK(slot.recommended_encoder.empty());
-    CHECK(slot.recommended_decoder.empty());
+    CHECK(slot.recommended_pipeline.empty());
     CHECK(slot.is_static == false);
     CHECK(slot.is_boolean_mask == false);
     CHECK(slot.sequence_dim == -1);
@@ -21,7 +21,6 @@ TEST_CASE("TensorSlotDescriptor - aggregate initialization", "[TensorSlotDescrip
             .shape = {3, 256, 256},
             .description = "Current video frame",
             .recommended_encoder = "ImageEncoder",
-            .recommended_decoder = "",
             .is_static = false,
             .is_boolean_mask = false,
             .sequence_dim = -1};
@@ -30,7 +29,7 @@ TEST_CASE("TensorSlotDescriptor - aggregate initialization", "[TensorSlotDescrip
     CHECK(slot.shape == std::vector<int64_t>{3, 256, 256});
     CHECK(slot.description == "Current video frame");
     CHECK(slot.recommended_encoder == "ImageEncoder");
-    CHECK(slot.recommended_decoder.empty());
+    CHECK(slot.recommended_pipeline.empty());
     CHECK(slot.is_static == false);
     CHECK(slot.is_boolean_mask == false);
     CHECK(slot.sequence_dim == -1);

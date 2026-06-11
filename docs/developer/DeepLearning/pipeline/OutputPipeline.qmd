@@ -1,0 +1,23 @@
+---
+title: "Output Pipeline Metadata"
+format: html
+---
+
+`OutputPipeline` defines the reusable metadata used to build and validate
+DeepLearning output chains. It keeps the internal distinction between
+tensor-to-tensor transforms and terminal tensor-to-DataManager decoders, while
+allowing the UI and JSON model specs to present a single ordered pipeline.
+
+The compatibility helpers propagate tensor shape metadata without running
+inference. Spatial outputs such as `[C,H,W]` may terminate in spatial decoders
+or pass through transforms such as global average pooling. Vector outputs such
+as `[C]` may terminate in `TensorToFeatureVector`.
+
+Each `OutputPipelineStepSpec` stores the step id plus an optional typed
+parameter variant. Transform settings such as `SpatialPointModuleParams` and
+decoder settings such as `MaskDecoderParams` are therefore owned by their
+concrete step type rather than flattened into one catch-all struct.
+
+The default pipeline helpers currently encode the main built-in workflows:
+NeuroSAM probability maps default to `TensorToMask2D`, while General Encoder
+feature maps default to `global_avg_pool -> TensorToFeatureVector`.

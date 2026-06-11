@@ -14,7 +14,7 @@
  * so this header and translation unit never include torch.
  */
 
-#include "Core/ModelDisplayInfo.hpp"        // ModelDisplayInfo
+#include "Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 
 #include "TimeFrame/TimeFrame.hpp"           // TimePosition
 #include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
@@ -49,8 +49,7 @@ class KeymapManager;
 namespace dl::widget {
 class DynamicInputSlotWidget;
 class EncoderShapeWidget;
-class OutputSlotWidget;
-class PostEncoderWidget;
+class OutputPipelineWidget;
 class RecurrentBindingWidget;
 class SequenceSlotWidget;
 class StaticInputSlotWidget;
@@ -178,11 +177,8 @@ private:
     // Sequence slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::SequenceSlotWidget *> _sequence_slot_widgets;
 
-    // Output slot widgets (non-owning; owned by _dynamic_container)
-    std::vector<dl::widget::OutputSlotWidget *> _output_slot_widgets;
-
-    // Post-encoder widget (non-owning; owned by _dynamic_container)
-    dl::widget::PostEncoderWidget * _post_encoder_widget = nullptr;
+    // Output pipeline widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::OutputPipelineWidget *> _output_slot_widgets;
 
     // Encoder shape widget (non-owning; owned by _dynamic_container)
     dl::widget::EncoderShapeWidget * _encoder_shape_widget = nullptr;

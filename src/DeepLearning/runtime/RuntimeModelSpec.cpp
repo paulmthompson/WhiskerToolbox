@@ -35,7 +35,9 @@ TensorSlotDescriptor SlotSpec::toDescriptor() const {
     desc.shape = shape;
     desc.description = description.value_or("");
     desc.recommended_encoder = recommended_encoder.value_or("");
-    desc.recommended_decoder = recommended_decoder.value_or("");
+    if (recommended_pipeline.has_value()) {
+        desc.recommended_pipeline = recommended_pipeline.value();
+    }
     desc.is_static = is_static.value_or(false);
     desc.is_boolean_mask = is_boolean_mask.value_or(false);
     desc.sequence_dim = sequence_dim.value_or(-1);
@@ -153,6 +155,16 @@ std::vector<std::string> RuntimeModelSpec::validate() const {
 
         if (slot.shape.empty()) {
             errors.push_back("outputs[" + std::to_string(i) + "]: shape must not be empty");
+        }
+
+        if (slot.recommended_pipeline.has_value()) {
+            auto const validation =
+                    validateOutputPipeline(slot.shape, slot.recommended_pipeline.value());
+            if (!validation.valid) {
+                errors.push_back("outputs[" + std::to_string(i) +
+                                 "]: recommended_pipeline invalid: " +
+                                 validation.message);
+            }
         }
     }
 

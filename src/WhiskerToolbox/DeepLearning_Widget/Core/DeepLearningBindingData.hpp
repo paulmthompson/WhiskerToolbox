@@ -10,6 +10,8 @@
  * without pulling in Qt headers via EditorState.
  */
 
+#include "DeepLearning/pipeline/OutputPipeline.hpp"
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -56,12 +58,8 @@ struct OutputBindingData {
     std::string slot_name;
     /** DataManager key to write results into */
     std::string data_key;
-    /** Decoder factory key (e.g. "TensorToMask2D") */
-    std::string decoder_id;
-    /** Mask/line threshold */
-    float threshold = 0.5f;
-    /** Point subpixel refinement */
-    bool subpixel = true;
+    /** Ordered output pipeline. Must end in a terminal decoder before inference. */
+    std::vector<dl::OutputPipelineStepSpec> pipeline;
 };
 
 /**

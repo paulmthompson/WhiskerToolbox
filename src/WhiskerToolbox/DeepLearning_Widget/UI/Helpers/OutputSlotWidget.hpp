@@ -100,8 +100,8 @@ private:
 
     AutoParamWidget * _auto_param = nullptr;
 
-    /// Recommended decoder from slot descriptor, used for initial selection.
-    std::string _recommended_decoder;
+    /// Recommended terminal decoder from the slot pipeline, used for initial selection.
+    std::string _recommended_terminal_step_id;
 };
 
 }// namespace dl::widget

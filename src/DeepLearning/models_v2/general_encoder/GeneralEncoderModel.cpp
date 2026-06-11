@@ -8,7 +8,7 @@
 #include "device/DeviceManager.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <c10/core/DeviceType.h> // at::kCPU
+#include <c10/core/DeviceType.h>// at::kCPU
 
 #include <cassert>
 #include <stdexcept>
@@ -68,7 +68,7 @@ std::vector<TensorSlotDescriptor> GeneralEncoderModel::inputSlots() const {
              .shape = {_input_channels, _input_height, _input_width},
              .description = "Input image",
              .recommended_encoder = "ImageEncoder",
-             .recommended_decoder = {},
+             .recommended_pipeline = {},
              .is_static = false,
              .is_boolean_mask = false,
              .dtype = TensorDType::Float32,
@@ -82,7 +82,8 @@ std::vector<TensorSlotDescriptor> GeneralEncoderModel::outputSlots() const {
              .shape = effectiveOutputShape(),
              .description = "Extracted feature tensor",
              .recommended_encoder = {},
-             .recommended_decoder = {},
+             .recommended_pipeline = defaultOutputPipeline(
+                     modelId(), kFeaturesSlot, _output_shape),
              .is_static = false,
              .is_boolean_mask = false,
              .dtype = TensorDType::Float32,

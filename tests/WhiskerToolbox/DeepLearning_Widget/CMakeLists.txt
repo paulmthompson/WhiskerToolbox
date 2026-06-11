@@ -15,10 +15,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_dl_widgets
+    binding_data/BindingData.test.cpp
     QtTestApp.cpp
     DataSourceComboHelper.test.cpp
     DynamicInputSlotWidget.test.cpp
     OutputSlotWidget.test.cpp
+    OutputPipelineWidget.test.cpp
     PostEncoderWidget.test.cpp
     EncoderShapeWidget.test.cpp
     RecurrentBindingWidget.test.cpp

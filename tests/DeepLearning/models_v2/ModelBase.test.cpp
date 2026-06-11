@@ -24,7 +24,11 @@ public:
 
     std::vector<dl::TensorSlotDescriptor> outputSlots() const override {
         return {
-                {.name = "heatmap", .shape = {1, 64, 64}, .description = "Output heatmap", .recommended_decoder = "TensorToMask2D"},
+                {.name = "heatmap",
+                 .shape = {1, 64, 64},
+                 .description = "Output heatmap",
+                 .recommended_pipeline = {dl::OutputPipelineStepSpec{
+                         .step_id = "TensorToMask2D"}}},
         };
     }
 
@@ -100,7 +104,8 @@ TEST_CASE("ModelBase - input/output slot descriptors", "[ModelBase]") {
     auto outputs = model.outputSlots();
     REQUIRE(outputs.size() == 1);
     CHECK(outputs[0].name == "heatmap");
-    CHECK(outputs[0].recommended_decoder == "TensorToMask2D");
+    REQUIRE(outputs[0].recommended_pipeline.size() == 1);
+    CHECK(outputs[0].recommended_pipeline[0].step_id == "TensorToMask2D");
 }
 
 TEST_CASE("ModelBase - weight loading and readiness", "[ModelBase]") {

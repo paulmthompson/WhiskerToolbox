@@ -39,6 +39,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
     emit outputBindingsChanged();
     emit staticInputsChanged();
     emit recurrentBindingsChanged();
+    emit postEncoderModuleChanged();
     return true;
 }
 
@@ -56,6 +57,8 @@ void DeepLearningState::setSelectedModelId(std::string const & id) {
         _data.output_bindings.clear();
         _data.static_inputs.clear();
         _data.recurrent_bindings.clear();
+        _data.post_encoder_module_type.clear();
+        _data.post_encoder_point_key.clear();
         markDirty();
         emit modelChanged();
     }

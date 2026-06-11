@@ -113,7 +113,8 @@ named tensor:
 
 - **`name`** — slot identifier (e.g. `"encoder_image"`)
 - **`shape`** — tensor dimensions excluding batch (e.g. `{3, 256, 256}`)
-- **`recommended_encoder`** / **`recommended_decoder`** — hints for the UI
+- **`recommended_encoder`** — input hint for the UI
+- **`recommended_pipeline`** — ordered output hint ending in a terminal decoder
 - **`is_static`** — if true, the user sets this input once (memory frames)
 - **`is_boolean_mask`** — if true, values are 0/1 flags
 - **`sequence_dim`** — optional axis index for frame sequences 
@@ -187,7 +188,11 @@ at runtime without recompilation:
     { "name": "image", "shape": [3, 256, 256], "recommended_encoder": "ImageEncoder" }
   ],
   "outputs": [
-    { "name": "heatmap", "shape": [1, 256, 256], "recommended_decoder": "TensorToMask2D" }
+    {
+      "name": "heatmap",
+      "shape": [1, 256, 256],
+      "recommended_pipeline": [{ "step_id": "TensorToMask2D" }]
+    }
   ]
 }
 ```

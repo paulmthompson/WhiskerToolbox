@@ -79,7 +79,7 @@ static std::string const kFullJson = R"({
             "name": "heatmap",
             "shape": [1, 256, 256],
             "description": "Probability map",
-            "recommended_decoder": "TensorToMask2D"
+            "recommended_pipeline": [{ "step_id": "TensorToMask2D" }]
         }
     ]
 })";
@@ -106,7 +106,8 @@ TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]") {
     slot.shape = {3, 256, 256};
     slot.description = "Current frame";
     slot.recommended_encoder = "ImageEncoder";
-    slot.recommended_decoder = "TensorToMask2D";
+    slot.recommended_pipeline = {OutputPipelineStepSpec{
+            .step_id = "TensorToMask2D"}};
     slot.is_static = true;
     slot.is_boolean_mask = true;
     slot.sequence_dim = 0;
@@ -118,7 +119,8 @@ TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]") {
     CHECK(desc.shape == expected_shape);
     CHECK(desc.description == "Current frame");
     CHECK(desc.recommended_encoder == "ImageEncoder");
-    CHECK(desc.recommended_decoder == "TensorToMask2D");
+    REQUIRE(desc.recommended_pipeline.size() == 1);
+    CHECK(desc.recommended_pipeline[0].step_id == "TensorToMask2D");
     CHECK(desc.is_static == true);
     CHECK(desc.is_boolean_mask == true);
     CHECK(desc.sequence_dim == 0);
@@ -137,7 +139,7 @@ TEST_CASE("SlotSpec - toDescriptor applies defaults for omitted fields", "[runti
     CHECK(desc.shape == expected_shape);
     CHECK(desc.description.empty());
     CHECK(desc.recommended_encoder.empty());
-    CHECK(desc.recommended_decoder.empty());
+    CHECK(desc.recommended_pipeline.empty());
     CHECK(desc.is_static == false);
     CHECK(desc.is_boolean_mask == false);
     CHECK(desc.sequence_dim == -1);
@@ -175,7 +177,8 @@ TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]") {
     CHECK(spec.outputs[0].name == "heatmap");
     auto const expected_heatmap_shape = std::vector<int64_t>{1, 256, 256};
     CHECK(spec.outputs[0].shape == expected_heatmap_shape);
-    CHECK(spec.outputs[0].recommended_decoder.value() == "TensorToMask2D");
+    REQUIRE(spec.outputs[0].recommended_pipeline.has_value());
+    CHECK(spec.outputs[0].recommended_pipeline->at(0).step_id == "TensorToMask2D");
 }
 
 TEST_CASE("RuntimeModelSpec - parse minimal JSON", "[runtime]") {
@@ -271,7 +274,35 @@ TEST_CASE("RuntimeModelSpec - inputDescriptors and outputDescriptors", "[runtime
     auto out_descs = spec.outputDescriptors();
     REQUIRE(out_descs.size() == 1);
     CHECK(out_descs[0].name == "heatmap");
-    CHECK(out_descs[0].recommended_decoder == "TensorToMask2D");
+    REQUIRE(out_descs[0].recommended_pipeline.size() == 1);
+    CHECK(out_descs[0].recommended_pipeline[0].step_id == "TensorToMask2D");
+}
+
+TEST_CASE("RuntimeModelSpec - recommended_pipeline JSON", "[runtime]") {
+    std::string const json = R"({
+        "model_id": "pipeline_model",
+        "display_name": "Pipeline Model",
+        "inputs": [{ "name": "image", "shape": [3, 224, 224] }],
+        "outputs": [{
+            "name": "features",
+            "shape": [384, 7, 7],
+            "recommended_pipeline": [
+                { "step_id": "global_avg_pool" },
+                { "step_id": "TensorToFeatureVector" }
+            ]
+        }]
+    })";
+
+    auto result = RuntimeModelSpec::fromJson(json);
+    REQUIRE(static_cast<bool>(result));
+    auto errors = result.value().validate();
+    CHECK(errors.empty());
+
+    auto outputs = result.value().outputDescriptors();
+    REQUIRE(outputs.size() == 1);
+    REQUIRE(outputs[0].recommended_pipeline.size() == 2);
+    CHECK(outputs[0].recommended_pipeline[0].step_id == "global_avg_pool");
+    CHECK(outputs[0].recommended_pipeline[1].step_id == "TensorToFeatureVector");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -483,7 +514,8 @@ TEST_CASE("RuntimeModel - input/output slots match spec", "[runtime]") {
     auto outputs = model.outputSlots();
     REQUIRE(outputs.size() == 1);
     CHECK(outputs[0].name == "heatmap");
-    CHECK(outputs[0].recommended_decoder == "TensorToMask2D");
+    REQUIRE(outputs[0].recommended_pipeline.size() == 1);
+    CHECK(outputs[0].recommended_pipeline[0].step_id == "TensorToMask2D");
 }
 
 TEST_CASE("RuntimeModel - isReady before loadWeights", "[runtime]") {

@@ -7,8 +7,8 @@
 #include "models_v2/general_encoder/GeneralEncoderModel.hpp"
 #include "registry/ModelRegistry.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::zeros, at::ones
+#include <ATen/Functions.h>  // at::zeros, at::ones
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <algorithm>
 #include <string>
@@ -135,7 +135,9 @@ TEST_CASE("GeneralEncoderModel - features output slot descriptor", "[GeneralEnco
     auto const expected_shape = std::vector<int64_t>{384, 7, 7};
     CHECK(slot.name == "features");
     CHECK(slot.shape == expected_shape);
-    CHECK(slot.recommended_decoder.empty());
+    REQUIRE(slot.recommended_pipeline.size() == 2);
+    CHECK(slot.recommended_pipeline[0].step_id == "global_avg_pool");
+    CHECK(slot.recommended_pipeline[1].step_id == "TensorToFeatureVector");
     CHECK(slot.is_static == false);
     CHECK(slot.dtype == dl::TensorDType::Float32);
     CHECK(slot.sequence_dim == -1);

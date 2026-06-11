@@ -49,7 +49,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const {
              .shape = {kImageChannels, kModelSize, kModelSize},
              .description = "Current frame",
              .recommended_encoder = "ImageEncoder",
-             .recommended_decoder = {},
+             .recommended_pipeline = {},
              .is_static = false,
              .is_boolean_mask = false,
              .dtype = TensorDType::Byte,// Model expects uint8 images
@@ -59,7 +59,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const {
              .shape = {kImageChannels, kModelSize, kModelSize},
              .description = "Memory encoder frames",
              .recommended_encoder = "ImageEncoder",
-             .recommended_decoder = {},
+             .recommended_pipeline = {},
              .is_static = true,
              .is_boolean_mask = false,
              .dtype = TensorDType::Byte,// Model expects uint8 images
@@ -69,7 +69,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const {
              .shape = {kMaskChannels, kModelSize, kModelSize},
              .description = "Memory ROI masks",
              .recommended_encoder = "Mask2DEncoder",
-             .recommended_decoder = {},
+             .recommended_pipeline = {},
              .is_static = true,
              .is_boolean_mask = false,
              .dtype = TensorDType::Float32,// Model expects float32 masks
@@ -83,7 +83,8 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::outputSlots() const {
              .shape = {kOutputChannels, kModelSize, kModelSize},
              .description = "Output probability map",
              .recommended_encoder = {},
-             .recommended_decoder = "TensorToMask2D",
+             .recommended_pipeline = {OutputPipelineStepSpec{
+                     .step_id = "TensorToMask2D"}},
              .is_static = false,
              .is_boolean_mask = false,
              .sequence_dim = -1},

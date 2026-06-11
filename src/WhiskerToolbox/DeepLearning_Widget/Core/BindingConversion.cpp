@@ -7,7 +7,9 @@
 #include "DeepLearning/channel_decoding/ChannelDecoder.hpp"
 #include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
 
+#include <ranges>
 #include <type_traits>
+#include <utility>
 
 namespace dl::conversion {
 
@@ -85,19 +87,21 @@ OutputBindingData fromOutputParams(
 
     params.decoder.visit([&](auto const & dec) {
         using T = std::decay_t<decltype(dec)>;
+        dl::OutputPipelineStepSpec step;
         if constexpr (std::is_same_v<T, dl::MaskDecoderParams>) {
-            binding.decoder_id = "TensorToMask2D";
-            binding.threshold = dec.threshold;
+            step.step_id = "TensorToMask2D";
+            step.parameters = dl::OutputPipelineStepParameters{dec};
         } else if constexpr (std::is_same_v<T, dl::PointDecoderParams>) {
-            binding.decoder_id = "TensorToPoint2D";
-            binding.threshold = dec.threshold;
-            binding.subpixel = dec.subpixel;
+            step.step_id = "TensorToPoint2D";
+            step.parameters = dl::OutputPipelineStepParameters{dec};
         } else if constexpr (std::is_same_v<T, dl::LineDecoderParams>) {
-            binding.decoder_id = "TensorToLine2D";
-            binding.threshold = dec.threshold;
+            step.step_id = "TensorToLine2D";
+            step.parameters = dl::OutputPipelineStepParameters{dec};
         } else if constexpr (std::is_same_v<T, dl::FeatureVectorDecoderParams>) {
-            binding.decoder_id = "TensorToFeatureVector";
+            step.step_id = "TensorToFeatureVector";
+            step.parameters = dl::OutputPipelineStepParameters{dec};
         }
+        binding.pipeline = {std::move(step)};
     });
 
     return binding;
@@ -211,18 +215,25 @@ dl::widget::OutputSlotParams toOutputParams(
     dl::widget::OutputSlotParams p;
     p.data_key = binding.data_key;
 
-    if (binding.decoder_id == "TensorToMask2D") {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToPoint2D") {
-        p.decoder = dl::PointDecoderParams{
-                .subpixel = binding.subpixel,
-                .threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToLine2D") {
-        p.decoder = dl::LineDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToFeatureVector") {
+    auto const terminal = std::ranges::find_if(
+            binding.pipeline, [](dl::OutputPipelineStepSpec const & step) {
+                return dl::isTerminalPipelineStep(step.step_id);
+            });
+    if (terminal == binding.pipeline.end()) {
+        p.decoder = dl::MaskDecoderParams{};
+        return p;
+    }
+
+    if (terminal->step_id == "TensorToMask2D") {
+        p.decoder = dl::maskDecoderParamsForStep(*terminal);
+    } else if (terminal->step_id == "TensorToPoint2D") {
+        p.decoder = dl::pointDecoderParamsForStep(*terminal);
+    } else if (terminal->step_id == "TensorToLine2D") {
+        p.decoder = dl::lineDecoderParamsForStep(*terminal);
+    } else if (terminal->step_id == "TensorToFeatureVector") {
         p.decoder = dl::FeatureVectorDecoderParams{};
     } else {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
+        p.decoder = dl::MaskDecoderParams{};
     }
     return p;
 }

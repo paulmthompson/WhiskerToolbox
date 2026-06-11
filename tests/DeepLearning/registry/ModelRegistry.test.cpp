@@ -30,7 +30,8 @@ public:
     std::vector<dl::TensorSlotDescriptor> outputSlots() const override {
         return {
             {.name = "heatmap", .shape = {1, 128, 128}, .description = "Output heatmap",
-             .recommended_decoder = "TensorToMask2D"},
+             .recommended_pipeline = {dl::OutputPipelineStepSpec{
+                     .step_id = "TensorToMask2D"}}},
         };
     }
 
@@ -71,7 +72,8 @@ public:
     std::vector<dl::TensorSlotDescriptor> outputSlots() const override {
         return {
             {.name = "points", .shape = {2}, .description = "Detected point",
-             .recommended_decoder = "TensorToPoint2D"},
+             .recommended_pipeline = {dl::OutputPipelineStepSpec{
+                     .step_id = "TensorToPoint2D"}}},
             {.name = "confidence", .shape = {1}, .description = "Confidence score"},
         };
     }
@@ -231,7 +233,8 @@ TEST_CASE("ModelRegistry - getModelInfo for AlphaModel", "[ModelRegistry]")
 
     REQUIRE(info->outputs.size() == 1);
     CHECK(info->outputs[0].name == "heatmap");
-    CHECK(info->outputs[0].recommended_decoder == "TensorToMask2D");
+    REQUIRE(info->outputs[0].recommended_pipeline.size() == 1);
+    CHECK(info->outputs[0].recommended_pipeline[0].step_id == "TensorToMask2D");
 }
 
 TEST_CASE("ModelRegistry - getModelInfo for BetaModel", "[ModelRegistry]")
@@ -318,7 +321,8 @@ TEST_CASE("ModelRegistry - getOutputSlot finds existing slot", "[ModelRegistry]"
     auto const * slot = reg.getOutputSlot("alpha", "heatmap");
     REQUIRE(slot != nullptr);
     CHECK(slot->name == "heatmap");
-    CHECK(slot->recommended_decoder == "TensorToMask2D");
+    REQUIRE(slot->recommended_pipeline.size() == 1);
+    CHECK(slot->recommended_pipeline[0].step_id == "TensorToMask2D");
 }
 
 TEST_CASE("ModelRegistry - getOutputSlot returns nullptr for unknown slot", "[ModelRegistry]")

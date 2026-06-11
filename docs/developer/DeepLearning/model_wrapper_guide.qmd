@@ -62,7 +62,7 @@ Create a `.json` file alongside your model weights:
       "name": "whisker_mask",
       "shape": [1, 256, 256],
       "description": "Predicted whisker probability map",
-      "recommended_decoder": "TensorToLine2D"
+      "recommended_pipeline": [{ "step_id": "TensorToLine2D" }]
     }
   ]
 }
@@ -92,7 +92,7 @@ Create a `.json` file alongside your model weights:
 | `shape` | array of int | Yes | Tensor shape excluding batch dimension |
 | `description` | string | No | Human-readable description |
 | `recommended_encoder` | string | No | `"ImageEncoder"`, `"Point2DEncoder"`, `"Mask2DEncoder"`, `"Line2DEncoder"` |
-| `recommended_decoder` | string | No | `"TensorToPoint2D"`, `"TensorToMask2D"`, `"TensorToLine2D"` |
+| `recommended_pipeline` | array | No | Ordered output steps, e.g. `[{ "step_id": "TensorToMask2D" }]` |
 | `is_static` | bool | No | If true, this is a memory input set once by the user |
 | `is_boolean_mask` | bool | No | If true, values are 0/1 flags |
 | `sequence_dim` | int | No | Axis index for frame sequences (-1 = none) |
@@ -207,7 +207,9 @@ std::vector<TensorSlotDescriptor> YourModel::outputSlots() const {
             .name = "output_mask",
             .shape = {1, 256, 256},
             .description = "Predicted segmentation mask",
-            .recommended_decoder = "TensorToMask2D",
+            .recommended_pipeline = {OutputPipelineStepSpec{
+                .step_id = "TensorToMask2D",
+            }},
         },
     };
 }
@@ -259,7 +261,7 @@ YourModel::forward(
 
 When defining `inputSlots()` and `outputSlots()`, consider:
 
-- **`recommended_encoder`** / **`recommended_decoder`** — the UI pre-selects these but the 
+- **`recommended_encoder`** / **`recommended_pipeline`** — the UI pre-selects these but the
   user can override them. Choose the most common use case.
 - **`is_static = true`** — use for memory inputs that the user sets once (e.g., reference 
   frames). The UI renders these as a separate "Memory Inputs" section.
