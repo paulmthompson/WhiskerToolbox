@@ -115,17 +115,9 @@ endif()
 
 target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DeepLearning PRIVATE ${CLANG_OPTIONS})
-endif()
+target_link_libraries(DeepLearning PUBLIC spdlog::spdlog_header_only)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DeepLearning PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DeepLearning PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DeepLearning)
 
 set_target_properties(DeepLearning PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

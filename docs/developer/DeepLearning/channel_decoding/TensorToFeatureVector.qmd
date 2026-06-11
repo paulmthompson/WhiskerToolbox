@@ -1,0 +1,31 @@
+---
+title: "TensorToFeatureVector"
+---
+
+## Overview
+
+`TensorToFeatureVector` decodes a global feature descriptor from a model output tensor into a
+flat `std::vector<float>` for storage in `TensorData`.
+
+## Tensor Layout
+
+The decoder accepts **1D** or **2D** tensors:
+
+| Rank | Layout | Behavior |
+|------|--------|----------|
+| 1    | `[C]`  | Returns all `C` feature values. `ctx.batch_index` is ignored. |
+| 2    | `[B, C]` | Returns the `C`-length vector at `ctx.batch_index`. |
+
+This decoder is typically used after a post-encoder such as `GlobalAvgPoolModule`, which
+reduces a spatial `[B, C, H, W]` feature map to `[B, C]`.
+
+## Validation
+
+`decode()` validates at runtime:
+
+- Tensor is defined and at least 1-dimensional
+- Tensor rank is 1 or 2 (not 0D, 3D, or higher)
+- For 2D inputs, `batch_index` is in `[0, B)`
+
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the
+failure at `spdlog::debug` level.

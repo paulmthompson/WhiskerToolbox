@@ -1,0 +1,40 @@
+---
+title: "TensorToMask2D"
+---
+
+## Overview
+
+`TensorToMask2D` decodes a single spatial channel from a model output tensor into a `Mask2D`
+by collecting all pixels whose activation exceeds a configurable threshold.
+
+## Tensor Layout
+
+The decoder expects a **4D** tensor in **NCHW** order:
+
+| Dim | Name    | Indexed by              |
+|-----|---------|-------------------------|
+| 0   | Batch   | `DecoderContext::batch_index` |
+| 1   | Channel | `DecoderContext::source_channel` |
+| 2   | Height  | `DecoderContext::height` |
+| 3   | Width   | `DecoderContext::width` |
+
+`DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
+`tensor.size(3)` respectively. `SlotAssembler` populates these from the output slot metadata
+(last two entries of the slot shape).
+
+## Coordinate Scaling
+
+When `DecoderContext::target_image_size` is non-zero, mask coordinates are upsampled from tensor
+space to the original image size using nearest-neighbor mapping. When `target_image_size` is
+`{0, 0}`, coordinates are returned in tensor pixel space.
+
+## Validation
+
+`decode()` validates at runtime:
+
+- Tensor is defined and 4-dimensional
+- `batch_index` and `source_channel` are in range
+- `height` and `width` are positive and match the tensor spatial dimensions
+
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range`, consistent with the other
+channel decoders.

@@ -7,8 +7,10 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <ATen/Functions.h> // at::zeros, at::ones
+#include <ATen/Functions.h>  // at::zeros, at::ones
+#include <ATen/core/Tensor.h>// at::Tensor
+
+#include <stdexcept>
 
 using Catch::Matchers::WithinAbs;
 
@@ -175,6 +177,50 @@ TEST_CASE("TensorToMask2D - threshold boundary", "[channel_decoding][TensorToMas
     REQUIRE(mask.size() == 1);
     CHECK(mask[0].x == 1);
     CHECK(mask[0].y == 1);
+}
+
+TEST_CASE("TensorToMask2D - rejects non-4D tensor", "[channel_decoding][TensorToMask2D]") {
+    dl::TensorToMask2D decoder;
+
+    auto tensor = at::zeros({1, 256});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 1;
+    ctx.width = 256;
+    dl::MaskDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
+}
+
+TEST_CASE("TensorToMask2D - rejects out-of-range batch index",
+          "[channel_decoding][TensorToMask2D]") {
+    dl::TensorToMask2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 1;
+    ctx.source_channel = 0;
+    ctx.height = 4;
+    ctx.width = 4;
+    dl::MaskDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::out_of_range);
+}
+
+TEST_CASE("TensorToMask2D - rejects spatial dimension mismatch",
+          "[channel_decoding][TensorToMask2D]") {
+    dl::TensorToMask2D decoder;
+
+    auto tensor = at::zeros({1, 1, 4, 4});
+    dl::DecoderContext ctx;
+    ctx.batch_index = 0;
+    ctx.source_channel = 0;
+    ctx.height = 8;
+    ctx.width = 8;
+    dl::MaskDecoderParams params;
+
+    CHECK_THROWS_AS(decoder.decode(tensor, ctx, params), std::invalid_argument);
 }
 
 TEST_CASE("TensorToMask2D - channel selection", "[channel_decoding][TensorToMask2D]") {
