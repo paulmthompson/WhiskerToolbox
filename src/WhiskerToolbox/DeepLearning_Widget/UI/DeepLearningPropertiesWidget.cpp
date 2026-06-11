@@ -5,6 +5,7 @@
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "DeepLearning_Widget/Inference/InferenceController.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
@@ -12,7 +13,6 @@
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
-#include "DeepLearning_Widget/UI/InferenceController.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -95,7 +95,8 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _refreshDataSourceCombos();
-        }, "DeepLearningPropertiesWidget - Refresh Data Source Combos");
+        },
+                                                     "DeepLearningPropertiesWidget - Refresh Data Source Combos");
     }
 
     connect(_state.get(), &DeepLearningState::modelChanged, this, [this] {

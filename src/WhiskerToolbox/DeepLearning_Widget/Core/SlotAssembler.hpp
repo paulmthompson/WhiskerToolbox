@@ -17,7 +17,7 @@
  * @see ModelBase for the model forward pass interface.
  */
 
-#include "BatchInferenceResult.hpp"
+#include "Inference/BatchInferenceResult.hpp"    // BatchInferenceResult
 #include "MediaOverrides.hpp"
 #include "ModelDisplayInfo.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"

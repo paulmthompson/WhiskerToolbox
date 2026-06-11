@@ -14,7 +14,7 @@
 
 #include "Core/DeepLearningBindingData.hpp"     // SlotBindingData, OutputBindingData, StaticInputData
 #include "Core/MediaOverrides.hpp"              // MediaOverrides
-#include "Core/WriteReservation.hpp"            // WriteReservation
+#include "Inference/WriteReservation.hpp"       // WriteReservation
 
 #include "CoreGeometry/ImageSize.hpp"            // ImageSize
 

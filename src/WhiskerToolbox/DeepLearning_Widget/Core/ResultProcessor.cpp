@@ -6,7 +6,7 @@
 #include "ResultProcessor.hpp"
 
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
-#include "DeepLearning_Widget/Core/WriteReservation.hpp"
+#include "DeepLearning_Widget/Inference/WriteReservation.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"

@@ -9,7 +9,7 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
-#include "DeepLearning_Widget/Core/WriteReservation.hpp"
+#include "DeepLearning_Widget/Inference/WriteReservation.hpp"
 #include "MultiIntervalBatchWorker.hpp"
 
 

@@ -4,7 +4,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.hpp
     DeepLearningWidgetRegistration.cpp
 
-    Core/BatchInferenceResult.hpp
     Core/BindingConversion.hpp
     Core/BindingConversion.cpp
     Core/ConstraintEnforcer.hpp
@@ -20,17 +19,18 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/SlotAssembler.hpp
     Core/SlotAssembler.cpp
 
+    Inference/BatchInferenceResult.hpp
+    Inference/BatchInferenceWorker.hpp
+    Inference/BatchInferenceWorker.cpp
+    Inference/InferenceController.hpp
+    Inference/InferenceController.cpp
+    Inference/MultiIntervalBatchWorker.hpp
+    Inference/MultiIntervalBatchWorker.cpp
+
     UI/DeepLearningViewWidget.hpp
     UI/DeepLearningViewWidget.cpp
-
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
-    UI/BatchInferenceWorker.hpp
-    UI/BatchInferenceWorker.cpp
-    UI/InferenceController.hpp
-    UI/InferenceController.cpp
-    UI/MultiIntervalBatchWorker.hpp
-    UI/MultiIntervalBatchWorker.cpp
 
     UI/Helpers/DataSourceComboHelper.hpp
     UI/Helpers/DataSourceComboHelper.cpp

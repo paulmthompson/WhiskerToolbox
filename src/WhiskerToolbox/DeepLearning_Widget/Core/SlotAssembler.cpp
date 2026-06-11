@@ -1,6 +1,6 @@
 #include "SlotAssembler.hpp"
 
-#include "BatchInferenceResult.hpp"
+#include "Inference/BatchInferenceResult.hpp" 
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"

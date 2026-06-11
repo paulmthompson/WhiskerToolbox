@@ -7,7 +7,7 @@
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"// ModelDisplayInfo
+#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"             // ModelDisplayInfo
 
 #include <string>
 #include <vector>
