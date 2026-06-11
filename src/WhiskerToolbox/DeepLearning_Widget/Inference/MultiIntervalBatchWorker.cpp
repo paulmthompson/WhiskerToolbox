@@ -5,8 +5,8 @@
 
 #include "MultiIntervalBatchWorker.hpp"
 
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 
 #include <utility>
 
@@ -44,6 +44,9 @@ std::string const & MultiIntervalBatchWorker::errorMessage() const {
     return _error_message;
 }
 
+/**
+ * @brief Executes batch inference over all intervals on the worker thread.
+ */
 void MultiIntervalBatchWorker::run() {
     // Ensure CUDA context on this worker thread (see BatchInferenceWorker).
     //SlotAssembler::initDeviceForCurrentThread();

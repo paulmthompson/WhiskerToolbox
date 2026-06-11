@@ -7,8 +7,8 @@
 
 #include "BatchInferenceWorker.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
-#include "DeepLearning_Widget/Core/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "DeepLearning_Widget/Inference/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Inference/WriteReservation.hpp"
 #include "MultiIntervalBatchWorker.hpp"
 
@@ -35,7 +35,9 @@ struct InferenceController::Impl {
 
     QThread * _batch_worker = nullptr;
 
-    /// Shared cancellation flag; set by cancel(), read by the active worker.
+    /**
+     * @brief Shared cancellation flag; set by cancel(), read by the active worker.
+     */
     std::shared_ptr<std::atomic<bool>> _cancel_flag =
             std::make_shared<std::atomic<bool>>(false);
 };

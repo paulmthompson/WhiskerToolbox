@@ -9,8 +9,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/ConstraintEnforcer.hpp
     Core/ConstraintEnforcer.cpp
     Core/DeepLearningBindingData.hpp
-    Core/ResultProcessor.hpp
-    Core/ResultProcessor.cpp
     Core/DeepLearningParamSchemas.hpp
     Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningParamSchemasUIHints.hpp
@@ -26,6 +24,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Inference/InferenceController.cpp
     Inference/MultiIntervalBatchWorker.hpp
     Inference/MultiIntervalBatchWorker.cpp
+    Inference/ResultProcessor.hpp
+    Inference/ResultProcessor.cpp
 
     UI/DeepLearningViewWidget.hpp
     UI/DeepLearningViewWidget.cpp

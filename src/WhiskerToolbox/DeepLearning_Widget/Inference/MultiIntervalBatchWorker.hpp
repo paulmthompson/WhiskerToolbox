@@ -12,11 +12,11 @@
  * @see BatchInferenceWorker
  */
 
-#include "Core/DeepLearningBindingData.hpp"     // SlotBindingData, OutputBindingData, StaticInputData
-#include "Core/MediaOverrides.hpp"              // MediaOverrides
-#include "Inference/WriteReservation.hpp"       // WriteReservation
+#include "Core/DeepLearningBindingData.hpp"// SlotBindingData, OutputBindingData, StaticInputData
+#include "Core/MediaOverrides.hpp"         // MediaOverrides
+#include "Inference/WriteReservation.hpp"  // WriteReservation
 
-#include "CoreGeometry/ImageSize.hpp"            // ImageSize
+#include "CoreGeometry/ImageSize.hpp"// ImageSize
 
 #include <QThread>
 
@@ -30,16 +30,22 @@
 class DataManager;
 class SlotAssembler;
 
-/// Runs offline batch inference over multiple frame intervals on a QThread.
+/**
+ * @brief Runs offline batch inference over multiple frame intervals on a QThread.
+ */
 class MultiIntervalBatchWorker : public QThread {
     Q_OBJECT
 
 public:
-    /// @param assembler Non-owning pointer; caller retains ownership.
-    /// @param dm Non-owning DataManager for encoding inputs and writing outputs.
-    /// @param reservation Shared buffer for progressive result delivery.
-    /// @param cancel_flag Shared flag polled between batches; set by InferenceController::cancel().
-    /// @param parent Optional QObject parent.
+    /**
+     * @brief Constructor for MultiIntervalBatchWorker.
+     *
+     * @param assembler Non-owning pointer; caller retains ownership.
+     * @param dm Non-owning DataManager for encoding inputs and writing outputs.
+     * @param reservation Shared buffer for progressive result delivery.
+     * @param cancel_flag Shared flag polled between batches; set by InferenceController::cancel().
+     * @param parent Optional QObject parent.
+     */
     MultiIntervalBatchWorker(
             SlotAssembler * assembler,
             DataManager * dm,
@@ -54,17 +60,26 @@ public:
             std::shared_ptr<std::atomic<bool>> cancel_flag,
             QObject * parent = nullptr);
 
-    /// Whether all intervals completed without error.
+    /**
+     * @brief Whether all intervals completed without error.
+     */
     [[nodiscard]] bool success() const;
 
-    /// Non-empty when success() is false.
+    /**
+     * @brief Non-empty when success() is false.
+     */
     [[nodiscard]] std::string const & errorMessage() const;
 
 signals:
-    /// Emitted during batch inference; progress is cumulative across intervals.
+    /**
+     * @brief Emitted during batch inference; progress is cumulative across intervals.
+     */
     void progressChanged(int current, int total);
 
 protected:
+    /**
+     * @brief Executes batch inference over all intervals on the worker thread.
+     */
     void run() override;
 
 private:

@@ -47,6 +47,9 @@ std::string const & BatchInferenceWorker::errorMessage() const {
     return _error_message;
 }
 
+/**
+ * @brief Executes batch inference on the worker thread.
+ */
 void BatchInferenceWorker::run() {
     // Ensure the CUDA runtime context is initialized on this worker
     // thread. On Windows, CUDA per-thread state is not inherited

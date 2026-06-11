@@ -18,22 +18,31 @@
  * @brief Serializable binding for a dynamic (per-frame) model input slot.
  */
 struct SlotBindingData {
-    std::string slot_name;      ///< Model input slot name (e.g. "encoder_image")
-    std::string data_key;       ///< DataManager key (e.g. "media/video_1")
-    std::string encoder_id;     ///< Encoder factory key (e.g. "ImageEncoder")
-    std::string mode = "Raw";   ///< "Raw", "Binary", "Heatmap"
-    float gaussian_sigma = 2.0f;///< Gaussian sigma (Heatmap mode only)
-    bool normalize = true;      ///< Normalize encoder output to [0, 1]
-    int time_offset = 0;        ///< Temporal offset applied per frame (e.g. -1 for previous frame)
+    /** Model input slot name (e.g. "encoder_image") */
+    std::string slot_name;
+    /** DataManager key (e.g. "media/video_1") */
+    std::string data_key;
+    /** Encoder factory key (e.g. "ImageEncoder") */
+    std::string encoder_id;
+    /** "Raw", "Binary", "Heatmap" */
+    std::string mode = "Raw";
+    /** Gaussian sigma (Heatmap mode only) */
+    float gaussian_sigma = 2.0f;
+    /** Normalize encoder output to [0, 1] */
+    bool normalize = true;
+    /** Temporal offset applied per frame (e.g. -1 for previous frame) */
+    int time_offset = 0;
 };
 
-/// Compute the effective frame index for a dynamic input slot.
-///
-/// Combines the current frame, batch index, and temporal offset, then
-/// clamps the result to [0, max_frame].
-///
-/// @pre max_frame >= 0
-/// @return Frame index clamped to [0, max_frame]
+/**
+ * @brief Compute the effective frame index for a dynamic input slot.
+ *
+ * Combines the current frame, batch index, and temporal offset, then
+ * clamps the result to [0, max_frame].
+ *
+ * @pre max_frame >= 0
+ * @return Frame index clamped to [0, max_frame]
+ */
 inline int computeEncodingFrame(
         int current_frame, int batch_index, int time_offset, int max_frame) {
     return std::clamp(current_frame + batch_index + time_offset, 0, max_frame);
@@ -43,21 +52,30 @@ inline int computeEncodingFrame(
  * @brief Serializable binding for a model output slot.
  */
 struct OutputBindingData {
-    std::string slot_name; ///< Model output slot name
-    std::string data_key;  ///< DataManager key to write results into
-    std::string decoder_id;///< Decoder factory key (e.g. "TensorToMask2D")
-    float threshold = 0.5f;///< Mask/line threshold
-    bool subpixel = true;  ///< Point subpixel refinement
+    /** Model output slot name */
+    std::string slot_name;
+    /** DataManager key to write results into */
+    std::string data_key;
+    /** Decoder factory key (e.g. "TensorToMask2D") */
+    std::string decoder_id;
+    /** Mask/line threshold */
+    float threshold = 0.5f;
+    /** Point subpixel refinement */
+    bool subpixel = true;
 };
 
-/// Capture mode for static (memory) model inputs.
-///
-/// - Relative: re-encodes at `current_frame + time_offset` every invocation.
-/// - Absolute: encodes once at a user-chosen frame; the tensor is cached and
-///   reused on subsequent invocations without re-encoding.
+/**
+ * @brief Capture mode for static (memory) model inputs.
+ *
+ * - Relative: re-encodes at `current_frame + time_offset` every invocation.
+ * - Absolute: encodes once at a user-chosen frame; the tensor is cached and
+ *   reused on subsequent invocations without re-encoding.
+ */
 enum class CaptureMode {
-    Relative,///< Re-encode each run (default, original behaviour)
-    Absolute ///< Encode once, cache, and reuse
+    /** Re-encode each run (default, original behaviour) */
+    Relative,
+    /** Encode once, cache, and reuse */
+    Absolute
 };
 
 /**
@@ -74,10 +92,12 @@ enum class CaptureMode {
     return s == "Absolute" ? CaptureMode::Absolute : CaptureMode::Relative;
 }
 
-/// Build a cache key for a static input entry.
-///
-/// Used by SlotAssembler to index into its tensor cache.
-/// Format: "slot_name:memory_index"
+/**
+ * @brief Build a cache key for a static input entry.
+ *
+ * Used by SlotAssembler to index into its tensor cache.
+ * Format: "slot_name:memory_index"
+ */
 [[nodiscard]] inline std::string staticCacheKey(
         std::string const & slot_name, int memory_index) {
     return slot_name + ":" + std::to_string(memory_index);
@@ -87,13 +107,20 @@ enum class CaptureMode {
  * @brief Serializable entry for a static (memory) model input.
  */
 struct StaticInputData {
-    std::string slot_name;                    ///< Static slot name (e.g. "memory_images")
-    int memory_index = 0;                     ///< Position in the memory buffer
-    std::string data_key;                     ///< DataManager source key
-    int time_offset = 0;                      ///< Relative frame offset (e.g. -1)
-    bool active = true;                       ///< For boolean mask slots
-    std::string capture_mode_str = "Relative";///< "Relative" or "Absolute" (serialization-friendly)
-    int captured_frame = -1;                  ///< Frame that was captured (Absolute mode only, -1 = not captured)
+    /** Static slot name (e.g. "memory_images") */
+    std::string slot_name;
+    /** Position in the memory buffer */
+    int memory_index = 0;
+    /** DataManager source key */
+    std::string data_key;
+    /** Relative frame offset (e.g. -1) */
+    int time_offset = 0;
+    /** For boolean mask slots */
+    bool active = true;
+    /** "Relative" or "Absolute" (serialization-friendly) */
+    std::string capture_mode_str = "Relative";
+    /** Frame that was captured (Absolute mode only, -1 = not captured) */
+    int captured_frame = -1;
 
     /**
      * @brief Get the capture mode as an enum.
@@ -111,20 +138,25 @@ struct StaticInputData {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// Recurrent (Feedback) Inputs — Phase 4
+// Recurrent (Feedback) Inputs
 // ════════════════════════════════════════════════════════════════════════════
 
-/// Initialization mode for a recurrent (feedback) input at t=0.
-///
-/// - Zeros: start with an all-zeros tensor matching the input slot shape.
-/// - StaticCapture: use a user-provided captured tensor (e.g., ground-truth
-///   mask at a reference frame).
-/// - FirstOutput: run the model once with zeros, discard the decoded result,
-///   use the raw output tensor as the initial state for the real sequence.
+/**
+ * @brief Initialization mode for a recurrent (feedback) input at t=0.
+ *
+ * - Zeros: start with an all-zeros tensor matching the input slot shape.
+ * - StaticCapture: use a user-provided captured tensor (e.g., ground-truth
+ *   mask at a reference frame).
+ * - FirstOutput: run the model once with zeros, discard the decoded result,
+ *   use the raw output tensor as the initial state for the real sequence.
+ */
 enum class RecurrentInitMode {
-    Zeros,        ///< Initialize with all-zeros tensor
-    StaticCapture,///< Use a user-captured tensor from a specific frame
-    FirstOutput   ///< Run once with zeros, use raw output as initial state
+    /** Initialize with all-zeros tensor */
+    Zeros,
+    /** Use a user-captured tensor from a specific frame */
+    StaticCapture,
+    /** Run once with zeros, use raw output as initial state */
+    FirstOutput
 };
 
 /**
@@ -150,34 +182,46 @@ enum class RecurrentInitMode {
     return RecurrentInitMode::Zeros;
 }
 
-/// Build a cache key for a recurrent binding's carried tensor.
-///
-/// Format: "recurrent:input_slot_name"
+/**
+ * @brief Build a cache key for a recurrent binding's carried tensor.
+ *
+ * Format: "recurrent:input_slot_name"
+ */
 [[nodiscard]] inline std::string recurrentCacheKey(
         std::string const & input_slot_name) {
     return "recurrent:" + input_slot_name;
 }
 
-/// Serializable binding that maps a model output slot back to an input slot
-/// for sequential frame-by-frame processing.
-///
-/// The prediction at frame t becomes an input at frame t+1.
-///
-/// When `target_memory_index >= 0`, the recurrent output is injected into a
-/// specific position along the sequence dimension of the input slot rather
-/// than replacing the entire slot tensor. This enables hybrid sequence inputs
-/// where some positions are static captures and others are recurrent.
+/**
+ * @brief Serializable binding that maps a model output slot back to an input slot
+ *        for sequential frame-by-frame processing.
+ *
+ * The prediction at frame t becomes an input at frame t+1.
+ *
+ * When `target_memory_index >= 0`, the recurrent output is injected into a
+ * specific position along the sequence dimension of the input slot rather
+ * than replacing the entire slot tensor. This enables hybrid sequence inputs
+ * where some positions are static captures and others are recurrent.
+ */
 struct RecurrentBindingData {
-    std::string input_slot_name;        ///< Model input slot to feed into
-    std::string output_slot_name;       ///< Model output slot to read from
-    std::string init_mode_str = "Zeros";///< "Zeros", "StaticCapture", or "FirstOutput"
-    std::string init_data_key;          ///< DataManager key for StaticCapture init mode
-    int init_frame = -1;                ///< Frame to capture for StaticCapture init mode
+    /** Model input slot to feed into */
+    std::string input_slot_name;
+    /** Model output slot to read from */
+    std::string output_slot_name;
+    /** "Zeros", "StaticCapture", or "FirstOutput" */
+    std::string init_mode_str = "Zeros";
+    /** DataManager key for StaticCapture init mode */
+    std::string init_data_key;
+    /** Frame to capture for StaticCapture init mode */
+    int init_frame = -1;
 
-    /// Target position along the sequence dimension for hybrid mode.
-    /// When >= 0, the recurrent output is placed at this specific sequence
-    /// position instead of replacing the entire input slot tensor.
-    /// When < 0 (default), the recurrent output replaces the full slot.
+    /**
+     * Target position along the sequence dimension for hybrid mode.
+     *
+     * When >= 0, the recurrent output is placed at this specific sequence
+     * position instead of replacing the entire input slot tensor.
+     * When < 0 (default), the recurrent output replaces the full slot.
+     */
     int target_memory_index = -1;
 
     /**
