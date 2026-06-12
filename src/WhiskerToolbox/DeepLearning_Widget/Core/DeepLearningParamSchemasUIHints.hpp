@@ -20,6 +20,16 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 
 template<>
+struct ParameterUIHints<dl::widget::DataBankStaticSourceParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::widget::DataManagerStaticSourceParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
 struct ParameterUIHints<dl::widget::DynamicInputSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
@@ -41,11 +51,6 @@ struct ParameterUIHints<dl::widget::RecurrentBindingSlotParams> {
 
 template<>
 struct ParameterUIHints<dl::widget::RecurrentSequenceEntryParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::RelativeCaptureParams> {
     static void annotate(ParameterSchema & schema);
 };
 

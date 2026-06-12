@@ -29,38 +29,45 @@ inline int computeEncodingFrame(
 }
 
 /**
- * @brief Capture mode for static (memory) model inputs.
+ * @brief How a static (memory) model input resolves its tensor data.
  *
- * - Relative: re-encodes at `current_frame + time_offset` every invocation.
- * - Absolute: encodes once at a user-chosen frame; the tensor is cached and
- *   reused on subsequent invocations without re-encoding.
+ * - DataManager: re-encodes from a DataManager key at
+ *   `current_frame + time_offset` every invocation.
+ * - DataBank: reuses a pre-encoded tensor from a named `dl::DataBank` entry.
  */
-enum class CaptureMode {
-    /** Re-encode each run (default, original behaviour) */
-    Relative,
-    /** Encode once, cache, and reuse */
-    Absolute
+enum class StaticInputSource {
+    DataManager,
+    DataBank
 };
 
 /**
- * @brief Convert CaptureMode to a string for serialization.
+ * @brief Convert StaticInputSource to a string for serialization.
  */
-[[nodiscard]] inline std::string captureModeToString(CaptureMode mode) {
-    return mode == CaptureMode::Absolute ? "Absolute" : "Relative";
+[[nodiscard]] inline std::string staticInputSourceToString(StaticInputSource source) {
+    return source == StaticInputSource::DataBank ? "DataBank" : "DataManager";
 }
 
 /**
- * @brief Convert a string to CaptureMode (defaults to Relative on unknown input).
+ * @brief Convert a string to StaticInputSource (defaults to DataManager).
  */
-[[nodiscard]] inline CaptureMode captureModeFromString(std::string const & s) {
-    return s == "Absolute" ? CaptureMode::Absolute : CaptureMode::Relative;
+[[nodiscard]] inline StaticInputSource staticInputSourceFromString(
+        std::string const & s) {
+    return s == "DataBank" ? StaticInputSource::DataBank
+                           : StaticInputSource::DataManager;
+}
+
+/**
+ * @brief Default DataBank entry ID for a static slot position.
+ */
+[[nodiscard]] inline std::string defaultBankEntryId(
+        std::string const & slot_name, int memory_index) {
+    return slot_name + "_" + std::to_string(memory_index);
 }
 
 /**
  * @brief Build a cache key for a static input entry.
  *
- * Used by SlotAssembler to index into its tensor cache.
- * Format: "slot_name:memory_index"
+ * Legacy format used by recurrent hybrid resolution: "slot_name:memory_index".
  */
 [[nodiscard]] inline std::string staticCacheKey(
         std::string const & slot_name, int memory_index) {
@@ -75,36 +82,67 @@ struct StaticInputData {
     std::string slot_name;
     /** Position in the memory buffer */
     int memory_index = 0;
-    /** DataManager source key */
+    /** "DataManager" or "DataBank" */
+    std::string source_type_str = "DataManager";
+    /** DataManager source key (DataManager mode) */
     std::string data_key;
-    /**
-     * Named DataBank entry ID (from dl::DataBank).
-     *
-     * When non-empty, static input resolution prefers the bank entry over
-     * legacy per-slot tensor cache. Empty means no bank binding.
-     */
+    /** Named DataBank entry ID (DataBank mode) */
     std::string bank_entry_id;
-    /** Relative frame offset (e.g. -1) */
+    /** Relative frame offset (DataManager mode) */
     int time_offset = 0;
     /** For boolean mask slots */
     bool active = true;
-    /** "Relative" or "Absolute" (serialization-friendly) */
-    std::string capture_mode_str = "Relative";
-    /** Frame that was captured (Absolute mode only, -1 = not captured) */
-    int captured_frame = -1;
 
     /**
-     * @brief Get the capture mode as an enum.
+     * @brief Legacy capture mode string from workspace JSON ("Relative"/"Absolute").
+     *
+     * Read during deserialization for migration only; new bindings use
+     * @p source_type_str instead.
      */
-    [[nodiscard]] CaptureMode captureMode() const {
-        return captureModeFromString(capture_mode_str);
+    std::string capture_mode_str;
+
+    /**
+     * @brief Get the resolved source type, migrating legacy capture_mode_str.
+     */
+    [[nodiscard]] StaticInputSource sourceType() const {
+        if (source_type_str == "DataBank") {
+            return StaticInputSource::DataBank;
+        }
+        if (capture_mode_str == "Absolute") {
+            return StaticInputSource::DataBank;
+        }
+        return StaticInputSource::DataManager;
     }
 
     /**
-     * @brief Set the capture mode from an enum.
+     * @brief Set the source type for serialization.
      */
-    void setCaptureMode(CaptureMode mode) {
-        capture_mode_str = captureModeToString(mode);
+    void setSourceType(StaticInputSource source) {
+        source_type_str = staticInputSourceToString(source);
+        capture_mode_str.clear();
+    }
+
+    /**
+     * @brief Whether this entry has enough configuration to participate in assembly.
+     */
+    [[nodiscard]] bool hasActiveSource() const {
+        if (sourceType() == StaticInputSource::DataBank) {
+            return !bank_entry_id.empty();
+        }
+        return !data_key.empty();
+    }
+
+    /**
+     * @brief Resolve the bank entry ID, applying legacy migration defaults.
+     */
+    [[nodiscard]] std::string resolvedBankEntryId() const {
+        if (!bank_entry_id.empty()) {
+            return bank_entry_id;
+        }
+        if (sourceType() == StaticInputSource::DataBank) {
+            return defaultBankEntryId(slot_name, memory_index);
+        }
+        return {};
     }
 };
 

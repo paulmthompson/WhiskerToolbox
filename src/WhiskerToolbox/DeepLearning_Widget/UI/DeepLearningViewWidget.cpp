@@ -62,7 +62,7 @@ void DeepLearningViewWidget::_buildUi() {
     main->addWidget(_progress_bar);
 }
 
-void DeepLearningViewWidget::refreshCachePreview() {
+void DeepLearningViewWidget::refreshDataBankView() {
     _progress_bar->setVisible(false);
     if (_data_bank_view) {
         _data_bank_view->refresh();

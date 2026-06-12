@@ -114,9 +114,9 @@ void registerTypes(EditorRegistry * registry,
                                                      props, &DeepLearningPropertiesWidget::onTimeChanged);
                                 }
 
-                                // Connect static cache changes to view widget preview
-                                QObject::connect(props, &DeepLearningPropertiesWidget::staticCacheChanged,
-                                                 view, &DeepLearningViewWidget::refreshCachePreview);
+                                // Connect DataBank changes to view widget preview
+                                QObject::connect(props, &DeepLearningPropertiesWidget::dataBankChanged,
+                                                 view, &DeepLearningViewWidget::refreshDataBankView);
 
                                 // Connect recurrent progress reporting
                                 QObject::connect(props, &DeepLearningPropertiesWidget::recurrentProgressChanged,

@@ -24,6 +24,7 @@ add_executable(test_dl_widgets
     EncoderShapeWidget.test.cpp
     RecurrentBindingWidget.test.cpp
     StaticInputSlotWidget.test.cpp
+    DataBankPropertiesWidget.test.cpp
     BindingConversion.test.cpp
     SequenceSlotWidget.test.cpp
     ConstraintEnforcer.test.cpp

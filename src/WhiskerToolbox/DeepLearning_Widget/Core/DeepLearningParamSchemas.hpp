@@ -21,31 +21,31 @@
 namespace dl::widget {
 
 // ============================================================================
-// Capture Mode — how a static input is acquired (Relative vs Absolute)
+// Static input source — DataManager-relative vs DataBank entry
 // ============================================================================
 
 /**
- * @brief Relative capture to encode data at (current_frame + time_offset) each run.
+ * @brief Re-encode from DataManager at (current_frame + time_offset) each run.
  */
-struct RelativeCaptureParams {
+struct DataManagerStaticSourceParams {
+    std::string data_key;
     int time_offset = 0;///< Temporal offset from the current frame
 };
 
 /**
- * @brief Absolute capture to encode data once at a chosen frame and cache the tensor.
- *
- * The captured frame index is stored in `StaticInputData::captured_frame` and set
- * by the "Capture Current Frame" button — not in this params struct.
+ * @brief Reuse a pre-encoded tensor from a named DataBank entry.
  */
-struct AbsoluteCaptureParams {};
+struct DataBankStaticSourceParams {
+    std::string bank_entry_id;
+};
 
 /**
- * @brief Tagged union discriminated by "capture_mode".
+ * @brief Tagged union discriminated by "static_source".
  */
-using CaptureModeVariant = rfl::TaggedUnion<
-        "capture_mode",
-        RelativeCaptureParams,
-        AbsoluteCaptureParams>;
+using StaticInputSourceVariant = rfl::TaggedUnion<
+        "static_source",
+        DataManagerStaticSourceParams,
+        DataBankStaticSourceParams>;
 
 // ============================================================================
 // Recurrent Init Mode — how recurrent (feedback) state is initialized at t=0
@@ -84,12 +84,16 @@ using RecurrentInitVariant = rfl::TaggedUnion<
 
 /**
  * @brief A sequence entry sourced from a DataManager data object (static data).
+ *
+ * Uses flat fields (not StaticInputSourceVariant) because AutoParamWidget
+ * does not yet support nested tagged unions inside variant alternatives.
  */
 struct StaticSequenceEntryParams {
-    std::string data_key;                     ///< DataManager key
-    std::string bank_entry_id;                ///< Named dl::DataBank entry (optional)
-    std::string capture_mode_str = "Relative";///< "Relative" or "Absolute"
-    int time_offset = 0;                      ///< Used in Relative mode
+    /// "DataManager" or "DataBank" (not the SequenceEntryVariant discriminator)
+    std::string static_source_kind = "DataManager";
+    std::string data_key;      ///< DataManager key (DataManager mode)
+    std::string bank_entry_id; ///< DataBank entry ID (DataBank mode)
+    int time_offset = 0;       ///< Temporal offset (DataManager mode)
 };
 
 /**
@@ -216,9 +220,7 @@ struct DynamicInputSlotParams {
  * @brief Full configuration for one non-sequence static (memory) input slot.
  */
 struct StaticInputSlotParams {
-    std::string source;                                       ///< DataManager key (dynamic combo)
-    std::string bank_entry_id;                                ///< Named dl::DataBank entry (optional)
-    CaptureModeVariant capture_mode = RelativeCaptureParams{};///< Relative or Absolute capture mode
+    StaticInputSourceVariant source = DataManagerStaticSourceParams{};
 };
 
 /**

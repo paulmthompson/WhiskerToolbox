@@ -8,10 +8,26 @@
 
 #include "DeepLearningParamSchemasUIHints.hpp"
 
-void ParameterUIHints<dl::widget::RelativeCaptureParams>::annotate(
+void ParameterUIHints<dl::widget::DataManagerStaticSourceParams>::annotate(
         ParameterSchema & schema) {
+    if (auto * f = schema.field("data_key")) {
+        f->display_name = "Data Source";
+        f->tooltip = "DataManager key to re-encode each run";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
+    }
     if (auto * f = schema.field("time_offset")) {
         f->tooltip = "Temporal offset from the current frame";
+    }
+}
+
+void ParameterUIHints<dl::widget::DataBankStaticSourceParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("bank_entry_id")) {
+        f->display_name = "Bank Entry";
+        f->tooltip = "Named DataBank entry with a pre-encoded tensor";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
 }
 
@@ -29,18 +45,24 @@ void ParameterUIHints<dl::widget::StaticCaptureInitParams>::annotate(
 
 void ParameterUIHints<dl::widget::StaticSequenceEntryParams>::annotate(
         ParameterSchema & schema) {
+    if (auto * f = schema.field("static_source_kind")) {
+        f->display_name = "Source";
+        f->tooltip =
+                "DataManager-relative encoding or a pre-captured DataBank entry";
+        f->allowed_values = {"DataManager", "DataBank"};
+    }
     if (auto * f = schema.field("data_key")) {
         f->tooltip = "DataManager key for this sequence entry";
         f->dynamic_combo = true;
         f->include_none_sentinel = true;
     }
-    if (auto * f = schema.field("capture_mode_str")) {
-        f->display_name = "Capture Mode";
-        f->tooltip = "Relative: re-encode each run; Absolute: capture once";
-        f->allowed_values = {"Relative", "Absolute"};
+    if (auto * f = schema.field("bank_entry_id")) {
+        f->tooltip = "Named DataBank entry with a pre-encoded tensor";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
     if (auto * f = schema.field("time_offset")) {
-        f->tooltip = "Temporal offset from the current frame (Relative mode)";
+        f->tooltip = "Temporal offset from the current frame (DataManager mode)";
     }
 }
 
@@ -69,15 +91,9 @@ void ParameterUIHints<dl::widget::SequenceEntryParams>::annotate(
 void ParameterUIHints<dl::widget::StaticInputSlotParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("source")) {
-        f->display_name = "Data Source";
-        f->tooltip = "DataManager key for the static input data";
-        f->dynamic_combo = true;
-        f->include_none_sentinel = true;
-    }
-    if (auto * f = schema.field("capture_mode")) {
+        f->display_name = "Source";
         f->tooltip =
-                "Relative: re-encode each run at current_frame + offset.\n"
-                "Absolute: capture once at a chosen frame and reuse.";
+                "DataManager-relative encoding or a pre-captured DataBank entry";
     }
 }
 
@@ -155,4 +171,3 @@ void ParameterUIHints<dl::widget::RecurrentBindingSlotParams>::annotate(
                 "• First Output: run model once with zeros, use output as init";
     }
 }
-

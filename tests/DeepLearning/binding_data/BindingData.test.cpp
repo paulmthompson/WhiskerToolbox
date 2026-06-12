@@ -71,26 +71,28 @@ TEST_CASE("computeEncodingFrame - exact boundaries are not clamped",
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// CaptureMode
+// StaticInputSource
 // ════════════════════════════════════════════════════════════════════════════
 
-TEST_CASE("CaptureMode - captureModeToString round trips",
-          "[binding_data][capture_mode]") {
-    CHECK(captureModeToString(CaptureMode::Relative) == "Relative");
-    CHECK(captureModeToString(CaptureMode::Absolute) == "Absolute");
+TEST_CASE("StaticInputSource - staticInputSourceToString round trips",
+          "[binding_data][static_source]") {
+    CHECK(staticInputSourceToString(StaticInputSource::DataManager) ==
+          "DataManager");
+    CHECK(staticInputSourceToString(StaticInputSource::DataBank) == "DataBank");
 }
 
-TEST_CASE("CaptureMode - captureModeFromString round trips",
-          "[binding_data][capture_mode]") {
-    CHECK(captureModeFromString("Relative") == CaptureMode::Relative);
-    CHECK(captureModeFromString("Absolute") == CaptureMode::Absolute);
+TEST_CASE("StaticInputSource - staticInputSourceFromString round trips",
+          "[binding_data][static_source]") {
+    CHECK(staticInputSourceFromString("DataManager") ==
+          StaticInputSource::DataManager);
+    CHECK(staticInputSourceFromString("DataBank") == StaticInputSource::DataBank);
 }
 
-TEST_CASE("CaptureMode - captureModeFromString defaults to Relative on unknown",
-          "[binding_data][capture_mode]") {
-    CHECK(captureModeFromString("") == CaptureMode::Relative);
-    CHECK(captureModeFromString("unknown") == CaptureMode::Relative);
-    CHECK(captureModeFromString("absolute") == CaptureMode::Relative);// case-sensitive
+TEST_CASE("StaticInputSource - unknown string defaults to DataManager",
+          "[binding_data][static_source]") {
+    CHECK(staticInputSourceFromString("") == StaticInputSource::DataManager);
+    CHECK(staticInputSourceFromString("unknown") ==
+          StaticInputSource::DataManager);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -98,27 +100,45 @@ TEST_CASE("CaptureMode - captureModeFromString defaults to Relative on unknown",
 // ════════════════════════════════════════════════════════════════════════════
 
 TEST_CASE("StaticInputData - defaults",
-          "[binding_data][capture_mode]") {
+          "[binding_data][static_source]") {
     StaticInputData const si;
-    CHECK(si.capture_mode_str == "Relative");
-    CHECK(si.captured_frame == -1);
-    CHECK(si.captureMode() == CaptureMode::Relative);
+    CHECK(si.source_type_str == "DataManager");
+    CHECK(si.sourceType() == StaticInputSource::DataManager);
     CHECK(si.time_offset == 0);
     CHECK(si.memory_index == 0);
     CHECK(si.active == true);
     CHECK(si.bank_entry_id.empty());
+    CHECK_FALSE(si.hasActiveSource());
 }
 
-TEST_CASE("StaticInputData - setCaptureMode updates string",
-          "[binding_data][capture_mode]") {
+TEST_CASE("StaticInputData - setSourceType updates string",
+          "[binding_data][static_source]") {
     StaticInputData si;
-    si.setCaptureMode(CaptureMode::Absolute);
-    CHECK(si.capture_mode_str == "Absolute");
-    CHECK(si.captureMode() == CaptureMode::Absolute);
+    si.setSourceType(StaticInputSource::DataBank);
+    CHECK(si.source_type_str == "DataBank");
+    CHECK(si.sourceType() == StaticInputSource::DataBank);
 
-    si.setCaptureMode(CaptureMode::Relative);
-    CHECK(si.capture_mode_str == "Relative");
-    CHECK(si.captureMode() == CaptureMode::Relative);
+    si.setSourceType(StaticInputSource::DataManager);
+    CHECK(si.source_type_str == "DataManager");
+    CHECK(si.sourceType() == StaticInputSource::DataManager);
+}
+
+TEST_CASE("StaticInputData - legacy Absolute capture_mode_str migrates to DataBank",
+          "[binding_data][static_source]") {
+    StaticInputData si;
+    si.capture_mode_str = "Absolute";
+    CHECK(si.sourceType() == StaticInputSource::DataBank);
+    CHECK(si.resolvedBankEntryId() == "memory_images_0");
+}
+
+TEST_CASE("StaticInputData - resolvedBankEntryId prefers explicit bank_entry_id",
+          "[binding_data][static_source]") {
+    StaticInputData si;
+    si.slot_name = "memory_masks";
+    si.memory_index = 2;
+    si.setSourceType(StaticInputSource::DataBank);
+    si.bank_entry_id = "custom_ref";
+    CHECK(si.resolvedBankEntryId() == "custom_ref");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -232,15 +252,15 @@ TEST_CASE("StaticInputData - multiple entries per slot with different memory_ind
         si.slot_name = "memory_images";
         si.memory_index = i;
         si.data_key = "media/video_1";
-        si.setCaptureMode(CaptureMode::Absolute);
-        si.captured_frame = 10 + i;
+        si.setSourceType(StaticInputSource::DataBank);
+        si.bank_entry_id = defaultBankEntryId("memory_images", i);
         entries.push_back(std::move(si));
     }
 
     CHECK(entries.size() == 4);
     for (int i = 0; i < 4; ++i) {
         CHECK(entries[static_cast<std::size_t>(i)].memory_index == i);
-        CHECK(entries[static_cast<std::size_t>(i)].captured_frame == 10 + i);
+        CHECK(entries[static_cast<std::size_t>(i)].hasActiveSource());
     }
 }
 

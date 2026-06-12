@@ -17,6 +17,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/storage/DataBank.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
@@ -227,6 +228,15 @@ void DeepLearningPropertiesWidget::_buildUi() {
     {
         _data_bank_properties =
                 new dl::widget::DataBankPropertiesWidget(this);
+        _data_bank_properties->setAssembler(_assembler.get());
+        _data_bank_properties->setDataManager(_data_manager);
+        _data_bank_properties->setCurrentFrame(_state->currentFrame());
+        connect(_data_bank_properties,
+                &dl::widget::DataBankPropertiesWidget::dataBankChanged,
+                this, &DeepLearningPropertiesWidget::dataBankChanged);
+        connect(_data_bank_properties,
+                &dl::widget::DataBankPropertiesWidget::dataBankChanged,
+                this, &DeepLearningPropertiesWidget::_refreshBankEntryCombos);
         main_layout->addWidget(_data_bank_properties);
     }
 
@@ -257,6 +267,9 @@ void DeepLearningPropertiesWidget::_buildUi() {
 
         connect(_frame_spin, QOverload<int>::of(&QSpinBox::valueChanged),
                 _state.get(), &DeepLearningState::setCurrentFrame);
+        connect(_frame_spin, QOverload<int>::of(&QSpinBox::valueChanged),
+                _data_bank_properties,
+                &dl::widget::DataBankPropertiesWidget::setCurrentFrame);
 
         bar->addWidget(new QLabel(tr("Batch:"), this));
         _batch_size_spin = new QSpinBox(this);
@@ -461,12 +474,8 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
         }
     }
 
-    // Notify all static input slot widgets of model readiness (enables capture button)
-    for (auto * slot_widget: _static_input_widgets) {
-        slot_widget->setModelReady(ready);
-    }
-    for (auto * seq_widget: _sequence_slot_widgets) {
-        seq_widget->setModelReady(ready);
+    if (_data_bank_properties) {
+        _data_bank_properties->setModelReady(ready);
     }
 }
 
@@ -610,19 +619,6 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                         &dl::widget::SequenceSlotWidget::bindingChanged,
                         this,
                         &DeepLearningPropertiesWidget::_syncBindingsFromUi);
-                connect(seq_widget,
-                        &dl::widget::SequenceSlotWidget::captureRequested,
-                        this,
-                        &DeepLearningPropertiesWidget::_onCaptureSequenceEntry);
-                connect(seq_widget,
-                        &dl::widget::SequenceSlotWidget::captureInvalidated,
-                        this,
-                        [this](std::string const & slot_name, int memory_index) {
-                            auto const key =
-                                    staticCacheKey(slot_name, memory_index);
-                            _assembler->clearStaticCacheEntry(key);
-                            emit staticCacheChanged();
-                        });
                 _sequence_slot_widgets.push_back(seq_widget);
                 _dynamic_layout->addWidget(seq_widget);
             } else {
@@ -633,18 +629,6 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                         &dl::widget::StaticInputSlotWidget::bindingChanged,
                         this,
                         &DeepLearningPropertiesWidget::_syncBindingsFromUi);
-                connect(slot_widget,
-                        &dl::widget::StaticInputSlotWidget::captureRequested,
-                        this,
-                        &DeepLearningPropertiesWidget::_onCaptureStaticInput);
-                connect(slot_widget,
-                        &dl::widget::StaticInputSlotWidget::captureInvalidated,
-                        this,
-                        [this](std::string const & slot_name) {
-                            auto const key = staticCacheKey(slot_name, 0);
-                            _assembler->clearStaticCacheEntry(key);
-                            emit staticCacheChanged();
-                        });
                 _static_input_widgets.push_back(slot_widget);
                 _dynamic_layout->addWidget(slot_widget);
             }
@@ -727,6 +711,17 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     // Apply initial consistency (honours saved post-encoder state)
     _enforcePostEncoderDecoderConsistency();
+
+    if (_data_bank_properties) {
+        std::vector<dl::TensorSlotDescriptor> static_slots;
+        for (auto const & slot: inputs) {
+            if (slot.is_static && !slot.is_boolean_mask) {
+                static_slots.push_back(slot);
+            }
+        }
+        _data_bank_properties->setStaticSlots(static_slots);
+        _refreshBankEntryCombos();
+    }
 
     _dynamic_layout->addStretch();
 }
@@ -850,6 +845,28 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     if (_post_encoder_widget) {
         _post_encoder_widget->refreshDataSources();
     }
+
+    if (_data_bank_properties) {
+        _data_bank_properties->refreshDataSources();
+    }
+}
+
+void DeepLearningPropertiesWidget::_refreshBankEntryCombos() {
+    if (!_assembler) {
+        return;
+    }
+
+    std::vector<std::string> const bank_ids = _assembler->dataBank().ids();
+    for (auto * slot_widget: _static_input_widgets) {
+        slot_widget->refreshBankEntries(bank_ids);
+    }
+    for (auto * seq_widget: _sequence_slot_widgets) {
+        seq_widget->refreshBankEntries(bank_ids);
+    }
+
+    if (_data_bank_properties) {
+        _data_bank_properties->refreshCaptureStatus();
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -892,15 +909,6 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
             for (auto const * seq_widget: _sequence_slot_widgets) {
                 if (seq_widget->slotName() != slot.name) continue;
                 for (auto si: seq_widget->getStaticInputs()) {
-                    if (si.captured_frame < 0) {
-                        for (auto const & prev: _state->staticInputs()) {
-                            if (prev.slot_name == slot.name &&
-                                prev.memory_index == si.memory_index) {
-                                si.captured_frame = prev.captured_frame;
-                                break;
-                            }
-                        }
-                    }
                     static_inputs.push_back(std::move(si));
                 }
                 for (auto const & rb: seq_widget->getRecurrentBindings()) {
@@ -912,16 +920,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
             for (auto const * w: _static_input_widgets) {
                 if (w->slotName() != slot.name) continue;
                 auto si = dl::conversion::fromStaticInputParams(
-                        w->slotName(), w->params(), w->capturedFrame());
-                if (si.captured_frame < 0) {
-                    for (auto const & prev: _state->staticInputs()) {
-                        if (prev.slot_name == slot.name) {
-                            si.captured_frame = prev.captured_frame;
-                            break;
-                        }
-                    }
-                }
-                if (!si.data_key.empty() && si.data_key != "(None)") {
+                        w->slotName(), w->params());
+                if (si.hasActiveSource()) {
                     static_inputs.push_back(std::move(si));
                 }
                 break;
@@ -1108,156 +1108,6 @@ void DeepLearningPropertiesWidget::_onInferenceRunningChanged(bool running) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Static Input Capture
-// ────────────────────────────────────────────────────────────────────────────
-
-void DeepLearningPropertiesWidget::_onCaptureStaticInput(
-        std::string const & slot_name) {
-
-    if (!_assembler->isModelReady()) {
-        QMessageBox::warning(this, tr("Not Ready"),
-                             tr("Model weights not loaded."));
-        return;
-    }
-
-    _syncBindingsFromUi();
-
-    // Find the static input entry for this slot
-    auto const & static_inputs = _state->staticInputs();
-    StaticInputData const * entry = nullptr;
-    for (auto const & si: static_inputs) {
-        if (si.slot_name == slot_name) {
-            entry = &si;
-            break;
-        }
-    }
-    if (!entry || entry->data_key.empty()) {
-        QMessageBox::warning(this, tr("No Source"),
-                             tr("Select a data source for this slot first."));
-        return;
-    }
-
-    // Determine which frame to capture
-    int frame = _state->currentFrame();
-    if (_current_time_position.has_value()) {
-        frame = static_cast<int>(_current_time_position->index.getValue());
-    }
-
-    // Determine source image size
-    ImageSize source_size{256, 256};
-    for (auto const & binding: _state->inputBindings()) {
-        auto media = _data_manager->getData<MediaData>(binding.data_key);
-        if (media) {
-            source_size = media->getImageSize();
-            break;
-        }
-    }
-
-    bool const ok = _assembler->captureStaticInput(
-            *_data_manager, *entry, frame, source_size);
-
-    // Update the captured_frame in state
-    if (ok) {
-        auto inputs = _state->staticInputs();
-        for (auto & si: inputs) {
-            if (si.slot_name == slot_name && si.memory_index == entry->memory_index) {
-                si.captured_frame = frame;
-                break;
-            }
-        }
-        _state->setStaticInputs(std::move(inputs));
-    }
-
-    // Update the StaticInputSlotWidget capture status display
-    auto const key = staticCacheKey(slot_name, 0);
-    for (auto * slot_widget: _static_input_widgets) {
-        if (slot_widget->slotName() == slot_name) {
-            if (ok && _assembler->hasStaticCacheEntry(key)) {
-                auto const range = _assembler->staticCacheTensorRange(key);
-                slot_widget->setCapturedStatus(frame, range);
-            } else {
-                slot_widget->clearCapturedStatus();
-            }
-            break;
-        }
-    }
-    emit staticCacheChanged();
-}
-
-void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
-        std::string const & slot_name, int memory_index) {
-
-    if (!_assembler->isModelReady()) {
-        QMessageBox::warning(this, tr("Not Ready"),
-                             tr("Model weights not loaded."));
-        return;
-    }
-
-    dl::widget::SequenceSlotWidget * seq_widget = nullptr;
-    for (auto * w: _sequence_slot_widgets) {
-        if (w->slotName() == slot_name) {
-            seq_widget = w;
-            break;
-        }
-    }
-    if (!seq_widget) return;
-
-    StaticInputData entry;
-    bool found = false;
-    for (auto const & si: seq_widget->getStaticInputs()) {
-        if (si.memory_index == memory_index) {
-            entry = si;
-            found = true;
-            break;
-        }
-    }
-    if (!found || entry.data_key.empty() || entry.data_key == "(None)") {
-        QMessageBox::warning(this, tr("No Source"),
-                             tr("Select a data source for this entry first."));
-        return;
-    }
-
-    int frame = _state->currentFrame();
-    if (_current_time_position.has_value()) {
-        frame = static_cast<int>(_current_time_position->index.getValue());
-    }
-
-    ImageSize source_size{256, 256};
-    for (auto const & binding: _state->inputBindings()) {
-        auto media = _data_manager->getData<MediaData>(binding.data_key);
-        if (media) {
-            source_size = media->getImageSize();
-            break;
-        }
-    }
-
-    bool const ok =
-            _assembler->captureStaticInput(*_data_manager, entry, frame,
-                                           source_size);
-
-    if (ok) {
-        auto const key = staticCacheKey(slot_name, memory_index);
-        auto const range = _assembler->hasStaticCacheEntry(key)
-                                   ? _assembler->staticCacheTensorRange(key)
-                                   : std::pair<float, float>{0.0f, 1.0f};
-        seq_widget->setCapturedStatus(memory_index, frame, range);
-        _syncBindingsFromUi();
-        auto inputs = _state->staticInputs();
-        for (auto & si: inputs) {
-            if (si.slot_name == slot_name && si.memory_index == memory_index) {
-                si.captured_frame = frame;
-                break;
-            }
-        }
-        _state->setStaticInputs(std::move(inputs));
-    } else {
-        seq_widget->clearCapturedStatus(memory_index);
-    }
-
-    emit staticCacheChanged();
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 // Batch Size Constraint
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -1363,6 +1213,11 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
 
 void DeepLearningPropertiesWidget::onTimeChanged(TimePosition const & position) {
     _current_time_position = position;
+
+    if (_data_bank_properties) {
+        _data_bank_properties->setCurrentFrame(
+                static_cast<int>(position.index.getValue()));
+    }
 
     // Enable/disable the predict current frame button based on whether we have
     // a valid time position and the model is ready

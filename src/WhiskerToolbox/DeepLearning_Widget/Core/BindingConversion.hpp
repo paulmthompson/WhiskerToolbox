@@ -22,7 +22,7 @@ namespace dl::conversion {
  * @param slot_name  Model input slot name (e.g. "encoder_image").
  * @param params     Widget-level params from DynamicInputSlotWidget.
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
@@ -35,24 +35,22 @@ namespace dl::conversion {
  * @brief Convert StaticInputSlotParams to StaticInputData.
  * @param slot_name  Model static slot name.
  * @param params     Widget-level params from StaticInputSlotWidget.
- * @param captured_frame  Frame index from last capture (-1 if never captured).
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
  */
 [[nodiscard]] StaticInputData fromStaticInputParams(
         std::string const & slot_name,
-        dl::widget::StaticInputSlotParams const & params,
-        int captured_frame);
+        dl::widget::StaticInputSlotParams const & params);
 
 /**
  * @brief Convert OutputSlotParams to OutputBindingData.
  * @param slot_name  Model output slot name.
  * @param params     Widget-level params from OutputSlotWidget.
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
@@ -66,7 +64,7 @@ namespace dl::conversion {
  * @param slot_name  Model input slot name (recurrent target).
  * @param params     Widget-level params from RecurrentBindingWidget.
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable input slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
@@ -80,9 +78,8 @@ namespace dl::conversion {
  * @param slot_name  Model sequence slot name.
  * @param memory_index  Position in the sequence.
  * @param params     Entry params from SequenceSlotWidget.
- * @param captured_frame  Frame index from last capture (-1 if never captured).
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
@@ -94,8 +91,7 @@ namespace dl::conversion {
 [[nodiscard]] StaticInputData fromStaticSequenceEntryParams(
         std::string const & slot_name,
         int memory_index,
-        dl::widget::StaticSequenceEntryParams const & params,
-        int captured_frame);
+        dl::widget::StaticSequenceEntryParams const & params);
 
 /**
  * @brief Convert RecurrentSequenceEntryParams to RecurrentBindingData.
@@ -103,7 +99,7 @@ namespace dl::conversion {
  * @param memory_index  Target position in the sequence.
  * @param params     Entry params from SequenceSlotWidget.
  * @return Binding data for SlotAssembler.
- * 
+ *
  * @pre slot_name must not be empty; an empty name produces a binding with no
  *      identifiable input slot, which SlotAssembler cannot match against the model
  *      (enforcement: none) [IMPORTANT]
@@ -133,6 +129,12 @@ namespace dl::conversion {
  * @brief Convert StaticInputData to StaticInputSlotParams.
  */
 [[nodiscard]] dl::widget::StaticInputSlotParams toStaticInputParams(
+        StaticInputData const & binding);
+
+/**
+ * @brief Convert StaticInputData to StaticSequenceEntryParams.
+ */
+[[nodiscard]] dl::widget::StaticSequenceEntryParams toStaticSequenceEntryParams(
         StaticInputData const & binding);
 
 /**

@@ -13,56 +13,62 @@
 
 
 // ============================================================================
-// CaptureModeVariant
+// StaticInputSourceVariant
 // ============================================================================
 
-TEST_CASE("CaptureModeVariant schema extraction",
-          "[dl_widget][param_schema][capture_mode]") {
+TEST_CASE("StaticInputSourceVariant schema extraction",
+          "[dl_widget][param_schema][static_source]") {
     struct Wrapper {
-        dl::widget::CaptureModeVariant capture = dl::widget::RelativeCaptureParams{};
+        dl::widget::StaticInputSourceVariant source =
+                dl::widget::DataManagerStaticSourceParams{};
     };
 
     auto schema = extractParameterSchema<Wrapper>();
     REQUIRE(schema.fields.size() == 1);
 
-    auto * f = schema.field("capture");
+    auto * f = schema.field("source");
     REQUIRE(f != nullptr);
     CHECK(f->is_variant);
     CHECK(f->type_name == "variant");
-    CHECK(f->variant_discriminator == "capture_mode");
+    CHECK(f->variant_discriminator == "static_source");
     REQUIRE(f->variant_alternatives.size() == 2);
     CHECK(f->allowed_values.size() == 2);
 
-    SECTION("RelativeCaptureParams alternative") {
+    SECTION("DataManagerStaticSourceParams alternative") {
         auto const & alt = f->variant_alternatives[0];
-        CHECK(alt.tag == "RelativeCaptureParams");
+        CHECK(alt.tag == "DataManagerStaticSourceParams");
         REQUIRE(alt.schema != nullptr);
-        CHECK(alt.schema->fields.size() == 1);
+        CHECK(alt.schema->fields.size() == 2);
+        CHECK(alt.schema->field("data_key") != nullptr);
         CHECK(alt.schema->field("time_offset") != nullptr);
     }
 
-    SECTION("AbsoluteCaptureParams has no fields") {
+    SECTION("DataBankStaticSourceParams alternative") {
         auto const & alt = f->variant_alternatives[1];
-        CHECK(alt.tag == "AbsoluteCaptureParams");
+        CHECK(alt.tag == "DataBankStaticSourceParams");
         REQUIRE(alt.schema != nullptr);
-        CHECK(alt.schema->fields.empty());
+        CHECK(alt.schema->fields.size() == 1);
+        CHECK(alt.schema->field("bank_entry_id") != nullptr);
     }
 }
 
-TEST_CASE("CaptureModeVariant JSON round-trip",
-          "[dl_widget][param_schema][capture_mode][roundtrip]") {
-    SECTION("Relative capture") {
-        dl::widget::RelativeCaptureParams params{.time_offset = -5};
-        dl::widget::CaptureModeVariant var{params};
+TEST_CASE("StaticInputSourceVariant JSON round-trip",
+          "[dl_widget][param_schema][static_source][roundtrip]") {
+    SECTION("DataManager source") {
+        dl::widget::DataManagerStaticSourceParams params{
+                .data_key = "media/video",
+                .time_offset = -5};
+        dl::widget::StaticInputSourceVariant var{params};
         auto json = rfl::json::write(var);
-        auto result = rfl::json::read<dl::widget::CaptureModeVariant>(json);
+        auto result = rfl::json::read<dl::widget::StaticInputSourceVariant>(json);
         REQUIRE(result);
     }
 
-    SECTION("Absolute capture") {
-        dl::widget::CaptureModeVariant var{dl::widget::AbsoluteCaptureParams{}};
+    SECTION("DataBank source") {
+        dl::widget::StaticInputSourceVariant var{
+                dl::widget::DataBankStaticSourceParams{.bank_entry_id = "ref_1"}};
         auto json = rfl::json::write(var);
-        auto result = rfl::json::read<dl::widget::CaptureModeVariant>(json);
+        auto result = rfl::json::read<dl::widget::StaticInputSourceVariant>(json);
         REQUIRE(result);
     }
 }
@@ -156,9 +162,9 @@ TEST_CASE("SequenceEntryVariant schema extraction",
 
     SECTION("StaticSequenceEntryParams fields") {
         auto const & s = *f->variant_alternatives[0].schema;
+        CHECK(s.field("static_source_kind") != nullptr);
         CHECK(s.field("data_key") != nullptr);
         CHECK(s.field("bank_entry_id") != nullptr);
-        CHECK(s.field("capture_mode_str") != nullptr);
         CHECK(s.field("time_offset") != nullptr);
     }
 
@@ -173,10 +179,8 @@ TEST_CASE("SequenceEntryVariant JSON round-trip",
           "[dl_widget][param_schema][sequence_entry][roundtrip]") {
     SECTION("Static entry") {
         dl::widget::StaticSequenceEntryParams params{
-                .data_key = "points/whisker",
-                .bank_entry_id = "whisker_ref",
-                .capture_mode_str = "Absolute",
-                .time_offset = 3};
+                .static_source_kind = "DataBank",
+                .bank_entry_id = "whisker_ref"};
         dl::widget::SequenceEntryVariant var{params};
         auto json = rfl::json::write(var);
         auto result = rfl::json::read<dl::widget::SequenceEntryVariant>(json);
@@ -398,16 +402,14 @@ TEST_CASE("EncoderShapeParams JSON round-trip",
 // UIHints annotation tests
 // ============================================================================
 
-TEST_CASE("StaticSequenceEntryParams UIHints annotate allowed_values",
+TEST_CASE("StaticSequenceEntryParams UIHints annotate static_source_kind field",
           "[dl_widget][param_schema][uihints]") {
     auto schema = extractParameterSchema<dl::widget::StaticSequenceEntryParams>();
 
-    auto * f = schema.field("capture_mode_str");
+    auto * f = schema.field("static_source_kind");
     REQUIRE(f != nullptr);
-    CHECK(f->display_name == "Capture Mode");
+    CHECK(f->display_name == "Source");
     REQUIRE(f->allowed_values.size() == 2);
-    CHECK(f->allowed_values[0] == "Relative");
-    CHECK(f->allowed_values[1] == "Absolute");
 }
 
 TEST_CASE("RecurrentSequenceEntryParams UIHints annotate allowed_values",

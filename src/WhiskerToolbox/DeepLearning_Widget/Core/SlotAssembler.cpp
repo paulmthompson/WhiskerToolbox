@@ -59,10 +59,6 @@ struct SlotAssembler::Impl {
     std::string model_id;
     std::unique_ptr<dl::PostEncoderModule> post_encoder_module;
 
-    /// Cached tensors for Absolute-mode static inputs.
-    /// Key: "slot_name:memory_index" (from staticCacheKey()).
-    std::unordered_map<std::string, at::Tensor> static_cache;
-
     /// Cached tensors for recurrent (feedback) inputs.
     /// Key: "recurrent:input_slot_name" (from recurrentCacheKey()).
     /// Stores the output tensor from the previous frame that will be
@@ -147,21 +143,6 @@ dl::EncoderContext makeDynamicSlotEncoderContext(
     }
 
     return ctx;
-}
-
-/// Default DataBank entry ID for a static slot position.
-[[nodiscard]] std::string defaultBankEntryId(
-        std::string const & slot_name, int memory_index) {
-    return slot_name + "_" + std::to_string(memory_index);
-}
-
-/// Map a legacy staticCacheKey ("slot:idx") to a default bank entry ID.
-[[nodiscard]] std::string bankEntryIdFromCacheKey(std::string const & cache_key) {
-    auto const pos = cache_key.rfind(':');
-    if (pos == std::string::npos) {
-        return cache_key;
-    }
-    return cache_key.substr(0, pos) + "_" + cache_key.substr(pos + 1);
 }
 
 /// Expand a batch-1 tensor along dimension 0 when batch_size > 1.
@@ -290,31 +271,24 @@ dl::EncoderContext makeDynamicSlotEncoderContext(
     return nullptr;
 }
 
-/// Resolve an Absolute-mode cached tensor from DataBank or legacy static_cache.
-[[nodiscard]] std::optional<at::Tensor> getAbsoluteCachedTensor(
+/// Resolve a pre-encoded tensor from the DataBank.
+[[nodiscard]] std::optional<at::Tensor> getBankCachedTensor(
         StaticInputData const & entry,
         dl::DataBank const & data_bank,
-        std::unordered_map<std::string, at::Tensor> const & static_cache,
         int batch_size) {
 
-    std::optional<at::Tensor> cached;
+    auto const bank_id = entry.resolvedBankEntryId();
+    if (bank_id.empty()) {
+        return std::nullopt;
+    }
 
-    if (!entry.bank_entry_id.empty()) {
-        cached = data_bank.getEncoded(entry.bank_entry_id);
-        if (!cached) {
-            spdlog::error(
-                    "SlotAssembler: bank entry '{}' has no encoded tensor for slot '{}'",
-                    entry.bank_entry_id,
-                    entry.slot_name);
-            return std::nullopt;
-        }
-    } else {
-        auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
-        auto const it = static_cache.find(key);
-        if (it == static_cache.end()) {
-            return std::nullopt;
-        }
-        cached = it->second;
+    auto const cached = data_bank.getEncoded(bank_id);
+    if (!cached) {
+        spdlog::error(
+                "SlotAssembler: bank entry '{}' has no encoded tensor for slot '{}'",
+                bank_id,
+                entry.slot_name);
+        return std::nullopt;
     }
 
     return expandLeadingBatchDim(*cached, batch_size);
@@ -341,12 +315,13 @@ void encodeDynamicSlot(
         ImageSize source_image_size,
         MediaOverrides const * media_overrides = nullptr) {
 
-    if (!entry.bank_entry_id.empty()) {
-        auto const source = data_bank.getSource(entry.bank_entry_id);
+    if (entry.sourceType() == StaticInputSource::DataBank) {
+        auto const bank_id = entry.resolvedBankEntryId();
+        auto const source = data_bank.getSource(bank_id);
         if (!source) {
             spdlog::error(
                     "SlotAssembler: bank entry '{}' has no source for slot '{}'",
-                    entry.bank_entry_id,
+                    bank_id,
                     entry.slot_name);
             return false;
         }
@@ -362,7 +337,7 @@ void encodeDynamicSlot(
         }
 
         ImageSize encode_image_size = source_image_size;
-        if (auto const bank_entry = data_bank.get(entry.bank_entry_id)) {
+        if (auto const bank_entry = data_bank.get(bank_id)) {
             encode_image_size = bank_entry->metadata.source_image_size;
         }
 
@@ -371,7 +346,7 @@ void encodeDynamicSlot(
         if (!encoded) {
             spdlog::error(
                     "SlotAssembler: failed to encode bank entry '{}' for slot '{}'",
-                    entry.bank_entry_id,
+                    bank_id,
                     entry.slot_name);
             return false;
         }
@@ -471,7 +446,6 @@ assembleInputs(
         dl::ModelBase const & model,
         std::vector<SlotBindingData> const & input_bindings,
         std::vector<StaticInputData> const & static_inputs,
-        std::unordered_map<std::string, at::Tensor> const & static_cache,
         dl::DataBank const & data_bank,
         std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
@@ -623,7 +597,7 @@ assembleInputs(
                 }
 
                 for (auto const * entry: entries) {
-                    if (entry->data_key.empty() && entry->bank_entry_id.empty()) {
+                    if (!entry->hasActiveSource()) {
                         continue;
                     }
                     if (entry->memory_index >= static_cast<int>(seq_len)) {
@@ -646,22 +620,18 @@ assembleInputs(
                         continue;
                     }
 
-                    auto const mode = captureModeFromString(entry->capture_mode_str);
-
                     // Get the target slice: tensor[:, ..., memory_index, ..., :]
                     // where memory_index is along full_seq_dim
                     auto target_slice = tensor.select(full_seq_dim, entry->memory_index);
 
-                    if (mode == CaptureMode::Absolute) {
-                        if (auto cached = getAbsoluteCachedTensor(
-                                    *entry, data_bank, static_cache, batch_size)) {
+                    if (entry->sourceType() == StaticInputSource::DataBank) {
+                        if (auto cached = getBankCachedTensor(
+                                    *entry, data_bank, batch_size)) {
                             target_slice.copy_(*cached);
                             ++filled_count;
                             continue;
                         }
-                        if (!entry->bank_entry_id.empty()) {
-                            continue;
-                        }
+                        continue;
                     }
 
                     std::vector<int64_t> temp_shape = {1};
@@ -696,27 +666,23 @@ assembleInputs(
                 // recurrent injection has a target tensor to fill into.
                 std::vector<int64_t> hybrid_tensor_shape = {batch_size};
                 hybrid_tensor_shape.insert(hybrid_tensor_shape.end(),
-                                         slot.shape.begin(), slot.shape.end());
+                                           slot.shape.begin(), slot.shape.end());
                 result[slot.name] = at::zeros(hybrid_tensor_shape,
                                               toTorchDType(slot.dtype));
             } else {
                 // ── Non-sequence static slot (original behavior) ──
                 for (auto const * entry: entries) {
-                    if (entry->data_key.empty() && entry->bank_entry_id.empty()) {
+                    if (!entry->hasActiveSource()) {
                         continue;
                     }
 
-                    auto const mode = captureModeFromString(entry->capture_mode_str);
-
-                    if (mode == CaptureMode::Absolute) {
-                        if (auto cached = getAbsoluteCachedTensor(
-                                    *entry, data_bank, static_cache, batch_size)) {
+                    if (entry->sourceType() == StaticInputSource::DataBank) {
+                        if (auto cached = getBankCachedTensor(
+                                    *entry, data_bank, batch_size)) {
                             tensor.copy_(*cached);
                             continue;
                         }
-                        if (!entry->bank_entry_id.empty()) {
-                            continue;
-                        }
+                        continue;
                     }
 
                     int const frame = computeEncodingFrame(
@@ -1072,7 +1038,6 @@ void SlotAssembler::resetModel() {
     _impl->model.reset();
     _impl->model_id.clear();
     _impl->post_encoder_module.reset();
-    _impl->static_cache.clear();
     _impl->recurrent_cache.clear();
 }
 
@@ -1120,10 +1085,6 @@ void SlotAssembler::initDeviceForCurrentThread() {
         (void) at::zeros({1}, at::TensorOptions().device(dev));
     }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-// Instance: static tensor cache
-// ════════════════════════════════════════════════════════════════════════════
 
 bool SlotAssembler::captureToBank(
         DataManager & dm,
@@ -1201,74 +1162,12 @@ bool SlotAssembler::captureStaticInput(
         int frame,
         ImageSize source_image_size) {
 
-    std::string const bank_id = entry.bank_entry_id.empty()
-                                        ? defaultBankEntryId(
-                                                  entry.slot_name,
-                                                  entry.memory_index)
-                                        : entry.bank_entry_id;
-
-    if (!captureToBank(dm, bank_id, entry, frame, source_image_size)) {
+    std::string const bank_id = entry.resolvedBankEntryId();
+    if (bank_id.empty()) {
         return false;
     }
 
-    auto const encoded = _impl->data_bank->getEncoded(bank_id);
-    if (!encoded) {
-        return false;
-    }
-
-    auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
-    _impl->static_cache[key] = encoded->clone();
-    return true;
-}
-
-void SlotAssembler::clearStaticCacheEntry(std::string const & cache_key) {
-    _impl->static_cache.erase(cache_key);
-    _impl->data_bank->remove(bankEntryIdFromCacheKey(cache_key));
-}
-
-void SlotAssembler::clearStaticCache() {
-    _impl->static_cache.clear();
-}
-
-bool SlotAssembler::hasStaticCacheEntry(std::string const & cache_key) const {
-    if (_impl->static_cache.contains(cache_key)) {
-        return true;
-    }
-    auto const bank_id = bankEntryIdFromCacheKey(cache_key);
-    return _impl->data_bank->getEncoded(bank_id).has_value();
-}
-
-std::vector<std::string> SlotAssembler::staticCacheKeys() const {
-    std::set<std::string> keys;
-    for (auto const & [k, _]: _impl->static_cache) {
-        keys.insert(k);
-    }
-    for (auto const & bank_id: _impl->data_bank->ids()) {
-        if (_impl->data_bank->getEncoded(bank_id)) {
-            keys.insert(bank_id);
-        }
-    }
-    return {keys.begin(), keys.end()};
-}
-
-std::vector<int64_t> SlotAssembler::staticCacheTensorShape(
-        std::string const & cache_key) const {
-    auto const it = _impl->static_cache.find(cache_key);
-    if (it != _impl->static_cache.end()) {
-        auto const sizes = it->second.sizes();
-        return {sizes.begin(), sizes.end()};
-    }
-    return _impl->data_bank->encodedShape(bankEntryIdFromCacheKey(cache_key));
-}
-
-std::pair<float, float> SlotAssembler::staticCacheTensorRange(
-        std::string const & cache_key) const {
-    auto const it = _impl->static_cache.find(cache_key);
-    if (it != _impl->static_cache.end()) {
-        auto const & t = it->second;
-        return {t.min().item<float>(), t.max().item<float>()};
-    }
-    return _impl->data_bank->encodedRange(bankEntryIdFromCacheKey(cache_key));
+    return captureToBank(dm, bank_id, entry, frame, source_image_size);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1295,7 +1194,6 @@ void SlotAssembler::runSingleFrame(
     auto inputs = assembleInputs(
             dm, *_impl->model,
             input_bindings, static_inputs,
-            _impl->static_cache,
             *_impl->data_bank,
             {},// no recurrent bindings in single-frame mode
             current_frame, /*batch_size=*/1);
@@ -1366,7 +1264,6 @@ void SlotAssembler::runBatchRange(
         auto inputs = assembleInputs(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
-                _impl->static_cache,
                 *_impl->data_bank,
                 {},// no recurrent bindings
                 chunk_start, /*batch_size=*/chunk_size);
@@ -1461,7 +1358,6 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
             auto inputs = assembleInputs(
                     dm, *_impl->model,
                     input_bindings, static_inputs,
-                    _impl->static_cache,
                     *_impl->data_bank,
                     {},// no recurrent bindings
                     chunk_start, /*batch_size=*/chunk_size,
@@ -1574,21 +1470,13 @@ void SlotAssembler::runRecurrentSequence(
             int const mem_idx = rb.hasTargetMemoryIndex()
                                         ? rb.target_memory_index
                                         : 0;
-            auto const static_key = staticCacheKey(rb.input_slot_name, mem_idx);
 
             std::optional<at::Tensor> init_tensor;
             if (auto const * static_entry = findStaticInputEntry(
                         static_inputs, rb.input_slot_name, mem_idx)) {
-                init_tensor = getAbsoluteCachedTensor(
-                        *static_entry,
-                        *_impl->data_bank,
-                        _impl->static_cache,
-                        /*batch_size=*/1);
-            }
-            if (!init_tensor) {
-                auto cache_it = _impl->static_cache.find(static_key);
-                if (cache_it != _impl->static_cache.end()) {
-                    init_tensor = cache_it->second;
+                if (static_entry->sourceType() == StaticInputSource::DataBank) {
+                    init_tensor = getBankCachedTensor(
+                            *static_entry, *_impl->data_bank, /*batch_size=*/1);
                 }
             }
             if (!init_tensor) {
@@ -1603,7 +1491,7 @@ void SlotAssembler::runRecurrentSequence(
                 temp_entry.slot_name = rb.input_slot_name;
                 temp_entry.memory_index = mem_idx;
                 temp_entry.data_key = rb.init_data_key;
-                temp_entry.setCaptureMode(CaptureMode::Absolute);
+                temp_entry.setSourceType(StaticInputSource::DataBank);
 
                 if (captureStaticInput(dm, temp_entry, rb.init_frame,
                                        source_image_size)) {
@@ -1681,7 +1569,6 @@ void SlotAssembler::runRecurrentSequence(
         auto inputs = assembleInputs(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
-                _impl->static_cache,
                 *_impl->data_bank,
                 recurrent_bindings,
                 frame, /*batch_size=*/1);

@@ -4,8 +4,44 @@
 
 #include "BindingConversion.hpp"
 
+#include <type_traits>
 
 namespace dl::conversion {
+
+namespace {
+
+void assignStaticInputFromSourceVariant(
+        StaticInputData & si,
+        dl::widget::StaticInputSourceVariant const & source) {
+    source.visit([&](auto const & params) {
+        using T = std::decay_t<decltype(params)>;
+        if constexpr (std::is_same_v<T, dl::widget::DataManagerStaticSourceParams>) {
+            si.setSourceType(StaticInputSource::DataManager);
+            si.data_key = params.data_key;
+            si.time_offset = params.time_offset;
+            si.bank_entry_id.clear();
+        } else if constexpr (std::is_same_v<T,
+                                            dl::widget::DataBankStaticSourceParams>) {
+            si.setSourceType(StaticInputSource::DataBank);
+            si.bank_entry_id = params.bank_entry_id;
+            si.data_key.clear();
+            si.time_offset = 0;
+        }
+    });
+}
+
+[[nodiscard]] dl::widget::StaticInputSourceVariant
+toStaticInputSourceVariant(StaticInputData const & binding) {
+    if (binding.sourceType() == StaticInputSource::DataBank) {
+        return dl::widget::DataBankStaticSourceParams{
+                .bank_entry_id = binding.resolvedBankEntryId()};
+    }
+    return dl::widget::DataManagerStaticSourceParams{
+            .data_key = binding.data_key,
+            .time_offset = binding.time_offset};
+}
+
+}// namespace
 
 // ════════════════════════════════════════════════════════════════════════════
 // Params → Binding
@@ -24,27 +60,11 @@ SlotBindingData fromDynamicInputParams(
 
 StaticInputData fromStaticInputParams(
         std::string const & slot_name,
-        dl::widget::StaticInputSlotParams const & params,
-        int captured_frame) {
+        dl::widget::StaticInputSlotParams const & params) {
     StaticInputData si;
     si.slot_name = slot_name;
     si.memory_index = 0;
-    si.data_key = params.source;
-    si.bank_entry_id = params.bank_entry_id;
-    si.captured_frame = captured_frame;
-
-    params.capture_mode.visit([&](auto const & cm) {
-        using T = std::decay_t<decltype(cm)>;
-        if constexpr (std::is_same_v<T, dl::widget::RelativeCaptureParams>) {
-            si.capture_mode_str = "Relative";
-            si.time_offset = cm.time_offset;
-        } else if constexpr (std::is_same_v<T,
-                                            dl::widget::AbsoluteCaptureParams>) {
-            si.capture_mode_str = "Absolute";
-            si.time_offset = 0;
-        }
-    });
-
+    assignStaticInputFromSourceVariant(si, params.source);
     return si;
 }
 
@@ -89,17 +109,23 @@ RecurrentBindingData fromRecurrentParams(
 StaticInputData fromStaticSequenceEntryParams(
         std::string const & slot_name,
         int memory_index,
-        dl::widget::StaticSequenceEntryParams const & params,
-        int captured_frame) {
+        dl::widget::StaticSequenceEntryParams const & params) {
     StaticInputData si;
     si.slot_name = slot_name;
     si.memory_index = memory_index;
-    si.data_key = params.data_key;
-    si.bank_entry_id = params.bank_entry_id;
-    si.capture_mode_str = params.capture_mode_str;
-    si.time_offset = params.time_offset;
-    si.captured_frame = captured_frame;
     si.active = true;
+
+    if (params.static_source_kind == "DataBank") {
+        si.setSourceType(StaticInputSource::DataBank);
+        si.bank_entry_id = params.bank_entry_id;
+        si.data_key.clear();
+        si.time_offset = 0;
+    } else {
+        si.setSourceType(StaticInputSource::DataManager);
+        si.data_key = params.data_key;
+        si.time_offset = params.time_offset;
+        si.bank_entry_id.clear();
+    }
     return si;
 }
 
@@ -132,16 +158,7 @@ dl::widget::DynamicInputSlotParams toDynamicInputParams(
 dl::widget::StaticInputSlotParams toStaticInputParams(
         StaticInputData const & binding) {
     dl::widget::StaticInputSlotParams p;
-    p.source = binding.data_key;
-    p.bank_entry_id = binding.bank_entry_id;
-
-    if (binding.capture_mode_str == "Absolute") {
-        p.capture_mode = dl::widget::AbsoluteCaptureParams{};
-    } else {
-        p.capture_mode =
-                dl::widget::RelativeCaptureParams{.time_offset =
-                                                          binding.time_offset};
-    }
+    p.source = toStaticInputSourceVariant(binding);
     return p;
 }
 
@@ -166,6 +183,20 @@ dl::widget::RecurrentBindingSlotParams toRecurrentParams(
         p.init = dl::widget::FirstOutputInitParams{};
     } else {
         p.init = dl::widget::ZerosInitParams{};
+    }
+    return p;
+}
+
+dl::widget::StaticSequenceEntryParams toStaticSequenceEntryParams(
+        StaticInputData const & binding) {
+    dl::widget::StaticSequenceEntryParams p;
+    if (binding.sourceType() == StaticInputSource::DataBank) {
+        p.static_source_kind = "DataBank";
+        p.bank_entry_id = binding.resolvedBankEntryId();
+    } else {
+        p.static_source_kind = "DataManager";
+        p.data_key = binding.data_key;
+        p.time_offset = binding.time_offset;
     }
     return p;
 }

@@ -43,9 +43,9 @@ public:
 
 public slots:
     /**
-     * @brief Refresh the static tensor cache preview display.
+     * @brief Refresh the DataBank preview display.
      */
-    void refreshCachePreview();
+    void refreshDataBankView();
 
     /**
      * @brief Update the progress bar during recurrent inference.

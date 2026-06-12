@@ -2,7 +2,7 @@
 /// @brief Tests for the StaticInputSlotWidget.
 ///
 /// Verifies construction, parameter get/set, data source refresh,
-/// capture status management, and signal emission.
+/// and signal emission.
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -44,77 +44,84 @@ TEST_CASE("StaticInputSlotWidget constructs with valid slot and DM",
     CHECK(widget->slotName() == "memory_images");
 }
 
-TEST_CASE("StaticInputSlotWidget default params have empty source",
+TEST_CASE("StaticInputSlotWidget default params use DataManager source",
           "[dl_widget][static_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     auto slot = makeStaticSlot();
 
     dl::widget::StaticInputSlotWidget const widget(slot, dm);
     auto p = widget.params();
-    // source should be empty or "(None)" since DM has no keys
-    // capture_mode should default to RelativeCaptureParams
-    bool is_relative = false;
-    p.capture_mode.visit([&](auto const & cm) {
-        using T = std::decay_t<decltype(cm)>;
-        if constexpr (std::is_same_v<T, dl::widget::RelativeCaptureParams>) {
-            is_relative = true;
+    bool is_data_manager = false;
+    p.source.visit([&](auto const & src) {
+        using T = std::decay_t<decltype(src)>;
+        if constexpr (std::is_same_v<T, dl::widget::DataManagerStaticSourceParams>) {
+            is_data_manager = true;
         }
     });
-    CHECK(is_relative);
+    CHECK(is_data_manager);
 }
 
 // ============================================================================
 // setParams / params round-trip
 // ============================================================================
 
-TEST_CASE("StaticInputSlotWidget setParams and params round-trip (Relative)",
+TEST_CASE("StaticInputSlotWidget setParams and params round-trip (DataManager)",
           "[dl_widget][static_input_widget]") {
     auto dm = std::make_shared<DataManager>();
-    auto slot = makeStaticSlot();
+    dm->setData<PointData>("media/ref", TimeKey("time"));
+    auto slot = makeStaticSlot("memory_images", "Point2DEncoder");
 
     dl::widget::StaticInputSlotWidget widget(slot, dm);
+    widget.refreshDataSources();
 
     dl::widget::StaticInputSlotParams p;
-    p.source = "";
-    p.capture_mode = dl::widget::RelativeCaptureParams{.time_offset = -5};
+    p.source = dl::widget::DataManagerStaticSourceParams{
+            .data_key = "media/ref",
+            .time_offset = -5};
 
     widget.setParams(p);
     auto result = widget.params();
 
-    bool is_relative = false;
+    bool is_data_manager = false;
     int time_offset = 0;
-    result.capture_mode.visit([&](auto const & cm) {
-        using T = std::decay_t<decltype(cm)>;
-        if constexpr (std::is_same_v<T, dl::widget::RelativeCaptureParams>) {
-            is_relative = true;
-            time_offset = cm.time_offset;
+    std::string data_key;
+    result.source.visit([&](auto const & src) {
+        using T = std::decay_t<decltype(src)>;
+        if constexpr (std::is_same_v<T, dl::widget::DataManagerStaticSourceParams>) {
+            is_data_manager = true;
+            time_offset = src.time_offset;
+            data_key = src.data_key;
         }
     });
-    CHECK(is_relative);
+    CHECK(is_data_manager);
     CHECK(time_offset == -5);
+    CHECK(data_key == "media/ref");
 }
 
-TEST_CASE("StaticInputSlotWidget setParams and params round-trip (Absolute)",
+TEST_CASE("StaticInputSlotWidget setParams and params round-trip (DataBank)",
           "[dl_widget][static_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     auto slot = makeStaticSlot();
 
     dl::widget::StaticInputSlotWidget widget(slot, dm);
+    widget.refreshBankEntries({"ref_mask_1"});
 
     dl::widget::StaticInputSlotParams p;
-    p.capture_mode = dl::widget::AbsoluteCaptureParams{};
+    p.source = dl::widget::DataBankStaticSourceParams{
+            .bank_entry_id = "ref_mask_1"};
 
     widget.setParams(p);
     auto result = widget.params();
 
-    bool is_absolute = false;
-    result.capture_mode.visit([&](auto const & cm) {
-        using T = std::decay_t<decltype(cm)>;
-        if constexpr (std::is_same_v<T, dl::widget::AbsoluteCaptureParams>) {
-            is_absolute = true;
+    bool is_data_bank = false;
+    result.source.visit([&](auto const & src) {
+        using T = std::decay_t<decltype(src)>;
+        if constexpr (std::is_same_v<T, dl::widget::DataBankStaticSourceParams>) {
+            is_data_bank = true;
+            CHECK(src.bank_entry_id == "ref_mask_1");
         }
     });
-    CHECK(is_absolute);
+    CHECK(is_data_bank);
 }
 
 // ============================================================================
@@ -131,19 +138,17 @@ TEST_CASE("StaticInputSlotWidget refreshDataSources with point encoder",
     auto slot = makeStaticSlot("memory_pts", "Point2DEncoder");
     dl::widget::StaticInputSlotWidget widget(slot, dm);
 
-    // After construction, source combo should be populated
     widget.refreshDataSources();
 
-    // Widget should not crash and params() should return valid data
     auto p = widget.params();
-    (void) p;// just verify no crash
+    (void) p;
 }
 
 // ============================================================================
 // toStaticInputData conversion
 // ============================================================================
 
-TEST_CASE("toStaticInputData produces Relative mode correctly",
+TEST_CASE("toStaticInputData produces DataManager source correctly",
           "[dl_widget][static_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<PointData>("pts/ref", TimeKey("time"));
@@ -152,82 +157,37 @@ TEST_CASE("toStaticInputData produces Relative mode correctly",
     dl::widget::StaticInputSlotWidget widget(slot, dm);
 
     dl::widget::StaticInputSlotParams p;
-    p.source = "pts/ref";
-    p.capture_mode = dl::widget::RelativeCaptureParams{.time_offset = -3};
+    p.source = dl::widget::DataManagerStaticSourceParams{
+            .data_key = "pts/ref",
+            .time_offset = -3};
     widget.setParams(p);
 
     auto si = widget.toStaticInputData();
     CHECK(si.slot_name == "mem_pts");
     CHECK(si.memory_index == 0);
     CHECK(si.data_key == "pts/ref");
-    CHECK(si.capture_mode_str == "Relative");
+    CHECK(si.sourceType() == StaticInputSource::DataManager);
     CHECK(si.time_offset == -3);
-    CHECK(si.captured_frame == -1);
 }
 
-TEST_CASE("toStaticInputData produces Absolute mode correctly",
+TEST_CASE("toStaticInputData produces DataBank source correctly",
           "[dl_widget][static_input_widget]") {
     auto dm = std::make_shared<DataManager>();
-    dm->setData<PointData>("pts/ref", TimeKey("time"));
     auto slot = makeStaticSlot("mem_pts", "Point2DEncoder");
 
     dl::widget::StaticInputSlotWidget widget(slot, dm);
+    widget.refreshBankEntries({"pts_ref"});
 
     dl::widget::StaticInputSlotParams p;
-    p.source = "pts/ref";
-    p.capture_mode = dl::widget::AbsoluteCaptureParams{};
+    p.source = dl::widget::DataBankStaticSourceParams{
+            .bank_entry_id = "pts_ref"};
     widget.setParams(p);
 
     auto si = widget.toStaticInputData();
     CHECK(si.slot_name == "mem_pts");
-    CHECK(si.capture_mode_str == "Absolute");
-    CHECK(si.time_offset == 0);
-    CHECK(si.captured_frame == -1);// No capture performed yet
-}
-
-// ============================================================================
-// Capture status management
-// ============================================================================
-
-TEST_CASE("setCapturedStatus updates internal captured_frame",
-          "[dl_widget][static_input_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeStaticSlot();
-
-    dl::widget::StaticInputSlotWidget widget(slot, dm);
-    CHECK(widget.toStaticInputData().captured_frame == -1);
-
-    widget.setCapturedStatus(77, {-1.0f, 1.0f});
-    CHECK(widget.toStaticInputData().captured_frame == 77);
-}
-
-TEST_CASE("clearCapturedStatus resets captured_frame to -1",
-          "[dl_widget][static_input_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeStaticSlot();
-
-    dl::widget::StaticInputSlotWidget widget(slot, dm);
-    widget.setCapturedStatus(42, {0.0f, 2.0f});
-    REQUIRE(widget.toStaticInputData().captured_frame == 42);
-
-    widget.clearCapturedStatus();
-    CHECK(widget.toStaticInputData().captured_frame == -1);
-}
-
-// ============================================================================
-// setModelReady
-// ============================================================================
-
-TEST_CASE("setModelReady does not crash",
-          "[dl_widget][static_input_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeStaticSlot();
-
-    dl::widget::StaticInputSlotWidget widget(slot, dm);
-    widget.setModelReady(true);
-    widget.setModelReady(false);
-    // No crash = success
-    CHECK(true);
+    CHECK(si.sourceType() == StaticInputSource::DataBank);
+    CHECK(si.bank_entry_id == "pts_ref");
+    CHECK(si.data_key.empty());
 }
 
 // ============================================================================
@@ -244,25 +204,8 @@ TEST_CASE("StaticInputSlotWidget emits bindingChanged on setParams",
     QSignalSpy const spy(&widget, &dl::widget::StaticInputSlotWidget::bindingChanged);
 
     dl::widget::StaticInputSlotParams p;
-    p.capture_mode = dl::widget::RelativeCaptureParams{.time_offset = -2};
+    p.source = dl::widget::DataManagerStaticSourceParams{.time_offset = -2};
     widget.setParams(p);
 
-    // At minimum, verify the spy is valid (signal was emitted or not depending on value change)
     CHECK(spy.isValid());
-}
-
-TEST_CASE("captureRequested and captureInvalidated signals are valid",
-          "[dl_widget][static_input_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeStaticSlot();
-
-    dl::widget::StaticInputSlotWidget widget(slot, dm);
-
-    QSignalSpy const capture_spy(&widget,
-                                 &dl::widget::StaticInputSlotWidget::captureRequested);
-    QSignalSpy const invalidate_spy(
-            &widget, &dl::widget::StaticInputSlotWidget::captureInvalidated);
-
-    CHECK(capture_spy.isValid());
-    CHECK(invalidate_spy.isValid());
 }

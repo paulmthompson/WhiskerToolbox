@@ -282,8 +282,6 @@ public:
      */
     void clearDataBank();
 
-    // ── Instance: static tensor cache ──────────────────────────────────────
-
     /**
      * @brief Capture a static input into a named DataBank entry.
      *
@@ -301,33 +299,18 @@ public:
             ImageSize source_image_size);
 
     /**
-     * @brief Capture a static input at a specific frame and store in the cache.
-     * 
-     * Encodes the data from DataManager at the given frame using the model's
-     * recommended encoder for the slot, then stores the resulting tensor in
-     * the DataBank and legacy static_cache.
-     * 
-     * @param dm DataManager to fetch data from
-     * @param entry Static input entry describing what to capture
-     * @param frame The frame number to encode and cache
-     * @param source_image_size Original image dimensions for coordinate scaling
-     * @return true if the tensor was successfully captured and cached
+     * @brief Capture a static input at a specific frame into the DataBank.
+     *
+     * Uses @p entry.resolvedBankEntryId() as the bank key. Encodes data from
+     * DataManager at the given frame using the model's recommended encoder.
+     *
+     * @pre entry.resolvedBankEntryId() must be non-empty
      */
     bool captureStaticInput(
             DataManager & dm,
             StaticInputData const & entry,
             int frame,
             ImageSize source_image_size);
-
-    /**
-     * @brief Clear a single entry from the static tensor cache.
-     */
-    void clearStaticCacheEntry(std::string const & cache_key);
-
-    /**
-     * @brief Clear the entire static tensor cache.
-     */
-    void clearStaticCache();
 
     // ── Instance: recurrent tensor cache ──────────────────────────────────────────
 
@@ -337,34 +320,6 @@ public:
      * Call when changing models, starting a new sequence, or clearing state.
      */
     void clearRecurrentCache();
-
-    /**
-     * @brief Whether a cached tensor exists for the given key.
-     */
-    [[nodiscard]] bool hasStaticCacheEntry(std::string const & cache_key) const;
-
-    /**
-     * @brief List all keys currently in the static tensor cache.
-     */
-    [[nodiscard]] std::vector<std::string> staticCacheKeys() const;
-
-    /**
-     * @brief Get the dimensions of a cached tensor as a vector of int64_t.
-     * 
-     * @returns The dimensions of the cached tensor as a vector of int64_t.
-     *          Returns empty vector if the key is not in the cache.
-     */
-    [[nodiscard]] std::vector<int64_t> staticCacheTensorShape(
-            std::string const & cache_key) const;
-
-    /**
-     * @brief Get min/max values of a cached tensor for preview display.
-     * 
-     * @returns The min and max values of the cached tensor as a pair of float.
-     *          Returns {0.0f, 0.0f} if the key is not in the cache.
-     */
-    [[nodiscard]] std::pair<float, float> staticCacheTensorRange(
-            std::string const & cache_key) const;
 
     // ── Static: registry queries ───────────────────────────────────────────
 

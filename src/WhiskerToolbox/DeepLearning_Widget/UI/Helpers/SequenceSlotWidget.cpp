@@ -8,7 +8,6 @@
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
@@ -25,8 +24,8 @@
 
 #include <rfl/json.hpp>
 
+#include <algorithm>
 #include <cassert>
-#include <type_traits>
 
 namespace dl::widget {
 
@@ -65,8 +64,8 @@ SequenceSlotWidget::SequenceSlotWidget(
     }
 
     auto * info = new QLabel(
-            tr("Relative: re-encodes each run at current_frame + offset.\n"
-               "Absolute: capture once at a chosen frame and reuse."),
+            tr("DataManager: re-encodes each run at current_frame + offset.\n"
+               "DataBank: reuses a pre-captured entry from the Memory Bank."),
             group);
     info->setWordWrap(true);
     info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
@@ -140,68 +139,17 @@ void SequenceSlotWidget::_addEntryRow(int memory_index) {
     row.auto_param->setSchema(schema);
     row_layout->addWidget(row.auto_param);
 
-    row.capture_row = new QWidget(row.group);
-    auto * capture_layout = new QHBoxLayout(row.capture_row);
-    capture_layout->setContentsMargins(0, 0, 0, 0);
-    row.capture_btn = new QPushButton(tr("\u2B07 Capture"), row.capture_row);
-    row.capture_btn->setEnabled(false);
-    capture_layout->addWidget(row.capture_btn);
-    capture_layout->addStretch();
-    row.capture_status = new QLabel(tr("Not captured"), row.capture_row);
-    row.capture_status->setStyleSheet(
-            QStringLiteral("color: gray; font-size: 10px;"));
-    capture_layout->addWidget(row.capture_status);
-    row.capture_row->setVisible(false);
-    row_layout->addWidget(row.capture_row);
-
     auto * entries_layout =
             qobject_cast<QVBoxLayout *>(_entries_container->layout());
     if (entries_layout) {
         entries_layout->addWidget(row.group);
     }
 
-    connect(row.capture_btn, &QPushButton::clicked, this,
-            [this, memory_index]() {
-                emit captureRequested(_slot_name, memory_index);
-            });
-
     connect(row.auto_param, &AutoParamWidget::parametersChanged, this,
-            [this, memory_index]() {
-                for (auto & r: _entry_rows) {
-                    if (r.memory_index == memory_index) {
-                        auto json_str = r.auto_param->toJson();
-                        auto parsed =
-                                rfl::json::read<SequenceEntryParams>(json_str);
-                        if (parsed) {
-                            parsed.value().entry.visit([&](auto const & v) {
-                                using T = std::decay_t<decltype(v)>;
-                                if constexpr (std::is_same_v<T,
-                                                             StaticSequenceEntryParams>) {
-                                    if (v.capture_mode_str == "Absolute" &&
-                                        v.data_key != r.last_data_key) {
-                                        r.last_data_key = v.data_key;
-                                        r.captured_frame = -1;
-                                        r.capture_status->setText(
-                                                tr("Not captured"));
-                                        r.capture_status->setStyleSheet(
-                                                QStringLiteral(
-                                                        "color: gray; font-size: 10px;"));
-                                        emit captureInvalidated(_slot_name,
-                                                                r.memory_index);
-                                    }
-                                }
-                            });
-                        }
-                        _updateEntryCaptureRow(r);
-                        break;
-                    }
-                }
-                emit bindingChanged();
-            });
+            &SequenceSlotWidget::bindingChanged);
 
     _refreshDataKeyCombos();
     _refreshOutputSlotCombos();
-    _updateEntryCaptureRow(row);
 
     _entry_rows.push_back(std::move(row));
 }
@@ -209,12 +157,10 @@ void SequenceSlotWidget::_addEntryRow(int memory_index) {
 void SequenceSlotWidget::_removeLastEntry() {
     if (_entry_rows.size() <= 1) return;
     auto & last = _entry_rows.back();
-    int const mem_idx = last.memory_index;
     if (last.group) {
         last.group->deleteLater();
     }
     _entry_rows.pop_back();
-    emit captureInvalidated(_slot_name, mem_idx);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -227,6 +173,13 @@ std::string const & SequenceSlotWidget::slotName() const {
 
 void SequenceSlotWidget::refreshDataSources() {
     _refreshDataKeyCombos();
+}
+
+void SequenceSlotWidget::refreshBankEntries(
+        std::vector<std::string> const & bank_entry_ids) {
+    for (auto & row: _entry_rows) {
+        row.auto_param->updateAllowedValues("bank_entry_id", bank_entry_ids);
+    }
 }
 
 void SequenceSlotWidget::refreshOutputSlots(
@@ -245,10 +198,12 @@ std::vector<StaticInputData> SequenceSlotWidget::getStaticInputs() const {
         parsed.value().entry.visit([&](auto const & v) {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, StaticSequenceEntryParams>) {
-                if (v.data_key.empty() || v.data_key == "(None)") return;
-
-                result.push_back(dl::conversion::fromStaticSequenceEntryParams(
-                        _slot_name, row.memory_index, v, row.captured_frame));
+                auto entry = dl::conversion::fromStaticSequenceEntryParams(
+                        _slot_name, row.memory_index, v);
+                if (!entry.hasActiveSource()) {
+                    return;
+                }
+                result.push_back(std::move(entry));
             }
         });
     }
@@ -281,49 +236,6 @@ SequenceSlotWidget::getRecurrentBindings() const {
     return result;
 }
 
-void SequenceSlotWidget::setCapturedStatus(
-        int memory_index,
-        int captured_frame,
-        std::pair<float, float> value_range) {
-    for (auto & row: _entry_rows) {
-        if (row.memory_index == memory_index) {
-            row.captured_frame = captured_frame;
-            QString info = tr("\u2713 Captured");
-            if (captured_frame >= 0) {
-                info += tr(" (frame %1)").arg(captured_frame);
-            }
-            info += tr(" range [%1, %2]")
-                            .arg(static_cast<double>(value_range.first), 0, 'f',
-                                 2)
-                            .arg(static_cast<double>(value_range.second), 0,
-                                 'f', 2);
-            row.capture_status->setText(info);
-            row.capture_status->setStyleSheet(
-                    QStringLiteral("color: green; font-size: 10px;"));
-            return;
-        }
-    }
-}
-
-void SequenceSlotWidget::clearCapturedStatus(int memory_index) {
-    for (auto & row: _entry_rows) {
-        if (row.memory_index == memory_index) {
-            row.captured_frame = -1;
-            row.capture_status->setText(tr("Not captured"));
-            row.capture_status->setStyleSheet(
-                    QStringLiteral("color: gray; font-size: 10px;"));
-            return;
-        }
-    }
-}
-
-void SequenceSlotWidget::setModelReady(bool ready) {
-    _model_ready = ready;
-    for (auto & row: _entry_rows) {
-        _updateEntryCaptureRow(row);
-    }
-}
-
 void SequenceSlotWidget::setEntriesFromState(
         std::vector<StaticInputData> const & static_inputs,
         std::vector<RecurrentBindingData> const & recurrent_bindings) {
@@ -344,8 +256,6 @@ void SequenceSlotWidget::setEntriesFromState(
         _addEntryRow(static_cast<int>(_entry_rows.size()));
     }
 
-    // Refresh combos before fromJson so data_key/output_slot_name options exist
-    // when setting values (fromJson uses findText; missing options cause no-op).
     _refreshDataKeyCombos();
     _refreshOutputSlotCombos();
 
@@ -356,12 +266,7 @@ void SequenceSlotWidget::setEntriesFromState(
         for (auto const & si: static_inputs) {
             if (si.slot_name == _slot_name &&
                 si.memory_index == row.memory_index) {
-                params = StaticSequenceEntryParams{
-                        .data_key = si.data_key,
-                        .bank_entry_id = si.bank_entry_id,
-                        .capture_mode_str = si.capture_mode_str,
-                        .time_offset = si.time_offset};
-                row.captured_frame = si.captured_frame;
+                params = dl::conversion::toStaticSequenceEntryParams(si);
                 found_static = true;
                 break;
             }
@@ -379,10 +284,9 @@ void SequenceSlotWidget::setEntriesFromState(
             }
         }
 
-        SequenceEntryParams holder{.entry = params};
+        SequenceEntryParams const holder{.entry = params};
         auto json = rfl::json::write(holder);
         row.auto_param->fromJson(json);
-        _updateEntryCaptureRow(row);
     }
 
     _refreshDataKeyCombos();
@@ -410,29 +314,6 @@ void SequenceSlotWidget::_refreshOutputSlotCombos() {
         row.auto_param->updateAllowedValues("output_slot_name",
                                             _output_slot_names);
     }
-}
-
-void SequenceSlotWidget::_updateEntryCaptureRow(EntryRow & row) {
-    auto json_str = row.auto_param->toJson();
-    auto parsed = rfl::json::read<SequenceEntryParams>(json_str);
-    bool show_capture = parsed && _isStaticAbsolute(parsed.value().entry);
-
-    row.capture_row->setVisible(show_capture);
-    if (row.capture_btn) {
-        row.capture_btn->setEnabled(show_capture && _model_ready);
-    }
-}
-
-bool SequenceSlotWidget::_isStaticAbsolute(
-        SequenceEntryVariant const & params) {
-    bool result = false;
-    params.visit([&](auto const & v) {
-        using T = std::decay_t<decltype(v)>;
-        if constexpr (std::is_same_v<T, StaticSequenceEntryParams>) {
-            result = (v.capture_mode_str == "Absolute");
-        }
-    });
-    return result;
 }
 
 }// namespace dl::widget

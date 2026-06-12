@@ -118,7 +118,7 @@ TEST_CASE("setEntriesFromState restores static input",
     si.slot_name = "memory_sequence";
     si.memory_index = 0;
     si.data_key = "pts/ref";
-    si.capture_mode_str = "Relative";
+    si.setSourceType(StaticInputSource::DataManager);
     si.time_offset = -2;
     si.active = true;
     static_inputs.push_back(si);
@@ -130,7 +130,7 @@ TEST_CASE("setEntriesFromState restores static input",
     CHECK(result[0].slot_name == "memory_sequence");
     CHECK(result[0].memory_index == 0);
     CHECK(result[0].data_key == "pts/ref");
-    CHECK(result[0].capture_mode_str == "Relative");
+    CHECK(result[0].sourceType() == StaticInputSource::DataManager);
     CHECK(result[0].time_offset == -2);
 }
 
@@ -161,23 +161,7 @@ TEST_CASE("setEntriesFromState restores recurrent binding",
 }
 
 // ============================================================================
-// Capture status
-// ============================================================================
-
-TEST_CASE("setCapturedStatus and clearCapturedStatus do not crash",
-          "[dl_widget][sequence_slot_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeSequenceSlot();
-    std::vector<std::string> outputs;
-
-    dl::widget::SequenceSlotWidget widget(slot, dm, outputs);
-    widget.setCapturedStatus(0, 42, {0.0f, 1.0f});
-    widget.clearCapturedStatus(0);
-    CHECK(true);
-}
-
-// ============================================================================
-// refreshDataSources / setModelReady
+// refreshDataSources
 // ============================================================================
 
 TEST_CASE("refreshDataSources with point encoder does not crash",
@@ -189,18 +173,6 @@ TEST_CASE("refreshDataSources with point encoder does not crash",
 
     dl::widget::SequenceSlotWidget widget(slot, dm, outputs);
     widget.refreshDataSources();
-    CHECK(true);
-}
-
-TEST_CASE("setModelReady does not crash",
-          "[dl_widget][sequence_slot_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeSequenceSlot();
-    std::vector<std::string> outputs;
-
-    dl::widget::SequenceSlotWidget widget(slot, dm, outputs);
-    widget.setModelReady(true);
-    widget.setModelReady(false);
     CHECK(true);
 }
 
@@ -219,23 +191,4 @@ TEST_CASE("SequenceSlotWidget bindingChanged signal is valid",
     QSignalSpy const spy(&widget,
                          &dl::widget::SequenceSlotWidget::bindingChanged);
     CHECK(spy.isValid());
-}
-
-TEST_CASE("SequenceSlotWidget captureRequested and captureInvalidated valid",
-          "[dl_widget][sequence_slot_widget]") {
-    auto dm = std::make_shared<DataManager>();
-    auto slot = makeSequenceSlot();
-    std::vector<std::string> outputs;
-
-    dl::widget::SequenceSlotWidget widget(slot, dm, outputs);
-
-    QSignalSpy const capture_spy(
-            &widget,
-            &dl::widget::SequenceSlotWidget::captureRequested);
-    QSignalSpy const invalidate_spy(
-            &widget,
-            &dl::widget::SequenceSlotWidget::captureInvalidated);
-
-    CHECK(capture_spy.isValid());
-    CHECK(invalidate_spy.isValid());
 }

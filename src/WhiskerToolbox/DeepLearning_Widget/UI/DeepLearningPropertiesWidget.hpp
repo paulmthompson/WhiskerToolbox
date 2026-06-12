@@ -93,9 +93,9 @@ public slots:
 
 signals:
     /**
-     * @brief Emitted when the static tensor cache changes (capture/clear).
+     * @brief Emitted when the DataBank changes (capture/clear).
      */
-    void staticCacheChanged();
+    void dataBankChanged();
 
     /**
      * @brief Emitted during recurrent inference to report progress.
@@ -122,9 +122,6 @@ private slots:
     void _onRunBatch();
     void _onRunRecurrentSequence();
     void _onPredictCurrentFrame();
-    void _onCaptureStaticInput(std::string const & slot_name);
-    void _onCaptureSequenceEntry(std::string const & slot_name,
-                                 int memory_index);
     void _onInferenceBatchFinished(bool success, QString const & error_message);
     void _onInferenceRunningChanged(bool running);
 
@@ -139,6 +136,7 @@ private:
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
     void _refreshDataSourceCombos();
+    void _refreshBankEntryCombos();
 
     void _syncBindingsFromUi();
     void _updateWeightsStatus();
