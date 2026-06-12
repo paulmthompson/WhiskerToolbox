@@ -17,7 +17,10 @@
 
 class QLabel;
 class QProgressBar;
-class QVBoxLayout;
+
+namespace dl::widget {
+class DataBankViewWidget;
+}
 
 class DataManager;
 class DeepLearningState;
@@ -55,7 +58,6 @@ public slots:
 private:
     void _buildUi();
     void _onModelChanged();
-    void _clearPreviewArea();
 
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<DataManager> _data_manager;
@@ -65,8 +67,7 @@ private:
 
     QLabel * _status_label = nullptr;
     QLabel * _model_info_label = nullptr;
-    QWidget * _preview_area = nullptr;
-    QVBoxLayout * _preview_layout = nullptr;
+    dl::widget::DataBankViewWidget * _data_bank_view = nullptr;
     QProgressBar * _progress_bar = nullptr;
 };
 

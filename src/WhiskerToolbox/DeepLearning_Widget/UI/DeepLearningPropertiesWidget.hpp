@@ -14,7 +14,7 @@
  * so this header and translation unit never include torch.
  */
 
-#include "Core/ModelDisplayInfo.hpp"        // ModelDisplayInfo
+#include "Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 
 #include "TimeFrame/TimeFrame.hpp"           // TimePosition
 #include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
@@ -47,6 +47,7 @@ class KeymapManager;
 }// namespace KeymapSystem
 
 namespace dl::widget {
+class DataBankPropertiesWidget;
 class DynamicInputSlotWidget;
 class EncoderShapeWidget;
 class OutputSlotWidget;
@@ -161,6 +162,7 @@ private:
     QPushButton * _run_recurrent_btn = nullptr;
     QPushButton * _predict_current_frame_btn = nullptr;
     QComboBox * _device_combo = nullptr;
+    dl::widget::DataBankPropertiesWidget * _data_bank_properties = nullptr;
 
     // Dynamic content container
     QVBoxLayout * _dynamic_layout = nullptr;

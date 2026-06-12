@@ -29,8 +29,11 @@
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 #include "storage/DataBank.hpp"
+#include "storage/DataBankEncode.hpp"
 
 #include "device/DeviceManager.hpp"
+
+#include <spdlog/spdlog.h>
 
 #include <ATen/core/Tensor.h>             // at::Tensor
 #include <c10/core/Device.h>              // Device, kCPU, kCUDA
@@ -116,27 +119,6 @@ findSlot(std::vector<dl::TensorSlotDescriptor> const & slot_vec,
     return nullptr;
 }
 
-/// Compute the per-element shape for a sequence slot.
-///
-/// For a slot with shape {4, 3, 256, 256} and sequence_dim=0, the
-/// per-element shape is {3, 256, 256} — the shape of one frame in the
-/// sequence. This is used for encoding individual sequence entries.
-///
-/// @pre slot.hasSequenceDim() must be true; calling with a non-sequence slot
-///      triggers an assert and would cause size_t underflow in reserve()
-///      (enforcement: assert) [CRITICAL]
-std::vector<int64_t> perElementShape(dl::TensorSlotDescriptor const & slot) {
-    assert(slot.hasSequenceDim() && "perElementShape: slot must have a sequence dim");
-    std::vector<int64_t> shape;
-    shape.reserve(slot.shape.size() - 1);
-    for (std::size_t i = 0; i < slot.shape.size(); ++i) {
-        if (static_cast<int>(i) != slot.sequence_dim) {
-            shape.push_back(slot.shape[i]);
-        }
-    }
-    return shape;
-}
-
 /// Get the sequence length from a slot's shape.
 ///
 /// @pre slot.hasSequenceDim() must be true; without it, slot.sequence_dim is
@@ -148,7 +130,7 @@ int64_t sequenceLength(dl::TensorSlotDescriptor const & slot) {
     return slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
 }
 
-dl::EncoderContext makeEncoderContext(
+dl::EncoderContext makeDynamicSlotEncoderContext(
         dl::TensorSlotDescriptor const & slot,
         int batch_index) {
 
@@ -165,6 +147,253 @@ dl::EncoderContext makeEncoderContext(
     }
 
     return ctx;
+}
+
+/// Default DataBank entry ID for a static slot position.
+[[nodiscard]] std::string defaultBankEntryId(
+        std::string const & slot_name, int memory_index) {
+    return slot_name + "_" + std::to_string(memory_index);
+}
+
+/// Map a legacy staticCacheKey ("slot:idx") to a default bank entry ID.
+[[nodiscard]] std::string bankEntryIdFromCacheKey(std::string const & cache_key) {
+    auto const pos = cache_key.rfind(':');
+    if (pos == std::string::npos) {
+        return cache_key;
+    }
+    return cache_key.substr(0, pos) + "_" + cache_key.substr(pos + 1);
+}
+
+/// Expand a batch-1 tensor along dimension 0 when batch_size > 1.
+[[nodiscard]] at::Tensor expandLeadingBatchDim(
+        at::Tensor tensor, int batch_size) {
+    if (batch_size > 1 && tensor.size(0) == 1) {
+        std::vector<int64_t> expand_sizes(
+                static_cast<std::size_t>(tensor.dim()), -1);
+        expand_sizes[0] = batch_size;
+        return tensor.expand(expand_sizes);
+    }
+    return tensor;
+}
+
+/// Fetch raw encoding source from DataManager without writing a tensor.
+[[nodiscard]] std::optional<dl::EncodingSourceVariant> fetchEncodingSource(
+        DataManager & dm,
+        SlotBindingData const & binding,
+        int frame,
+        MediaOverrides const * media_overrides = nullptr) {
+
+    return binding.encoder.visit(
+            [&](auto const & params) -> std::optional<dl::EncodingSourceVariant> {
+                using ParamsT = std::decay_t<decltype(params)>;
+
+                if constexpr (std::is_same_v<ParamsT, dl::ImageEncoderParams>) {
+                    std::shared_ptr<MediaData> media;
+                    if (media_overrides) {
+                        auto ov_it = media_overrides->find(binding.data_key);
+                        if (ov_it != media_overrides->end()) {
+                            media = ov_it->second;
+                        }
+                    }
+                    if (!media) {
+                        media = dm.getData<MediaData>(binding.data_key);
+                    }
+                    if (!media) {
+                        spdlog::error(
+                                "SlotAssembler: MediaData not found for key '{}'",
+                                binding.data_key);
+                        return std::nullopt;
+                    }
+                    media->LoadFrame(frame);
+
+                    int const channels =
+                            (media->getFormat() == MediaData::DisplayFormat::Color)
+                                    ? 3
+                                    : 1;
+
+                    dl::ImageEncodingSource source;
+                    source.size = media->getImageSize();
+                    source.channels = channels;
+                    if (media->is8Bit()) {
+                        source.is_8bit = true;
+                        source.data_u8 = media->getRawData8(frame);
+                    } else {
+                        source.is_8bit = false;
+                        source.data_f32 = media->getRawData32(frame);
+                    }
+                    return source;
+
+                } else if constexpr (std::is_same_v<ParamsT,
+                                                    dl::Point2DEncoderParams>) {
+                    auto point_data = dm.getData<PointData>(binding.data_key);
+                    if (!point_data) {
+                        return std::nullopt;
+                    }
+
+                    auto points_at_frame =
+                            point_data->getAtTime(TimeFrameIndex(frame));
+                    std::vector<Point2D<float>> points_vec;
+                    points_vec.reserve(
+                            static_cast<std::size_t>(points_at_frame.size()));
+                    for (auto const & pt: points_at_frame) {
+                        points_vec.push_back(pt);
+                    }
+                    return points_vec;
+
+                } else if constexpr (std::is_same_v<ParamsT,
+                                                    dl::Mask2DEncoderParams>) {
+                    auto mask_data = dm.getData<MaskData>(binding.data_key);
+                    if (!mask_data) {
+                        return std::nullopt;
+                    }
+
+                    auto masks_at_frame =
+                            mask_data->getAtTime(TimeFrameIndex(frame));
+                    Mask2D mask_to_encode;
+                    for (auto const & m: masks_at_frame) {
+                        mask_to_encode = m;
+                        break;
+                    }
+                    return mask_to_encode;
+
+                } else if constexpr (std::is_same_v<ParamsT,
+                                                    dl::Line2DEncoderParams>) {
+                    auto line_data = dm.getData<LineData>(binding.data_key);
+                    if (!line_data) {
+                        return std::nullopt;
+                    }
+
+                    auto lines_at_frame =
+                            line_data->getAtTime(TimeFrameIndex(frame));
+                    Line2D line_to_encode;
+                    for (auto const & l: lines_at_frame) {
+                        line_to_encode = l;
+                        break;
+                    }
+                    return line_to_encode;
+                } else {
+                    return std::nullopt;
+                }
+            });
+}
+
+/// Find a static input entry matching slot name and memory index.
+[[nodiscard]] StaticInputData const * findStaticInputEntry(
+        std::vector<StaticInputData> const & static_inputs,
+        std::string const & slot_name,
+        int memory_index) {
+    for (auto const & si: static_inputs) {
+        if (si.slot_name == slot_name && si.memory_index == memory_index) {
+            return &si;
+        }
+    }
+    return nullptr;
+}
+
+/// Resolve an Absolute-mode cached tensor from DataBank or legacy static_cache.
+[[nodiscard]] std::optional<at::Tensor> getAbsoluteCachedTensor(
+        StaticInputData const & entry,
+        dl::DataBank const & data_bank,
+        std::unordered_map<std::string, at::Tensor> const & static_cache,
+        int batch_size) {
+
+    std::optional<at::Tensor> cached;
+
+    if (!entry.bank_entry_id.empty()) {
+        cached = data_bank.getEncoded(entry.bank_entry_id);
+        if (!cached) {
+            spdlog::error(
+                    "SlotAssembler: bank entry '{}' has no encoded tensor for slot '{}'",
+                    entry.bank_entry_id,
+                    entry.slot_name);
+            return std::nullopt;
+        }
+    } else {
+        auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
+        auto const it = static_cache.find(key);
+        if (it == static_cache.end()) {
+            return std::nullopt;
+        }
+        cached = it->second;
+    }
+
+    return expandLeadingBatchDim(*cached, batch_size);
+}
+
+void encodeDynamicSlot(
+        DataManager & dm,
+        SlotBindingData const & binding,
+        dl::TensorSlotDescriptor const & slot,
+        at::Tensor & tensor,
+        int frame,
+        int batch_index,
+        ImageSize const & source_image_size,
+        MediaOverrides const * media_overrides);
+
+/// Encode a static entry into a single-batch temp tensor (Relative mode).
+[[nodiscard]] bool encodeStaticEntryToTensor(
+        DataManager & dm,
+        StaticInputData const & entry,
+        dl::TensorSlotDescriptor const & encode_slot,
+        dl::DataBank const & data_bank,
+        at::Tensor & temp,
+        int frame,
+        ImageSize source_image_size,
+        MediaOverrides const * media_overrides = nullptr) {
+
+    if (!entry.bank_entry_id.empty()) {
+        auto const source = data_bank.getSource(entry.bank_entry_id);
+        if (!source) {
+            spdlog::error(
+                    "SlotAssembler: bank entry '{}' has no source for slot '{}'",
+                    entry.bank_entry_id,
+                    entry.slot_name);
+            return false;
+        }
+
+        auto const encoder_params =
+                dl::encoderParamsFromFactoryName(encode_slot.recommended_encoder);
+        if (!encoder_params) {
+            spdlog::error(
+                    "SlotAssembler: unknown encoder '{}' for slot '{}'",
+                    encode_slot.recommended_encoder,
+                    entry.slot_name);
+            return false;
+        }
+
+        ImageSize encode_image_size = source_image_size;
+        if (auto const bank_entry = data_bank.get(entry.bank_entry_id)) {
+            encode_image_size = bank_entry->metadata.source_image_size;
+        }
+
+        auto encoded = dl::encodeSourceToTensor(
+                *source, encode_slot, *encoder_params, encode_image_size);
+        if (!encoded) {
+            spdlog::error(
+                    "SlotAssembler: failed to encode bank entry '{}' for slot '{}'",
+                    entry.bank_entry_id,
+                    entry.slot_name);
+            return false;
+        }
+        at::Tensor write_target =
+                temp.dim() > 0 && temp.size(0) > 1 ? temp.narrow(0, 0, 1) : temp;
+        write_target.copy_(*encoded);
+        return true;
+    }
+
+    if (entry.data_key.empty()) {
+        return false;
+    }
+
+    SlotBindingData temp_binding;
+    temp_binding.slot_name = encode_slot.name;
+    temp_binding.data_key = entry.data_key;
+    dl::widget::assignEncoderFromFactoryName(
+            temp_binding.encoder, encode_slot.recommended_encoder);
+    encodeDynamicSlot(
+            dm, temp_binding, encode_slot, temp, frame, 0,
+            source_image_size, media_overrides);
+    return true;
 }
 
 /// Encode a dynamic (per-frame) input slot into the tensor.
@@ -198,81 +427,15 @@ void encodeDynamicSlot(
         ImageSize const & source_image_size,
         MediaOverrides const * media_overrides = nullptr) {
 
-    auto ctx = makeEncoderContext(slot, batch_index);
+    auto const source = fetchEncodingSource(
+            dm, binding, frame, media_overrides);
+    if (!source) {
+        return;
+    }
 
+    auto const ctx = makeDynamicSlotEncoderContext(slot, batch_index);
     binding.encoder.visit([&](auto const & params) {
-        using ParamsT = std::decay_t<decltype(params)>;
-
-        if constexpr (std::is_same_v<ParamsT, dl::ImageEncoderParams>) {
-            std::shared_ptr<MediaData> media;
-            if (media_overrides) {
-                auto ov_it = media_overrides->find(binding.data_key);
-                if (ov_it != media_overrides->end()) {
-                    media = ov_it->second;
-                }
-            }
-            if (!media) {
-                media = dm.getData<MediaData>(binding.data_key);
-            }
-            if (!media) {
-                std::cerr << "SlotAssembler: MediaData not found for key '"
-                          << binding.data_key << "'\n";
-                return;
-            }
-            media->LoadFrame(frame);
-
-            int const channels =
-                    (media->getFormat() == MediaData::DisplayFormat::Color) ? 3 : 1;
-            auto const image_size = media->getImageSize();
-
-            dl::ImageEncodingSource source;
-            source.size = image_size;
-            source.channels = channels;
-            if (media->is8Bit()) {
-                source.is_8bit = true;
-                source.data_u8 = media->getRawData8(frame);
-            } else {
-                source.is_8bit = false;
-                source.data_f32 = media->getRawData32(frame);
-            }
-            dl::encodeToTensor(source, tensor, ctx, source_image_size, params);
-
-        } else if constexpr (std::is_same_v<ParamsT, dl::Point2DEncoderParams>) {
-            auto point_data = dm.getData<PointData>(binding.data_key);
-            if (!point_data) return;
-
-            auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
-            std::vector<Point2D<float>> points_vec;
-            points_vec.reserve(static_cast<std::size_t>(points_at_frame.size()));
-            for (auto const & pt: points_at_frame) {
-                points_vec.push_back(pt);
-            }
-            dl::encodeToTensor(points_vec, tensor, ctx, source_image_size, params);
-
-        } else if constexpr (std::is_same_v<ParamsT, dl::Mask2DEncoderParams>) {
-            auto mask_data = dm.getData<MaskData>(binding.data_key);
-            if (!mask_data) return;
-
-            auto masks_at_frame = mask_data->getAtTime(TimeFrameIndex(frame));
-            Mask2D mask_to_encode;
-            for (auto const & m: masks_at_frame) {
-                mask_to_encode = m;
-                break;
-            }
-            dl::encodeToTensor(mask_to_encode, tensor, ctx, source_image_size, params);
-
-        } else if constexpr (std::is_same_v<ParamsT, dl::Line2DEncoderParams>) {
-            auto line_data = dm.getData<LineData>(binding.data_key);
-            if (!line_data) return;
-
-            auto lines_at_frame = line_data->getAtTime(TimeFrameIndex(frame));
-            Line2D line_to_encode;
-            for (auto const & l: lines_at_frame) {
-                line_to_encode = l;
-                break;
-            }
-            dl::encodeToTensor(line_to_encode, tensor, ctx, source_image_size, params);
-        }
+        dl::encodeToTensor(*source, tensor, ctx, source_image_size, params);
     });
 }
 
@@ -309,6 +472,7 @@ assembleInputs(
         std::vector<SlotBindingData> const & input_bindings,
         std::vector<StaticInputData> const & static_inputs,
         std::unordered_map<std::string, at::Tensor> const & static_cache,
+        dl::DataBank const & data_bank,
         std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
         int batch_size,
@@ -459,7 +623,9 @@ assembleInputs(
                 }
 
                 for (auto const * entry: entries) {
-                    if (entry->data_key.empty()) continue;
+                    if (entry->data_key.empty() && entry->bank_entry_id.empty()) {
+                        continue;
+                    }
                     if (entry->memory_index >= static_cast<int>(seq_len)) {
                         std::cerr << "SlotAssembler: memory_index "
                                   << entry->memory_index
@@ -481,34 +647,23 @@ assembleInputs(
                     }
 
                     auto const mode = captureModeFromString(entry->capture_mode_str);
-                    auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
 
                     // Get the target slice: tensor[:, ..., memory_index, ..., :]
                     // where memory_index is along full_seq_dim
                     auto target_slice = tensor.select(full_seq_dim, entry->memory_index);
 
                     if (mode == CaptureMode::Absolute) {
-                        auto cache_it = static_cache.find(key);
-                        if (cache_it != static_cache.end()) {
-                            auto cached = cache_it->second;
-                            // Cached tensor has shape {1, ...elem_shape}
-                            // Expand to {batch_size, ...elem_shape} if needed
-                            if (batch_size > 1 && cached.size(0) == 1) {
-                                std::vector<int64_t> expand_sizes(
-                                        static_cast<std::size_t>(cached.dim()), -1);
-                                expand_sizes[0] = batch_size;
-                                cached = cached.expand(expand_sizes);
-                            }
-                            // target_slice has shape {batch_size, ...elem_shape}
-                            target_slice.copy_(cached);
+                        if (auto cached = getAbsoluteCachedTensor(
+                                    *entry, data_bank, static_cache, batch_size)) {
+                            target_slice.copy_(*cached);
                             ++filled_count;
                             continue;
                         }
-                        // Fall through to relative encoding if not yet captured
+                        if (!entry->bank_entry_id.empty()) {
+                            continue;
+                        }
                     }
 
-                    // Relative mode (or Absolute without cache): encode live
-                    // Create a temp tensor with per-element shape for encoding
                     std::vector<int64_t> temp_shape = {1};
                     temp_shape.insert(temp_shape.end(),
                                       elem_shape.begin(), elem_shape.end());
@@ -516,23 +671,13 @@ assembleInputs(
 
                     int const frame = computeEncodingFrame(
                             current_frame, 0, entry->time_offset, max_frame);
-                    SlotBindingData temp_binding;
-                    temp_binding.slot_name = slot.name;
-                    temp_binding.data_key = entry->data_key;
-                    dl::widget::assignEncoderFromFactoryName(
-                            temp_binding.encoder, slot.recommended_encoder);
-                    encodeDynamicSlot(dm, temp_binding, elem_slot, temp,
-                                      frame, 0, source_image_size,
-                                      media_overrides);
-
-                    // Expand temp from {1, ...elem_shape} to {batch_size, ...}
-                    if (batch_size > 1) {
-                        std::vector<int64_t> expand_sizes(
-                                static_cast<std::size_t>(temp.dim()), -1);
-                        expand_sizes[0] = batch_size;
-                        temp = temp.expand(expand_sizes);
+                    if (!encodeStaticEntryToTensor(
+                                dm, *entry, elem_slot, data_bank, temp, frame,
+                                source_image_size, media_overrides)) {
+                        continue;
                     }
-                    target_slice.copy_(temp);
+
+                    target_slice.copy_(expandLeadingBatchDim(temp, batch_size));
                     ++filled_count;
                 }
 
@@ -549,48 +694,38 @@ assembleInputs(
             } else if (entries.empty() && slot_claimed && !slot_claimed->empty()) {
                 // Hybrid-only: create a zero tensor for the slot so that
                 // recurrent injection has a target tensor to fill into.
-                std::vector<int64_t> tensor_shape = {batch_size};
-                tensor_shape.insert(tensor_shape.end(),
-                                    slot.shape.begin(), slot.shape.end());
-                result[slot.name] = at::zeros(tensor_shape,
+                std::vector<int64_t> hybrid_tensor_shape = {batch_size};
+                hybrid_tensor_shape.insert(hybrid_tensor_shape.end(),
+                                         slot.shape.begin(), slot.shape.end());
+                result[slot.name] = at::zeros(hybrid_tensor_shape,
                                               toTorchDType(slot.dtype));
             } else {
                 // ── Non-sequence static slot (original behavior) ──
                 for (auto const * entry: entries) {
-                    if (entry->data_key.empty()) continue;
-
-                    auto const mode = captureModeFromString(entry->capture_mode_str);
-                    auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
-
-                    if (mode == CaptureMode::Absolute) {
-                        // Absolute mode: use cached tensor if available
-                        auto cache_it = static_cache.find(key);
-                        if (cache_it != static_cache.end()) {
-                            auto cached = cache_it->second;
-                            // Expand along batch dimension if needed
-                            if (batch_size > 1 && cached.size(0) == 1) {
-                                std::vector<int64_t> expand_sizes(
-                                        static_cast<std::size_t>(cached.dim()), -1);
-                                expand_sizes[0] = batch_size;
-                                cached = cache_it->second.expand(expand_sizes);
-                            }
-                            // Copy cached data into the output tensor
-                            tensor.copy_(cached);
-                            continue;
-                        }
-                        // Fall through to relative encoding if not yet captured
+                    if (entry->data_key.empty() && entry->bank_entry_id.empty()) {
+                        continue;
                     }
 
-                    // Relative mode (or Absolute without cache): encode live
+                    auto const mode = captureModeFromString(entry->capture_mode_str);
+
+                    if (mode == CaptureMode::Absolute) {
+                        if (auto cached = getAbsoluteCachedTensor(
+                                    *entry, data_bank, static_cache, batch_size)) {
+                            tensor.copy_(*cached);
+                            continue;
+                        }
+                        if (!entry->bank_entry_id.empty()) {
+                            continue;
+                        }
+                    }
+
                     int const frame = computeEncodingFrame(
                             current_frame, 0, entry->time_offset, max_frame);
-                    SlotBindingData temp_binding;
-                    temp_binding.slot_name = slot.name;
-                    temp_binding.data_key = entry->data_key;
-                    dl::widget::assignEncoderFromFactoryName(
-                            temp_binding.encoder, slot.recommended_encoder);
-                    encodeDynamicSlot(dm, temp_binding, slot, tensor, frame, 0, source_image_size,
-                                      media_overrides);
+                    if (!encodeStaticEntryToTensor(
+                                dm, *entry, slot, data_bank, tensor, frame,
+                                source_image_size, media_overrides)) {
+                        continue;
+                    }
                 }
             }
             result[slot.name] = std::move(tensor);
@@ -990,21 +1125,30 @@ void SlotAssembler::initDeviceForCurrentThread() {
 // Instance: static tensor cache
 // ════════════════════════════════════════════════════════════════════════════
 
-bool SlotAssembler::captureStaticInput(
+bool SlotAssembler::captureToBank(
         DataManager & dm,
+        std::string const & bank_entry_id,
         StaticInputData const & entry,
         int frame,
         ImageSize source_image_size) {
 
-    if (!_impl->model) return false;
-    if (entry.data_key.empty()) return false;
+    if (!_impl->model) {
+        return false;
+    }
+    if (entry.data_key.empty()) {
+        return false;
+    }
+    if (auto const err = dl::validateEntryId(bank_entry_id)) {
+        spdlog::error("SlotAssembler::captureToBank: {}", *err);
+        return false;
+    }
 
     auto const input_slot_vec = _impl->model->inputSlots();
     auto const * slot = findSlot(input_slot_vec, entry.slot_name);
-    if (!slot || !slot->is_static) return false;
+    if (!slot || !slot->is_static) {
+        return false;
+    }
 
-    // For sequence slots, capture at per-element shape (excluding the
-    // sequence dimension). For non-sequence slots, use the full shape.
     std::vector<int64_t> encode_shape;
     if (slot->hasSequenceDim()) {
         encode_shape = perElementShape(*slot);
@@ -1012,13 +1156,6 @@ bool SlotAssembler::captureStaticInput(
         encode_shape = slot->shape;
     }
 
-    // Create a single-batch tensor and encode into it
-    std::vector<int64_t> tensor_shape = {1};
-    tensor_shape.insert(tensor_shape.end(),
-                        encode_shape.begin(), encode_shape.end());
-    auto tensor = at::zeros(tensor_shape, toTorchDType(slot->dtype));
-
-    // Build a temporary descriptor with the encoding shape
     dl::TensorSlotDescriptor encode_slot = *slot;
     encode_slot.shape = encode_shape;
     encode_slot.sequence_dim = -1;
@@ -1029,15 +1166,64 @@ bool SlotAssembler::captureStaticInput(
     dl::widget::assignEncoderFromFactoryName(
             temp_binding.encoder, slot->recommended_encoder);
 
-    encodeDynamicSlot(dm, temp_binding, encode_slot, tensor, frame, 0, source_image_size);
+    auto const source = fetchEncodingSource(dm, temp_binding, frame);
+    if (!source) {
+        return false;
+    }
+
+    dl::DataBankEntryMetadata metadata;
+    metadata.data_key = entry.data_key;
+    metadata.captured_frame = frame;
+    metadata.source_image_size = source_image_size;
+    metadata.encoder_factory_name = slot->recommended_encoder;
+
+    if (!_impl->data_bank->putSource(bank_entry_id, *source, metadata)) {
+        return false;
+    }
+
+    auto const encoder_params =
+            dl::encoderParamsFromFactoryName(slot->recommended_encoder);
+    if (!encoder_params) {
+        spdlog::error(
+                "SlotAssembler::captureToBank: unknown encoder '{}' for slot '{}'",
+                slot->recommended_encoder,
+                entry.slot_name);
+        return false;
+    }
+
+    return _impl->data_bank->encodeEntry(
+            bank_entry_id, encode_slot, *encoder_params);
+}
+
+bool SlotAssembler::captureStaticInput(
+        DataManager & dm,
+        StaticInputData const & entry,
+        int frame,
+        ImageSize source_image_size) {
+
+    std::string const bank_id = entry.bank_entry_id.empty()
+                                        ? defaultBankEntryId(
+                                                  entry.slot_name,
+                                                  entry.memory_index)
+                                        : entry.bank_entry_id;
+
+    if (!captureToBank(dm, bank_id, entry, frame, source_image_size)) {
+        return false;
+    }
+
+    auto const encoded = _impl->data_bank->getEncoded(bank_id);
+    if (!encoded) {
+        return false;
+    }
 
     auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
-    _impl->static_cache[key] = std::move(tensor);
+    _impl->static_cache[key] = encoded->clone();
     return true;
 }
 
 void SlotAssembler::clearStaticCacheEntry(std::string const & cache_key) {
     _impl->static_cache.erase(cache_key);
+    _impl->data_bank->remove(bankEntryIdFromCacheKey(cache_key));
 }
 
 void SlotAssembler::clearStaticCache() {
@@ -1045,32 +1231,44 @@ void SlotAssembler::clearStaticCache() {
 }
 
 bool SlotAssembler::hasStaticCacheEntry(std::string const & cache_key) const {
-    return _impl->static_cache.contains(cache_key);
+    if (_impl->static_cache.contains(cache_key)) {
+        return true;
+    }
+    auto const bank_id = bankEntryIdFromCacheKey(cache_key);
+    return _impl->data_bank->getEncoded(bank_id).has_value();
 }
 
 std::vector<std::string> SlotAssembler::staticCacheKeys() const {
-    std::vector<std::string> keys;
-    keys.reserve(_impl->static_cache.size());
+    std::set<std::string> keys;
     for (auto const & [k, _]: _impl->static_cache) {
-        keys.push_back(k);
+        keys.insert(k);
     }
-    return keys;
+    for (auto const & bank_id: _impl->data_bank->ids()) {
+        if (_impl->data_bank->getEncoded(bank_id)) {
+            keys.insert(bank_id);
+        }
+    }
+    return {keys.begin(), keys.end()};
 }
 
 std::vector<int64_t> SlotAssembler::staticCacheTensorShape(
         std::string const & cache_key) const {
-    auto it = _impl->static_cache.find(cache_key);
-    if (it == _impl->static_cache.end()) return {};
-    auto sizes = it->second.sizes();
-    return {sizes.begin(), sizes.end()};
+    auto const it = _impl->static_cache.find(cache_key);
+    if (it != _impl->static_cache.end()) {
+        auto const sizes = it->second.sizes();
+        return {sizes.begin(), sizes.end()};
+    }
+    return _impl->data_bank->encodedShape(bankEntryIdFromCacheKey(cache_key));
 }
 
 std::pair<float, float> SlotAssembler::staticCacheTensorRange(
         std::string const & cache_key) const {
-    auto it = _impl->static_cache.find(cache_key);
-    if (it == _impl->static_cache.end()) return {0.0f, 0.0f};
-    auto const & t = it->second;
-    return {t.min().item<float>(), t.max().item<float>()};
+    auto const it = _impl->static_cache.find(cache_key);
+    if (it != _impl->static_cache.end()) {
+        auto const & t = it->second;
+        return {t.min().item<float>(), t.max().item<float>()};
+    }
+    return _impl->data_bank->encodedRange(bankEntryIdFromCacheKey(cache_key));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1098,6 +1296,7 @@ void SlotAssembler::runSingleFrame(
             dm, *_impl->model,
             input_bindings, static_inputs,
             _impl->static_cache,
+            *_impl->data_bank,
             {},// no recurrent bindings in single-frame mode
             current_frame, /*batch_size=*/1);
 
@@ -1168,6 +1367,7 @@ void SlotAssembler::runBatchRange(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
                 _impl->static_cache,
+                *_impl->data_bank,
                 {},// no recurrent bindings
                 chunk_start, /*batch_size=*/chunk_size);
 
@@ -1262,6 +1462,7 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                     dm, *_impl->model,
                     input_bindings, static_inputs,
                     _impl->static_cache,
+                    *_impl->data_bank,
                     {},// no recurrent bindings
                     chunk_start, /*batch_size=*/chunk_size,
                     &media_overrides);
@@ -1370,40 +1571,56 @@ void SlotAssembler::runRecurrentSequence(
                     at::zeros(init_shape, toTorchDType(input_slot->dtype));
 
         } else if (mode == RecurrentInitMode::StaticCapture) {
-            // For hybrid mode, use the target_memory_index as cache key
             int const mem_idx = rb.hasTargetMemoryIndex()
                                         ? rb.target_memory_index
                                         : 0;
             auto const static_key = staticCacheKey(rb.input_slot_name, mem_idx);
-            auto cache_it = _impl->static_cache.find(static_key);
-            if (cache_it != _impl->static_cache.end()) {
-                _impl->recurrent_cache[key] = cache_it->second.clone();
-            } else {
-                // If not captured yet, try to encode from init_data_key / init_frame
-                if (!rb.init_data_key.empty() && rb.init_frame >= 0) {
-                    StaticInputData temp_entry;
-                    temp_entry.slot_name = rb.input_slot_name;
-                    temp_entry.memory_index = mem_idx;
-                    temp_entry.data_key = rb.init_data_key;
-                    temp_entry.setCaptureMode(CaptureMode::Absolute);
 
-                    if (captureStaticInput(dm, temp_entry, rb.init_frame,
-                                           source_image_size)) {
-                        auto it2 = _impl->static_cache.find(static_key);
-                        if (it2 != _impl->static_cache.end()) {
-                            _impl->recurrent_cache[key] = it2->second.clone();
-                        }
+            std::optional<at::Tensor> init_tensor;
+            if (auto const * static_entry = findStaticInputEntry(
+                        static_inputs, rb.input_slot_name, mem_idx)) {
+                init_tensor = getAbsoluteCachedTensor(
+                        *static_entry,
+                        *_impl->data_bank,
+                        _impl->static_cache,
+                        /*batch_size=*/1);
+            }
+            if (!init_tensor) {
+                auto cache_it = _impl->static_cache.find(static_key);
+                if (cache_it != _impl->static_cache.end()) {
+                    init_tensor = cache_it->second;
+                }
+            }
+            if (!init_tensor) {
+                auto const bank_id = defaultBankEntryId(rb.input_slot_name, mem_idx);
+                init_tensor = _impl->data_bank->getEncoded(bank_id);
+            }
+
+            if (init_tensor) {
+                _impl->recurrent_cache[key] = init_tensor->clone();
+            } else if (!rb.init_data_key.empty() && rb.init_frame >= 0) {
+                StaticInputData temp_entry;
+                temp_entry.slot_name = rb.input_slot_name;
+                temp_entry.memory_index = mem_idx;
+                temp_entry.data_key = rb.init_data_key;
+                temp_entry.setCaptureMode(CaptureMode::Absolute);
+
+                if (captureStaticInput(dm, temp_entry, rb.init_frame,
+                                       source_image_size)) {
+                    if (auto encoded = _impl->data_bank->getEncoded(
+                                defaultBankEntryId(rb.input_slot_name, mem_idx))) {
+                        _impl->recurrent_cache[key] = encoded->clone();
                     }
                 }
-                // If still missing, fall back to zeros
-                if (!_impl->recurrent_cache.contains(key)) {
-                    std::cerr << "SlotAssembler: StaticCapture init failed for '"
-                              << rb.input_slot_name
-                              << "', falling back to zeros\n";
-                    _impl->recurrent_cache[key] =
-                            at::zeros(init_shape,
-                                      toTorchDType(input_slot->dtype));
-                }
+            }
+
+            if (!_impl->recurrent_cache.contains(key)) {
+                spdlog::warn(
+                        "SlotAssembler: StaticCapture init failed for '{}', "
+                        "falling back to zeros",
+                        rb.input_slot_name);
+                _impl->recurrent_cache[key] =
+                        at::zeros(init_shape, toTorchDType(input_slot->dtype));
             }
 
         } else if (mode == RecurrentInitMode::FirstOutput) {
@@ -1465,6 +1682,7 @@ void SlotAssembler::runRecurrentSequence(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
                 _impl->static_cache,
+                *_impl->data_bank,
                 recurrent_bindings,
                 frame, /*batch_size=*/1);
 

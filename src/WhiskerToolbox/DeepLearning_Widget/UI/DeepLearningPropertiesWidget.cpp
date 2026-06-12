@@ -6,6 +6,7 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"
+#include "DeepLearning_Widget/UI/DataBank/DataBankPropertiesWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
@@ -220,6 +221,13 @@ void DeepLearningPropertiesWidget::_buildUi() {
                 this, &DeepLearningPropertiesWidget::_onWeightsBrowseClicked);
         connect(_weights_path_edit, &QLineEdit::editingFinished,
                 this, &DeepLearningPropertiesWidget::_onWeightsPathEdited);
+    }
+
+    // ── Memory bank (static input library) ──
+    {
+        _data_bank_properties =
+                new dl::widget::DataBankPropertiesWidget(this);
+        main_layout->addWidget(_data_bank_properties);
     }
 
     // ── Scroll area for dynamic slot panels ──

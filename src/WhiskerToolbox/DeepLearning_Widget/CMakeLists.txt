@@ -32,6 +32,13 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
 
+    UI/DataBank/DataBankPropertiesWidget.hpp
+    UI/DataBank/DataBankPropertiesWidget.cpp
+    UI/DataBank/DataBankPropertiesWidget.ui
+    UI/DataBank/DataBankViewWidget.hpp
+    UI/DataBank/DataBankViewWidget.cpp
+    UI/DataBank/DataBankViewWidget.ui
+
     UI/Helpers/DataSourceComboHelper.hpp
     UI/Helpers/DataSourceComboHelper.cpp
     UI/Helpers/DynamicInputSlotWidget.hpp
@@ -77,6 +84,7 @@ target_link_libraries(DeepLearning_Widget PRIVATE AutoParamWidget)
 target_include_directories(DeepLearning_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

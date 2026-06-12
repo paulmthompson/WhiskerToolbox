@@ -285,11 +285,27 @@ public:
     // ── Instance: static tensor cache ──────────────────────────────────────
 
     /**
+     * @brief Capture a static input into a named DataBank entry.
+     *
+     * Fetches geometry/image data from DataManager, stores the source in the
+     * DataBank, and channel-encodes it for the static slot.
+     *
+     * @pre bank_entry_id must pass dl::validateEntryId()
+     * @pre entry.data_key must be non-empty
+     */
+    bool captureToBank(
+            DataManager & dm,
+            std::string const & bank_entry_id,
+            StaticInputData const & entry,
+            int frame,
+            ImageSize source_image_size);
+
+    /**
      * @brief Capture a static input at a specific frame and store in the cache.
      * 
      * Encodes the data from DataManager at the given frame using the model's
-     * recommended encoder for the slot, then stores the resulting tensor.
-     * The cached tensor is reused during inference for Absolute-mode entries.
+     * recommended encoder for the slot, then stores the resulting tensor in
+     * the DataBank and legacy static_cache.
      * 
      * @param dm DataManager to fetch data from
      * @param entry Static input entry describing what to capture
