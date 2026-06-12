@@ -169,6 +169,8 @@ struct RuntimeModelSpec {
     std::optional<std::vector<WeightsVariant>> weights_variants;
     std::vector<SlotSpec> inputs;
     std::vector<SlotSpec> outputs;
+    /** UI hint: post-encoder module registry key (e.g. "global_avg_pool") */
+    std::optional<std::string> recommended_post_encoder;
     /** Optional post-encoder pipeline */
     std::optional<std::vector<PostEncoderStepSpec>> post_encoder;
 

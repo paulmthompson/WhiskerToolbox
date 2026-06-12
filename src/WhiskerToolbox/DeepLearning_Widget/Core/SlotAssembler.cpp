@@ -1638,6 +1638,7 @@ std::optional<ModelDisplayInfo> SlotAssembler::getModelDisplayInfo(
     display.preferred_batch_size = info->preferred_batch_size;
     display.max_batch_size = info->max_batch_size;
     display.batch_mode = info->batch_mode;
+    display.recommended_post_encoder = info->recommended_post_encoder;
     return display;
 }
 
@@ -1656,6 +1657,7 @@ std::optional<ModelDisplayInfo> SlotAssembler::currentModelDisplayInfo() const {
     display.preferred_batch_size = model.preferredBatchSize();
     display.max_batch_size = model.maxBatchSize();
     display.batch_mode = model.batchMode();
+    display.recommended_post_encoder = model.recommendedPostEncoderModule();
     return display;
 }
 

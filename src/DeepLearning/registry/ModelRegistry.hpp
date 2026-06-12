@@ -66,6 +66,8 @@ public:
         int max_batch_size = 0;
         /** Rich batch-size constraint */
         BatchMode batch_mode = DynamicBatch{1, 0};
+        /** Post-encoder module registry key; empty = none recommended */
+        std::string recommended_post_encoder;
     };
 
     /**

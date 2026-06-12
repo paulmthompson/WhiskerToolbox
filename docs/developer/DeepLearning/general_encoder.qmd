@@ -101,8 +101,10 @@ auto model = dl::ModelRegistry::instance().create("convnext_tiny_encoder");
 ### Option 3: Widget UI
 
 The `GeneralEncoderModel` appears in the Deep Learning widget's model selector as 
-"General Encoder". Select it, configure the image binding, load weights, and run 
-inference through the standard widget workflow.
+"General Encoder". By default the widget recommends **Global Average Pooling** as 
+the post-encoder module and **TensorToFeatureVector** as the output decoder. Select 
+the model, configure the image binding, load weights, and run inference through the 
+standard widget workflow.
 
 #### Runtime Shape Configuration
 

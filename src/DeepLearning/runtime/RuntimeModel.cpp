@@ -53,6 +53,10 @@ std::vector<TensorSlotDescriptor> RuntimeModel::outputSlots() const {
     return _output_slots;
 }
 
+std::string RuntimeModel::recommendedPostEncoderModule() const {
+    return _spec.recommended_post_encoder.value_or("");
+}
+
 void RuntimeModel::loadWeights(std::filesystem::path const & path) {
     _execution->load(path);
 }

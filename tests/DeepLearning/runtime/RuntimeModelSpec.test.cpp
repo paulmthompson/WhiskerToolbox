@@ -642,6 +642,53 @@ TEST_CASE("RuntimeModelSpec - parse without backend field defaults to empty", "[
     CHECK_FALSE(result.value().backend.has_value());
 }
 
+TEST_CASE("RuntimeModelSpec - parse recommended_post_encoder field", "[runtime]") {
+    auto json = R"({
+        "model_id": "encoder_json",
+        "display_name": "Encoder JSON",
+        "inputs": [
+            { "name": "image", "shape": [3, 224, 224] }
+        ],
+        "outputs": [
+            {
+                "name": "features",
+                "shape": [768, 7, 7],
+                "recommended_decoder": "TensorToFeatureVector"
+            }
+        ],
+        "recommended_post_encoder": "global_avg_pool"
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto const & spec = result.value();
+    REQUIRE(spec.recommended_post_encoder.has_value());
+    CHECK(spec.recommended_post_encoder.value() == "global_avg_pool");
+}
+
+TEST_CASE("RuntimeModelSpec - recommended_post_encoder roundtrips through toJson",
+          "[runtime]") {
+    auto json = R"({
+        "model_id": "encoder_json",
+        "display_name": "Encoder JSON",
+        "inputs": [
+            { "name": "image", "shape": [3, 224, 224] }
+        ],
+        "outputs": [
+            { "name": "features", "shape": [768, 7, 7] }
+        ],
+        "recommended_post_encoder": "global_avg_pool"
+    })";
+
+    auto result1 = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result1);
+    auto serialized = result1.value().toJson();
+    auto result2 = dl::RuntimeModelSpec::fromJson(serialized);
+    REQUIRE(result2);
+    REQUIRE(result2.value().recommended_post_encoder.has_value());
+    CHECK(result2.value().recommended_post_encoder.value() == "global_avg_pool");
+}
+
 TEST_CASE("RuntimeModelSpec - backend field roundtrips through toJson", "[runtime]") {
     auto json = R"({
         "model_id": "roundtrip_backend",

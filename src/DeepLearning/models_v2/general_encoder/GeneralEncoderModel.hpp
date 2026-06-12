@@ -83,6 +83,7 @@ public:
 
     [[nodiscard]] std::vector<TensorSlotDescriptor> inputSlots() const override;
     [[nodiscard]] std::vector<TensorSlotDescriptor> outputSlots() const override;
+    [[nodiscard]] std::string recommendedPostEncoderModule() const override;
 
     void loadWeights(std::filesystem::path const & path) override;
     [[nodiscard]] bool isReady() const override;

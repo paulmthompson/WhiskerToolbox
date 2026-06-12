@@ -261,6 +261,9 @@ When defining `inputSlots()` and `outputSlots()`, consider:
 
 - **`recommended_encoder`** / **`recommended_decoder`** — the UI pre-selects these but the 
   user can override them. Choose the most common use case.
+- **`recommendedPostEncoderModule()`** — optional model-level hint (registry key, e.g. 
+  `"global_avg_pool"`). The UI pre-selects this in the Post-Encoder section when the user 
+  switches models. JSON specs use `"recommended_post_encoder"`.
 - **`is_static = true`** — use for memory inputs that the user sets once (e.g., reference 
   frames). The UI renders these as a separate "Memory Inputs" section.
 - **`is_boolean_mask = true`** — use for 0/1 flag tensors that indicate which memory slots 

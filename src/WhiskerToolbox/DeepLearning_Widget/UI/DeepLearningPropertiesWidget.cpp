@@ -193,7 +193,8 @@ void DeepLearningPropertiesWidget::_buildUi() {
 
         connect(_model_combo,
                 QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this, &DeepLearningPropertiesWidget::_onModelComboChanged);
+                this,
+                [this](int index) { _onModelComboChanged(index, true); });
     }
 
     // ── Weights ──
@@ -317,10 +318,12 @@ void DeepLearningPropertiesWidget::_populateModelCombo() {
     }
     _model_combo->blockSignals(false);
 
-    _onModelComboChanged(_model_combo->currentIndex());
+    _onModelComboChanged(_model_combo->currentIndex(), false);
 }
 
-void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
+void DeepLearningPropertiesWidget::_onModelComboChanged(
+        int index,
+        bool apply_recommendations) {
     auto const model_id =
             _model_combo->itemData(index).toString().toStdString();
     _state->setSelectedModelId(model_id);
@@ -351,7 +354,15 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
             if (max_b > 0) {
                 _batch_size_spin->setMaximum(max_b);
             }
+
+            if (apply_recommendations) {
+                dl::widget::PostEncoderSlotParams pe;
+                auto const & rec = _current_info->recommended_post_encoder;
+                pe.module_key = rec.empty() ? "none" : rec;
+                _state->setPostEncoderParams(pe);
+            }
         }
+
         _assembler->loadModel(model_id);
 
         // Apply saved encoder shape if configured
@@ -529,7 +540,6 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     }
 
     auto const & inputs = _current_info->inputs;
-    auto const & outputs = _current_info->outputs;
 
     // ── Encoder shape configuration (GeneralEncoderModel only) ──
     if (_current_info->model_id == "general_encoder") {
@@ -654,7 +664,7 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 has_recurrent = true;
             }
             auto * rb_widget = new dl::widget::RecurrentBindingWidget(
-                    slot, outputs, _data_manager, _dynamic_container);
+                    slot, _current_info->outputs, _data_manager, _dynamic_container);
             for (auto const & rb: _state->recurrentBindings()) {
                 if (rb.input_slot_name == slot.name) {
                     rb_widget->setParams(
@@ -670,12 +680,26 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
         }
     }
 
+    // ── Post-Encoder Module (before Outputs — matches inference pipeline) ──
+    auto * post_encoder_widget = new dl::widget::PostEncoderWidget(
+            _state, _data_manager, _assembler.get(), _dynamic_container);
+    connect(post_encoder_widget, &dl::widget::PostEncoderWidget::bindingChanged,
+            this, &DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency);
+    _post_encoder_widget = post_encoder_widget;
+    _dynamic_layout->addWidget(post_encoder_widget);
+
+    if (auto const info = _assembler->currentModelDisplayInfo()) {
+        _current_info = info;
+    }
+
+    auto const & effective_outputs = _current_info->outputs;
+
     // ── Outputs ──
-    if (!outputs.empty()) {
+    if (!effective_outputs.empty()) {
         _dynamic_layout->addWidget(
                 new QLabel(tr("<b>Outputs</b>"), _dynamic_container));
     }
-    for (auto const & slot: outputs) {
+    for (auto const & slot: effective_outputs) {
         auto * slot_widget = new dl::widget::OutputSlotWidget(
                 slot, _data_manager, _dynamic_container);
         auto const & saved = _state->outputBindings();
@@ -692,14 +716,6 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
         _output_slot_widgets.push_back(slot_widget);
         _dynamic_layout->addWidget(slot_widget);
     }
-
-    // ── Post-Encoder Module ──
-    auto * post_encoder_widget = new dl::widget::PostEncoderWidget(
-            _state, _data_manager, _assembler.get(), _dynamic_container);
-    connect(post_encoder_widget, &dl::widget::PostEncoderWidget::bindingChanged,
-            this, &DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency);
-    _post_encoder_widget = post_encoder_widget;
-    _dynamic_layout->addWidget(post_encoder_widget);
 
     // Apply initial consistency (honours saved post-encoder state)
     _enforcePostEncoderDecoderConsistency();

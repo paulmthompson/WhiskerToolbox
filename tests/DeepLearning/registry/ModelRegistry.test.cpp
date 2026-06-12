@@ -232,6 +232,16 @@ TEST_CASE("ModelRegistry - getModelInfo for AlphaModel", "[ModelRegistry]")
     REQUIRE(info->outputs.size() == 1);
     CHECK(info->outputs[0].name == "heatmap");
     CHECK(info->outputs[0].recommended_decoder == "TensorToMask2D");
+    CHECK(info->recommended_post_encoder.empty());
+}
+
+TEST_CASE("ModelRegistry - getModelInfo for GeneralEncoder post-encoder hint",
+          "[ModelRegistry]") {
+    auto const info = dl::ModelRegistry::instance().getModelInfo("general_encoder");
+    REQUIRE(info.has_value());
+    CHECK(info->recommended_post_encoder == "global_avg_pool");
+    REQUIRE(info->outputs.size() == 1);
+    CHECK(info->outputs[0].recommended_decoder == "TensorToFeatureVector");
 }
 
 TEST_CASE("ModelRegistry - getModelInfo for BetaModel", "[ModelRegistry]")

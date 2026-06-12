@@ -133,7 +133,7 @@ void PostEncoderWidget::setParams(PostEncoderSlotParams const & p) {
 }
 
 void PostEncoderWidget::syncToAssembler() {
-    if (_assembler->isModelReady()) {
+    if (!_assembler->currentModelId().empty()) {
         _assembler->configurePostEncoderModule(params(), _sourceImageSize());
     }
 }
@@ -158,7 +158,7 @@ void PostEncoderWidget::_applyToStateAndAssembler() {
     auto const p = params();
     _state->setPostEncoderParams(p);
 
-    if (_assembler->isModelReady()) {
+    if (!_assembler->currentModelId().empty()) {
         _assembler->configurePostEncoderModule(p, _sourceImageSize());
     }
 }

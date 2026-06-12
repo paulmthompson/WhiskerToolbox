@@ -105,6 +105,16 @@ public:
     }
 
     /**
+     * @brief Recommended post-encoder module key for the UI (e.g. "global_avg_pool").
+     *
+     * Empty string means no post-encoder module is recommended.
+     * The UI pre-selects this but the user can override it.
+     */
+    [[nodiscard]] virtual std::string recommendedPostEncoderModule() const {
+        return {};
+    }
+
+    /**
      * @brief Run inference.
      *
      * @param inputs Map of slot_name → Tensor, each with a leading batch dimension.

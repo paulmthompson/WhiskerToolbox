@@ -113,7 +113,7 @@ signals:
     void batchProgressChanged(int current, int total);
 
 private slots:
-    void _onModelComboChanged(int index);
+    void _onModelComboChanged(int index, bool apply_recommendations = true);
     void _onWeightsBrowseClicked();
     void _onWeightsPathEdited();
     void _onDeviceComboChanged(int index);

@@ -82,12 +82,16 @@ std::vector<TensorSlotDescriptor> GeneralEncoderModel::outputSlots() const {
              .shape = _output_shape,
              .description = "Extracted feature tensor",
              .recommended_encoder = {},
-             .recommended_decoder = {},
+             .recommended_decoder = "TensorToFeatureVector",
              .is_static = false,
              .is_boolean_mask = false,
              .dtype = TensorDType::Float32,
              .sequence_dim = -1},
     };
+}
+
+std::string GeneralEncoderModel::recommendedPostEncoderModule() const {
+    return "global_avg_pool";
 }
 
 // ---------------------------------------------------------------------------

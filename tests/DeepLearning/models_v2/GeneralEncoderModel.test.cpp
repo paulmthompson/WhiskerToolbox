@@ -135,11 +135,17 @@ TEST_CASE("GeneralEncoderModel - features output slot descriptor", "[GeneralEnco
     auto const expected_shape = std::vector<int64_t>{384, 7, 7};
     CHECK(slot.name == "features");
     CHECK(slot.shape == expected_shape);
-    CHECK(slot.recommended_decoder.empty());
+    CHECK(slot.recommended_decoder == "TensorToFeatureVector");
     CHECK(slot.is_static == false);
     CHECK(slot.dtype == dl::TensorDType::Float32);
     CHECK(slot.sequence_dim == -1);
     CHECK_FALSE(slot.description.empty());
+}
+
+TEST_CASE("GeneralEncoderModel - recommends global average pooling post-encoder",
+          "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel const model;
+    CHECK(model.recommendedPostEncoderModule() == "global_avg_pool");
 }
 
 TEST_CASE("GeneralEncoderModel - custom output slot reflects constructor args", "[GeneralEncoderModel]") {

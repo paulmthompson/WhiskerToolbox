@@ -173,6 +173,7 @@ void ModelRegistry::ensureCached(std::string const & model_id) const {
     info.preferred_batch_size = model->preferredBatchSize();
     info.max_batch_size = model->maxBatchSize();
     info.batch_mode = model->batchMode();
+    info.recommended_post_encoder = model->recommendedPostEncoderModule();
 
     _info_cache[model_id] = std::move(info);
 }

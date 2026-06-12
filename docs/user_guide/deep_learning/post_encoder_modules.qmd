@@ -11,7 +11,7 @@ After a deep learning encoder processes each video frame into a feature map `[B,
 
 ## Selecting a Post-Encoder Module
 
-The **Post-Encoder Module** section appears at the bottom of the Deep Learning widget's **Dynamic Slots** panel, below the Outputs section.
+The **Post-Encoder Module** section appears in the Deep Learning widget's **Dynamic Slots** panel, above the Outputs section (matching the inference pipeline: model → post-encoder → decoder).
 
 Use the **Module** combo to choose one of:
 

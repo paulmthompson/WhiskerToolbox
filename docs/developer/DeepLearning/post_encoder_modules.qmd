@@ -180,7 +180,7 @@ creation time. Before each forward pass, `SlotAssembler::_updateSpatialPoint()` 
 
 The **Post-Encoder Module** section is rendered by
 [`PostEncoderWidget`](../../src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp)
-at the bottom of the Dynamic Slot panels in `DeepLearningPropertiesWidget`. It
+above the Outputs section in the Dynamic Slot panels in `DeepLearningPropertiesWidget`. It
 replaced the previous hand-built combo boxes with a schema-driven
 `AutoParamWidget` form.
 
@@ -207,8 +207,8 @@ On parameter change:
 
 1. Reads `{module_key, parameters_json}` from combo + `AutoParamWidget::toJson()`.
 2. Updates `DeepLearningState::postEncoderParams()` (serialized in workspace JSON).
-3. Calls `SlotAssembler::configurePostEncoderModule(params, ...)` when the model
-   is ready.
+3. Calls `SlotAssembler::configurePostEncoderModule(params, ...)` when a model
+   is loaded (weights not required).
 
 See [DeepLearning Widget Helpers — PostEncoderWidget](../DeepLearning_Widget/helpers.qmd#postencoderwidget)
 and [Schema-Driven Forms](../ui/schema_driven_forms.qmd) for the full pattern and
