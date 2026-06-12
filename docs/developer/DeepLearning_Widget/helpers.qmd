@@ -160,3 +160,75 @@ dm_observer_callback = [slot_widget]() {
 | Encoder sub-params | Flat mode + sigma fields for all encoders | Per-encoder stacked forms |
 | JSON round-trip | Manual field-by-field extraction | `rfl::json::write/read` on the struct |
 | Testing | Requires full widget + DM integration | Struct tests are Qt-free |
+
+## PostEncoderWidget {#postencoderwidget}
+
+**Header:** `DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp`
+
+A self-contained widget for configuring the post-encoder module section. Introduced
+in the DeepLearning widget refactoring, it replaces the hand-built
+`_buildPostEncoderSection()` panel with a schema-driven `AutoParamWidget` form.
+
+### Architecture
+
+The widget is driven by `PostEncoderSlotParams` (`module_key` + `parameters_json`):
+
+```cpp
+struct PostEncoderStepDescriptor {
+    std::string module_key = "none";
+    std::string parameters_json = "{}";
+};
+using PostEncoderSlotParams = PostEncoderStepDescriptor;
+```
+
+UI structure:
+
+- **Module combo** — from `PostEncoderModuleRegistry::moduleKeys()` + `(None)`
+- **Parameter panel** — `AutoParamWidget` with schema from `getSchema(module_key)`
+- **`point_key`** — dynamic combo when `spatial_point` is selected
+
+UI hints for `SpatialPointModuleParams` live in
+`DeepLearning/post_encoder/PostEncoderParamSchemas.hpp`.
+
+### Signals
+
+| Signal | Emitted when |
+|---|---|
+| `bindingChanged()` | Any parameter change (after state and assembler are updated) |
+
+### Typical usage
+
+```cpp
+auto * post_encoder = new PostEncoderWidget(state, dm, assembler, this);
+layout->addWidget(post_encoder);
+
+connect(post_encoder, &PostEncoderWidget::bindingChanged, this, [&]() {
+    // Coordinator reacts to module or point_key changes
+});
+
+// Refresh when DataManager keys change
+dm_observer_callback = [post_encoder]() {
+    post_encoder->refreshDataSources();
+};
+```
+
+### State and apply path
+
+- **Read:** `params()` returns `PostEncoderSlotParams` via `toJson()` →
+  `rfl::json::read`.
+- **Write:** `setParams(p)` serializes with `rfl::json::write` → `fromJson`.
+- **Persist:** `DeepLearningState::postEncoderParams()` is the workspace source
+  of truth (embedded in `DeepLearningStateData` via reflect-cpp).
+- **Apply:** `_applyToStateAndAssembler()` calls `setPostEncoderParams()`, then
+  `SlotAssembler::configurePostEncoderModule(params, ...)` when the model is ready.
+- **Re-sync:** `syncToAssembler()` re-applies params after `loadModel()` clears the
+  assembler module (called from `_loadModelIfReady()` and
+  `_enforcePostEncoderDecoderConsistency()`).
+
+### Comparison with TransformsV2_Widget
+
+`PostEncoderWidget` is the **simple** schema-driven pattern (one fixed struct, one
+form). For runtime catalogs, ordered multi-step composition, and JSON-as-state,
+see [Schema-Driven Forms](../ui/schema_driven_forms.qmd), which documents how
+TransformsV2_Widget extends the same primitives and proposes phased improvements
+for this widget.

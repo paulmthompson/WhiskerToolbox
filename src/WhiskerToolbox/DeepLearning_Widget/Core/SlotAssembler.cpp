@@ -28,7 +28,9 @@
 #include "models_v2/TensorDTypeUtils.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 #include "models_v2/general_encoder/GeneralEncoderModel.hpp"
+#include "post_encoder/PostEncoderModule.hpp"
 #include "post_encoder/PostEncoderModuleRegistry.hpp"
+#include "post_encoder/PostEncoderOutputTransform.hpp"
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
@@ -55,6 +57,7 @@
 struct SlotAssembler::Impl {
     std::unique_ptr<dl::ModelBase> model;
     std::string model_id;
+    std::unique_ptr<dl::PostEncoderModule> post_encoder_module;
 
     /// Cached tensors for Absolute-mode static inputs.
     /// Key: "slot_name:memory_index" (from staticCacheKey()).
@@ -73,6 +76,37 @@ struct SlotAssembler::Impl {
 // ════════════════════════════════════════════════════════════════════════════
 
 namespace {
+
+[[nodiscard]] std::vector<dl::TensorSlotDescriptor>
+effectiveOutputSlotsFor(
+        dl::ModelBase const * model,
+        dl::PostEncoderModule const * post_encoder) {
+    if (!model) {
+        return {};
+    }
+    return dl::effectiveOutputSlots(model->outputSlots(), post_encoder);
+}
+
+[[nodiscard]] std::unordered_map<std::string, at::Tensor>
+runModelAndPostEncoder(
+        dl::ModelBase & model,
+        dl::PostEncoderModule const * post_encoder,
+        std::unordered_map<std::string, at::Tensor> const & inputs) {
+    auto outputs = model.forward(inputs);
+    return dl::applyPostEncoderToFirstOutputSlot(
+            std::move(outputs),
+            model.outputSlots(),
+            post_encoder);
+}
+
+[[nodiscard]] bool requiresSingleFrameBatch(
+        dl::PostEncoderModule const * post_encoder) {
+    if (!post_encoder) {
+        return false;
+    }
+    return dynamic_cast<dl::SpatialPointExtractModule const *>(post_encoder) !=
+           nullptr;
+}
 
 dl::RasterMode modeFromString(std::string const & mode_str) {
     if (mode_str == "Binary") return dl::RasterMode::Binary;
@@ -627,12 +661,12 @@ void decodeOutputs(
         DataManager & dm,
         std::unordered_map<std::string, at::Tensor> const & outputs,
         std::vector<OutputBindingData> const & output_bindings,
-        dl::ModelBase const & model,
+        std::vector<dl::TensorSlotDescriptor> const & output_slots,
         int current_frame,
         ImageSize source_image_size,
         int batch_index = 0) {
 
-    auto const output_slot_vec = model.outputSlots();
+    auto const & output_slot_vec = output_slots;
 
     for (auto const & binding: output_bindings) {
         if (binding.data_key.empty()) continue;
@@ -766,13 +800,13 @@ void decodeOutputs(
 std::vector<FrameResult> decodeOutputsToBuffer(
         std::unordered_map<std::string, at::Tensor> const & outputs,
         std::vector<OutputBindingData> const & output_bindings,
-        dl::ModelBase const & model,
+        std::vector<dl::TensorSlotDescriptor> const & output_slots,
         int current_frame,
         ImageSize source_image_size,
         int batch_index = 0) {
 
     std::vector<FrameResult> frame_results;
-    auto const output_slot_vec = model.outputSlots();
+    auto const & output_slot_vec = output_slots;
 
     for (auto const & binding: output_bindings) {
         if (binding.data_key.empty()) continue;
@@ -884,6 +918,7 @@ SlotAssembler & SlotAssembler::operator=(SlotAssembler &&) noexcept = default;
 bool SlotAssembler::loadModel(std::string const & model_id) {
     _impl->model.reset();
     _impl->model_id.clear();
+    _impl->post_encoder_module.reset();
 
     if (model_id.empty()) return false;
 
@@ -931,10 +966,16 @@ std::string SlotAssembler::validateWeights() {
 
     try {
         torch::NoGradGuard const no_grad;
-        auto const outputs = _impl->model->forward(dummy_inputs);
+        auto const outputs = runModelAndPostEncoder(
+                *_impl->model,
+                _impl->post_encoder_module.get(),
+                dummy_inputs);
+        auto const effective_slots = effectiveOutputSlotsFor(
+                _impl->model.get(),
+                _impl->post_encoder_module.get());
 
         // Verify all expected output slots are present and non-empty.
-        for (auto const & expected: _impl->model->outputSlots()) {
+        for (auto const & expected: effective_slots) {
             auto it = outputs.find(expected.name);
             if (it == outputs.end()) {
                 return "Missing output slot '" + expected.name + "'";
@@ -962,6 +1003,7 @@ std::string const & SlotAssembler::currentModelId() const {
 void SlotAssembler::resetModel() {
     _impl->model.reset();
     _impl->model_id.clear();
+    _impl->post_encoder_module.reset();
     _impl->static_cache.clear();
     _impl->recurrent_cache.clear();
 }
@@ -1115,11 +1157,17 @@ void SlotAssembler::runSingleFrame(
             {},// no recurrent bindings in single-frame mode
             current_frame, /*batch_size=*/1);
 
-    auto outputs = _impl->model->forward(inputs);
+    auto const effective_slots = effectiveOutputSlotsFor(
+            _impl->model.get(),
+            _impl->post_encoder_module.get());
+    auto outputs = runModelAndPostEncoder(
+            *_impl->model,
+            _impl->post_encoder_module.get(),
+            inputs);
 
     decodeOutputs(
             dm, outputs, output_bindings,
-            *_impl->model, current_frame, source_image_size);
+            effective_slots, current_frame, source_image_size);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1150,12 +1198,13 @@ void SlotAssembler::runBatchRange(
     }
     if (batch_size < 1) batch_size = 1;
 
-    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
-    if (enc &&
-        dynamic_cast<dl::SpatialPointExtractModule *>(enc->postEncoderModule())) {
+    if (requiresSingleFrameBatch(_impl->post_encoder_module.get())) {
         batch_size = 1;
     }
 
+    auto const effective_slots = effectiveOutputSlotsFor(
+            _impl->model.get(),
+            _impl->post_encoder_module.get());
     int const total_frames = end_frame - start_frame + 1;
     int frames_processed = 0;
 
@@ -1178,14 +1227,17 @@ void SlotAssembler::runBatchRange(
                 {},// no recurrent bindings
                 chunk_start, /*batch_size=*/chunk_size);
 
-        auto outputs = _impl->model->forward(inputs);
+        auto outputs = runModelAndPostEncoder(
+                *_impl->model,
+                _impl->post_encoder_module.get(),
+                inputs);
 
         // Decode each batch element individually
         for (int b = 0; b < chunk_size; ++b) {
             int const frame = chunk_start + b;
             decodeOutputs(
                     dm, outputs, output_bindings,
-                    *_impl->model, frame, source_image_size, b);
+                    effective_slots, frame, source_image_size, b);
         }
 
         frames_processed += chunk_size;
@@ -1235,12 +1287,13 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
     }
     if (batch_size < 1) batch_size = 1;
 
-    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
-    if (enc &&
-        dynamic_cast<dl::SpatialPointExtractModule *>(enc->postEncoderModule())) {
+    if (requiresSingleFrameBatch(_impl->post_encoder_module.get())) {
         batch_size = 1;
     }
 
+    auto const effective_slots = effectiveOutputSlotsFor(
+            _impl->model.get(),
+            _impl->post_encoder_module.get());
     int const total_frames = end_frame - start_frame + 1;
     int frames_processed = 0;
 
@@ -1269,14 +1322,17 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                     chunk_start, /*batch_size=*/chunk_size,
                     &media_overrides);
 
-            auto outputs = _impl->model->forward(inputs);
+            auto outputs = runModelAndPostEncoder(
+                    *_impl->model,
+                    _impl->post_encoder_module.get(),
+                    inputs);
 
             // Decode each batch element individually
             for (int b = 0; b < chunk_size; ++b) {
                 int const frame = chunk_start + b;
                 auto frame_results = decodeOutputsToBuffer(
                         outputs, output_bindings,
-                        *_impl->model, frame, source_image_size, b);
+                        effective_slots, frame, source_image_size, b);
 
                 if (result_callback) {
                     result_callback(std::move(frame_results));
@@ -1493,8 +1549,14 @@ void SlotAssembler::runRecurrentSequence(
             }
         }
 
-        // 3. Forward pass
-        auto outputs = _impl->model->forward(inputs);
+        // 3. Forward pass and post-encoder
+        auto outputs = runModelAndPostEncoder(
+                *_impl->model,
+                _impl->post_encoder_module.get(),
+                inputs);
+        auto const effective_slots = effectiveOutputSlotsFor(
+                _impl->model.get(),
+                _impl->post_encoder_module.get());
 
         // 4. For FirstOutput mode on t=0: use raw output, skip decoding
         if (f == 0) {
@@ -1535,7 +1597,7 @@ void SlotAssembler::runRecurrentSequence(
         // 5. Decode outputs into DataManager
         decodeOutputs(
                 dm, outputs, output_bindings,
-                *_impl->model, frame, source_image_size);
+                effective_slots, frame, source_image_size);
 
         // 6. Cache output tensors for next frame's recurrent inputs
         for (auto const & rb: recurrent_bindings) {
@@ -1588,7 +1650,9 @@ std::optional<ModelDisplayInfo> SlotAssembler::currentModelDisplayInfo() const {
     display.display_name = model.displayName();
     display.description = model.description();
     display.inputs = model.inputSlots();
-    display.outputs = model.outputSlots();
+    display.outputs = effectiveOutputSlotsFor(
+            _impl->model.get(),
+            _impl->post_encoder_module.get());
     display.preferred_batch_size = model.preferredBatchSize();
     display.max_batch_size = model.maxBatchSize();
     display.batch_mode = model.batchMode();
@@ -1632,24 +1696,16 @@ void SlotAssembler::configurePostEncoderModule(
         ImageSize source_image_size) {
     if (!_impl || !_impl->model) return;
 
-    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
-    if (!enc) return;
-
-    auto module = dl::PostEncoderModuleRegistry::instance().create(
+    _impl->post_encoder_module = dl::PostEncoderModuleRegistry::instance().create(
             params.module_key,
             params.parameters_json,
             source_image_size);
-
-    enc->setPostEncoderModule(std::move(module));
 }
 
 void SlotAssembler::_updateSpatialPoint(DataManager & dm, int frame) {
     if (!_impl || !_impl->model) return;
 
-    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
-    if (!enc) return;
-
-    auto * module = enc->postEncoderModule();
+    auto * module = _impl->post_encoder_module.get();
     if (!module || module->name() != "spatial_point") return;
 
     auto * sp = dynamic_cast<dl::SpatialPointExtractModule *>(module);

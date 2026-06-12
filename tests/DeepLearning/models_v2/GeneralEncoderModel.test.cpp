@@ -262,15 +262,6 @@ TEST_CASE("GeneralEncoderModel - setOutputShape updates raw output", "[GeneralEn
     CHECK(outputs[0].shape == new_shape);
 }
 
-TEST_CASE("GeneralEncoderModel - setOutputShape affects effectiveOutputShape with post-encoder", "[GeneralEncoderModel]") {
-    dl::GeneralEncoderModel model;
-    model.setOutputShape({192, 16, 16});
-
-    // Without post-encoder, effective = raw
-    auto const expected_raw = std::vector<int64_t>{192, 16, 16};
-    CHECK(model.effectiveOutputShape() == expected_raw);
-}
-
 TEST_CASE("GeneralEncoderModel - setInputResolution preserves channels", "[GeneralEncoderModel]") {
     dl::GeneralEncoderModel model(1, 224, 224, {256});
     CHECK(model.inputChannels() == 1);

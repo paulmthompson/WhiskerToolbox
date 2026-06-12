@@ -132,6 +132,12 @@ void PostEncoderWidget::setParams(PostEncoderSlotParams const & p) {
     _applyToStateAndAssembler();
 }
 
+void PostEncoderWidget::syncToAssembler() {
+    if (_assembler->isModelReady()) {
+        _assembler->configurePostEncoderModule(params(), _sourceImageSize());
+    }
+}
+
 void PostEncoderWidget::refreshDataSources() {
     if (!_dm || !_auto_param) {
         return;
@@ -220,6 +226,9 @@ void PostEncoderWidget::_rebuildParamsPanel(std::string const & params_json) {
     _auto_param = new AutoParamWidget(this);
     _auto_param->setSchema(*schema);
 
+    // Populate dynamic combos before fromJson so restored values remain valid.
+    refreshDataSources();
+
     if (!params_json.empty() && params_json != "{}") {
         _auto_param->fromJson(params_json);
     }
@@ -233,7 +242,6 @@ void PostEncoderWidget::_rebuildParamsPanel(std::string const & params_json) {
     });
 
     _params_layout->addWidget(_auto_param);
-    refreshDataSources();
 }
 
 void PostEncoderWidget::_clearParamsPanel() {

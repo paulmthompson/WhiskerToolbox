@@ -70,6 +70,14 @@ public:
     /// @brief Refresh the point_key combo from DataManager.
     void refreshDataSources();
 
+    /**
+     * @brief Push current params to SlotAssembler when the model is ready.
+     *
+     * Used after model load or weight validation when `loadModel()` cleared
+     * the assembler's post-encoder module.
+     */
+    void syncToAssembler();
+
 signals:
     /// Emitted whenever any parameter in the post-encoder section changes.
     void bindingChanged();

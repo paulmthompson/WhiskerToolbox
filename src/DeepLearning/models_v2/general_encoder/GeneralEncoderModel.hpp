@@ -8,11 +8,9 @@
 
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/ModelExecution.hpp"
-#include "post_encoder/PostEncoderModule.hpp"
 
 #include <cstdint>
 #include <filesystem>
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,15 +105,9 @@ public:
     [[nodiscard]] int inputWidth() const { return _input_width; }
 
     /**
-     * @brief Raw encoder output shape (before any post-encoder module is applied).
+     * @brief Raw encoder output shape reported by `outputSlots()`.
      */
     [[nodiscard]] std::vector<int64_t> const & outputShape() const { return _output_shape; }
-
-    /**
-     * @brief Effective output shape reported by `outputSlots()`, accounting for any
-     *        configured post-encoder module.
-     */
-    [[nodiscard]] std::vector<int64_t> effectiveOutputShape() const;
 
     /**
      * @brief Reconfigure the input resolution at runtime.
@@ -140,28 +132,6 @@ public:
     void setOutputShape(std::vector<int64_t> output_shape);
     /** @} */
 
-    /** @name Post-encoder module */
-    /** @{ */
-
-    /**
-     * @brief Replace the current post-encoder module.
-     *
-     * If `module` is `nullptr`, the raw encoder output is returned unchanged.
-     * Calling this method immediately changes the shape reported by
-     * `outputSlots()`.
-     *
-     * @note Not thread-safe; must be called before concurrent `forward()` use.
-     */
-    void setPostEncoderModule(std::unique_ptr<PostEncoderModule> module);
-
-    /**
-     * @brief Non-owning access to the current post-encoder module.
-     *
-     * @return nullptr if none is configured.
-     */
-    [[nodiscard]] PostEncoderModule * postEncoderModule() const;
-    /** @} */
-
 private:
     int _input_channels;
     int _input_height;
@@ -169,7 +139,6 @@ private:
     std::vector<int64_t> _output_shape;
     ModelExecution _execution;
     std::vector<std::string> _input_order;
-    std::unique_ptr<PostEncoderModule> _post_encoder_module;
 };
 
 }// namespace dl

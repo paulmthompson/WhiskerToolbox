@@ -381,10 +381,10 @@ public:
     // ── Post-encoder configuration ─────────────────────────────────────────
 
     /**
-     * @brief Configure a post-encoder module on the currently loaded model.
+     * @brief Configure the post-encoder pipeline stage for the current model.
      *
-     * Only applies when the current model is a `GeneralEncoderModel`.
-     * Calling this when the model changes will reset the configuration.
+     * Applies to the first model output slot between `forward()` and decoding.
+     * Cleared when the model is loaded or reset.
      *
      * @param params  Registry-driven module key and JSON parameters.
      * @param source_image_size  Source image size used for spatial_point

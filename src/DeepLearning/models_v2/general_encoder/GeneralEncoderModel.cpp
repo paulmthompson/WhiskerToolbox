@@ -79,7 +79,7 @@ std::vector<TensorSlotDescriptor> GeneralEncoderModel::inputSlots() const {
 std::vector<TensorSlotDescriptor> GeneralEncoderModel::outputSlots() const {
     return {
             {.name = kFeaturesSlot,
-             .shape = effectiveOutputShape(),
+             .shape = _output_shape,
              .description = "Extracted feature tensor",
              .recommended_encoder = {},
              .recommended_decoder = {},
@@ -118,25 +118,6 @@ int GeneralEncoderModel::maxBatchSize() const {
 
 BatchMode GeneralEncoderModel::batchMode() const {
     return DynamicBatch{1, 0};
-}
-
-// ---------------------------------------------------------------------------
-// Post-encoder module
-// ---------------------------------------------------------------------------
-std::vector<int64_t> GeneralEncoderModel::effectiveOutputShape() const {
-    if (_post_encoder_module) {
-        return _post_encoder_module->outputShape(_output_shape);
-    }
-    return _output_shape;
-}
-
-void GeneralEncoderModel::setPostEncoderModule(
-        std::unique_ptr<PostEncoderModule> module) {
-    _post_encoder_module = std::move(module);
-}
-
-PostEncoderModule * GeneralEncoderModel::postEncoderModule() const {
-    return _post_encoder_module.get();
 }
 
 // ---------------------------------------------------------------------------
@@ -190,14 +171,7 @@ GeneralEncoderModel::forward(
 
     // Map the first output to the "features" slot
     std::unordered_map<std::string, at::Tensor> result;
-    at::Tensor features = output_tensors[0].to(at::kCPU);
-
-    // Apply post-encoder module if configured
-    if (_post_encoder_module) {
-        features = _post_encoder_module->apply(features);
-    }
-
-    result[kFeaturesSlot] = std::move(features);
+    result[kFeaturesSlot] = output_tensors[0].to(at::kCPU);
 
     return result;
 }

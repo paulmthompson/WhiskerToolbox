@@ -6,7 +6,7 @@ title: "Post-Encoder Feature Extraction Modules"
 
 Post-encoder modules are optional processing stages applied between the encoder backbone and the channel decoder. They transform the raw 4-D feature map `[B, C, H, W]` produced by the encoder into a form suitable for further decoding — most commonly collapsing the spatial dimensions.
 
-All post-encoder modules implement the `dl::PostEncoderModule` abstract interface, live in `src/DeepLearning/post_encoder/`, and are instantiated via `PostEncoderModuleFactory`.
+All post-encoder modules implement the `dl::PostEncoderModule` abstract interface, live in `src/DeepLearning/post_encoder/`, and are registered in `PostEncoderModuleRegistry`.
 
 ```
 [B,C,H,W] encoder output
@@ -100,70 +100,119 @@ pipeline.add(std::make_unique<dl::GlobalAvgPoolModule>());
 auto out = pipeline.apply(features);
 ```
 
-## Factory
+## Registry
 
-`PostEncoderModuleFactory::create(name, source_image_size, params)` maps string keys to concrete modules:
+`PostEncoderModuleRegistry::create(key, params_json, source_image_size)` maps
+registered keys to concrete modules:
 
 | Key | Result |
 |-----|--------|
 | `"none"` / `""` | `nullptr` (no post-processing) |
 | `"global_avg_pool"` | `GlobalAvgPoolModule` |
-| `"spatial_point"` | `SpatialPointExtractModule` using `source_image_size` and `params.interpolation` |
+| `"spatial_point"` | `SpatialPointExtractModule` using `source_image_size` and parsed JSON params |
 | anything else | `nullptr` (unknown key) |
 
-The factory takes two parameter structs:
-
-1. **`ImageSize source_image_size`** — Runtime context for coordinate scaling (not user-configurable).
-2. **Per-module params** — User-configurable parameters specific to each module type
-   (`GlobalAvgPoolModuleParams`, `SpatialPointModuleParams`).
+Modules self-register at static init via `RegisterPostEncoderModule<Params>` in
+their `.cpp` file. Parameter structs live in `PostEncoderModuleParams.hpp`:
 
 ```cpp
-/// No user-configurable params.
 struct GlobalAvgPoolModuleParams {};
 
-/// User-configurable params for SpatialPointExtractModule.
 struct SpatialPointModuleParams {
     InterpolationMode interpolation = InterpolationMode::Nearest;
+    std::string point_key;
 };
 ```
 
-## Integration with GeneralEncoderModel
+To add a new module:
 
-`GeneralEncoderModel` holds an optional `unique_ptr<PostEncoderModule>` set via `setPostEncoderModule(...)`.
-
-- **`forward()`** applies the module (if set) to the raw encoder output before returning.
-- **`effectiveOutputShape()`** returns the shape after the module's transformation; `outputSlots()` uses this to advertise the correct slot dimensions to the widget.
-- **`outputShape()`** still returns the raw encoder shape.
+1. Implement `PostEncoderModule` with `outputShape()`.
+2. Define an `rfl` params struct (+ `ParameterUIHints` if needed).
+3. Add `RegisterPostEncoderModule<Params>(...)` in the module `.cpp`.
 
 ## Integration with SlotAssembler
 
-`SlotAssembler` exposes two public methods:
+Post-encoder is a **model-agnostic pipeline stage** owned by `SlotAssembler`, not by any
+specific `ModelBase` subclass. Every inference mode runs the same linear per-frame
+pipeline:
+
+```
+prepareFrame (spatial point sync)
+    → ModelBase::forward()
+    → PostEncoderModule::apply()   // optional, first output slot only
+    → ChannelDecoder::decode()
+```
+
+`ModelBase::outputSlots()` always reports raw model shapes. `SlotAssembler` applies
+`effectiveOutputSlots()` (via `PostEncoderOutputTransform`) for decoding, weight
+validation, and `currentModelDisplayInfo()`.
 
 ```cpp
 void configurePostEncoderModule(
-    std::string const & module_type,
-    ImageSize source_image_size,
-    std::string const & interpolation);
-
-void updateSpatialPoint(
-    DataManager & dm,
-    std::string const & point_key,
-    int frame);
+    dl::widget::PostEncoderSlotParams const & params,
+    ImageSize source_image_size = {});
 ```
 
-`configurePostEncoderModule` performs a `dynamic_cast<GeneralEncoderModel*>` and calls `setPostEncoderModule` on success. If the current model is not a `GeneralEncoderModel`, the call is silently ignored.
+`configurePostEncoderModule` instantiates a module from `PostEncoderModuleRegistry` and
+stores it on the assembler. The module is cleared when the model is loaded or reset;
+`PostEncoderWidget::syncToAssembler()` re-applies saved params after weights load.
 
-`updateSpatialPoint` reads `PointData[point_key]` at `frame`, takes the first point, and calls `SpatialPointExtractModule::setPoint()`. It is called automatically before every forward pass (both single-frame and batch) when a non-empty `spatial_point_key` is stored in the assembler's `Impl`.
+**Targeting:** post-encoder applies to the **first** model output slot only. Per-slot
+targeting is planned as a follow-up.
+
+**Recurrent inference:** tensor recurrent bindings cache the post-encoder output tensor
+(the same tensor passed to the decoder) for the next frame's input injection.
+
+`SpatialPointModuleParams::point_key` is stored on `SpatialPointExtractModule` at
+creation time. Before each forward pass, `SlotAssembler::_updateSpatialPoint()` reads
+`PointData` from that key and calls `setPoint()`.
+
+## Future work
+
+- **Per-output-slot targeting** — extend params/UI so post-encoder can bind to a named
+  output slot on multi-output models.
+- **`prepareFrame(DataManager&, int)`** on modules — move spatial-point lookup into the
+  module interface so `SlotAssembler` does not special-case `SpatialPointExtractModule`.
+- **Decoder-roundtrip recurrent feedback** — decode → re-encode for models that feed
+  decoded results back as inputs (separate from tensor-level recurrent bindings).
 
 ## Widget UI
 
-The **Post-Encoder Module** section appears at the bottom of the Dynamic Slot panels in `DeepLearningPropertiesWidget`. It contains:
+The **Post-Encoder Module** section is rendered by
+[`PostEncoderWidget`](../../src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp)
+at the bottom of the Dynamic Slot panels in `DeepLearningPropertiesWidget`. It
+replaced the previous hand-built combo boxes with a schema-driven
+`AutoParamWidget` form.
 
-1. **Module** combo: `None`, `Global Average Pooling`, `Spatial Point Extraction`
-2. **Interpolation** combo (spatial only): `Bilinear`, `Nearest`
-3. **Point Key** combo (spatial only): populated from all `PointData` keys in DataManager
+### Architecture
 
-On any change the widget immediately calls `_assembler->configurePostEncoderModule(...)` and persists the selection to `DeepLearningState` (fields `post_encoder_module_type` and `post_encoder_point_key`).
+The widget is driven by `dl::widget::PostEncoderSlotParams`
+(`PostEncoderStepDescriptor`: `module_key` + `parameters_json`).
+
+- **Module combo** — populated from `PostEncoderModuleRegistry::moduleKeys()` plus
+  `(None)`.
+- **Parameter panel** — `AutoParamWidget` loaded from `getSchema(module_key)`.
+- **Spatial point** — `ParameterUIHints<SpatialPointModuleParams>` marks
+  `point_key` as a dynamic combo; `refreshDataSources()` populates it.
+
+### Data flow
+
+On construction the widget:
+
+1. Populates the module combo from the registry.
+2. Restores from `DeepLearningState::postEncoderParams()`.
+3. Rebuilds the parameter panel for the selected module key.
+
+On parameter change:
+
+1. Reads `{module_key, parameters_json}` from combo + `AutoParamWidget::toJson()`.
+2. Updates `DeepLearningState::postEncoderParams()` (serialized in workspace JSON).
+3. Calls `SlotAssembler::configurePostEncoderModule(params, ...)` when the model
+   is ready.
+
+See [DeepLearning Widget Helpers — PostEncoderWidget](../DeepLearning_Widget/helpers.qmd#postencoderwidget)
+and [Schema-Driven Forms](../ui/schema_driven_forms.qmd) for the full pattern and
+improvement roadmap.
 
 ## Batch Inference and TensorData Output
 
@@ -171,12 +220,12 @@ For batch runs with `TensorToFeatureVector` as the decoder, `_mergeResults()` co
 
 ## Testing
 
-Unit tests live in `tests/DeepLearning/post_encoder/PostEncoderModules.test.cpp`:
+Unit tests live under `tests/DeepLearning/post_encoder/`:
 
-- `GlobalAvgPoolModule`: output shape, value averaging, single-pixel passthrough
-- `SpatialPointExtractModule`: name/shape, nearest/bilinear extraction, clamping
-- `PostEncoderPipeline`: empty passthrough, single-module delegation, shape chaining
-- `PostEncoderModuleFactory`: `none`, `global_avg_pool`, `spatial_point`, unknown key
+- `PostEncoderModules.test.cpp` — `GlobalAvgPoolModule`, `SpatialPointExtractModule`,
+  `PostEncoderPipeline`, `PostEncoderModuleRegistry`
+- `PostEncoderOutputTransform.test.cpp` — `applyPostEncoderToFirstOutputSlot`,
+  `effectiveOutputSlots`
 
 Run with:
 

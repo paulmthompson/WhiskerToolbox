@@ -435,6 +435,13 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
     _run_recurrent_btn->setEnabled(ready);
     _predict_current_frame_btn->setEnabled(ready && _current_time_position.has_value());
 
+    if (ready && _post_encoder_widget) {
+        _post_encoder_widget->syncToAssembler();
+        if (auto const info = _assembler->currentModelDisplayInfo()) {
+            _current_info = info;
+        }
+    }
+
     // Notify all static input slot widgets of model readiness (enables capture button)
     for (auto * slot_widget: _static_input_widgets) {
         slot_widget->setModelReady(ready);
@@ -706,6 +713,11 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
 void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
     if (!_post_encoder_widget || !_current_info) return;
+
+    _post_encoder_widget->syncToAssembler();
+    if (auto const info = _assembler->currentModelDisplayInfo()) {
+        _current_info = info;
+    }
 
     auto const valid_decoders = dl::constraints::validDecodersForPostEncoder(
             _post_encoder_widget->params());

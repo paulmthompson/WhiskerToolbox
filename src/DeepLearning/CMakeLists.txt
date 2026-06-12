@@ -90,6 +90,8 @@ set(DEEP_LEARNING_SOURCES
     post_encoder/SpatialPointExtractModule.cpp
     post_encoder/PostEncoderPipeline.hpp
     post_encoder/PostEncoderPipeline.cpp
+    post_encoder/PostEncoderOutputTransform.hpp
+    post_encoder/PostEncoderOutputTransform.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
