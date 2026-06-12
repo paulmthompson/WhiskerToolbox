@@ -11,11 +11,12 @@
 
 #include "DeepLearning/channel_decoding/ChannelDecoder.hpp"
 #include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
-
+#include "DeepLearning/channel_encoding/EncoderDispatch.hpp"
 
 #include <rfl.hpp>
 
 #include <string>
+#include <type_traits>
 
 namespace dl::widget {
 
@@ -162,6 +163,40 @@ using EncoderVariant = rfl::TaggedUnion<
         dl::Mask2DEncoderParams,
         dl::Line2DEncoderParams>;
 
+/**
+ * @brief Whether the active encoder alternative targets MediaData.
+ */
+[[nodiscard]] inline bool isImageEncoder(EncoderVariant const & encoder) {
+    bool result = false;
+    encoder.visit([&](auto const & params) {
+        result = dl::isImageEncoderParams<std::decay_t<decltype(params)>>();
+    });
+    return result;
+}
+
+/**
+ * @brief Map encoder variant to DataManager data type name.
+ */
+[[nodiscard]] inline std::string dataTypeForEncoder(EncoderVariant const & encoder) {
+    std::string data_type;
+    encoder.visit([&](auto const & params) {
+        data_type = dl::dataTypeForEncoderParams<std::decay_t<decltype(params)>>();
+    });
+    return data_type;
+}
+
+/**
+ * @brief Assign default encoder params from a factory registry name.
+ */
+inline void assignEncoderFromFactoryName(
+        EncoderVariant & encoder, std::string const & factory_name) {
+    if (auto params = dl::encoderParamsFromFactoryName(factory_name)) {
+        std::visit([&](auto const & p) { encoder = p; }, *params);
+    } else {
+        encoder = dl::ImageEncoderParams{};
+    }
+}
+
 // ============================================================================
 // Composite Slot Parameter Structs
 // ============================================================================
@@ -215,6 +250,23 @@ struct EncoderShapeParams {
 };
 
 }// namespace dl::widget
+
+/**
+ * @brief Serializable binding for a dynamic (per-frame) model input slot.
+ *
+ * Persisted in workspace JSON with a nested tagged `encoder` field (reflect-cpp),
+ * matching `DynamicInputSlotParams` plus the model slot name.
+ */
+struct SlotBindingData {
+    /** Model input slot name (e.g. "encoder_image") */
+    std::string slot_name;
+    /** DataManager key (e.g. "media/video_1") */
+    std::string data_key;
+    /** Encoder type and user-configurable parameters */
+    dl::widget::EncoderVariant encoder = dl::ImageEncoderParams{};
+    /** Temporal offset applied per frame (e.g. -1 for previous frame) */
+    int time_offset = 0;
+};
 
 /**
  * @brief Serializable binding for a model output slot.

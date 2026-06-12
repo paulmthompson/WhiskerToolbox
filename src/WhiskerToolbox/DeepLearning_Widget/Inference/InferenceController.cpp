@@ -6,6 +6,7 @@
 #include "InferenceController.hpp"
 
 #include "BatchInferenceWorker.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/ResultProcessor.hpp"
@@ -131,7 +132,7 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
 
     MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
-        if (binding.encoder_id != "ImageEncoder" || binding.data_key.empty())
+        if (!dl::widget::isImageEncoder(binding.encoder) || binding.data_key.empty())
             continue;
         auto media = _impl->_dm->getData<MediaData>(binding.data_key);
         if (!media) continue;
@@ -236,7 +237,7 @@ void InferenceController::runBatchIntervals(
 
     MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
-        if (binding.encoder_id != "ImageEncoder" || binding.data_key.empty())
+        if (!dl::widget::isImageEncoder(binding.encoder) || binding.data_key.empty())
             continue;
         auto media = _impl->_dm->getData<MediaData>(binding.data_key);
         if (!media) continue;

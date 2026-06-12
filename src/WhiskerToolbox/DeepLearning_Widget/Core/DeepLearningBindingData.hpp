@@ -15,26 +15,6 @@
 #include <vector>
 
 /**
- * @brief Serializable binding for a dynamic (per-frame) model input slot.
- */
-struct SlotBindingData {
-    /** Model input slot name (e.g. "encoder_image") */
-    std::string slot_name;
-    /** DataManager key (e.g. "media/video_1") */
-    std::string data_key;
-    /** Encoder factory key (e.g. "ImageEncoder") */
-    std::string encoder_id;
-    /** "Raw", "Binary", "Heatmap" */
-    std::string mode = "Raw";
-    /** Gaussian sigma (Heatmap mode only) */
-    float gaussian_sigma = 2.0f;
-    /** Normalize encoder output to [0, 1] */
-    bool normalize = true;
-    /** Temporal offset applied per frame (e.g. -1 for previous frame) */
-    int time_offset = 0;
-};
-
-/**
  * @brief Compute the effective frame index for a dynamic input slot.
  *
  * Combines the current frame, batch index, and temporal offset, then

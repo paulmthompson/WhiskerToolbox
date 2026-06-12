@@ -365,12 +365,20 @@ public:
     [[nodiscard]] static std::vector<std::string> availableDecoders();
 
     /**
-     * @brief Map encoder name → DataManager data type name for combo filtering.
-     * 
+     * @brief Map encoder params → DataManager data type name for combo filtering.
+     *
      * @returns "MediaData", "PointData", "MaskData", "LineData", or "".
      */
     [[nodiscard]] static std::string dataTypeForEncoder(
-            std::string const & encoder_id);
+            dl::widget::EncoderVariant const & encoder);
+
+    /**
+     * @brief Map encoder factory name → DataManager data type name.
+     *
+     * Used for model metadata `recommended_encoder` hints.
+     */
+    [[nodiscard]] static std::string dataTypeForEncoder(
+            std::string const & factory_name);
 
     /**
      * @brief Map decoder params → DataManager data type name for combo filtering.

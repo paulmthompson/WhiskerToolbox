@@ -87,8 +87,6 @@ public:
 
     /**
      * @brief Convert current parameters to a SlotBindingData for SlotAssembler.
-     * 
-     * Extracts encoder_id, mode, gaussian_sigma from the EncoderVariant.
      */
     [[nodiscard]] SlotBindingData toSlotBindingData() const;
 
@@ -109,12 +107,6 @@ private:
      */
     [[nodiscard]] static std::vector<std::string> _encoderTagsForDataType(
             std::string const & data_type_hint);
-
-    /**
-     * @brief Map an encoder variant tag to its SlotAssembler encoder ID string.
-     */
-    [[nodiscard]] static std::string _encoderIdFromTag(
-            std::string const & json);
 
     std::string _slot_name;
     std::shared_ptr<DataManager> _dm;

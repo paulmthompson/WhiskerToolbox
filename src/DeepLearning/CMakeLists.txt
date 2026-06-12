@@ -35,6 +35,8 @@ set(DEEP_LEARNING_SOURCES
     channel_encoding/Line2DEncoder.cpp
     channel_encoding/EncoderFactory.hpp
     channel_encoding/EncoderFactory.cpp
+    channel_encoding/EncoderDispatch.hpp
+    channel_encoding/EncoderDispatch.cpp
 
     channel_decoding/ChannelDecoder.hpp
     channel_decoding/DecoderParamSchemas.hpp

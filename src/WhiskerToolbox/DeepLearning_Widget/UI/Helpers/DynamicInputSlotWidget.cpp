@@ -30,36 +30,6 @@
 namespace dl::widget {
 
 // ════════════════════════════════════════════════════════════════════════════
-// Encoder tag ↔ SlotAssembler encoder ID mapping
-// ════════════════════════════════════════════════════════════════════════════
-
-namespace {
-
-/// Map from reflect-cpp variant tag (struct name) to SlotAssembler encoder ID.
-constexpr struct {
-    char const * tag;
-    char const * encoder_id;
-} kTagToEncoderId[] = {
-        {"ImageEncoderParams", "ImageEncoder"},
-        {"Point2DEncoderParams", "Point2DEncoder"},
-        {"Mask2DEncoderParams", "Mask2DEncoder"},
-        {"Line2DEncoderParams", "Line2DEncoder"},
-};
-
-/// Map from SlotAssembler encoder ID to reflect-cpp variant tag.
-constexpr struct {
-    char const * encoder_id;
-    char const * tag;
-} kEncoderIdToTag[] = {
-        {"ImageEncoder", "ImageEncoderParams"},
-        {"Point2DEncoder", "Point2DEncoderParams"},
-        {"Mask2DEncoder", "Mask2DEncoderParams"},
-        {"Line2DEncoder", "Line2DEncoderParams"},
-};
-
-}// namespace
-
-// ════════════════════════════════════════════════════════════════════════════
 // Construction / Destruction
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -106,21 +76,7 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
     // Set initial encoder from recommended_encoder hint
     if (!_recommended_encoder.empty()) {
         DynamicInputSlotParams initial;
-        for (auto const & [encoder_id, tag]: kEncoderIdToTag) {
-            if (_recommended_encoder == encoder_id) {
-                // Build the matching encoder variant
-                if (tag == std::string("ImageEncoderParams")) {
-                    initial.encoder = dl::ImageEncoderParams{};
-                } else if (tag == std::string("Point2DEncoderParams")) {
-                    initial.encoder = dl::Point2DEncoderParams{};
-                } else if (tag == std::string("Mask2DEncoderParams")) {
-                    initial.encoder = dl::Mask2DEncoderParams{};
-                } else if (tag == std::string("Line2DEncoderParams")) {
-                    initial.encoder = dl::Line2DEncoderParams{};
-                }
-                break;
-            }
-        }
+        assignEncoderFromFactoryName(initial.encoder, _recommended_encoder);
         auto json = rfl::json::write(initial);
         _auto_param->fromJson(json);
     }
@@ -131,12 +87,10 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
     // When parameters change, re-evaluate source→encoder constraints and emit
     connect(_auto_param, &AutoParamWidget::parametersChanged,
             this, [this]() {
-                // Get the current encoder tag to figure out compatible sources
-                auto current = params();
-                auto const encoder_id = _encoderIdFromTag(
-                        rfl::json::write(current.encoder));
-                if (!encoder_id.empty()) {
-                    auto const type_hint = SlotAssembler::dataTypeForEncoder(encoder_id);
+                auto const current = params();
+                auto const type_hint =
+                        SlotAssembler::dataTypeForEncoder(current.encoder);
+                if (!type_hint.empty()) {
                     auto const types = DataSourceComboHelper::typesFromHint(type_hint);
                     auto const keys = getKeysForTypes(*_dm, types);
                     _auto_param->updateAllowedValues("source", keys);
@@ -203,19 +157,6 @@ std::vector<std::string> DynamicInputSlotWidget::_encoderTagsForDataType(
     // Unknown → allow all
     return {"ImageEncoderParams", "Point2DEncoderParams",
             "Mask2DEncoderParams", "Line2DEncoderParams"};
-}
-
-std::string DynamicInputSlotWidget::_encoderIdFromTag(
-        std::string const & json) {
-    // Quick parse: find the "encoder" tag value from JSON
-    // The JSON looks like: {"encoder":"ImageEncoderParams", ...}
-    // We just need the tag, not the full parse
-    for (auto const & [tag, encoder_id]: kTagToEncoderId) {
-        if (json.find(tag) != std::string::npos) {
-            return encoder_id;
-        }
-    }
-    return {};
 }
 
 }// namespace dl::widget

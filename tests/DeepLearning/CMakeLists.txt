@@ -20,6 +20,7 @@ add_executable(test_DeepLearning
     channel_encoding/Mask2DEncoder.test.cpp
     channel_encoding/Line2DEncoder.test.cpp
     channel_encoding/EncoderFactory.test.cpp
+    channel_encoding/EncoderDispatch.test.cpp
 
     channel_decoding/TensorToPoint2D.test.cpp
     channel_decoding/TensorToMask2D.test.cpp

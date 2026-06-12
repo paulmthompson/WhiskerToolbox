@@ -18,6 +18,8 @@
 
 #include <QSignalSpy>
 
+#include <type_traits>
+
 /// Helper: create a minimal TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeTestSlot(
         std::string name = "encoder_image",
@@ -145,9 +147,13 @@ TEST_CASE("toSlotBindingData extracts correct fields from ImageEncoder",
     auto binding = widget.toSlotBindingData();
     CHECK(binding.slot_name == "enc_img");
     CHECK(binding.data_key == "test_source");
-    CHECK(binding.encoder_id == "ImageEncoder");
-    CHECK(binding.mode == "Raw");
     CHECK(binding.time_offset == 2);
+    binding.encoder.visit([&](auto const & enc) {
+        using T = std::decay_t<decltype(enc)>;
+        if constexpr (std::is_same_v<T, dl::ImageEncoderParams>) {
+            CHECK(enc.normalize);
+        }
+    });
 }
 
 TEST_CASE("toSlotBindingData extracts mode and sigma from Point2DEncoder",
@@ -168,8 +174,12 @@ TEST_CASE("toSlotBindingData extracts mode and sigma from Point2DEncoder",
 
     auto binding = widget.toSlotBindingData();
     CHECK(binding.slot_name == "enc_pts");
-    CHECK(binding.encoder_id == "Point2DEncoder");
-    CHECK(binding.mode == "Heatmap");
-    CHECK(binding.gaussian_sigma == 5.0f);
     CHECK(binding.time_offset == -1);
+    binding.encoder.visit([&](auto const & enc) {
+        using T = std::decay_t<decltype(enc)>;
+        if constexpr (std::is_same_v<T, dl::Point2DEncoderParams>) {
+            CHECK(enc.mode == dl::RasterMode::Heatmap);
+            CHECK(enc.gaussian_sigma == 5.0f);
+        }
+    });
 }

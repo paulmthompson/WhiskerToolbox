@@ -36,6 +36,37 @@ TEST_CASE("DeepLearningState round-trips post_encoder_params",
     CHECK(parsed.value().point_key == "points/query");
 }
 
+TEST_CASE("DeepLearningState round-trips input_bindings with nested encoder",
+          "[dl_widget][deep_learning_state]") {
+    DeepLearningState state;
+
+    SlotBindingData binding;
+    binding.slot_name = "encoder_image";
+    binding.data_key = "media/video_1";
+    binding.encoder = dl::Point2DEncoderParams{
+            .mode = dl::RasterMode::Heatmap,
+            .gaussian_sigma = 4.0f};
+    binding.time_offset = -2;
+    state.setInputBindings({binding});
+
+    auto const json = state.toJson();
+    DeepLearningState restored;
+    REQUIRE(restored.fromJson(json));
+
+    auto const & restored_bindings = restored.inputBindings();
+    REQUIRE(restored_bindings.size() == 1);
+    CHECK(restored_bindings[0].slot_name == "encoder_image");
+    CHECK(restored_bindings[0].data_key == "media/video_1");
+    CHECK(restored_bindings[0].time_offset == -2);
+    restored_bindings[0].encoder.visit([&](auto const & enc) {
+        using T = std::decay_t<decltype(enc)>;
+        if constexpr (std::is_same_v<T, dl::Point2DEncoderParams>) {
+            CHECK(enc.mode == dl::RasterMode::Heatmap);
+            CHECK(enc.gaussian_sigma == 4.0f);
+        }
+    });
+}
+
 TEST_CASE("DeepLearningState round-trips output_bindings with nested decoder",
           "[dl_widget][deep_learning_state]") {
     DeepLearningState state;

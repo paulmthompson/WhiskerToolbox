@@ -71,16 +71,6 @@ TEST_CASE("computeEncodingFrame - exact boundaries are not clamped",
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// SlotBindingData defaults
-// ════════════════════════════════════════════════════════════════════════════
-
-TEST_CASE("SlotBindingData - time_offset defaults to zero",
-          "[binding_data][time_offset]") {
-    SlotBindingData const binding;
-    CHECK(binding.time_offset == 0);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
 // CaptureMode
 // ════════════════════════════════════════════════════════════════════════════
 

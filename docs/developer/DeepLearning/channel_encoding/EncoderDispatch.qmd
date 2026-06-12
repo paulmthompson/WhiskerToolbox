@@ -1,0 +1,30 @@
+---
+title: "EncoderDispatch"
+---
+
+## Overview
+
+`EncoderDispatch` provides type-safe dispatch from encoder parameter variants to
+`ImageEncoder` / `Point2DEncoder` / … encode calls. It replaces string-based
+`encoder_id` switches in `SlotAssembler` and centralizes factory-name /
+DataManager-type mapping.
+
+**Location:** `src/DeepLearning/channel_encoding/EncoderDispatch.hpp`
+
+## API
+
+| Function | Purpose |
+|---|---|
+| `encodeToTensor()` | Encode pre-fetched source data using typed or variant params |
+| `isImageEncoder()` | Whether the active encoder targets MediaData |
+| `dataTypeForEncoder()` | Map params to `MediaData`, `PointData`, etc. |
+| `encoderFactoryName()` | Map params to registry name (`ImageEncoder`, …) |
+| `encoderParamsFromFactoryName()` | Default params from model `recommended_encoder` hint |
+
+## Types
+
+- `EncoderParamsVariant` — `std::variant` of all `*EncoderParams` structs
+- `EncodingSourceVariant` — image pixels, point vector, mask, or line source data
+
+`SlotBindingData` in workspace JSON stores a nested tagged `encoder` field
+(reflect-cpp), matching `DynamicInputSlotParams`.
