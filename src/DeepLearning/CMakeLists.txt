@@ -96,6 +96,12 @@ set(DEEP_LEARNING_SOURCES
     post_encoder/PostEncoderPipeline.cpp
     post_encoder/PostEncoderOutputTransform.hpp
     post_encoder/PostEncoderOutputTransform.cpp
+
+    storage/DataBankEntry.hpp
+    storage/DataBankEncode.hpp
+    storage/DataBankEncode.cpp
+    storage/DataBank.hpp
+    storage/DataBank.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})

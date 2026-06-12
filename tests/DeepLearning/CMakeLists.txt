@@ -46,6 +46,8 @@ add_executable(test_DeepLearning
     post_encoder/PostEncoderModules.test.cpp
     post_encoder/PostEncoderModuleRegistry.test.cpp
     post_encoder/PostEncoderOutputTransform.test.cpp
+
+    storage/DataBank.test.cpp
 )
 
 target_link_libraries(test_DeepLearning PRIVATE
