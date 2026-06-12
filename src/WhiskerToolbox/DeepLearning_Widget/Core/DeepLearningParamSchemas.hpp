@@ -32,11 +32,12 @@ struct RelativeCaptureParams {
 };
 
 /**
- * @brief Absolute capture to encode data once at a specific frame and cache the tensor.
+ * @brief Absolute capture to encode data once at a chosen frame and cache the tensor.
+ *
+ * The captured frame index is stored in `StaticInputData::captured_frame` and set
+ * by the "Capture Current Frame" button — not in this params struct.
  */
-struct AbsoluteCaptureParams {
-    int captured_frame = -1;///< Frame index at which the tensor was captured
-};
+struct AbsoluteCaptureParams {};
 
 /**
  * @brief Tagged union discriminated by "capture_mode".

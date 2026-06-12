@@ -41,12 +41,11 @@ TEST_CASE("CaptureModeVariant schema extraction",
         CHECK(alt.schema->field("time_offset") != nullptr);
     }
 
-    SECTION("AbsoluteCaptureParams alternative") {
+    SECTION("AbsoluteCaptureParams has no fields") {
         auto const & alt = f->variant_alternatives[1];
         CHECK(alt.tag == "AbsoluteCaptureParams");
         REQUIRE(alt.schema != nullptr);
-        CHECK(alt.schema->fields.size() == 1);
-        CHECK(alt.schema->field("captured_frame") != nullptr);
+        CHECK(alt.schema->fields.empty());
     }
 }
 
@@ -61,8 +60,7 @@ TEST_CASE("CaptureModeVariant JSON round-trip",
     }
 
     SECTION("Absolute capture") {
-        dl::widget::AbsoluteCaptureParams params{.captured_frame = 42};
-        dl::widget::CaptureModeVariant var{params};
+        dl::widget::CaptureModeVariant var{dl::widget::AbsoluteCaptureParams{}};
         auto json = rfl::json::write(var);
         auto result = rfl::json::read<dl::widget::CaptureModeVariant>(json);
         REQUIRE(result);

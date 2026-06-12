@@ -133,8 +133,7 @@ dl::widget::StaticInputSlotParams toStaticInputParams(
     p.source = binding.data_key;
 
     if (binding.capture_mode_str == "Absolute") {
-        p.capture_mode = dl::widget::AbsoluteCaptureParams{
-                .captured_frame = binding.captured_frame};
+        p.capture_mode = dl::widget::AbsoluteCaptureParams{};
     } else {
         p.capture_mode =
                 dl::widget::RelativeCaptureParams{.time_offset =

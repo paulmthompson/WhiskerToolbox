@@ -102,7 +102,7 @@ TEST_CASE("StaticInputSlotWidget setParams and params round-trip (Absolute)",
     dl::widget::StaticInputSlotWidget widget(slot, dm);
 
     dl::widget::StaticInputSlotParams p;
-    p.capture_mode = dl::widget::AbsoluteCaptureParams{.captured_frame = 42};
+    p.capture_mode = dl::widget::AbsoluteCaptureParams{};
 
     widget.setParams(p);
     auto result = widget.params();
