@@ -697,12 +697,28 @@ assembleInputs(
     return decoded;
 }
 
-/// @brief Write decoded geometry into DataManager at the given frame.
+/// @brief Verify the output data key is configured and already present in DataManager.
+void assertOutputDataKeyReady(
+        DataManager & dm,
+        std::string const & data_key) {
+    assert(!data_key.empty() &&
+           "writeDecodedGeometryToDataManager: data_key must be set before inference");
+    assert(dm.getDataVariant(data_key).has_value() &&
+           "writeDecodedGeometryToDataManager: data_key must exist in DataManager");
+}
+
+/**
+ * @brief Write decoded geometry into DataManager at the given frame.
+ *
+ * @pre data_key is non-empty and refers to an existing object of the matching type.
+ */
 void writeDecodedGeometryToDataManager(
         DataManager & dm,
         std::string const & data_key,
         TimeFrameIndex const frame_idx,
         dl::DecodedGeometryVariant decoded) {
+    assertOutputDataKeyReady(dm, data_key);
+
     std::visit(
             [&](auto && geometry) {
                 using GeometryT = std::decay_t<decltype(geometry)>;
@@ -710,61 +726,34 @@ void writeDecodedGeometryToDataManager(
                     if (geometry.empty()) {
                         return;
                     }
-                    auto mask_data = dm.getData<MaskData>(data_key);
-                    if (!mask_data) {
-                        dm.setData<MaskData>(data_key, TimeKey("media"));
-                        mask_data = dm.getData<MaskData>(data_key);
-                    }
-                    if (mask_data) {
-                        mask_data->addAtTime(
-                                frame_idx,
-                                std::forward<decltype(geometry)>(geometry),
-                                NotifyObservers::Yes);
-                    }
+                    dm.getData<MaskData>(data_key)->addAtTime(
+                            frame_idx,
+                            std::forward<decltype(geometry)>(geometry),
+                            NotifyObservers::Yes);
                 } else if constexpr (std::is_same_v<GeometryT, Point2D<float>>) {
-                    auto point_data = dm.getData<PointData>(data_key);
-                    if (!point_data) {
-                        dm.setData<PointData>(data_key, TimeKey("media"));
-                        point_data = dm.getData<PointData>(data_key);
-                    }
-                    if (point_data) {
-                        point_data->addAtTime(
-                                frame_idx,
-                                std::forward<decltype(geometry)>(geometry),
-                                NotifyObservers::Yes);
-                    }
+                    dm.getData<PointData>(data_key)->addAtTime(
+                            frame_idx,
+                            std::forward<decltype(geometry)>(geometry),
+                            NotifyObservers::Yes);
                 } else if constexpr (std::is_same_v<GeometryT, Line2D>) {
                     if (geometry.empty()) {
                         return;
                     }
-                    auto line_data = dm.getData<LineData>(data_key);
-                    if (!line_data) {
-                        dm.setData<LineData>(data_key, TimeKey("media"));
-                        line_data = dm.getData<LineData>(data_key);
-                    }
-                    if (line_data) {
-                        line_data->addAtTime(
-                                frame_idx,
-                                std::forward<decltype(geometry)>(geometry),
-                                NotifyObservers::Yes);
-                    }
+                    dm.getData<LineData>(data_key)->addAtTime(
+                            frame_idx,
+                            std::forward<decltype(geometry)>(geometry),
+                            NotifyObservers::Yes);
                 } else if constexpr (std::is_same_v<GeometryT, std::vector<float>>) {
                     if (geometry.empty()) {
                         return;
                     }
-                    auto tensor_data = dm.getData<TensorData>(data_key);
-                    if (!tensor_data) {
-                        dm.setData<TensorData>(data_key, TimeKey("media"));
-                        tensor_data = dm.getData<TensorData>(data_key);
-                    }
-                    if (tensor_data) {
-                        auto time_frame = dm.getTime();
-                        std::vector<std::pair<int, std::vector<float>>> rows;
-                        rows.emplace_back(
-                                static_cast<int>(frame_idx.getValue()),
-                                std::forward<decltype(geometry)>(geometry));
-                        tensor_data->upsertRows(rows, std::move(time_frame));
-                    }
+                    auto time_frame = dm.getTime();
+                    std::vector<std::pair<int, std::vector<float>>> rows;
+                    rows.emplace_back(
+                            static_cast<int>(frame_idx.getValue()),
+                            std::forward<decltype(geometry)>(geometry));
+                    dm.getData<TensorData>(data_key)->upsertRows(
+                            rows, std::move(time_frame));
                 }
             },
             std::move(decoded));
