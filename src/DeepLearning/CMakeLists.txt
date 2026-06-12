@@ -46,6 +46,8 @@ set(DEEP_LEARNING_SOURCES
     channel_decoding/TensorToLine2D.cpp
     channel_decoding/DecoderFactory.hpp
     channel_decoding/DecoderFactory.cpp
+    channel_decoding/DecoderDispatch.hpp
+    channel_decoding/DecoderDispatch.cpp
 
     device/DeviceManager.hpp
     device/DeviceManager.cpp

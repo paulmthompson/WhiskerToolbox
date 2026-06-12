@@ -373,10 +373,18 @@ public:
             std::string const & encoder_id);
 
     /**
-     * @brief Map decoder name → DataManager data type name for combo filtering.
+     * @brief Map decoder params → DataManager data type name for combo filtering.
      */
     [[nodiscard]] static std::string dataTypeForDecoder(
-            std::string const & decoder_id);
+            dl::widget::DecoderVariant const & decoder);
+
+    /**
+     * @brief Map decoder factory name → DataManager data type name.
+     *
+     * Used for model metadata `recommended_decoder` hints.
+     */
+    [[nodiscard]] static std::string dataTypeForDecoder(
+            std::string const & decoder_factory_name);
 
     // ── Post-encoder configuration ─────────────────────────────────────────
 

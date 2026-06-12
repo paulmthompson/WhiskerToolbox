@@ -8,8 +8,8 @@
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/channel_decoding/DecoderDispatch.hpp"
 #include "DeepLearning/channel_decoding/DecoderParamSchemas.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
@@ -25,39 +25,8 @@
 #include <rfl/json.hpp>
 
 #include <cassert>
-#include <type_traits>
 
 namespace dl::widget {
-
-// ════════════════════════════════════════════════════════════════════════════
-// Decoder tag ↔ SlotAssembler decoder ID mapping
-// ════════════════════════════════════════════════════════════════════════════
-
-namespace {
-
-/// Map from reflect-cpp variant tag (struct name) to SlotAssembler decoder ID.
-constexpr struct {
-    char const * tag;
-    char const * decoder_id;
-} kTagToDecoderId[] = {
-        {"MaskDecoderParams", "TensorToMask2D"},
-        {"PointDecoderParams", "TensorToPoint2D"},
-        {"LineDecoderParams", "TensorToLine2D"},
-        {"FeatureVectorDecoderParams", "TensorToFeatureVector"},
-};
-
-/// Map from SlotAssembler decoder ID to reflect-cpp variant tag.
-constexpr struct {
-    char const * decoder_id;
-    char const * tag;
-} kDecoderIdToTag[] = {
-        {"TensorToMask2D", "MaskDecoderParams"},
-        {"TensorToPoint2D", "PointDecoderParams"},
-        {"TensorToLine2D", "LineDecoderParams"},
-        {"TensorToFeatureVector", "FeatureVectorDecoderParams"},
-};
-
-}// namespace
 
 // ════════════════════════════════════════════════════════════════════════════
 // Construction / Destruction
@@ -103,19 +72,13 @@ OutputSlotWidget::OutputSlotWidget(
 
     if (!_recommended_decoder.empty()) {
         OutputSlotParams initial;
-        for (auto const & [decoder_id, tag]: kDecoderIdToTag) {
-            if (_recommended_decoder == decoder_id) {
-                if (tag == std::string("MaskDecoderParams")) {
-                    initial.decoder = dl::MaskDecoderParams{};
-                } else if (tag == std::string("PointDecoderParams")) {
-                    initial.decoder = dl::PointDecoderParams{};
-                } else if (tag == std::string("LineDecoderParams")) {
-                    initial.decoder = dl::LineDecoderParams{};
-                } else if (tag == std::string("FeatureVectorDecoderParams")) {
-                    initial.decoder = dl::FeatureVectorDecoderParams{};
-                }
-                break;
-            }
+        if (auto const params =
+                    dl::decoderParamsFromFactoryName(_recommended_decoder)) {
+            std::visit(
+                    [&](auto const & decoder_params) {
+                        initial.decoder = decoder_params;
+                    },
+                    *params);
         }
         auto json = rfl::json::write(initial);
         _auto_param->fromJson(json);
@@ -124,12 +87,9 @@ OutputSlotWidget::OutputSlotWidget(
     _refreshTargetCombo();
 
     connect(_auto_param, &AutoParamWidget::parametersChanged, this, [this]() {
-        auto current = params();
-        auto const decoder_id =
-                _decoderIdFromTag(rfl::json::write(current.decoder));
-        if (!decoder_id.empty()) {
-            auto const type_hint =
-                    SlotAssembler::dataTypeForDecoder(decoder_id);
+        auto const current = params();
+        auto const type_hint = SlotAssembler::dataTypeForDecoder(current.decoder);
+        if (!type_hint.empty()) {
             auto const types =
                     DataSourceComboHelper::typesFromHint(type_hint);
             auto const keys = getKeysForTypes(*_dm, types);
@@ -183,28 +143,17 @@ OutputBindingData OutputSlotWidget::toOutputBindingData() const {
 void OutputSlotWidget::_refreshTargetCombo() {
     if (!_dm) return;
 
-    auto current = params();
-    auto const decoder_id =
-            _decoderIdFromTag(rfl::json::write(current.decoder));
-    std::string type_hint =
-            decoder_id.empty()
-                    ? SlotAssembler::dataTypeForDecoder(_recommended_decoder)
-                    : SlotAssembler::dataTypeForDecoder(decoder_id);
+    auto const current = params();
+    std::string type_hint = SlotAssembler::dataTypeForDecoder(current.decoder);
+    if (type_hint.empty() && !_recommended_decoder.empty()) {
+        type_hint = SlotAssembler::dataTypeForDecoder(_recommended_decoder);
+    }
     if (type_hint.empty()) {
         type_hint = "MaskData";
     }
     auto const types = DataSourceComboHelper::typesFromHint(type_hint);
     auto const keys = getKeysForTypes(*_dm, types);
     _auto_param->updateAllowedValues("data_key", keys);
-}
-
-std::string OutputSlotWidget::_decoderIdFromTag(std::string const & json) {
-    for (auto const & [tag, decoder_id]: kTagToDecoderId) {
-        if (json.find(tag) != std::string::npos) {
-            return decoder_id;
-        }
-    }
-    return {};
 }
 
 OutputSlotParams OutputSlotWidget::paramsFromBinding(

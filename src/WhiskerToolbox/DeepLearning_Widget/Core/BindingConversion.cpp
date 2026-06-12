@@ -82,24 +82,7 @@ OutputBindingData fromOutputParams(
     OutputBindingData binding;
     binding.slot_name = slot_name;
     binding.data_key = (params.data_key == "(None)") ? "" : params.data_key;
-
-    params.decoder.visit([&](auto const & dec) {
-        using T = std::decay_t<decltype(dec)>;
-        if constexpr (std::is_same_v<T, dl::MaskDecoderParams>) {
-            binding.decoder_id = "TensorToMask2D";
-            binding.threshold = dec.threshold;
-        } else if constexpr (std::is_same_v<T, dl::PointDecoderParams>) {
-            binding.decoder_id = "TensorToPoint2D";
-            binding.threshold = dec.threshold;
-            binding.subpixel = dec.subpixel;
-        } else if constexpr (std::is_same_v<T, dl::LineDecoderParams>) {
-            binding.decoder_id = "TensorToLine2D";
-            binding.threshold = dec.threshold;
-        } else if constexpr (std::is_same_v<T, dl::FeatureVectorDecoderParams>) {
-            binding.decoder_id = "TensorToFeatureVector";
-        }
-    });
-
+    binding.decoder = params.decoder;
     return binding;
 }
 
@@ -210,20 +193,7 @@ dl::widget::OutputSlotParams toOutputParams(
         OutputBindingData const & binding) {
     dl::widget::OutputSlotParams p;
     p.data_key = binding.data_key;
-
-    if (binding.decoder_id == "TensorToMask2D") {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToPoint2D") {
-        p.decoder = dl::PointDecoderParams{
-                .subpixel = binding.subpixel,
-                .threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToLine2D") {
-        p.decoder = dl::LineDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToFeatureVector") {
-        p.decoder = dl::FeatureVectorDecoderParams{};
-    } else {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
-    }
+    p.decoder = binding.decoder;
     return p;
 }
 

@@ -20,7 +20,6 @@ class AutoParamWidget;
 class DataManager;
 class QGroupBox;
 class QLabel;
-struct OutputBindingData;
 
 namespace dl {
 struct TensorSlotDescriptor;
@@ -91,9 +90,6 @@ signals:
 private:
     /// Populate the target combo with DM keys matching the decoder's output type.
     void _refreshTargetCombo();
-
-    /// Map decoder variant tag to SlotAssembler decoder ID string.
-    [[nodiscard]] static std::string _decoderIdFromTag(std::string const & json);
 
     std::string _slot_name;
     std::shared_ptr<DataManager> _dm;

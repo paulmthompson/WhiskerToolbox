@@ -9,7 +9,7 @@
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -17,6 +17,8 @@
 #include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <QSignalSpy>
+
+#include <type_traits>
 
 /// Helper: create a minimal output TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeOutputSlot(
@@ -114,8 +116,12 @@ TEST_CASE("toOutputBindingData extracts correct fields from MaskDecoder",
     auto binding = widget.toOutputBindingData();
     CHECK(binding.slot_name == "mask_out");
     CHECK(binding.data_key == "masks/result");
-    CHECK(binding.decoder_id == "TensorToMask2D");
-    CHECK(binding.threshold == 0.6f);
+    binding.decoder.visit([&](auto const & dec) {
+        using T = std::decay_t<decltype(dec)>;
+        if constexpr (std::is_same_v<T, dl::MaskDecoderParams>) {
+            CHECK(dec.threshold == 0.6f);
+        }
+    });
 }
 
 TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
@@ -136,9 +142,13 @@ TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
 
     auto binding = widget.toOutputBindingData();
     CHECK(binding.slot_name == "point_out");
-    CHECK(binding.decoder_id == "TensorToPoint2D");
-    CHECK(binding.subpixel == false);
-    CHECK(binding.threshold == 0.4f);
+    binding.decoder.visit([&](auto const & dec) {
+        using T = std::decay_t<decltype(dec)>;
+        if constexpr (std::is_same_v<T, dl::PointDecoderParams>) {
+            CHECK(dec.subpixel == false);
+            CHECK(dec.threshold == 0.4f);
+        }
+    });
 }
 
 // ============================================================================
@@ -150,8 +160,7 @@ TEST_CASE("paramsFromBinding restores MaskDecoder binding",
     OutputBindingData binding;
     binding.slot_name = "mask_out";
     binding.data_key = "masks/saved";
-    binding.decoder_id = "TensorToMask2D";
-    binding.threshold = 0.55f;
+    binding.decoder = dl::MaskDecoderParams{.threshold = 0.55f};
 
     auto params = dl::widget::OutputSlotWidget::paramsFromBinding(binding);
     CHECK(params.data_key == "masks/saved");
@@ -172,9 +181,8 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
     OutputBindingData original;
     original.slot_name = "point_out";
     original.data_key = "points/restored";
-    original.decoder_id = "TensorToPoint2D";
-    original.threshold = 0.3f;
-    original.subpixel = true;
+    original.decoder =
+            dl::PointDecoderParams{.subpixel = true, .threshold = 0.3f};
 
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
@@ -183,9 +191,13 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
 
     auto binding = widget.toOutputBindingData();
     CHECK(binding.data_key == "points/restored");
-    CHECK(binding.decoder_id == "TensorToPoint2D");
-    CHECK(binding.threshold == 0.3f);
-    CHECK(binding.subpixel == true);
+    binding.decoder.visit([&](auto const & dec) {
+        using T = std::decay_t<decltype(dec)>;
+        if constexpr (std::is_same_v<T, dl::PointDecoderParams>) {
+            CHECK(dec.threshold == 0.3f);
+            CHECK(dec.subpixel == true);
+        }
+    });
 }
 
 // ============================================================================

@@ -18,11 +18,8 @@
 #include "channel_encoding/Point2DEncoder.hpp"
 
 #include "channel_decoding/ChannelDecoder.hpp"
+#include "channel_decoding/DecoderDispatch.hpp"
 #include "channel_decoding/DecoderFactory.hpp"
-#include "channel_decoding/TensorToFeatureVector.hpp"
-#include "channel_decoding/TensorToLine2D.hpp"
-#include "channel_decoding/TensorToMask2D.hpp"
-#include "channel_decoding/TensorToPoint2D.hpp"
 
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/TensorDTypeUtils.hpp"
@@ -43,6 +40,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <type_traits>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -647,6 +645,157 @@ assembleInputs(
     return result;
 }
 
+/// @brief Build decoder context from slot metadata and runtime state.
+[[nodiscard]] dl::DecoderContext makeDecoderContext(
+        dl::TensorSlotDescriptor const & slot,
+        ImageSize source_image_size,
+        int batch_index) {
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = batch_index;
+    ctx.target_image_size = source_image_size;
+
+    if (slot.shape.size() >= 2) {
+        ctx.height = static_cast<int>(slot.shape[slot.shape.size() - 2]);
+        ctx.width = static_cast<int>(slot.shape[slot.shape.size() - 1]);
+    }
+    return ctx;
+}
+
+/**
+ * @brief Decode one output binding when spatial rank requirements are satisfied.
+ *
+ * @returns Decoded geometry, or nullopt when skipped due to rank mismatch.
+ */
+[[nodiscard]] std::optional<dl::DecodedGeometryVariant> decodeBindingGeometry(
+        OutputBindingData const & binding,
+        at::Tensor const & tensor,
+        dl::DecoderContext const & ctx,
+        char const * log_prefix) {
+    std::optional<dl::DecodedGeometryVariant> decoded;
+    bool spatial_skip = false;
+
+    binding.decoder.visit([&](auto const & params) {
+        using ParamsT = std::decay_t<decltype(params)>;
+        if constexpr (dl::isSpatialDecoderParams<ParamsT>()) {
+            if (tensor.dim() < 4) {
+                spatial_skip = true;
+                std::cerr << log_prefix << ": spatial decoder '"
+                          << dl::decoderFactoryName<ParamsT>()
+                          << "' requires 4D tensor [B,C,H,W], got dim="
+                          << tensor.dim()
+                          << " (post-encoder reduces rank). Skipping.\n";
+                return;
+            }
+        }
+        decoded = dl::decodeToGeometry(tensor, ctx, params);
+    });
+
+    if (spatial_skip) {
+        return std::nullopt;
+    }
+    return decoded;
+}
+
+/// @brief Write decoded geometry into DataManager at the given frame.
+void writeDecodedGeometryToDataManager(
+        DataManager & dm,
+        std::string const & data_key,
+        TimeFrameIndex const frame_idx,
+        dl::DecodedGeometryVariant decoded) {
+    std::visit(
+            [&](auto && geometry) {
+                using GeometryT = std::decay_t<decltype(geometry)>;
+                if constexpr (std::is_same_v<GeometryT, Mask2D>) {
+                    if (geometry.empty()) {
+                        return;
+                    }
+                    auto mask_data = dm.getData<MaskData>(data_key);
+                    if (!mask_data) {
+                        dm.setData<MaskData>(data_key, TimeKey("media"));
+                        mask_data = dm.getData<MaskData>(data_key);
+                    }
+                    if (mask_data) {
+                        mask_data->addAtTime(
+                                frame_idx,
+                                std::forward<decltype(geometry)>(geometry),
+                                NotifyObservers::Yes);
+                    }
+                } else if constexpr (std::is_same_v<GeometryT, Point2D<float>>) {
+                    auto point_data = dm.getData<PointData>(data_key);
+                    if (!point_data) {
+                        dm.setData<PointData>(data_key, TimeKey("media"));
+                        point_data = dm.getData<PointData>(data_key);
+                    }
+                    if (point_data) {
+                        point_data->addAtTime(
+                                frame_idx,
+                                std::forward<decltype(geometry)>(geometry),
+                                NotifyObservers::Yes);
+                    }
+                } else if constexpr (std::is_same_v<GeometryT, Line2D>) {
+                    if (geometry.empty()) {
+                        return;
+                    }
+                    auto line_data = dm.getData<LineData>(data_key);
+                    if (!line_data) {
+                        dm.setData<LineData>(data_key, TimeKey("media"));
+                        line_data = dm.getData<LineData>(data_key);
+                    }
+                    if (line_data) {
+                        line_data->addAtTime(
+                                frame_idx,
+                                std::forward<decltype(geometry)>(geometry),
+                                NotifyObservers::Yes);
+                    }
+                } else if constexpr (std::is_same_v<GeometryT, std::vector<float>>) {
+                    if (geometry.empty()) {
+                        return;
+                    }
+                    auto tensor_data = dm.getData<TensorData>(data_key);
+                    if (!tensor_data) {
+                        dm.setData<TensorData>(data_key, TimeKey("media"));
+                        tensor_data = dm.getData<TensorData>(data_key);
+                    }
+                    if (tensor_data) {
+                        auto time_frame = dm.getTime();
+                        std::vector<std::pair<int, std::vector<float>>> rows;
+                        rows.emplace_back(
+                                static_cast<int>(frame_idx.getValue()),
+                                std::forward<decltype(geometry)>(geometry));
+                        tensor_data->upsertRows(rows, std::move(time_frame));
+                    }
+                }
+            },
+            std::move(decoded));
+}
+
+/// @brief Convert decoded geometry to a FrameResult when non-empty.
+[[nodiscard]] std::optional<FrameResult> toFrameResult(
+        int current_frame,
+        std::string const & data_key,
+        dl::DecodedGeometryVariant decoded) {
+    return std::visit(
+            [&](auto && geometry) -> std::optional<FrameResult> {
+                using GeometryT = std::decay_t<decltype(geometry)>;
+                if constexpr (std::is_same_v<GeometryT, Point2D<float>>) {
+                    return FrameResult{
+                            current_frame,
+                            geometry,
+                            data_key};
+                } else {
+                    if (geometry.empty()) {
+                        return std::nullopt;
+                    }
+                    return FrameResult{
+                            current_frame,
+                            std::forward<decltype(geometry)>(geometry),
+                            data_key};
+                }
+            },
+            std::move(decoded));
+}
+
 /// Decode model output tensors and write results into DataManager.
 ///
 /// @pre current_frame >= 0; a negative value is stored as a negative-indexed
@@ -666,119 +815,24 @@ void decodeOutputs(
         ImageSize source_image_size,
         int batch_index = 0) {
 
-    auto const & output_slot_vec = output_slots;
+    TimeFrameIndex const frame_idx(current_frame);
 
     for (auto const & binding: output_bindings) {
         if (binding.data_key.empty()) continue;
         auto it = outputs.find(binding.slot_name);
         if (it == outputs.end()) continue;
 
-        auto const & tensor = it->second;
-        auto const * slot = findSlot(output_slot_vec, binding.slot_name);
+        auto const * slot = findSlot(output_slots, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderContext ctx;
-        ctx.source_channel = 0;
-        ctx.batch_index = batch_index;
-        ctx.target_image_size = source_image_size;
+        auto const ctx =
+                makeDecoderContext(*slot, source_image_size, batch_index);
+        auto decoded = decodeBindingGeometry(
+                binding, it->second, ctx, "SlotAssembler");
+        if (!decoded) continue;
 
-        if (slot->shape.size() >= 2) {
-            ctx.height =
-                    static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            ctx.width =
-                    static_cast<int>(slot->shape[slot->shape.size() - 1]);
-        }
-
-        TimeFrameIndex const frame_idx(current_frame);
-
-        // Spatial decoders require 4D [B,C,H,W] tensors. Post-encoder
-        // modules like GlobalAvgPool reduce rank to 2D [B,C], making
-        // spatial decoders incompatible. Guard and skip gracefully.
-        bool const is_spatial_decoder =
-                (binding.decoder_id == "TensorToMask2D" ||
-                 binding.decoder_id == "TensorToPoint2D" ||
-                 binding.decoder_id == "TensorToLine2D");
-        if (is_spatial_decoder && tensor.dim() < 4) {
-            std::cerr << "SlotAssembler: spatial decoder '"
-                      << binding.decoder_id
-                      << "' requires 4D tensor [B,C,H,W], got dim="
-                      << tensor.dim()
-                      << " (post-encoder reduces rank). Skipping.\n";
-            continue;
-        }
-
-        if (binding.decoder_id == "TensorToMask2D") {
-            dl::TensorToMask2D const decoder;
-            dl::MaskDecoderParams params;
-            params.threshold = binding.threshold;
-            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
-
-            // Get or create MaskData and add the decoded mask
-            auto mask_data = dm.getData<MaskData>(binding.data_key);
-            if (!mask_data) {
-                // Create new MaskData if it doesn't exist
-                dm.setData<MaskData>(binding.data_key, TimeKey("media"));
-                mask_data = dm.getData<MaskData>(binding.data_key);
-            }
-            if (mask_data && !mask.empty()) {
-                mask_data->addAtTime(frame_idx, std::move(mask), NotifyObservers::Yes);
-            }
-
-        } else if (binding.decoder_id == "TensorToPoint2D") {
-            dl::TensorToPoint2D const decoder;
-            dl::PointDecoderParams pt_params;
-            pt_params.subpixel = binding.subpixel;
-            auto point = dl::TensorToPoint2D::decode(tensor, ctx, pt_params);
-
-            auto point_data = dm.getData<PointData>(binding.data_key);
-            if (!point_data) {
-                dm.setData<PointData>(binding.data_key, TimeKey("media"));
-                point_data = dm.getData<PointData>(binding.data_key);
-            }
-            if (point_data) {
-                point_data->addAtTime(frame_idx, std::move(point), NotifyObservers::Yes);
-            }
-
-        } else if (binding.decoder_id == "TensorToLine2D") {
-            dl::TensorToLine2D const decoder;
-            dl::LineDecoderParams ln_params;
-            ln_params.threshold = binding.threshold;
-            auto line = dl::TensorToLine2D::decode(tensor, ctx, ln_params);
-
-            auto line_data = dm.getData<LineData>(binding.data_key);
-            if (!line_data) {
-                dm.setData<LineData>(binding.data_key, TimeKey("media"));
-                line_data = dm.getData<LineData>(binding.data_key);
-            }
-            if (line_data && !line.empty()) {
-                line_data->addAtTime(frame_idx, std::move(line), NotifyObservers::Yes);
-            }
-
-        } else if (binding.decoder_id == "TensorToFeatureVector") {
-            dl::TensorToFeatureVector const decoder;
-            dl::FeatureVectorDecoderParams const fv_params;
-            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, fv_params);
-
-            // Upsert into existing TensorData so single-frame results
-            // accumulate across invocations (matching MaskData/PointData behavior).
-            if (!vec.empty()) {
-                auto tensor_data = dm.getData<TensorData>(binding.data_key);
-                if (!tensor_data) {
-                    dm.setData<TensorData>(binding.data_key, TimeKey("media"));
-                    tensor_data = dm.getData<TensorData>(binding.data_key);
-                }
-                if (tensor_data) {
-                    auto time_frame = dm.getTime();
-                    std::vector<std::pair<int, std::vector<float>>> rows;
-                    rows.emplace_back(static_cast<int>(frame_idx.getValue()), std::move(vec));
-                    tensor_data->upsertRows(rows, std::move(time_frame));
-                }
-            }
-
-        } else {
-            std::cerr << "SlotAssembler: unknown decoder '"
-                      << binding.decoder_id << "'\n";
-        }
+        writeDecodedGeometryToDataManager(
+                dm, binding.data_key, frame_idx, std::move(*decoded));
     }
 }
 
@@ -806,91 +860,24 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         int batch_index = 0) {
 
     std::vector<FrameResult> frame_results;
-    auto const & output_slot_vec = output_slots;
 
     for (auto const & binding: output_bindings) {
         if (binding.data_key.empty()) continue;
         auto it = outputs.find(binding.slot_name);
         if (it == outputs.end()) continue;
 
-        auto const & tensor = it->second;
-        auto const * slot = findSlot(output_slot_vec, binding.slot_name);
+        auto const * slot = findSlot(output_slots, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderContext ctx;
-        ctx.source_channel = 0;
-        ctx.batch_index = batch_index;
-        ctx.target_image_size = source_image_size;
+        auto const ctx =
+                makeDecoderContext(*slot, source_image_size, batch_index);
+        auto decoded = decodeBindingGeometry(
+                binding, it->second, ctx, "SlotAssembler(offline)");
+        if (!decoded) continue;
 
-        if (slot->shape.size() >= 2) {
-            ctx.height =
-                    static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            ctx.width =
-                    static_cast<int>(slot->shape[slot->shape.size() - 1]);
-        }
-
-        // Rank guard: spatial decoders need 4D [B,C,H,W] tensors.
-        bool const is_spatial_decoder =
-                (binding.decoder_id == "TensorToMask2D" ||
-                 binding.decoder_id == "TensorToPoint2D" ||
-                 binding.decoder_id == "TensorToLine2D");
-        if (is_spatial_decoder && tensor.dim() < 4) {
-            std::cerr << "SlotAssembler(offline): spatial decoder '"
-                      << binding.decoder_id
-                      << "' requires 4D tensor [B,C,H,W], got dim="
-                      << tensor.dim()
-                      << " (post-encoder reduces rank). Skipping.\n";
-            continue;
-        }
-
-        if (binding.decoder_id == "TensorToMask2D") {
-            dl::TensorToMask2D const decoder;
-            dl::MaskDecoderParams params;
-            params.threshold = binding.threshold;
-            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
-            if (!mask.empty()) {
-                frame_results.push_back(FrameResult{
-                        current_frame,
-                        std::move(mask),
-                        binding.data_key,
-                        binding.decoder_id});
-            }
-        } else if (binding.decoder_id == "TensorToPoint2D") {
-            dl::TensorToPoint2D const decoder;
-            dl::PointDecoderParams params;
-            params.subpixel = binding.subpixel;
-            auto point = dl::TensorToPoint2D::decode(tensor, ctx, params);
-            frame_results.push_back(FrameResult{
-                    current_frame,
-                    point,
-                    binding.data_key,
-                    binding.decoder_id});
-        } else if (binding.decoder_id == "TensorToLine2D") {
-            dl::TensorToLine2D const decoder;
-            dl::LineDecoderParams params;
-            params.threshold = binding.threshold;
-            auto line = dl::TensorToLine2D::decode(tensor, ctx, params);
-            if (!line.empty()) {
-                frame_results.push_back(FrameResult{
-                        current_frame,
-                        std::move(line),
-                        binding.data_key,
-                        binding.decoder_id});
-            }
-        } else if (binding.decoder_id == "TensorToFeatureVector") {
-            dl::TensorToFeatureVector const decoder;
-            dl::FeatureVectorDecoderParams const params;
-            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, params);
-            if (!vec.empty()) {
-                frame_results.push_back(FrameResult{
-                        current_frame,
-                        std::move(vec),
-                        binding.data_key,
-                        binding.decoder_id});
-            }
-        } else {
-            std::cerr << "SlotAssembler(offline): unknown decoder '"
-                      << binding.decoder_id << "'\n";
+        if (auto frame_result =
+                    toFrameResult(current_frame, binding.data_key, std::move(*decoded))) {
+            frame_results.push_back(std::move(*frame_result));
         }
     }
 
@@ -1681,11 +1668,20 @@ std::string SlotAssembler::dataTypeForEncoder(std::string const & encoder_id) {
     return {};
 }
 
-std::string SlotAssembler::dataTypeForDecoder(std::string const & decoder_id) {
-    if (decoder_id == "TensorToPoint2D") return "PointData";
-    if (decoder_id == "TensorToMask2D") return "MaskData";
-    if (decoder_id == "TensorToLine2D") return "LineData";
-    if (decoder_id == "TensorToFeatureVector") return "TensorData";
+std::string SlotAssembler::dataTypeForDecoder(
+        dl::widget::DecoderVariant const & decoder) {
+    std::string data_type;
+    decoder.visit([&](auto const & params) {
+        data_type = dl::dataTypeForDecoderParams<std::decay_t<decltype(params)>>();
+    });
+    return data_type;
+}
+
+std::string SlotAssembler::dataTypeForDecoder(
+        std::string const & decoder_factory_name) {
+    if (auto const params = dl::decoderParamsFromFactoryName(decoder_factory_name)) {
+        return dl::dataTypeForDecoder(*params);
+    }
     return {};
 }
 

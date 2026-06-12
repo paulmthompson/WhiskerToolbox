@@ -26,6 +26,7 @@ add_executable(test_DeepLearning
     channel_decoding/TensorToLine2D.test.cpp
     channel_decoding/TensorToFeatureVector.test.cpp
     channel_decoding/DecoderFactory.test.cpp
+    channel_decoding/DecoderDispatch.test.cpp
     channel_decoding/RoundTrip.test.cpp
 
     models_v2/TensorSlotDescriptor.test.cpp

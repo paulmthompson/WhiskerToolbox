@@ -9,36 +9,26 @@
 #ifndef BATCH_INFERENCE_RESULT_HPP
 #define BATCH_INFERENCE_RESULT_HPP
 
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/masks.hpp"
-#include "CoreGeometry/points.hpp"
+#include "channel_decoding/DecoderDispatch.hpp"
 
 #include <string>
-#include <variant>
 #include <vector>
 
-/**
- * @brief Decoded data produced by a single output decoder for one frame.
- * 
- * `std::vector<float>` represents a feature vector output from
- * `TensorToFeatureVector`, to be written into a `TensorData` row.
- */
-using DecodedOutputVariant = std::variant<Mask2D, Point2D<float>, Line2D,
-                                          std::vector<float>>;
+/// Alias for geometry decoded by channel decoders (shared with DecoderDispatch).
+using DecodedOutputVariant = dl::DecodedGeometryVariant;
 
 /**
  * @brief A single decoded result for one frame + one output binding.
  */
 struct FrameResult {
-    int frame_index = 0;      ///< Frame that was processed
-    DecodedOutputVariant data;///< Decoded geometry data or feature vector
-    std::string data_key;     ///< DataManager key to write into
-    std::string decoder_id;   ///< Decoder that produced this result
+    int frame_index = 0;       ///< Frame that was processed
+    DecodedOutputVariant data; ///< Decoded geometry data or feature vector
+    std::string data_key;      ///< DataManager key to write into
 };
 
 /**
  * @brief Accumulated results from an offline batch inference run.
- * 
+ *
  * The worker fills this on its thread; the main thread consumes it to
  * write into DataManager in one bulk pass.
  */

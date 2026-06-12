@@ -49,22 +49,6 @@ inline int computeEncodingFrame(
 }
 
 /**
- * @brief Serializable binding for a model output slot.
- */
-struct OutputBindingData {
-    /** Model output slot name */
-    std::string slot_name;
-    /** DataManager key to write results into */
-    std::string data_key;
-    /** Decoder factory key (e.g. "TensorToMask2D") */
-    std::string decoder_id;
-    /** Mask/line threshold */
-    float threshold = 0.5f;
-    /** Point subpixel refinement */
-    bool subpixel = true;
-};
-
-/**
  * @brief Capture mode for static (memory) model inputs.
  *
  * - Relative: re-encodes at `current_frame + time_offset` every invocation.

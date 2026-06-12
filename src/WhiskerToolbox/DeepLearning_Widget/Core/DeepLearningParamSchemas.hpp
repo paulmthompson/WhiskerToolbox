@@ -216,6 +216,19 @@ struct EncoderShapeParams {
 
 }// namespace dl::widget
 
-
+/**
+ * @brief Serializable binding for a model output slot.
+ *
+ * Persisted in workspace JSON with a nested tagged `decoder` field (reflect-cpp),
+ * matching `OutputSlotParams` plus the model slot name.
+ */
+struct OutputBindingData {
+    /** Model output slot name */
+    std::string slot_name;
+    /** DataManager key to write results into */
+    std::string data_key;
+    /** Decoder type and user-configurable parameters */
+    dl::widget::DecoderVariant decoder = dl::MaskDecoderParams{};
+};
 
 #endif// DEEP_LEARNING_PARAM_SCHEMAS_HPP
