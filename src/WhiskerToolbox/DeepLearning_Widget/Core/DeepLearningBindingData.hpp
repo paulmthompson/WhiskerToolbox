@@ -77,6 +77,13 @@ struct StaticInputData {
     int memory_index = 0;
     /** DataManager source key */
     std::string data_key;
+    /**
+     * Named DataBank entry ID (from dl::DataBank).
+     *
+     * When non-empty, static input resolution prefers the bank entry over
+     * legacy per-slot tensor cache. Empty means no bank binding.
+     */
+    std::string bank_entry_id;
     /** Relative frame offset (e.g. -1) */
     int time_offset = 0;
     /** For boolean mask slots */

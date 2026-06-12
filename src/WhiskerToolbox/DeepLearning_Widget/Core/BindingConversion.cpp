@@ -30,6 +30,7 @@ StaticInputData fromStaticInputParams(
     si.slot_name = slot_name;
     si.memory_index = 0;
     si.data_key = params.source;
+    si.bank_entry_id = params.bank_entry_id;
     si.captured_frame = captured_frame;
 
     params.capture_mode.visit([&](auto const & cm) {
@@ -94,6 +95,7 @@ StaticInputData fromStaticSequenceEntryParams(
     si.slot_name = slot_name;
     si.memory_index = memory_index;
     si.data_key = params.data_key;
+    si.bank_entry_id = params.bank_entry_id;
     si.capture_mode_str = params.capture_mode_str;
     si.time_offset = params.time_offset;
     si.captured_frame = captured_frame;
@@ -131,6 +133,7 @@ dl::widget::StaticInputSlotParams toStaticInputParams(
         StaticInputData const & binding) {
     dl::widget::StaticInputSlotParams p;
     p.source = binding.data_key;
+    p.bank_entry_id = binding.bank_entry_id;
 
     if (binding.capture_mode_str == "Absolute") {
         p.capture_mode = dl::widget::AbsoluteCaptureParams{};

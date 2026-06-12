@@ -157,6 +157,7 @@ TEST_CASE("SequenceEntryVariant schema extraction",
     SECTION("StaticSequenceEntryParams fields") {
         auto const & s = *f->variant_alternatives[0].schema;
         CHECK(s.field("data_key") != nullptr);
+        CHECK(s.field("bank_entry_id") != nullptr);
         CHECK(s.field("capture_mode_str") != nullptr);
         CHECK(s.field("time_offset") != nullptr);
     }
@@ -173,6 +174,7 @@ TEST_CASE("SequenceEntryVariant JSON round-trip",
     SECTION("Static entry") {
         dl::widget::StaticSequenceEntryParams params{
                 .data_key = "points/whisker",
+                .bank_entry_id = "whisker_ref",
                 .capture_mode_str = "Absolute",
                 .time_offset = 3};
         dl::widget::SequenceEntryVariant var{params};

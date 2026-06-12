@@ -17,10 +17,10 @@
  * @see ModelBase for the model forward pass interface.
  */
 
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 #include "MediaOverrides.hpp"
 #include "ModelDisplayInfo.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <atomic>
@@ -39,6 +39,10 @@ struct ImageSize;
 
 class DataManager;
 class MediaData;
+
+namespace dl {
+class DataBank;
+}
 
 
 /**
@@ -262,6 +266,21 @@ public:
      * libtorch operations.
      */
     static void initDeviceForCurrentThread();
+
+    // ── Instance: DataBank (named static input library) ─────────────────────
+
+    /**
+     * @brief Named store of geometry sources and channel-encoded tensors.
+     *
+     * Session-scoped: survives model switches via resetModel().
+     */
+    [[nodiscard]] dl::DataBank & dataBank();
+    [[nodiscard]] dl::DataBank const & dataBank() const;
+
+    /**
+     * @brief Remove all entries from the DataBank.
+     */
+    void clearDataBank();
 
     // ── Instance: static tensor cache ──────────────────────────────────────
 

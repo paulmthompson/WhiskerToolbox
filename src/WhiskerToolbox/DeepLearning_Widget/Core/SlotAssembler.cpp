@@ -1,8 +1,8 @@
 #include "SlotAssembler.hpp"
 
-#include "Inference/BatchInferenceResult.hpp" 
 #include "DeepLearningBindingData.hpp"
 #include "DeepLearningParamSchemas.hpp"
+#include "Inference/BatchInferenceResult.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -28,22 +28,23 @@
 #include "post_encoder/PostEncoderOutputTransform.hpp"
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
+#include "storage/DataBank.hpp"
 
 #include "device/DeviceManager.hpp"
 
-#include <torch/csrc/autograd/grad_mode.h> // torch::NoGradGuard
-#include <ATen/core/Tensor.h> // at::Tensor
-#include <c10/core/Device.h>  // Device, kCPU, kCUDA
+#include <ATen/core/Tensor.h>             // at::Tensor
+#include <c10/core/Device.h>              // Device, kCPU, kCUDA
+#include <torch/csrc/autograd/grad_mode.h>// torch::NoGradGuard
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <type_traits>
 #include <filesystem>
 #include <iostream>
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -65,6 +66,8 @@ struct SlotAssembler::Impl {
     /// injected into the input slot on the next frame.
     std::unordered_map<std::string, at::Tensor> recurrent_cache;
 
+    /// Named library of geometry sources and channel-encoded tensors.
+    std::unique_ptr<dl::DataBank> data_bank;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -550,7 +553,7 @@ assembleInputs(
                 tensor_shape.insert(tensor_shape.end(),
                                     slot.shape.begin(), slot.shape.end());
                 result[slot.name] = at::zeros(tensor_shape,
-                                                 toTorchDType(slot.dtype));
+                                              toTorchDType(slot.dtype));
             } else {
                 // ── Non-sequence static slot (original behavior) ──
                 for (auto const * entry: entries) {
@@ -832,7 +835,9 @@ std::vector<FrameResult> decodeOutputsToBuffer(
 // ════════════════════════════════════════════════════════════════════════════
 
 SlotAssembler::SlotAssembler()
-    : _impl(std::make_unique<Impl>()) {}
+    : _impl(std::make_unique<Impl>()) {
+    _impl->data_bank = std::make_unique<dl::DataBank>();
+}
 
 SlotAssembler::~SlotAssembler() = default;
 
@@ -934,6 +939,18 @@ void SlotAssembler::resetModel() {
     _impl->post_encoder_module.reset();
     _impl->static_cache.clear();
     _impl->recurrent_cache.clear();
+}
+
+dl::DataBank & SlotAssembler::dataBank() {
+    return *_impl->data_bank;
+}
+
+dl::DataBank const & SlotAssembler::dataBank() const {
+    return *_impl->data_bank;
+}
+
+void SlotAssembler::clearDataBank() {
+    _impl->data_bank->clear();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1385,7 +1402,7 @@ void SlotAssembler::runRecurrentSequence(
                               << "', falling back to zeros\n";
                     _impl->recurrent_cache[key] =
                             at::zeros(init_shape,
-                                         toTorchDType(input_slot->dtype));
+                                      toTorchDType(input_slot->dtype));
                 }
             }
 

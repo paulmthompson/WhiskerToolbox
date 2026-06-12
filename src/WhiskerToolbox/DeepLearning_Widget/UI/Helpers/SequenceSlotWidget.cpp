@@ -358,6 +358,7 @@ void SequenceSlotWidget::setEntriesFromState(
                 si.memory_index == row.memory_index) {
                 params = StaticSequenceEntryParams{
                         .data_key = si.data_key,
+                        .bank_entry_id = si.bank_entry_id,
                         .capture_mode_str = si.capture_mode_str,
                         .time_offset = si.time_offset};
                 row.captured_frame = si.captured_frame;

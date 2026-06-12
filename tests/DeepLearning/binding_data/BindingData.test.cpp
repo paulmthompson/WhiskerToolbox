@@ -106,6 +106,7 @@ TEST_CASE("StaticInputData - defaults",
     CHECK(si.time_offset == 0);
     CHECK(si.memory_index == 0);
     CHECK(si.active == true);
+    CHECK(si.bank_entry_id.empty());
 }
 
 TEST_CASE("StaticInputData - setCaptureMode updates string",

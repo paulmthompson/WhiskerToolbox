@@ -87,6 +87,7 @@ using RecurrentInitVariant = rfl::TaggedUnion<
  */
 struct StaticSequenceEntryParams {
     std::string data_key;                     ///< DataManager key
+    std::string bank_entry_id;                ///< Named dl::DataBank entry (optional)
     std::string capture_mode_str = "Relative";///< "Relative" or "Absolute"
     int time_offset = 0;                      ///< Used in Relative mode
 };
@@ -216,6 +217,7 @@ struct DynamicInputSlotParams {
  */
 struct StaticInputSlotParams {
     std::string source;                                       ///< DataManager key (dynamic combo)
+    std::string bank_entry_id;                                ///< Named dl::DataBank entry (optional)
     CaptureModeVariant capture_mode = RelativeCaptureParams{};///< Relative or Absolute capture mode
 };
 
