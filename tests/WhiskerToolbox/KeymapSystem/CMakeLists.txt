@@ -25,16 +25,19 @@ set_target_properties(test_keymap_system PROPERTIES
 
 target_link_libraries(test_keymap_system PRIVATE
     Catch2::Catch2WithMain
-    Commands
     DataManager
-    DataSynthesizer
-    TransformsV2
     EditorState
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     WhiskerToolbox::KeymapSystem
 )
+
+# Command Listener Dependencies
+target_link_libraries(test_keymap_system PRIVATE Commands)
+target_link_libraries(test_keymap_system PRIVATE DataSynthesizer)
+target_link_libraries(test_keymap_system PRIVATE TransformsV2)
+target_link_libraries(test_keymap_system PRIVATE DeepLearning)
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)
     catch_discover_tests(test_keymap_system)

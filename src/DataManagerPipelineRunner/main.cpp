@@ -6,6 +6,7 @@
 #include "Commands/register_core_commands.hpp"
 #include "DataManager.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
+#include "DeepLearning/register_deeplearning_commands.hpp"
 #include "JsonPipeline/JsonPipelineRunner.hpp"
 #include "TransformsV2/register_transformsv2_commands.hpp"
 
@@ -161,6 +162,7 @@ int main(int argc, char ** argv) {
         commands::register_core_commands();
         WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
         WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
+        dl::register_deeplearning_commands();
 
         DataManager data_manager;
         auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(

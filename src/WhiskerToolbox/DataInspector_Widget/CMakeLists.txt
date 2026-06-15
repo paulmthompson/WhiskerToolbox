@@ -133,7 +133,11 @@ target_link_libraries(DataInspector_Widget PRIVATE MediaExport)
 target_link_libraries(DataInspector_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(DataInspector_Widget PRIVATE TransformsV2)
 target_link_libraries(DataInspector_Widget PRIVATE TransformsV2_Widget)
+
+# Command Listener Dependencies
 target_link_libraries(DataInspector_Widget PRIVATE Commands)
+target_link_libraries(DataInspector_Widget PRIVATE DataSynthesizer)
+target_link_libraries(DataInspector_Widget PRIVATE DeepLearning)
 
 target_include_directories(DataInspector_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" # This directory

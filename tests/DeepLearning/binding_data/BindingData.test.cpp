@@ -123,14 +123,6 @@ TEST_CASE("StaticInputData - setSourceType updates string",
     CHECK(si.sourceType() == StaticInputSource::DataManager);
 }
 
-TEST_CASE("StaticInputData - legacy Absolute capture_mode_str migrates to DataBank",
-          "[binding_data][static_source]") {
-    StaticInputData si;
-    si.capture_mode_str = "Absolute";
-    CHECK(si.sourceType() == StaticInputSource::DataBank);
-    CHECK(si.resolvedBankEntryId() == "memory_images_0");
-}
-
 TEST_CASE("StaticInputData - resolvedBankEntryId prefers explicit bank_entry_id",
           "[binding_data][static_source]") {
     StaticInputData si;

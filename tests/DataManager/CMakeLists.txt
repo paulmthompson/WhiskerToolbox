@@ -203,7 +203,17 @@ if(ENABLE_OPENCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()
 
-target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager Commands DataSynthesizer TransformsV2)
+target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain)
+
+target_link_libraries(test_data_manager PRIVATE DataManager)
+
+#Command tests
+target_link_libraries(test_data_manager PRIVATE Commands)
+target_link_libraries(test_data_manager PRIVATE DataSynthesizer)
+target_link_libraries(test_data_manager PRIVATE TransformsV2)
+target_link_libraries(test_data_manager PRIVATE DeepLearning)
+
+
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE DataManagerNumpy)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)

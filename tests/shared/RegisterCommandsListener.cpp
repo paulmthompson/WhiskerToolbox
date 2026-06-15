@@ -8,6 +8,7 @@
 #include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "TransformsV2/register_transformsv2_commands.hpp"
+#include "DeepLearning/register_deeplearning_commands.hpp"
 
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
@@ -22,6 +23,7 @@ public:
         commands::register_core_commands();
         WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
         WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
+        dl::register_deeplearning_commands();
     }
 };
 

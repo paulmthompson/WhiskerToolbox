@@ -9,13 +9,13 @@
  * pre-encoded model input data (memory frames, reference masks, etc.).
  */
 
-#include "channel_encoding/EncoderDispatch.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"
-#include "storage/DataBankEntry.hpp"
+#include "channel_encoding/EncoderDispatch.hpp"// EncoderParamsVariant, EncodingSourceVariant
+#include "models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor
+#include "storage/DataBankEntry.hpp"           // DataBankEntry, DataBankEntryMetadata
 
 #include "CoreGeometry/ImageSize.hpp"
 
-#include <ATen/core/Tensor.h>
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cstddef>
 #include <optional>

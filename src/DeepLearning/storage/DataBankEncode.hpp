@@ -6,12 +6,12 @@
  * @brief Free functions for encoding DataBank sources into model-ready tensors.
  */
 
-#include "channel_encoding/EncoderDispatch.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"
+#include "channel_encoding/EncoderDispatch.hpp"// EncodingSourceVariant, EncoderParamsVariant
+#include "models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor
 
 #include "CoreGeometry/ImageSize.hpp"
 
-#include <ATen/core/Tensor.h>
+#include <ATen/core/Tensor.h>// at::Tensor
 
 #include <cstdint>
 #include <optional>

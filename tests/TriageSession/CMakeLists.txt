@@ -25,7 +25,7 @@ target_link_libraries(test_triage_session PRIVATE
 
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(test_triage_session PRIVATE DataManager)
-target_link_libraries(test_triage_session PRIVATE Commands DataSynthesizer TransformsV2)
+target_link_libraries(test_triage_session PRIVATE Commands DataSynthesizer TransformsV2 DeepLearning)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::DigitalTimeSeries)
 

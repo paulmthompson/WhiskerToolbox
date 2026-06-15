@@ -38,6 +38,8 @@ add_executable(test_commands
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands TransformsV2)
+target_link_libraries(test_commands PRIVATE DeepLearning)
+
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::DigitalTimeSeries)

@@ -80,6 +80,7 @@
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
+#include "DeepLearning/register_deeplearning_commands.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 #include "TransformsV2/register_transformsv2_commands.hpp"
@@ -203,6 +204,7 @@ MainWindow::MainWindow(QWidget * parent)
     commands::register_core_commands();
     WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
     WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
+    dl::register_deeplearning_commands();
 
     // Wire the openEditor callback so ContextActions can open/focus editors
     _editor_registry->setOpenEditorCallback([this](EditorTypeId const & type_id)

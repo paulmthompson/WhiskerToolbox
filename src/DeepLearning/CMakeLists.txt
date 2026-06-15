@@ -13,6 +13,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(DEEP_LEARNING_SOURCES
     torch_helpers.hpp
+    register_deeplearning_commands.hpp
+    register_deeplearning_commands.cpp
 
     models/efficientvit/efficientvit.hpp
     models/efficientvit/efficientvit.cpp
@@ -128,8 +130,9 @@ if(ENABLE_EXECUTORCH)
 endif()
 
 target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
-
 target_link_libraries(DeepLearning PUBLIC spdlog::spdlog_header_only)
+target_link_libraries(DeepLearning PRIVATE DataManager)
+target_link_libraries(DeepLearning PRIVATE Commands)
 
 set_target_compiler_warnings(DeepLearning)
 
