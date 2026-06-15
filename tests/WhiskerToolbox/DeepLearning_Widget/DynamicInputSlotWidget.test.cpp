@@ -1,15 +1,12 @@
 /// @file DynamicInputSlotWidget.test.cpp
 /// @brief Tests for the DynamicInputSlotWidget.
-///
-/// Verifies construction, parameter get/set, data source refresh,
-/// and signal emission.
 
 #include <catch2/catch_test_macros.hpp>
 
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -20,7 +17,6 @@
 
 #include <type_traits>
 
-/// Helper: create a minimal TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeTestSlot(
         std::string name = "encoder_image",
         std::string recommended_encoder = "ImageEncoder") {
@@ -32,10 +28,6 @@ static dl::TensorSlotDescriptor makeTestSlot(
     return slot;
 }
 
-// ============================================================================
-// Construction
-// ============================================================================
-
 TEST_CASE("DynamicInputSlotWidget constructs with valid slot and DM",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
@@ -45,67 +37,52 @@ TEST_CASE("DynamicInputSlotWidget constructs with valid slot and DM",
     CHECK(widget->slotName() == "encoder_image");
 }
 
-TEST_CASE("DynamicInputSlotWidget default params have empty source",
+TEST_CASE("DynamicInputSlotWidget default binding has empty data_key",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     auto slot = makeTestSlot();
 
     dl::widget::DynamicInputSlotWidget const widget(slot, dm);
-    auto p = widget.params();
-    CHECK(p.time_offset == 0);
-    // source should be empty or "(None)" since DM has no keys
+    auto binding = widget.binding();
+    CHECK(binding.data_key.empty());
+    CHECK(binding.time_offset == 0);
 }
 
-// ============================================================================
-// setParams / params round-trip
-// ============================================================================
-
-TEST_CASE("DynamicInputSlotWidget setParams and params round-trip",
+TEST_CASE("DynamicInputSlotWidget setBinding and binding round-trip",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     auto slot = makeTestSlot("enc_pts", "Point2DEncoder");
 
     dl::widget::DynamicInputSlotWidget widget(slot, dm);
 
-    dl::widget::DynamicInputSlotParams p;
-    p.encoder = dl::Point2DEncoderParams{
+    SlotBindingData original;
+    original.slot_name = "enc_pts";
+    original.encoder = dl::Point2DEncoderParams{
             .mode = dl::RasterMode::Heatmap,
             .gaussian_sigma = 4.0f};
-    p.time_offset = -3;
+    original.time_offset = -3;
 
-    widget.setParams(p);
-    auto result = widget.params();
+    widget.setBinding(original);
+    auto result = widget.binding();
 
     CHECK(result.time_offset == -3);
+    CHECK(result.slot_name == "enc_pts");
 }
 
-// ============================================================================
-// Data source refresh
-// ============================================================================
-
-TEST_CASE("DynamicInputSlotWidget refreshDataSources updates source combo",
+TEST_CASE("DynamicInputSlotWidget refreshDataSources updates data_key combo",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
-
-    // Add some data objects
     dm->setData<PointData>("points/whisker", TimeKey("time"));
     dm->setData<PointData>("points/other", TimeKey("time"));
 
     auto slot = makeTestSlot("enc_pts", "Point2DEncoder");
     dl::widget::DynamicInputSlotWidget widget(slot, dm);
 
-    // After construction, source combo should have point keys
     widget.refreshDataSources();
 
-    // We can't easily inspect the combo directly, but we can verify
-    // the widget doesn't crash and params() still returns valid data
-    auto p = widget.params();
-    CHECK(p.time_offset == 0);
+    auto binding = widget.binding();
+    CHECK(binding.time_offset == 0);
 }
-
-// ============================================================================
-// Signal emission
-// ============================================================================
 
 TEST_CASE("DynamicInputSlotWidget emits bindingChanged on param changes",
           "[dl_widget][dynamic_input_widget]") {
@@ -116,21 +93,15 @@ TEST_CASE("DynamicInputSlotWidget emits bindingChanged on param changes",
 
     QSignalSpy const spy(&widget, &dl::widget::DynamicInputSlotWidget::bindingChanged);
 
-    // Setting params triggers the signal via fromJson → parametersChanged chain
-    dl::widget::DynamicInputSlotParams p;
-    p.time_offset = 5;
-    widget.setParams(p);
+    SlotBindingData updated;
+    updated.encoder = dl::ImageEncoderParams{};
+    updated.time_offset = 5;
+    widget.setBinding(updated);
 
-    // The signal may or may not fire depending on whether values changed
-    // At minimum, verify the spy is valid
     CHECK(spy.isValid());
 }
 
-// ============================================================================
-// toSlotBindingData conversion
-// ============================================================================
-
-TEST_CASE("toSlotBindingData extracts correct fields from ImageEncoder",
+TEST_CASE("binding extracts correct fields from ImageEncoder",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<PointData>("test_source", TimeKey("time"));
@@ -138,13 +109,13 @@ TEST_CASE("toSlotBindingData extracts correct fields from ImageEncoder",
 
     dl::widget::DynamicInputSlotWidget widget(slot, dm);
 
-    dl::widget::DynamicInputSlotParams p;
-    p.source = "test_source";
-    p.encoder = dl::ImageEncoderParams{.normalize = true};
-    p.time_offset = 2;
-    widget.setParams(p);
+    SlotBindingData binding_in;
+    binding_in.data_key = "test_source";
+    binding_in.encoder = dl::ImageEncoderParams{.normalize = true};
+    binding_in.time_offset = 2;
+    widget.setBinding(binding_in);
 
-    auto binding = widget.toSlotBindingData();
+    auto binding = widget.binding();
     CHECK(binding.slot_name == "enc_img");
     CHECK(binding.data_key == "test_source");
     CHECK(binding.time_offset == 2);
@@ -156,7 +127,7 @@ TEST_CASE("toSlotBindingData extracts correct fields from ImageEncoder",
     });
 }
 
-TEST_CASE("toSlotBindingData extracts mode and sigma from Point2DEncoder",
+TEST_CASE("binding extracts mode and sigma from Point2DEncoder",
           "[dl_widget][dynamic_input_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<PointData>("points/whisker", TimeKey("time"));
@@ -164,15 +135,15 @@ TEST_CASE("toSlotBindingData extracts mode and sigma from Point2DEncoder",
 
     dl::widget::DynamicInputSlotWidget widget(slot, dm);
 
-    dl::widget::DynamicInputSlotParams p;
-    p.source = "points/whisker";
-    p.encoder = dl::Point2DEncoderParams{
+    SlotBindingData binding_in;
+    binding_in.data_key = "points/whisker";
+    binding_in.encoder = dl::Point2DEncoderParams{
             .mode = dl::RasterMode::Heatmap,
             .gaussian_sigma = 5.0f};
-    p.time_offset = -1;
-    widget.setParams(p);
+    binding_in.time_offset = -1;
+    widget.setBinding(binding_in);
 
-    auto binding = widget.toSlotBindingData();
+    auto binding = widget.binding();
     CHECK(binding.slot_name == "enc_pts");
     CHECK(binding.time_offset == -1);
     binding.encoder.visit([&](auto const & enc) {
@@ -182,4 +153,18 @@ TEST_CASE("toSlotBindingData extracts mode and sigma from Point2DEncoder",
             CHECK(enc.gaussian_sigma == 5.0f);
         }
     });
+}
+
+TEST_CASE("binding normalizes None sentinel for data_key",
+          "[dl_widget][dynamic_input_widget]") {
+    auto dm = std::make_shared<DataManager>();
+    auto slot = makeTestSlot();
+
+    dl::widget::DynamicInputSlotWidget widget(slot, dm);
+
+    dl::DynamicInputBindingForm form;
+    form.data_key = "(None)";
+    widget.setBinding(dl::toSlotBindingData(slot.name, form));
+
+    CHECK(widget.binding().data_key.empty());
 }

@@ -12,6 +12,8 @@ find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(DEEP_LEARNING_SOURCES
+    bindings/BindingParamSchemas.cpp
+    bindings/BindingParamSchemas.hpp
     bindings/DeepLearningBindingData.hpp
     bindings/EncoderDecoderBindingTypes.hpp
     bindings/SlotBindingTypes.hpp

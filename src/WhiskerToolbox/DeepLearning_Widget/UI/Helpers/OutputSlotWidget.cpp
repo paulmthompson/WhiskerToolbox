@@ -3,8 +3,6 @@
 
 #include "OutputSlotWidget.hpp"
 
-#include "DeepLearning_Widget/Core/BindingConversion.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 
@@ -25,10 +23,6 @@
 #include <cassert>
 
 namespace dl::widget {
-
-// ════════════════════════════════════════════════════════════════════════════
-// Construction / Destruction
-// ════════════════════════════════════════════════════════════════════════════
 
 OutputSlotWidget::OutputSlotWidget(
         dl::TensorSlotDescriptor const & slot,
@@ -64,24 +58,22 @@ OutputSlotWidget::OutputSlotWidget(
     _auto_param = new AutoParamWidget(group);
     group_layout->addWidget(_auto_param);
 
-    auto schema =
-            extractParameterSchema<OutputSlotParams>();
+    auto schema = extractParameterSchema<OutputBindingForm>();
     _auto_param->setSchema(schema);
 
     if (!_recommended_decoder.empty()) {
-        OutputSlotParams initial;
+        OutputBindingForm initial;
         if (auto const params =
                     dl::decoderParamsFromFactoryName(_recommended_decoder)) {
             initial.decoder = *params;
         }
-        auto json = rfl::json::write(initial);
-        _auto_param->fromJson(json);
+        _setForm(initial);
     }
 
     _refreshTargetCombo();
 
     connect(_auto_param, &AutoParamWidget::parametersChanged, this, [this]() {
-        auto const current = params();
+        auto const current = _form();
         auto const type_hint = SlotAssembler::dataTypeForDecoder(current.decoder);
         if (!type_hint.empty()) {
             auto const types =
@@ -95,22 +87,13 @@ OutputSlotWidget::OutputSlotWidget(
 
 OutputSlotWidget::~OutputSlotWidget() = default;
 
-// ════════════════════════════════════════════════════════════════════════════
-// Public API
-// ════════════════════════════════════════════════════════════════════════════
-
-OutputSlotParams OutputSlotWidget::params() const {
-    auto json_str = _auto_param->toJson();
-    auto result = rfl::json::read<OutputSlotParams>(json_str);
-    if (result) {
-        return result.value();
-    }
-    return {};
+OutputBindingData OutputSlotWidget::binding() const {
+    return toOutputBindingData(_slot_name, _form());
 }
 
-void OutputSlotWidget::setParams(OutputSlotParams const & p) {
-    auto json = rfl::json::write(p);
-    _auto_param->fromJson(json);
+void OutputSlotWidget::setBinding(OutputBindingData const & binding) {
+    _setForm(fromOutputBindingData(binding));
+    _refreshTargetCombo();
 }
 
 void OutputSlotWidget::refreshDataSources() {
@@ -126,18 +109,24 @@ std::string const & OutputSlotWidget::slotName() const {
     return _slot_name;
 }
 
-OutputBindingData OutputSlotWidget::toOutputBindingData() const {
-    return dl::conversion::fromOutputParams(_slot_name, params());
+OutputBindingForm OutputSlotWidget::_form() const {
+    auto json_str = _auto_param->toJson();
+    auto result = rfl::json::read<OutputBindingForm>(json_str);
+    if (result) {
+        return result.value();
+    }
+    return {};
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// Private helpers
-// ════════════════════════════════════════════════════════════════════════════
+void OutputSlotWidget::_setForm(OutputBindingForm const & form) {
+    auto json = rfl::json::write(form);
+    _auto_param->fromJson(json);
+}
 
 void OutputSlotWidget::_refreshTargetCombo() {
     if (!_dm) return;
 
-    auto const current = params();
+    auto const current = _form();
     std::string type_hint = SlotAssembler::dataTypeForDecoder(current.decoder);
     if (type_hint.empty() && !_recommended_decoder.empty()) {
         type_hint = SlotAssembler::dataTypeForDecoder(_recommended_decoder);
@@ -148,11 +137,6 @@ void OutputSlotWidget::_refreshTargetCombo() {
     auto const types = DataSourceComboHelper::typesFromHint(type_hint);
     auto const keys = getKeysForTypes(*_dm, types);
     _auto_param->updateAllowedValues("data_key", keys);
-}
-
-OutputSlotParams OutputSlotWidget::paramsFromBinding(
-        OutputBindingData const & binding) {
-    return dl::conversion::toOutputParams(binding);
 }
 
 }// namespace dl::widget

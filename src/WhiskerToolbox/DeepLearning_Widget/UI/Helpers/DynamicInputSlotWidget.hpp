@@ -1,16 +1,16 @@
 /**
  * @file DynamicInputSlotWidget.hpp
  * @brief Self-contained widget for configuring one dynamic input slot.
- * 
- * Replaces the hand-built `_buildDynamicInputGroup()` panel with a
- * schema-driven form powered by AutoParamWidget. The widget owns a
- * `DynamicInputSlotParams` struct and exposes it via signals.
+ *
+ * Schema-driven form powered by AutoParamWidget over
+ * `dl::DynamicInputBindingForm`, exposed as `SlotBindingData`.
  */
 
 #ifndef DYNAMIC_INPUT_SLOT_WIDGET_HPP
 #define DYNAMIC_INPUT_SLOT_WIDGET_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
 #include <QWidget>
 
@@ -22,7 +22,6 @@ class AutoParamWidget;
 class DataManager;
 class QGroupBox;
 class QLabel;
-struct SlotBindingData;
 
 namespace dl {
 struct TensorSlotDescriptor;
@@ -33,7 +32,7 @@ namespace dl::widget {
 /**
  * @brief Widget for configuring a single dynamic (per-frame) input slot.
  *
- * Wraps an AutoParamWidget driven by the `DynamicInputSlotParams` schema.
+ * Wraps an AutoParamWidget driven by `dl::DynamicInputBindingForm`.
  * The data-source combo is populated dynamically from DataManager, and
  * encoder alternatives are constrained to types compatible with the
  * selected data source.
@@ -59,21 +58,21 @@ public:
 
     ~DynamicInputSlotWidget() override;
 
-    // Non-copyable, non-movable (QWidget)
     DynamicInputSlotWidget(DynamicInputSlotWidget const &) = delete;
     DynamicInputSlotWidget & operator=(DynamicInputSlotWidget const &) = delete;
     DynamicInputSlotWidget(DynamicInputSlotWidget &&) = delete;
     DynamicInputSlotWidget & operator=(DynamicInputSlotWidget &&) = delete;
 
     /**
-     * @brief Return the current parameter values.
+     * @brief Return the current slot binding (includes @c slot_name).
      */
-    [[nodiscard]] DynamicInputSlotParams params() const;
+    [[nodiscard]] SlotBindingData binding() const;
 
     /**
-     * @brief Set the parameter values and update the UI.
+     * @brief Set binding values and update the UI.
+     * @param binding Saved binding; @c slot_name may differ from this widget's slot.
      */
-    void setParams(DynamicInputSlotParams const & params);
+    void setBinding(SlotBindingData const & binding);
 
     /**
      * @brief Refresh the data-source combo with current DataManager keys.
@@ -85,11 +84,6 @@ public:
      */
     [[nodiscard]] std::string const & slotName() const;
 
-    /**
-     * @brief Convert current parameters to a SlotBindingData for SlotAssembler.
-     */
-    [[nodiscard]] SlotBindingData toSlotBindingData() const;
-
 signals:
     /**
      * @brief Emitted whenever any parameter in the slot changes.
@@ -98,22 +92,25 @@ signals:
 
 private:
     /**
-     * @brief Populate the source combo with DM keys matching all dynamic input types.
+     * @brief Read the current form values from AutoParamWidget.
      */
-    void _refreshSourceCombo();
+    [[nodiscard]] DynamicInputBindingForm _form() const;
 
     /**
-     * @brief Map an encoder tag to the DM data types it can consume.
+     * @brief Write form values to AutoParamWidget.
      */
-    [[nodiscard]] static std::vector<std::string> _encoderTagsForDataType(
-            std::string const & data_type_hint);
+    void _setForm(DynamicInputBindingForm const & form);
+
+    /**
+     * @brief Populate the data_key combo with DM keys for dynamic input types.
+     */
+    void _refreshSourceCombo();
 
     std::string _slot_name;
     std::shared_ptr<DataManager> _dm;
 
     AutoParamWidget * _auto_param = nullptr;
 
-    /// Recommended encoder from slot descriptor, used for initial selection.
     std::string _recommended_encoder;
 };
 

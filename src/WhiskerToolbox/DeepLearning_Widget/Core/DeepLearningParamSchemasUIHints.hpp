@@ -30,16 +30,6 @@ struct ParameterUIHints<dl::widget::DataManagerStaticSourceParams> {
 };
 
 template<>
-struct ParameterUIHints<dl::widget::DynamicInputSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
-struct ParameterUIHints<dl::widget::OutputSlotParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
 struct ParameterUIHints<dl::widget::RecurrentBindingSlotParams> {
     static void annotate(ParameterSchema & schema);
 };

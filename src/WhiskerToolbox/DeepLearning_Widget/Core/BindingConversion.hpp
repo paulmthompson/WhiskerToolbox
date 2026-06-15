@@ -6,10 +6,10 @@
 #ifndef DEEP_LEARNING_BINDING_CONVERSION_HPP
 #define DEEP_LEARNING_BINDING_CONVERSION_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp" // DynamicInputSlotParams, StaticInputSlotParams, OutputSlotParams
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp" // StaticInputData, RecurrentBindingData
-#include "DeepLearning/bindings/SlotBindingTypes.hpp" // SlotBindingData, OutputBindingData
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
 #include <string>
 
@@ -18,20 +18,6 @@ namespace dl::conversion {
 // ════════════════════════════════════════════════════════════════════════════
 // Params → Binding (UI → State)
 // ════════════════════════════════════════════════════════════════════════════
-
-/**
- * @brief Convert DynamicInputSlotParams to SlotBindingData.
- * @param slot_name  Model input slot name (e.g. "encoder_image").
- * @param params     Widget-level params from DynamicInputSlotWidget.
- * @return Binding data for SlotAssembler.
- *
- * @pre slot_name must not be empty; an empty name produces a binding with no
- *      identifiable slot, which SlotAssembler cannot match against the model
- *      (enforcement: none) [IMPORTANT]
- */
-[[nodiscard]] SlotBindingData fromDynamicInputParams(
-        std::string const & slot_name,
-        dl::widget::DynamicInputSlotParams const & params);
 
 /**
  * @brief Convert StaticInputSlotParams to StaticInputData.
@@ -46,20 +32,6 @@ namespace dl::conversion {
 [[nodiscard]] StaticInputData fromStaticInputParams(
         std::string const & slot_name,
         dl::widget::StaticInputSlotParams const & params);
-
-/**
- * @brief Convert OutputSlotParams to OutputBindingData.
- * @param slot_name  Model output slot name.
- * @param params     Widget-level params from OutputSlotWidget.
- * @return Binding data for SlotAssembler.
- *
- * @pre slot_name must not be empty; an empty name produces a binding with no
- *      identifiable slot, which SlotAssembler cannot match against the model
- *      (enforcement: none) [IMPORTANT]
- */
-[[nodiscard]] OutputBindingData fromOutputParams(
-        std::string const & slot_name,
-        dl::widget::OutputSlotParams const & params);
 
 /**
  * @brief Convert RecurrentBindingSlotParams to RecurrentBindingData.
@@ -122,12 +94,6 @@ namespace dl::conversion {
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
- * @brief Convert SlotBindingData to DynamicInputSlotParams.
- */
-[[nodiscard]] dl::widget::DynamicInputSlotParams toDynamicInputParams(
-        SlotBindingData const & binding);
-
-/**
  * @brief Convert StaticInputData to StaticInputSlotParams.
  */
 [[nodiscard]] dl::widget::StaticInputSlotParams toStaticInputParams(
@@ -138,12 +104,6 @@ namespace dl::conversion {
  */
 [[nodiscard]] dl::widget::StaticSequenceEntryParams toStaticSequenceEntryParams(
         StaticInputData const & binding);
-
-/**
- * @brief Convert OutputBindingData to OutputSlotParams.
- */
-[[nodiscard]] dl::widget::OutputSlotParams toOutputParams(
-        OutputBindingData const & binding);
 
 /**
  * @brief Convert RecurrentBindingData to RecurrentBindingSlotParams.

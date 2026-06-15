@@ -47,17 +47,6 @@ toStaticInputSourceVariant(StaticInputData const & binding) {
 // Params → Binding
 // ════════════════════════════════════════════════════════════════════════════
 
-SlotBindingData fromDynamicInputParams(
-        std::string const & slot_name,
-        dl::widget::DynamicInputSlotParams const & params) {
-    SlotBindingData binding;
-    binding.slot_name = slot_name;
-    binding.data_key = params.source;
-    binding.encoder = params.encoder;
-    binding.time_offset = params.time_offset;
-    return binding;
-}
-
 StaticInputData fromStaticInputParams(
         std::string const & slot_name,
         dl::widget::StaticInputSlotParams const & params) {
@@ -66,16 +55,6 @@ StaticInputData fromStaticInputParams(
     si.memory_index = 0;
     assignStaticInputFromSourceVariant(si, params.source);
     return si;
-}
-
-OutputBindingData fromOutputParams(
-        std::string const & slot_name,
-        dl::widget::OutputSlotParams const & params) {
-    OutputBindingData binding;
-    binding.slot_name = slot_name;
-    binding.data_key = (params.data_key == "(None)") ? "" : params.data_key;
-    binding.decoder = params.decoder;
-    return binding;
 }
 
 RecurrentBindingData fromRecurrentParams(
@@ -146,27 +125,10 @@ RecurrentBindingData fromRecurrentSequenceEntryParams(
 // Binding → Params
 // ════════════════════════════════════════════════════════════════════════════
 
-dl::widget::DynamicInputSlotParams toDynamicInputParams(
-        SlotBindingData const & binding) {
-    dl::widget::DynamicInputSlotParams p;
-    p.source = binding.data_key;
-    p.encoder = binding.encoder;
-    p.time_offset = binding.time_offset;
-    return p;
-}
-
 dl::widget::StaticInputSlotParams toStaticInputParams(
         StaticInputData const & binding) {
     dl::widget::StaticInputSlotParams p;
     p.source = toStaticInputSourceVariant(binding);
-    return p;
-}
-
-dl::widget::OutputSlotParams toOutputParams(
-        OutputBindingData const & binding) {
-    dl::widget::OutputSlotParams p;
-    p.data_key = binding.data_key;
-    p.decoder = binding.decoder;
     return p;
 }
 

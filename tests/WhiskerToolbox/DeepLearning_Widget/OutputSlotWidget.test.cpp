@@ -1,15 +1,12 @@
 /// @file OutputSlotWidget.test.cpp
 /// @brief Tests for the OutputSlotWidget.
-///
-/// Verifies construction, parameter get/set, data source refresh,
-/// toOutputBindingData conversion, and paramsFromBinding restore.
 
 #include <catch2/catch_test_macros.hpp>
 
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -20,7 +17,6 @@
 
 #include <type_traits>
 
-/// Helper: create a minimal output TensorSlotDescriptor for testing.
 static dl::TensorSlotDescriptor makeOutputSlot(
         std::string name = "mask_out",
         std::string recommended_decoder = "TensorToMask2D") {
@@ -32,10 +28,6 @@ static dl::TensorSlotDescriptor makeOutputSlot(
     return slot;
 }
 
-// ============================================================================
-// Construction
-// ============================================================================
-
 TEST_CASE("OutputSlotWidget constructs with valid slot and DM",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
@@ -45,22 +37,17 @@ TEST_CASE("OutputSlotWidget constructs with valid slot and DM",
     CHECK(widget->slotName() == "mask_out");
 }
 
-TEST_CASE("OutputSlotWidget default params have empty data_key",
+TEST_CASE("OutputSlotWidget default binding has empty data_key",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
     auto slot = makeOutputSlot();
 
     dl::widget::OutputSlotWidget const widget(slot, dm);
-    auto p = widget.params();
-    auto is_empty = p.data_key.empty() || p.data_key == "(None)";
-    CHECK(is_empty);
+    auto binding = widget.binding();
+    CHECK(binding.data_key.empty());
 }
 
-// ============================================================================
-// setParams / params round-trip
-// ============================================================================
-
-TEST_CASE("OutputSlotWidget setParams and params round-trip",
+TEST_CASE("OutputSlotWidget setBinding and binding round-trip",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<MaskData>("masks/result", TimeKey("time"));
@@ -69,18 +56,15 @@ TEST_CASE("OutputSlotWidget setParams and params round-trip",
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
 
-    dl::widget::OutputSlotParams p;
-    p.data_key = "masks/result";
-    p.decoder = dl::MaskDecoderParams{.threshold = 0.7f};
-    widget.setParams(p);
+    OutputBindingData original;
+    original.slot_name = "mask_out";
+    original.data_key = "masks/result";
+    original.decoder = dl::MaskDecoderParams{.threshold = 0.7f};
+    widget.setBinding(original);
 
-    auto result = widget.params();
+    auto result = widget.binding();
     CHECK(result.data_key == "masks/result");
 }
-
-// ============================================================================
-// Data source refresh
-// ============================================================================
 
 TEST_CASE("OutputSlotWidget refreshDataSources updates target combo",
           "[dl_widget][output_slot_widget]") {
@@ -91,15 +75,11 @@ TEST_CASE("OutputSlotWidget refreshDataSources updates target combo",
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
 
-    auto p = widget.params();
-    CHECK(p.decoder.visit([](auto const &) { return true; }));
+    auto binding = widget.binding();
+    CHECK(binding.decoder.visit([](auto const &) { return true; }));
 }
 
-// ============================================================================
-// toOutputBindingData conversion
-// ============================================================================
-
-TEST_CASE("toOutputBindingData extracts correct fields from MaskDecoder",
+TEST_CASE("binding extracts correct fields from MaskDecoder",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<MaskData>("masks/result", TimeKey("time"));
@@ -108,12 +88,12 @@ TEST_CASE("toOutputBindingData extracts correct fields from MaskDecoder",
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
 
-    dl::widget::OutputSlotParams p;
-    p.data_key = "masks/result";
-    p.decoder = dl::MaskDecoderParams{.threshold = 0.6f};
-    widget.setParams(p);
+    OutputBindingData binding_in;
+    binding_in.data_key = "masks/result";
+    binding_in.decoder = dl::MaskDecoderParams{.threshold = 0.6f};
+    widget.setBinding(binding_in);
 
-    auto binding = widget.toOutputBindingData();
+    auto binding = widget.binding();
     CHECK(binding.slot_name == "mask_out");
     CHECK(binding.data_key == "masks/result");
     binding.decoder.visit([&](auto const & dec) {
@@ -124,7 +104,7 @@ TEST_CASE("toOutputBindingData extracts correct fields from MaskDecoder",
     });
 }
 
-TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
+TEST_CASE("binding extracts subpixel from PointDecoder",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<PointData>("points/out", TimeKey("time"));
@@ -133,14 +113,14 @@ TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
 
-    dl::widget::OutputSlotParams p;
-    p.data_key = "points/out";
-    p.decoder = dl::PointDecoderParams{
+    OutputBindingData binding_in;
+    binding_in.data_key = "points/out";
+    binding_in.decoder = dl::PointDecoderParams{
             .subpixel = false,
             .threshold = 0.4f};
-    widget.setParams(p);
+    widget.setBinding(binding_in);
 
-    auto binding = widget.toOutputBindingData();
+    auto binding = widget.binding();
     CHECK(binding.slot_name == "point_out");
     binding.decoder.visit([&](auto const & dec) {
         using T = std::decay_t<decltype(dec)>;
@@ -151,28 +131,7 @@ TEST_CASE("toOutputBindingData extracts subpixel from PointDecoder",
     });
 }
 
-// ============================================================================
-// paramsFromBinding / state restore
-// ============================================================================
-
-TEST_CASE("paramsFromBinding restores MaskDecoder binding",
-          "[dl_widget][output_slot_widget]") {
-    OutputBindingData binding;
-    binding.slot_name = "mask_out";
-    binding.data_key = "masks/saved";
-    binding.decoder = dl::MaskDecoderParams{.threshold = 0.55f};
-
-    auto params = dl::widget::OutputSlotWidget::paramsFromBinding(binding);
-    CHECK(params.data_key == "masks/saved");
-    params.decoder.visit([&](auto const & dec) {
-        using T = std::decay_t<decltype(dec)>;
-        if constexpr (std::is_same_v<T, dl::MaskDecoderParams>) {
-            CHECK(dec.threshold == 0.55f);
-        }
-    });
-}
-
-TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
+TEST_CASE("setBinding restores saved binding",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
     dm->setData<PointData>("points/restored", TimeKey("time"));
@@ -186,10 +145,9 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
 
     dl::widget::OutputSlotWidget widget(slot, dm);
     widget.refreshDataSources();
-    widget.setParams(
-            dl::widget::OutputSlotWidget::paramsFromBinding(original));
+    widget.setBinding(original);
 
-    auto binding = widget.toOutputBindingData();
+    auto binding = widget.binding();
     CHECK(binding.data_key == "points/restored");
     binding.decoder.visit([&](auto const & dec) {
         using T = std::decay_t<decltype(dec)>;
@@ -200,10 +158,6 @@ TEST_CASE("setParams from paramsFromBinding round-trips toOutputBindingData",
     });
 }
 
-// ============================================================================
-// Signal emission
-// ============================================================================
-
 TEST_CASE("OutputSlotWidget emits bindingChanged on param changes",
           "[dl_widget][output_slot_widget]") {
     auto dm = std::make_shared<DataManager>();
@@ -213,9 +167,23 @@ TEST_CASE("OutputSlotWidget emits bindingChanged on param changes",
 
     QSignalSpy const spy(&widget, &dl::widget::OutputSlotWidget::bindingChanged);
 
-    dl::widget::OutputSlotParams p;
-    p.decoder = dl::LineDecoderParams{.threshold = 0.5f};
-    widget.setParams(p);
+    OutputBindingData updated;
+    updated.decoder = dl::LineDecoderParams{.threshold = 0.5f};
+    widget.setBinding(updated);
 
     CHECK(spy.isValid());
+}
+
+TEST_CASE("binding normalizes None sentinel for data_key",
+          "[dl_widget][output_slot_widget]") {
+    auto dm = std::make_shared<DataManager>();
+    auto slot = makeOutputSlot();
+
+    dl::widget::OutputSlotWidget widget(slot, dm);
+
+    dl::OutputBindingForm form;
+    form.data_key = "(None)";
+    widget.setBinding(dl::toOutputBindingData(slot.name, form));
+
+    CHECK(widget.binding().data_key.empty());
 }

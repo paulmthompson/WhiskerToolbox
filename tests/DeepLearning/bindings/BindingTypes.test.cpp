@@ -3,6 +3,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "DeepLearning/bindings/EncoderDecoderBindingTypes.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
@@ -179,4 +180,71 @@ TEST_CASE("OutputBindingData JSON round-trip",
     REQUIRE(result);
     CHECK(result.value().slot_name == "decoder_mask");
     CHECK(result.value().data_key == "masks/pred");
+}
+
+// ============================================================================
+// Binding form structs (AutoParamWidget)
+// ============================================================================
+
+TEST_CASE("DynamicInputBindingForm schema extraction",
+          "[dl_bindings][param_schema][dynamic_input_form]") {
+    auto schema = extractParameterSchema<dl::DynamicInputBindingForm>();
+    REQUIRE(schema.fields.size() == 3);
+
+    auto * data_key = schema.field("data_key");
+    REQUIRE(data_key != nullptr);
+    CHECK(data_key->dynamic_combo);
+    CHECK(data_key->include_none_sentinel);
+    CHECK(data_key->display_name == "Data Source");
+
+    auto * encoder = schema.field("encoder");
+    REQUIRE(encoder != nullptr);
+    CHECK(encoder->is_variant);
+
+    auto * time_offset = schema.field("time_offset");
+    REQUIRE(time_offset != nullptr);
+    CHECK(time_offset->display_name == "Time Offset");
+}
+
+TEST_CASE("OutputBindingForm schema extraction",
+          "[dl_bindings][param_schema][output_form]") {
+    auto schema = extractParameterSchema<dl::OutputBindingForm>();
+    REQUIRE(schema.fields.size() == 2);
+
+    auto * data_key = schema.field("data_key");
+    REQUIRE(data_key != nullptr);
+    CHECK(data_key->display_name == "Target");
+    CHECK(data_key->dynamic_combo);
+
+    auto * decoder = schema.field("decoder");
+    REQUIRE(decoder != nullptr);
+    CHECK(decoder->is_variant);
+}
+
+TEST_CASE("normalizeBindingDataKey strips None sentinel",
+          "[dl_bindings][param_schema][form_helpers]") {
+    CHECK(dl::normalizeBindingDataKey("(None)").empty());
+    CHECK(dl::normalizeBindingDataKey("media/video") == "media/video");
+}
+
+TEST_CASE("toSlotBindingData maps form fields",
+          "[dl_bindings][param_schema][form_helpers]") {
+    dl::DynamicInputBindingForm form{
+            .data_key = "(None)",
+            .encoder = dl::ImageEncoderParams{.normalize = true},
+            .time_offset = 2};
+    auto binding = dl::toSlotBindingData("encoder_image", form);
+    CHECK(binding.slot_name == "encoder_image");
+    CHECK(binding.data_key.empty());
+    CHECK(binding.time_offset == 2);
+}
+
+TEST_CASE("toOutputBindingData maps form fields",
+          "[dl_bindings][param_schema][form_helpers]") {
+    dl::OutputBindingForm form{
+            .data_key = "masks/out",
+            .decoder = dl::MaskDecoderParams{.threshold = 0.5f}};
+    auto binding = dl::toOutputBindingData("mask_out", form);
+    CHECK(binding.slot_name == "mask_out");
+    CHECK(binding.data_key == "masks/out");
 }

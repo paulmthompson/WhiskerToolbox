@@ -111,8 +111,7 @@ using SequenceEntryVariant = rfl::TaggedUnion<
 /**
  * @brief Wrapper for AutoParamWidget
  *
- *  variant must be a struct field (like encoder in DynamicInputSlotParams),
- * not the root type, so fromJson/toJson nesting works.
+ *  variant must be a struct field, not the root type, so fromJson/toJson nesting works.
  */
 struct SequenceEntryParams {
     SequenceEntryVariant entry = StaticSequenceEntryParams{};
@@ -123,27 +122,10 @@ struct SequenceEntryParams {
 // ============================================================================
 
 /**
- * @brief Full configuration for one dynamic (per-frame) input slot.
- */
-struct DynamicInputSlotParams {
-    std::string source;                          ///< DataManager key (dynamic combo)
-    dl::EncoderVariant encoder = dl::ImageEncoderParams{};///< Encoder type + params
-    int time_offset = 0;                         ///< Temporal offset from current frame
-};
-
-/**
  * @brief Full configuration for one non-sequence static (memory) input slot.
  */
 struct StaticInputSlotParams {
     StaticInputSourceVariant source = DataManagerStaticSourceParams{};
-};
-
-/**
- * @brief Parameters for an output slot binding (target key + decoder configuration).
- */
-struct OutputSlotParams {
-    std::string data_key;                         ///< DataManager key for results
-    dl::DecoderVariant decoder = dl::MaskDecoderParams{};///< Decoder configuration
 };
 
 /**

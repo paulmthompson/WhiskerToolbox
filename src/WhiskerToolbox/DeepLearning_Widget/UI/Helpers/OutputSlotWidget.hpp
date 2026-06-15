@@ -1,14 +1,14 @@
 /// @file OutputSlotWidget.hpp
 /// @brief Self-contained widget for configuring one output slot.
 ///
-/// Replaces the hand-built `_buildOutputGroup()` panel with a
-/// schema-driven form powered by AutoParamWidget. The widget owns an
-/// `OutputSlotParams` struct and exposes it via toOutputBindingData().
+/// Schema-driven form powered by AutoParamWidget over `dl::OutputBindingForm`,
+/// exposed as `OutputBindingData`.
 
 #ifndef OUTPUT_SLOT_WIDGET_HPP
 #define OUTPUT_SLOT_WIDGET_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
 #include <QWidget>
 
@@ -30,7 +30,7 @@ namespace dl::widget {
 /**
  * @brief Widget for configuring a single model output slot.
  *
- * Wraps an AutoParamWidget driven by the `OutputSlotParams` schema.
+ * Wraps an AutoParamWidget driven by `dl::OutputBindingForm`.
  * The target (data_key) combo is populated dynamically from DataManager
  * based on the decoder's expected output type.
  *
@@ -55,17 +55,20 @@ public:
 
     ~OutputSlotWidget() override;
 
-    // Non-copyable, non-movable (QWidget)
     OutputSlotWidget(OutputSlotWidget const &) = delete;
     OutputSlotWidget & operator=(OutputSlotWidget const &) = delete;
     OutputSlotWidget(OutputSlotWidget &&) = delete;
     OutputSlotWidget & operator=(OutputSlotWidget &&) = delete;
 
-    /// @brief Return the current parameter values.
-    [[nodiscard]] OutputSlotParams params() const;
+    /**
+     * @brief Return the current slot binding (includes @c slot_name).
+     */
+    [[nodiscard]] OutputBindingData binding() const;
 
-    /// @brief Set the parameter values and update the UI.
-    void setParams(OutputSlotParams const & params);
+    /**
+     * @brief Set binding values and update the UI.
+     */
+    void setBinding(OutputBindingData const & binding);
 
     /// @brief Refresh the target combo with current DataManager keys.
     void refreshDataSources();
@@ -76,19 +79,13 @@ public:
     /// @brief Return the slot name this widget is bound to.
     [[nodiscard]] std::string const & slotName() const;
 
-    /// @brief Convert current parameters to OutputBindingData for SlotAssembler.
-    [[nodiscard]] OutputBindingData toOutputBindingData() const;
-
-    /// @brief Build OutputSlotParams from saved OutputBindingData (for state restore).
-    [[nodiscard]] static OutputSlotParams paramsFromBinding(
-            OutputBindingData const & binding);
-
 signals:
     /// Emitted whenever any parameter in the slot changes.
     void bindingChanged();
 
 private:
-    /// Populate the target combo with DM keys matching the decoder's output type.
+    [[nodiscard]] OutputBindingForm _form() const;
+    void _setForm(OutputBindingForm const & form);
     void _refreshTargetCombo();
 
     std::string _slot_name;
@@ -96,7 +93,6 @@ private:
 
     AutoParamWidget * _auto_param = nullptr;
 
-    /// Recommended decoder from slot descriptor, used for initial selection.
     std::string _recommended_decoder;
 };
 

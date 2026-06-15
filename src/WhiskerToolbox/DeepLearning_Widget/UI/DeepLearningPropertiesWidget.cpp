@@ -579,6 +579,15 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
             }
             auto * slot_widget = new dl::widget::DynamicInputSlotWidget(
                     slot, _data_manager, _dynamic_container);
+            auto const & saved_inputs = _state->inputBindings();
+            auto input_it = std::find_if(
+                    saved_inputs.begin(), saved_inputs.end(),
+                    [&slot](SlotBindingData const & b) {
+                        return b.slot_name == slot.name;
+                    });
+            if (input_it != saved_inputs.end()) {
+                slot_widget->setBinding(*input_it);
+            }
             connect(slot_widget, &dl::widget::DynamicInputSlotWidget::bindingChanged,
                     this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
             _dynamic_input_widgets.push_back(slot_widget);
@@ -692,8 +701,7 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                                    return b.slot_name == slot.name;
                                });
         if (it != saved.end()) {
-            slot_widget->setParams(
-                    dl::widget::OutputSlotWidget::paramsFromBinding(*it));
+            slot_widget->setBinding(*it);
         }
         connect(slot_widget, &dl::widget::OutputSlotWidget::bindingChanged,
                 this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
@@ -871,9 +879,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     // ── Input bindings (from DynamicInputSlotWidgets) ──
     std::vector<SlotBindingData> input_bindings;
     for (auto const * w: _dynamic_input_widgets) {
-        auto binding =
-                dl::conversion::fromDynamicInputParams(w->slotName(), w->params());
-        if (!binding.data_key.empty() && binding.data_key != "(None)") {
+        auto binding = w->binding();
+        if (!binding.data_key.empty()) {
             input_bindings.push_back(std::move(binding));
         }
     }
@@ -882,9 +889,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     // ── Output bindings ──
     std::vector<OutputBindingData> output_bindings;
     for (auto const * w: _output_slot_widgets) {
-        auto binding =
-                dl::conversion::fromOutputParams(w->slotName(), w->params());
-        if (!binding.data_key.empty() && binding.data_key != "(None)") {
+        auto binding = w->binding();
+        if (!binding.data_key.empty()) {
             output_bindings.push_back(std::move(binding));
         }
     }
