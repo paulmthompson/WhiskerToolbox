@@ -22,11 +22,7 @@ add_executable(test_dl_widgets
     PostEncoderWidget.test.cpp
     DeepLearningState.test.cpp
     EncoderShapeWidget.test.cpp
-    RecurrentBindingWidget.test.cpp
-    StaticInputSlotWidget.test.cpp
-    DataBankPropertiesWidget.test.cpp
-    BindingConversion.test.cpp
-    SequenceSlotWidget.test.cpp
+    MemorySlotWidget.test.cpp
 )
 
 target_link_libraries(test_dl_widgets PRIVATE

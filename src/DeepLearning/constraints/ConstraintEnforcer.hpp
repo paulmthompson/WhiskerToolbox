@@ -6,8 +6,8 @@
 #ifndef DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
-#include "bindings/DeepLearningBindingData.hpp" // RecurrentBindingData
-#include "bindings/SlotBindingTypes.hpp"       // dl::PostEncoderStepDescriptor
+#include "bindings/DeepLearningBindingData.hpp"
+#include "bindings/SlotBindingTypes.hpp"
 
 #include <string>
 #include <vector>
@@ -36,24 +36,20 @@ struct BatchSizeConstraint {
 };
 
 /**
- * @brief      Compute the batch-size constraint for a given model and current recurrent bindings.
+ * @brief      Compute the batch-size constraint for a given model and memory frames.
  * @details    Priority (most restrictive wins):
- *             - Active recurrent bindings              → min=1, max=1, forced_by_recurrent=true
+ *             - Active recurrent memory frames           → min=1, max=1, forced_by_recurrent=true
  *             - Model RecurrentOnlyBatch or FixedBatch{1} → min=1, max=1, forced_by_recurrent=false
  *             - Model FixedBatch{N>1}                  → min=N, max=N, forced_by_recurrent=false
  *             - Model DynamicBatch                     → min/max from batch mode, forced_by_recurrent=false
  *
- * A recurrent binding is considered active when its @c output_slot_name is
- * non-empty, i.e. the user has chosen an output slot to feed back.
- *
- * @param info                      Model display info (contains @c batch_mode).
- * @param active_recurrent_bindings Recurrent bindings from state; activity is
- *                                  determined by checking @c output_slot_name.
+ * @param info           Model display info (contains @c batch_mode).
+ * @param memory_frames  Session memory frame bindings.
  * @return BatchSizeConstraint describing the allowed batch-size range.
  */
 [[nodiscard]] BatchSizeConstraint computeBatchSizeConstraint(
         dl::ModelInfo const & info,
-        std::vector<RecurrentBindingData> const & active_recurrent_bindings);
+        std::vector<MemoryFrameBinding> const & memory_frames);
 
 // ════════════════════════════════════════════════════════════════════════════
 // Post-encoder / decoder consistency

@@ -96,41 +96,64 @@ TEST_CASE("StaticInputSource - unknown string defaults to DataManager",
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// StaticInputData defaults
+// MemoryFrameBinding
 // ════════════════════════════════════════════════════════════════════════════
 
-TEST_CASE("StaticInputData - defaults",
-          "[binding_data][static_source]") {
-    StaticInputData const si;
-    CHECK(si.source_type_str == "DataManager");
-    CHECK(si.sourceType() == StaticInputSource::DataManager);
-    CHECK(si.time_offset == 0);
-    CHECK(si.memory_index == 0);
-    CHECK(si.active == true);
-    CHECK(si.bank_entry_id.empty());
-    CHECK_FALSE(si.hasActiveSource());
+TEST_CASE("MemoryFrameBinding - static defaults",
+          "[binding_data][memory_frame]") {
+    dl::MemoryFrameBinding const frame;
+    CHECK(frame.slot_name.empty());
+    CHECK(frame.memory_index == 0);
+    CHECK(dl::isStaticFrame(frame));
+    CHECK_FALSE(dl::hasActiveStaticSource(frame));
 }
 
-TEST_CASE("StaticInputData - setSourceType updates string",
-          "[binding_data][static_source]") {
-    StaticInputData si;
-    si.setSourceType(StaticInputSource::DataBank);
-    CHECK(si.source_type_str == "DataBank");
-    CHECK(si.sourceType() == StaticInputSource::DataBank);
-
-    si.setSourceType(StaticInputSource::DataManager);
-    CHECK(si.source_type_str == "DataManager");
-    CHECK(si.sourceType() == StaticInputSource::DataManager);
+TEST_CASE("MemoryFrameBinding - static DataManager source",
+          "[binding_data][memory_frame]") {
+    dl::MemoryFrameBinding frame;
+    frame.slot_name = "memory_masks";
+    frame.frame = dl::StaticFrameSource{
+            dl::DataManagerStaticSource{.data_key = "masks/ref", .time_offset = 2}};
+    CHECK(dl::staticSourceType(frame) == StaticInputSource::DataManager);
+    CHECK(dl::staticDataKey(frame) == "masks/ref");
+    CHECK(dl::staticTimeOffset(frame) == 2);
+    CHECK(dl::hasActiveStaticSource(frame));
 }
 
-TEST_CASE("StaticInputData - resolvedBankEntryId prefers explicit bank_entry_id",
-          "[binding_data][static_source]") {
-    StaticInputData si;
-    si.slot_name = "memory_masks";
-    si.memory_index = 2;
-    si.setSourceType(StaticInputSource::DataBank);
-    si.bank_entry_id = "custom_ref";
-    CHECK(si.resolvedBankEntryId() == "custom_ref");
+TEST_CASE("MemoryFrameBinding - static DataBank source",
+          "[binding_data][memory_frame]") {
+    dl::MemoryFrameBinding frame;
+    frame.slot_name = "memory_masks";
+    frame.memory_index = 1;
+    frame.frame = dl::StaticFrameSource{
+            dl::DataBankStaticSource{.bank_entry_id = "custom_ref"}};
+    CHECK(dl::staticSourceType(frame) == StaticInputSource::DataBank);
+    CHECK(dl::resolvedBankEntryId(frame) == "custom_ref");
+    CHECK(dl::hasActiveStaticSource(frame));
+}
+
+TEST_CASE("MemoryFrameBinding - recurrent frame",
+          "[binding_data][memory_frame]") {
+    dl::MemoryFrameBinding frame;
+    frame.slot_name = "memory_masks";
+    frame.frame = dl::RecurrentFrameSource{
+            .output_slot_name = "mask_out",
+            .init = dl::StaticCaptureInit{.data_key = "media/video", .frame = 42}};
+    CHECK(dl::isRecurrentFrame(frame));
+    CHECK(dl::hasActiveRecurrentBinding(frame));
+    CHECK(dl::recurrentInitMode(frame) == RecurrentInitMode::StaticCapture);
+    CHECK(dl::staticCaptureDataKey(frame) == "media/video");
+    CHECK(dl::staticCaptureFrame(frame) == 42);
+}
+
+TEST_CASE("hasActiveRecurrentBindings detects active frames",
+          "[binding_data][memory_frame]") {
+    dl::MemoryFrameBinding inactive;
+    inactive.frame = dl::RecurrentFrameSource{};
+    dl::MemoryFrameBinding active;
+    active.frame = dl::RecurrentFrameSource{.output_slot_name = "out"};
+  CHECK_FALSE(dl::hasActiveRecurrentBindings({inactive}));
+  CHECK(dl::hasActiveRecurrentBindings({inactive, active}));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -173,135 +196,3 @@ TEST_CASE("recurrentCacheKey - different slots produce different keys",
     CHECK(recurrentCacheKey("a") != recurrentCacheKey("b"));
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// RecurrentBindingData defaults
-// ════════════════════════════════════════════════════════════════════════════
-
-TEST_CASE("RecurrentBindingData - defaults",
-          "[binding_data][recurrent]") {
-    RecurrentBindingData const rb;
-    CHECK(rb.input_slot_name.empty());
-    CHECK(rb.output_slot_name.empty());
-    CHECK(rb.init_mode_str == "Zeros");
-    CHECK(rb.init_data_key.empty());
-    CHECK(rb.init_frame == -1);
-    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
-}
-
-TEST_CASE("RecurrentBindingData - setInitMode updates string",
-          "[binding_data][recurrent]") {
-    RecurrentBindingData rb;
-    rb.setInitMode(RecurrentInitMode::StaticCapture);
-    CHECK(rb.init_mode_str == "StaticCapture");
-    CHECK(rb.initMode() == RecurrentInitMode::StaticCapture);
-
-    rb.setInitMode(RecurrentInitMode::FirstOutput);
-    CHECK(rb.init_mode_str == "FirstOutput");
-    CHECK(rb.initMode() == RecurrentInitMode::FirstOutput);
-
-    rb.setInitMode(RecurrentInitMode::Zeros);
-    CHECK(rb.init_mode_str == "Zeros");
-    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// StaticInputData for sequence entries
-// ════════════════════════════════════════════════════════════════════════════
-
-TEST_CASE("StaticInputData - multiple entries per slot with different memory_index",
-          "[binding_data][sequence]") {
-    std::vector<StaticInputData> entries;
-    for (int i = 0; i < 4; ++i) {
-        StaticInputData si;
-        si.slot_name = "memory_images";
-        si.memory_index = i;
-        si.data_key = "media/video_1";
-        si.setSourceType(StaticInputSource::DataBank);
-        si.bank_entry_id = defaultBankEntryId("memory_images", i);
-        entries.push_back(std::move(si));
-    }
-
-    CHECK(entries.size() == 4);
-    for (int i = 0; i < 4; ++i) {
-        CHECK(entries[static_cast<std::size_t>(i)].memory_index == i);
-        CHECK(entries[static_cast<std::size_t>(i)].hasActiveSource());
-    }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// Phase 5: Hybrid Sequence Inputs — RecurrentBindingData.target_memory_index
-// ════════════════════════════════════════════════════════════════════════════
-
-TEST_CASE("RecurrentBindingData - target_memory_index defaults to -1",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData const rb;
-    CHECK(rb.target_memory_index == -1);
-    CHECK_FALSE(rb.hasTargetMemoryIndex());
-}
-
-TEST_CASE("RecurrentBindingData - hasTargetMemoryIndex with valid index",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData rb;
-    rb.target_memory_index = 0;
-    CHECK(rb.hasTargetMemoryIndex());
-
-    rb.target_memory_index = 3;
-    CHECK(rb.hasTargetMemoryIndex());
-}
-
-TEST_CASE("RecurrentBindingData - hasTargetMemoryIndex with negative index",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData rb;
-    rb.target_memory_index = -1;
-    CHECK_FALSE(rb.hasTargetMemoryIndex());
-
-    rb.target_memory_index = -5;
-    CHECK_FALSE(rb.hasTargetMemoryIndex());
-}
-
-TEST_CASE("RecurrentBindingData - hybrid binding has all fields",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData rb;
-    rb.input_slot_name = "memory_images";
-    rb.output_slot_name = "decoder_output";
-    rb.target_memory_index = 4;
-    rb.setInitMode(RecurrentInitMode::Zeros);
-
-    CHECK(rb.input_slot_name == "memory_images");
-    CHECK(rb.output_slot_name == "decoder_output");
-    CHECK(rb.target_memory_index == 4);
-    CHECK(rb.hasTargetMemoryIndex());
-    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
-}
-
-TEST_CASE("RecurrentBindingData - whole-slot vs position-specific",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData whole_slot;
-    whole_slot.input_slot_name = "memory_images";
-    whole_slot.output_slot_name = "output";
-    // target_memory_index defaults to -1 (whole slot)
-
-    RecurrentBindingData position_specific;
-    position_specific.input_slot_name = "memory_images";
-    position_specific.output_slot_name = "output";
-    position_specific.target_memory_index = 2;
-
-    CHECK_FALSE(whole_slot.hasTargetMemoryIndex());
-    CHECK(position_specific.hasTargetMemoryIndex());
-}
-
-TEST_CASE("RecurrentBindingData - hybrid with StaticCapture init",
-          "[binding_data][hybrid]") {
-    RecurrentBindingData rb;
-    rb.input_slot_name = "memory_images";
-    rb.output_slot_name = "decoder_output";
-    rb.target_memory_index = 4;
-    rb.setInitMode(RecurrentInitMode::StaticCapture);
-    rb.init_data_key = "media/video_1";
-    rb.init_frame = 42;
-
-    CHECK(rb.initMode() == RecurrentInitMode::StaticCapture);
-    CHECK(rb.init_data_key == "media/video_1");
-    CHECK(rb.init_frame == 42);
-    CHECK(rb.hasTargetMemoryIndex());
-}

@@ -4,11 +4,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.hpp
     DeepLearningWidgetRegistration.cpp
 
-    Core/BindingConversion.hpp
-    Core/BindingConversion.cpp
-    Core/DeepLearningParamSchemas.hpp
-    Core/DeepLearningParamSchemas.cpp
-    Core/DeepLearningParamSchemasUIHints.hpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
     Core/SlotAssembler.hpp
@@ -42,16 +37,12 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/DynamicInputSlotWidget.cpp
     UI/Helpers/EncoderShapeWidget.hpp
     UI/Helpers/EncoderShapeWidget.cpp
+    UI/Helpers/MemorySlotWidget.hpp
+    UI/Helpers/MemorySlotWidget.cpp
     UI/Helpers/OutputSlotWidget.hpp
     UI/Helpers/OutputSlotWidget.cpp
     UI/Helpers/PostEncoderWidget.hpp
     UI/Helpers/PostEncoderWidget.cpp
-    UI/Helpers/RecurrentBindingWidget.hpp
-    UI/Helpers/RecurrentBindingWidget.cpp
-    UI/Helpers/SequenceSlotWidget.hpp
-    UI/Helpers/SequenceSlotWidget.cpp
-    UI/Helpers/StaticInputSlotWidget.hpp
-    UI/Helpers/StaticInputSlotWidget.cpp
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})

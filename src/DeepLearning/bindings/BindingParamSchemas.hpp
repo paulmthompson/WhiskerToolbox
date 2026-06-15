@@ -4,6 +4,7 @@
 #ifndef DEEP_LEARNING_BINDING_PARAM_SCHEMAS_HPP
 #define DEEP_LEARNING_BINDING_PARAM_SCHEMAS_HPP
 
+#include "bindings/DeepLearningBindingData.hpp"
 #include "bindings/EncoderDecoderBindingTypes.hpp"
 #include "bindings/SlotBindingTypes.hpp"
 
@@ -11,6 +12,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace dl {
 
@@ -33,6 +35,21 @@ struct DynamicInputBindingForm {
 struct OutputBindingForm {
     std::string data_key;
     DecoderVariant decoder = MaskDecoderParams{};
+};
+
+/**
+ * @brief AutoParamWidget form for a static memory frame source.
+ */
+struct StaticFrameSourceForm {
+    StaticInputSourceVariant source = DataManagerStaticSource{};
+};
+
+/**
+ * @brief AutoParamWidget form for a recurrent memory frame source.
+ */
+struct RecurrentFrameSourceForm {
+    std::string output_slot_name;
+    RecurrentInitVariant init = ZerosInit{};
 };
 
 /**
@@ -97,6 +114,83 @@ struct OutputBindingForm {
             .decoder = binding.decoder};
 }
 
+/**
+ * @brief Build a static memory frame binding.
+ */
+[[nodiscard]] inline MemoryFrameBinding toStaticMemoryFrame(
+        std::string slot_name,
+        int memory_index,
+        StaticFrameSourceForm const & form) {
+    return MemoryFrameBinding{
+            .slot_name = std::move(slot_name),
+            .memory_index = memory_index,
+            .frame = StaticFrameSource{.source = form.source},
+            .active = true};
+}
+
+/**
+ * @brief Build a recurrent memory frame binding.
+ */
+[[nodiscard]] inline MemoryFrameBinding toRecurrentMemoryFrame(
+        std::string slot_name,
+        int memory_index,
+        RecurrentFrameSourceForm const & form) {
+    RecurrentFrameSource source;
+    source.output_slot_name = normalizeBindingDataKey(form.output_slot_name);
+    source.init = form.init;
+    return MemoryFrameBinding{
+            .slot_name = std::move(slot_name),
+            .memory_index = memory_index,
+            .frame = std::move(source),
+            .active = true};
+}
+
+/**
+ * @brief Extract static frame form fields from a memory frame binding.
+ */
+[[nodiscard]] inline StaticFrameSourceForm fromStaticMemoryFrame(
+        MemoryFrameBinding const & binding) {
+    if (isStaticFrame(binding)) {
+        return StaticFrameSourceForm{
+                .source = rfl::get<StaticFrameSource>(binding.frame.variant()).source};
+    }
+    return {};
+}
+
+/**
+ * @brief Extract recurrent frame form fields from a memory frame binding.
+ */
+[[nodiscard]] inline RecurrentFrameSourceForm fromRecurrentMemoryFrame(
+        MemoryFrameBinding const & binding) {
+    if (!isRecurrentFrame(binding)) {
+        return {};
+    }
+    auto const & source = rfl::get<RecurrentFrameSource>(binding.frame.variant());
+    return RecurrentFrameSourceForm{
+            .output_slot_name = source.output_slot_name,
+            .init = source.init};
+}
+
+/**
+ * @brief Build a capture binding that reads @p data_key from DataManager.
+ *
+ * Used with @ref SlotAssembler::captureToBank, which takes the bank entry ID
+ * separately.
+ */
+[[nodiscard]] inline MemoryFrameBinding makeCaptureBinding(
+        std::string slot_name,
+        int memory_index,
+        std::string data_key) {
+    return MemoryFrameBinding{
+            .slot_name = std::move(slot_name),
+            .memory_index = memory_index,
+            .frame = StaticFrameSource{
+                    DataManagerStaticSource{
+                            .data_key = std::move(data_key),
+                            .time_offset = 0}},
+            .active = true};
+}
+
 } // namespace dl
 
 template<>
@@ -106,6 +200,31 @@ struct ParameterUIHints<dl::DynamicInputBindingForm> {
 
 template<>
 struct ParameterUIHints<dl::OutputBindingForm> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::DataManagerStaticSource> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::DataBankStaticSource> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::StaticFrameSourceForm> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::StaticCaptureInit> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::RecurrentFrameSourceForm> {
     static void annotate(ParameterSchema & schema);
 };
 

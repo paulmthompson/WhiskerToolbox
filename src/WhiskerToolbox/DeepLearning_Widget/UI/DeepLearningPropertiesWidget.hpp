@@ -52,9 +52,7 @@ class DynamicInputSlotWidget;
 class EncoderShapeWidget;
 class OutputSlotWidget;
 class PostEncoderWidget;
-class RecurrentBindingWidget;
-class SequenceSlotWidget;
-class StaticInputSlotWidget;
+class MemorySlotWidget;
 }// namespace dl::widget
 
 class DeepLearningPropertiesWidget : public QWidget {
@@ -172,11 +170,7 @@ private:
     // Dynamic input slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::DynamicInputSlotWidget *> _dynamic_input_widgets;
 
-    // Static input slot widgets (non-owning; owned by _dynamic_container)
-    std::vector<dl::widget::StaticInputSlotWidget *> _static_input_widgets;
-
-    // Sequence slot widgets (non-owning; owned by _dynamic_container)
-    std::vector<dl::widget::SequenceSlotWidget *> _sequence_slot_widgets;
+    std::vector<dl::widget::MemorySlotWidget *> _memory_slot_widgets;
 
     // Output slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::OutputSlotWidget *> _output_slot_widgets;
@@ -186,10 +180,6 @@ private:
 
     // Encoder shape widget (non-owning; owned by _dynamic_container)
     dl::widget::EncoderShapeWidget * _encoder_shape_widget = nullptr;
-
-    // Recurrent binding widgets (non-owning; owned by _dynamic_container)
-    std::vector<dl::widget::RecurrentBindingWidget *> _recurrent_binding_widgets;
-
     // Cached model display info (clean — no torch types).
     std::optional<dl::ModelInfo> _current_info;
 

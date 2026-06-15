@@ -32,20 +32,24 @@ dl::ModelInfo makeInfo(dl::BatchMode mode) {
     return info;
 }
 
-/// Build an active RecurrentBindingData (output_slot_name is non-empty).
-RecurrentBindingData makeActiveBinding(std::string const & output_slot = "encoder_output") {
-    RecurrentBindingData rb;
-    rb.input_slot_name = "memory";
-    rb.output_slot_name = output_slot;
-    return rb;
+/// Build an active recurrent memory frame.
+dl::MemoryFrameBinding makeActiveFrame(std::string const & output_slot = "encoder_output") {
+    dl::MemoryFrameBinding frame;
+    frame.slot_name = "memory";
+    frame.memory_index = 0;
+    frame.frame = dl::RecurrentFrameSource{
+            .output_slot_name = output_slot,
+            .init = dl::ZerosInit{}};
+    return frame;
 }
 
-/// Build an inactive RecurrentBindingData (output_slot_name is empty).
-RecurrentBindingData makeInactiveBinding() {
-    RecurrentBindingData rb;
-    rb.input_slot_name = "memory";
-    rb.output_slot_name = "";
-    return rb;
+/// Build an inactive recurrent memory frame (no output slot selected).
+dl::MemoryFrameBinding makeInactiveFrame() {
+    dl::MemoryFrameBinding frame;
+    frame.slot_name = "memory";
+    frame.memory_index = 0;
+    frame.frame = dl::RecurrentFrameSource{};
+    return frame;
 }
 
 }// namespace
@@ -78,7 +82,7 @@ TEST_CASE("computeBatchSizeConstraint: DynamicBatch, active recurrent binding",
           "[dl_constraints][batch_size]") {
     auto const info = makeInfo(dl::DynamicBatch{1, 0});
     BatchSizeConstraint const c =
-            computeBatchSizeConstraint(info, {makeActiveBinding()});
+            computeBatchSizeConstraint(info, {makeActiveFrame()});
 
     CHECK(c.min == 1);
     CHECK(c.max == 1);
@@ -89,7 +93,7 @@ TEST_CASE("computeBatchSizeConstraint: DynamicBatch, inactive bindings only",
           "[dl_constraints][batch_size]") {
     auto const info = makeInfo(dl::DynamicBatch{1, 16});
     BatchSizeConstraint const c =
-            computeBatchSizeConstraint(info, {makeInactiveBinding(), makeInactiveBinding()});
+            computeBatchSizeConstraint(info, {makeInactiveFrame(), makeInactiveFrame()});
 
     CHECK(c.min == 1);
     CHECK(c.max == 16);
@@ -100,7 +104,7 @@ TEST_CASE("computeBatchSizeConstraint: DynamicBatch, mixed active and inactive b
           "[dl_constraints][batch_size]") {
     auto const info = makeInfo(dl::DynamicBatch{1, 0});
     BatchSizeConstraint const c =
-            computeBatchSizeConstraint(info, {makeInactiveBinding(), makeActiveBinding()});
+            computeBatchSizeConstraint(info, {makeInactiveFrame(), makeActiveFrame()});
 
     // One active binding is enough to force batch=1
     CHECK(c.min == 1);
@@ -137,7 +141,7 @@ TEST_CASE("computeBatchSizeConstraint: FixedBatch{4}, active recurrent binding â
           "[dl_constraints][batch_size]") {
     auto const info = makeInfo(dl::FixedBatch{4});
     BatchSizeConstraint const c =
-            computeBatchSizeConstraint(info, {makeActiveBinding()});
+            computeBatchSizeConstraint(info, {makeActiveFrame()});
 
     // Recurrent constraint overrides FixedBatch{4} and locks to 1
     CHECK(c.min == 1);
@@ -164,7 +168,7 @@ TEST_CASE("computeBatchSizeConstraint: RecurrentOnlyBatch, active binding â€” al
           "[dl_constraints][batch_size]") {
     auto const info = makeInfo(dl::RecurrentOnlyBatch{});
     BatchSizeConstraint const c =
-            computeBatchSizeConstraint(info, {makeActiveBinding()});
+            computeBatchSizeConstraint(info, {makeActiveFrame()});
 
     CHECK(c.min == 1);
     CHECK(c.max == 1);

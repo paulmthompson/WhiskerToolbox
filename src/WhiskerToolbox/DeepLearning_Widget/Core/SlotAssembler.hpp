@@ -17,10 +17,11 @@
  * @see ModelBase for the model forward pass interface.
  */
 
-#include "DeepLearning_Widget/Core/MediaOverrides.hpp" // MediaOverrides
+#include "DeepLearning_Widget/Core/MediaOverrides.hpp"           // MediaOverrides
 #include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 
-#include "DeepLearning/models_v2/ModelInfo.hpp"       // dl::ModelInfo
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"// dl::MemoryFrameBinding
+#include "DeepLearning/models_v2/ModelInfo.hpp"             // dl::ModelInfo
 
 #include <atomic>
 #include <functional>
@@ -31,9 +32,7 @@
 #include <vector>
 
 struct SlotBindingData;
-struct StaticInputData;
 struct OutputBindingData;
-struct RecurrentBindingData;
 struct ImageSize;
 
 class DataManager;
@@ -42,7 +41,7 @@ class MediaData;
 namespace dl {
 class DataBank;
 struct PostEncoderStepDescriptor;
-}
+}// namespace dl
 
 
 /**
@@ -108,7 +107,7 @@ public:
      * assemble inputs → forward → decode outputs.
      * @param dm DataManager for encoding inputs / writing outputs
      * @param input_bindings Dynamic input slot bindings
-     * @param static_inputs Static (memory) input entries
+     * @param memory_frames Memory frame bindings
      * @param output_bindings Output slot bindings
      * @param current_frame Current frame index
      * @param source_image_size Original image dimensions
@@ -117,7 +116,7 @@ public:
     void runSingleFrame(
             DataManager & dm,
             std::vector<SlotBindingData> const & input_bindings,
-            std::vector<StaticInputData> const & static_inputs,
+            std::vector<dl::MemoryFrameBinding> const & memory_frames,
             std::vector<OutputBindingData> const & output_bindings,
             int current_frame,
             ImageSize source_image_size);
@@ -140,7 +139,7 @@ public:
      * @brief Run independent (non-recurrent) inference over a range of frames.
      * @param dm DataManager for encoding inputs / writing outputs
      * @param input_bindings Dynamic input slot bindings
-     * @param static_inputs Static (memory) input entries
+     * @param memory_frames Memory frame bindings
      * @param output_bindings Output slot bindings
      * @param start_frame First frame to process (inclusive)
      * @param end_frame Last frame to process (inclusive)
@@ -152,7 +151,7 @@ public:
     void runBatchRange(
             DataManager & dm,
             std::vector<SlotBindingData> const & input_bindings,
-            std::vector<StaticInputData> const & static_inputs,
+            std::vector<dl::MemoryFrameBinding> const & memory_frames,
             std::vector<OutputBindingData> const & output_bindings,
             int start_frame,
             int end_frame,
@@ -173,7 +172,7 @@ public:
      * @param dm DataManager for non-media input encoding (masks, points, lines)
      * @param media_overrides Cloned MediaData instances keyed by data_key
      * @param input_bindings Dynamic input slot bindings
-     * @param static_inputs Static (memory) input entries
+     * @param memory_frames Memory frame bindings
      * @param output_bindings Output slot bindings
      * @param start_frame First frame to process (inclusive)
      * @param end_frame Last frame to process (inclusive)
@@ -192,7 +191,7 @@ public:
             DataManager & dm,
             MediaOverrides const & media_overrides,
             std::vector<SlotBindingData> const & input_bindings,
-            std::vector<StaticInputData> const & static_inputs,
+            std::vector<dl::MemoryFrameBinding> const & memory_frames,
             std::vector<OutputBindingData> const & output_bindings,
             int start_frame,
             int end_frame,
@@ -217,9 +216,8 @@ public:
      *
      * @param dm DataManager for encoding inputs / writing outputs
      * @param input_bindings Dynamic input slot bindings
-     * @param static_inputs Static (memory) input entries
+     * @param memory_frames Memory frame bindings
      * @param output_bindings Output slot bindings
-     * @param recurrent_bindings Recurrent feedback bindings
      * @param start_frame First frame to process
      * @param frame_count Number of frames to process
      * @param source_image_size Original image dimensions
@@ -229,9 +227,8 @@ public:
     void runRecurrentSequence(
             DataManager & dm,
             std::vector<SlotBindingData> const & input_bindings,
-            std::vector<StaticInputData> const & static_inputs,
+            std::vector<dl::MemoryFrameBinding> const & memory_frames,
             std::vector<OutputBindingData> const & output_bindings,
-            std::vector<RecurrentBindingData> const & recurrent_bindings,
             int start_frame,
             int frame_count,
             ImageSize source_image_size,
@@ -294,7 +291,7 @@ public:
     bool captureToBank(
             DataManager & dm,
             std::string const & bank_entry_id,
-            StaticInputData const & entry,
+            dl::MemoryFrameBinding const & entry,
             int frame,
             ImageSize source_image_size);
 
@@ -308,7 +305,7 @@ public:
      */
     bool captureStaticInput(
             DataManager & dm,
-            StaticInputData const & entry,
+            dl::MemoryFrameBinding const & entry,
             int frame,
             ImageSize source_image_size);
 

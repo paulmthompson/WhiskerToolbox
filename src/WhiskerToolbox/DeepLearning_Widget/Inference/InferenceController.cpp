@@ -5,7 +5,7 @@
 
 #include "InferenceController.hpp"
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/BatchInferenceWorker.hpp"
@@ -92,7 +92,7 @@ void InferenceController::runSingleFrame(int frame) {
         _impl->_assembler->runSingleFrame(
                 *_impl->_dm,
                 _impl->_state->inputBindings(),
-                _impl->_state->staticInputs(),
+                _impl->_state->memoryFrames(),
                 _impl->_state->outputBindings(),
                 frame,
                 source_size);
@@ -147,17 +147,19 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
 
     // Also clone VideoData for static (memory) inputs so the worker
     // thread does not race with the main thread's ffmpeg decoder.
-    for (auto const & si: _impl->_state->staticInputs()) {
-        if (si.data_key.empty()) continue;
-        if (media_overrides.contains(si.data_key)) continue;
-        auto media = _impl->_dm->getData<MediaData>(si.data_key);
+    for (auto const & frame: _impl->_state->memoryFrames()) {
+        if (!dl::isStaticFrame(frame)) continue;
+        auto const data_key = dl::staticDataKey(frame);
+        if (data_key.empty()) continue;
+        if (media_overrides.contains(data_key)) continue;
+        auto media = _impl->_dm->getData<MediaData>(data_key);
         if (!media) continue;
         if (media->getMediaType() == MediaData::MediaType::Video) {
             auto clone = std::make_shared<VideoData>();
             clone->LoadMedia(media->getFilename());
-            media_overrides[si.data_key] = std::move(clone);
+            media_overrides[data_key] = std::move(clone);
         } else {
-            media_overrides[si.data_key] = media;
+            media_overrides[data_key] = media;
         }
     }
 
@@ -170,7 +172,7 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
             _impl->_dm.get(),
             std::move(media_overrides),
             _impl->_state->inputBindings(),
-            _impl->_state->staticInputs(),
+            _impl->_state->memoryFrames(),
             _impl->_state->outputBindings(),
             start,
             end,
@@ -252,17 +254,19 @@ void InferenceController::runBatchIntervals(
 
     // Also clone VideoData for static (memory) inputs so the worker
     // thread does not race with the main thread's ffmpeg decoder.
-    for (auto const & si: _impl->_state->staticInputs()) {
-        if (si.data_key.empty()) continue;
-        if (media_overrides.contains(si.data_key)) continue;
-        auto media = _impl->_dm->getData<MediaData>(si.data_key);
+    for (auto const & frame: _impl->_state->memoryFrames()) {
+        if (!dl::isStaticFrame(frame)) continue;
+        auto const data_key = dl::staticDataKey(frame);
+        if (data_key.empty()) continue;
+        if (media_overrides.contains(data_key)) continue;
+        auto media = _impl->_dm->getData<MediaData>(data_key);
         if (!media) continue;
         if (media->getMediaType() == MediaData::MediaType::Video) {
             auto clone = std::make_shared<VideoData>();
             clone->LoadMedia(media->getFilename());
-            media_overrides[si.data_key] = std::move(clone);
+            media_overrides[data_key] = std::move(clone);
         } else {
-            media_overrides[si.data_key] = media;
+            media_overrides[data_key] = media;
         }
     }
 
@@ -275,7 +279,7 @@ void InferenceController::runBatchIntervals(
             _impl->_dm.get(),
             std::move(media_overrides),
             _impl->_state->inputBindings(),
-            _impl->_state->staticInputs(),
+            _impl->_state->memoryFrames(),
             _impl->_state->outputBindings(),
             std::move(intervals),
             source_size,
@@ -316,10 +320,9 @@ void InferenceController::runRecurrentSequence(int start, int frame_count) {
         return;
     }
 
-    auto const & recurrent = _impl->_state->recurrentBindings();
-    if (recurrent.empty()) {
+    if (!_impl->_state->hasRecurrentBindings()) {
         emit batchFinished(false,
-                           tr("Configure at least one recurrent feedback binding."));
+                           tr("Configure at least one recurrent memory frame."));
         return;
     }
 
@@ -338,9 +341,8 @@ void InferenceController::runRecurrentSequence(int start, int frame_count) {
         _impl->_assembler->runRecurrentSequence(
                 *_impl->_dm,
                 _impl->_state->inputBindings(),
-                _impl->_state->staticInputs(),
+                _impl->_state->memoryFrames(),
                 _impl->_state->outputBindings(),
-                recurrent,
                 start,
                 frame_count,
                 source_size,

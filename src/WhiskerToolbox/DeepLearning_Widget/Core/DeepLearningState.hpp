@@ -32,8 +32,7 @@ struct DeepLearningStateData {
     int current_frame = 0;
     std::vector<SlotBindingData> input_bindings;
     std::vector<OutputBindingData> output_bindings;
-    std::vector<StaticInputData> static_inputs;
-    std::vector<RecurrentBindingData> recurrent_bindings;
+    std::vector<dl::MemoryFrameBinding> memory_frames;
     std::string instance_id;
     std::string display_name = "Deep Learning";
     /// Post-encoder module configuration.
@@ -84,16 +83,12 @@ public:
     [[nodiscard]] std::vector<OutputBindingData> const & outputBindings() const;
     void setOutputBindings(std::vector<OutputBindingData> bindings);
 
-    // ── Static Inputs ──
-    [[nodiscard]] std::vector<StaticInputData> const & staticInputs() const;
-    void setStaticInputs(std::vector<StaticInputData> inputs);
-
-    // ── Recurrent Bindings ──
-    [[nodiscard]] std::vector<RecurrentBindingData> const & recurrentBindings() const;
-    void setRecurrentBindings(std::vector<RecurrentBindingData> bindings);
+    // ── Memory Frames ──
+    [[nodiscard]] std::vector<dl::MemoryFrameBinding> const & memoryFrames() const;
+    void setMemoryFrames(std::vector<dl::MemoryFrameBinding> frames);
 
     /**
-     * @brief Whether any recurrent bindings are active (forces batch_size=1).
+     * @brief Whether any memory frames use active recurrent feedback.
      */
     [[nodiscard]] bool hasRecurrentBindings() const;
 
@@ -124,8 +119,7 @@ signals:
     void currentFrameChanged(int frame);
     void inputBindingsChanged();
     void outputBindingsChanged();
-    void staticInputsChanged();
-    void recurrentBindingsChanged();
+    void memoryFramesChanged();
     void postEncoderModuleChanged();
     void modelConfigurationChanged();
 

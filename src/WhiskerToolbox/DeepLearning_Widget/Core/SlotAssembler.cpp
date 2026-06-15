@@ -1,6 +1,6 @@
 #include "SlotAssembler.hpp"
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -253,14 +253,16 @@ dl::EncoderContext makeDynamicSlotEncoderContext(
             });
 }
 
-/// Find a static input entry matching slot name and memory index.
-[[nodiscard]] StaticInputData const * findStaticInputEntry(
-        std::vector<StaticInputData> const & static_inputs,
+/// Find a static memory frame matching slot name and memory index.
+[[nodiscard]] dl::MemoryFrameBinding const * findStaticMemoryFrame(
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         std::string const & slot_name,
         int memory_index) {
-    for (auto const & si: static_inputs) {
-        if (si.slot_name == slot_name && si.memory_index == memory_index) {
-            return &si;
+    for (auto const & frame: memory_frames) {
+        if (frame.slot_name == slot_name &&
+            frame.memory_index == memory_index &&
+            dl::isStaticFrame(frame)) {
+            return &frame;
         }
     }
     return nullptr;
@@ -268,11 +270,11 @@ dl::EncoderContext makeDynamicSlotEncoderContext(
 
 /// Resolve a pre-encoded tensor from the DataBank.
 [[nodiscard]] std::optional<at::Tensor> getBankCachedTensor(
-        StaticInputData const & entry,
+        dl::MemoryFrameBinding const & entry,
         dl::DataBank const & data_bank,
         int batch_size) {
 
-    auto const bank_id = entry.resolvedBankEntryId();
+    auto const bank_id = dl::resolvedBankEntryId(entry);
     if (bank_id.empty()) {
         return std::nullopt;
     }
@@ -302,7 +304,7 @@ void encodeDynamicSlot(
 /// Encode a static entry into a single-batch temp tensor (DataManager or DataBank source).
 [[nodiscard]] bool encodeStaticEntryToTensor(
         DataManager & dm,
-        StaticInputData const & entry,
+        dl::MemoryFrameBinding const & entry,
         dl::TensorSlotDescriptor const & encode_slot,
         dl::DataBank const & data_bank,
         at::Tensor & temp,
@@ -310,8 +312,8 @@ void encodeDynamicSlot(
         ImageSize source_image_size,
         MediaOverrides const * media_overrides = nullptr) {
 
-    if (entry.sourceType() == StaticInputSource::DataBank) {
-        auto const bank_id = entry.resolvedBankEntryId();
+    if (dl::staticSourceType(entry) == StaticInputSource::DataBank) {
+        auto const bank_id = dl::resolvedBankEntryId(entry);
         auto const source = data_bank.getSource(bank_id);
         if (!source) {
             spdlog::error(
@@ -351,13 +353,13 @@ void encodeDynamicSlot(
         return true;
     }
 
-    if (entry.data_key.empty()) {
+    if (dl::staticDataKey(entry).empty()) {
         return false;
     }
 
     SlotBindingData temp_binding;
     temp_binding.slot_name = encode_slot.name;
-    temp_binding.data_key = entry.data_key;
+    temp_binding.data_key = dl::staticDataKey(entry);
     dl::assignEncoderFromFactoryName(
             temp_binding.encoder, encode_slot.recommended_encoder);
     encodeDynamicSlot(
@@ -409,23 +411,6 @@ void encodeDynamicSlot(
     });
 }
 
-/// Build a set of recurrent-claimed positions for each sequence slot.
-///
-/// Returns a map from slot_name -> set of memory_index values that are
-/// claimed by a recurrent binding (i.e., should NOT be filled by static
-/// assembly because the recurrent injection will fill them).
-std::unordered_map<std::string, std::set<int>>
-recurrentClaimedPositions(
-        std::vector<RecurrentBindingData> const & recurrent_bindings) {
-    std::unordered_map<std::string, std::set<int>> result;
-    for (auto const & rb: recurrent_bindings) {
-        if (rb.hasTargetMemoryIndex()) {
-            result[rb.input_slot_name].insert(rb.target_memory_index);
-        }
-    }
-    return result;
-}
-
 /// Build the full input tensor map for a model forward pass.
 ///
 /// @pre current_frame >= 0; negative values are silently clamped to 0 by
@@ -440,9 +425,8 @@ assembleInputs(
         DataManager & dm,
         dl::ModelBase const & model,
         std::vector<SlotBindingData> const & input_bindings,
-        std::vector<StaticInputData> const & static_inputs,
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         dl::DataBank const & data_bank,
-        std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
         int batch_size,
         MediaOverrides const * media_overrides = nullptr) {
@@ -513,26 +497,16 @@ assembleInputs(
     }
 
     // ── Static (memory) inputs ──
-    std::unordered_map<std::string, std::vector<StaticInputData const *>> grouped;
-    for (auto const & si: static_inputs) {
-        grouped[si.slot_name].push_back(&si);
+    std::unordered_map<std::string, std::vector<dl::MemoryFrameBinding const *>> grouped;
+    for (auto const & frame: memory_frames) {
+        grouped[frame.slot_name].push_back(&frame);
     }
-
-    // ── Build recurrent-claimed position map for hybrid mode ──
-    auto const claimed = recurrentClaimedPositions(recurrent_bindings);
 
     // Process all static/memory input slots (including boolean masks)
     for (auto const & slot: input_slot_vec) {
         if (!slot.is_static) continue;// skip dynamic inputs
 
         auto const & entries = grouped[slot.name];// may be empty
-
-        // Positions in this slot claimed by recurrent bindings
-        std::set<int> const * slot_claimed = nullptr;
-        {
-            auto it = claimed.find(slot.name);
-            if (it != claimed.end()) slot_claimed = &it->second;
-        }
 
         if (slot.is_boolean_mask) {
             // Boolean mask: always create, even if no entries
@@ -586,13 +560,13 @@ assembleInputs(
                 // Track which positions have been filled for gap warnings
                 int filled_count = 0;
 
-                // Count recurrent-claimed positions as "will be filled"
-                if (slot_claimed) {
-                    filled_count += static_cast<int>(slot_claimed->size());
-                }
-
                 for (auto const * entry: entries) {
-                    if (!entry->hasActiveSource()) {
+                    if (dl::isRecurrentFrame(*entry) &&
+                        dl::hasActiveRecurrentBinding(*entry)) {
+                        ++filled_count;
+                        continue;
+                    }
+                    if (!dl::hasActiveStaticSource(*entry)) {
                         continue;
                     }
                     if (entry->memory_index >= static_cast<int>(seq_len)) {
@@ -604,22 +578,9 @@ assembleInputs(
                         continue;
                     }
 
-                    // Skip positions claimed by recurrent bindings
-                    if (slot_claimed &&
-                        slot_claimed->contains(entry->memory_index)) {
-                        std::cerr << "SlotAssembler: position "
-                                  << entry->memory_index
-                                  << " in slot '" << slot.name
-                                  << "' is claimed by both static and "
-                                     "recurrent sources; skipping static\n";
-                        continue;
-                    }
-
-                    // Get the target slice: tensor[:, ..., memory_index, ..., :]
-                    // where memory_index is along full_seq_dim
                     auto target_slice = tensor.select(full_seq_dim, entry->memory_index);
 
-                    if (entry->sourceType() == StaticInputSource::DataBank) {
+                    if (dl::staticSourceType(*entry) == StaticInputSource::DataBank) {
                         if (auto cached = getBankCachedTensor(
                                     *entry, data_bank, batch_size)) {
                             target_slice.copy_(*cached);
@@ -635,7 +596,7 @@ assembleInputs(
                     auto temp = at::zeros(temp_shape, toTorchDType(slot.dtype));
 
                     int const frame = computeEncodingFrame(
-                            current_frame, 0, entry->time_offset, max_frame);
+                            current_frame, 0, dl::staticTimeOffset(*entry), max_frame);
                     if (!encodeStaticEntryToTensor(
                                 dm, *entry, elem_slot, data_bank, temp, frame,
                                 source_image_size, media_overrides)) {
@@ -654,24 +615,14 @@ assembleInputs(
                               << " sequence positions filled; unfilled "
                                  "positions are zero-padded\n";
                 }
-                // For hybrid slots: also create the tensor when there are
-                // only recurrent-claimed positions but no static entries.
-            } else if (entries.empty() && slot_claimed && !slot_claimed->empty()) {
-                // Hybrid-only: create a zero tensor for the slot so that
-                // recurrent injection has a target tensor to fill into.
-                std::vector<int64_t> hybrid_tensor_shape = {batch_size};
-                hybrid_tensor_shape.insert(hybrid_tensor_shape.end(),
-                                           slot.shape.begin(), slot.shape.end());
-                result[slot.name] = at::zeros(hybrid_tensor_shape,
-                                              toTorchDType(slot.dtype));
             } else {
-                // ── Non-sequence static slot (original behavior) ──
+                // ── Non-sequence static slot ──
                 for (auto const * entry: entries) {
-                    if (!entry->hasActiveSource()) {
+                    if (!dl::hasActiveStaticSource(*entry)) {
                         continue;
                     }
 
-                    if (entry->sourceType() == StaticInputSource::DataBank) {
+                    if (dl::staticSourceType(*entry) == StaticInputSource::DataBank) {
                         if (auto cached = getBankCachedTensor(
                                     *entry, data_bank, batch_size)) {
                             tensor.copy_(*cached);
@@ -681,7 +632,7 @@ assembleInputs(
                     }
 
                     int const frame = computeEncodingFrame(
-                            current_frame, 0, entry->time_offset, max_frame);
+                            current_frame, 0, dl::staticTimeOffset(*entry), max_frame);
                     if (!encodeStaticEntryToTensor(
                                 dm, *entry, slot, data_bank, tensor, frame,
                                 source_image_size, media_overrides)) {
@@ -1084,14 +1035,14 @@ void SlotAssembler::initDeviceForCurrentThread() {
 bool SlotAssembler::captureToBank(
         DataManager & dm,
         std::string const & bank_entry_id,
-        StaticInputData const & entry,
+        dl::MemoryFrameBinding const & entry,
         int frame,
         ImageSize source_image_size) {
 
     if (!_impl->model) {
         return false;
     }
-    if (entry.data_key.empty()) {
+    if (dl::staticDataKey(entry).empty()) {
         return false;
     }
     if (auto const err = dl::validateEntryId(bank_entry_id)) {
@@ -1118,7 +1069,7 @@ bool SlotAssembler::captureToBank(
 
     SlotBindingData temp_binding;
     temp_binding.slot_name = slot->name;
-    temp_binding.data_key = entry.data_key;
+    temp_binding.data_key = dl::staticDataKey(entry);
     dl::assignEncoderFromFactoryName(
             temp_binding.encoder, slot->recommended_encoder);
 
@@ -1128,7 +1079,7 @@ bool SlotAssembler::captureToBank(
     }
 
     dl::DataBankEntryMetadata metadata;
-    metadata.data_key = entry.data_key;
+    metadata.data_key = dl::staticDataKey(entry);
     metadata.captured_frame = frame;
     metadata.source_image_size = source_image_size;
     metadata.encoder_factory_name = slot->recommended_encoder;
@@ -1153,11 +1104,11 @@ bool SlotAssembler::captureToBank(
 
 bool SlotAssembler::captureStaticInput(
         DataManager & dm,
-        StaticInputData const & entry,
+        dl::MemoryFrameBinding const & entry,
         int frame,
         ImageSize source_image_size) {
 
-    std::string const bank_id = entry.resolvedBankEntryId();
+    std::string const bank_id = dl::resolvedBankEntryId(entry);
     if (bank_id.empty()) {
         return false;
     }
@@ -1172,7 +1123,7 @@ bool SlotAssembler::captureStaticInput(
 void SlotAssembler::runSingleFrame(
         DataManager & dm,
         std::vector<SlotBindingData> const & input_bindings,
-        std::vector<StaticInputData> const & static_inputs,
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         std::vector<OutputBindingData> const & output_bindings,
         int current_frame,
         ImageSize source_image_size) {
@@ -1188,9 +1139,8 @@ void SlotAssembler::runSingleFrame(
 
     auto inputs = assembleInputs(
             dm, *_impl->model,
-            input_bindings, static_inputs,
+            input_bindings, memory_frames,
             *_impl->data_bank,
-            {},// no recurrent bindings in single-frame mode
             current_frame, /*batch_size=*/1);
 
     auto const effective_slots = effectiveOutputSlotsFor(
@@ -1213,7 +1163,7 @@ void SlotAssembler::runSingleFrame(
 void SlotAssembler::runBatchRange(
         DataManager & dm,
         std::vector<SlotBindingData> const & input_bindings,
-        std::vector<StaticInputData> const & static_inputs,
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         std::vector<OutputBindingData> const & output_bindings,
         int start_frame,
         int end_frame,
@@ -1258,9 +1208,8 @@ void SlotAssembler::runBatchRange(
 
         auto inputs = assembleInputs(
                 dm, *_impl->model,
-                input_bindings, static_inputs,
+                input_bindings, memory_frames,
                 *_impl->data_bank,
-                {},// no recurrent bindings
                 chunk_start, /*batch_size=*/chunk_size);
 
         auto outputs = runModelAndPostEncoder(
@@ -1292,7 +1241,7 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         DataManager & dm,
         MediaOverrides const & media_overrides,
         std::vector<SlotBindingData> const & input_bindings,
-        std::vector<StaticInputData> const & static_inputs,
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         std::vector<OutputBindingData> const & output_bindings,
         int start_frame,
         int end_frame,
@@ -1352,9 +1301,8 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
 
             auto inputs = assembleInputs(
                     dm, *_impl->model,
-                    input_bindings, static_inputs,
+                    input_bindings, memory_frames,
                     *_impl->data_bank,
-                    {},// no recurrent bindings
                     chunk_start, /*batch_size=*/chunk_size,
                     &media_overrides);
 
@@ -1410,9 +1358,8 @@ void SlotAssembler::clearRecurrentCache() {
 void SlotAssembler::runRecurrentSequence(
         DataManager & dm,
         std::vector<SlotBindingData> const & input_bindings,
-        std::vector<StaticInputData> const & static_inputs,
+        std::vector<dl::MemoryFrameBinding> const & memory_frames,
         std::vector<OutputBindingData> const & output_bindings,
-        std::vector<RecurrentBindingData> const & recurrent_bindings,
         int start_frame,
         int frame_count,
         ImageSize source_image_size,
@@ -1425,30 +1372,35 @@ void SlotAssembler::runRecurrentSequence(
 
     torch::NoGradGuard const no_grad;
 
-    if (recurrent_bindings.empty()) {
+    std::vector<dl::MemoryFrameBinding const *> recurrent_frames;
+    for (auto const & frame: memory_frames) {
+        if (dl::hasActiveRecurrentBinding(frame)) {
+            recurrent_frames.push_back(&frame);
+        }
+    }
+
+    if (recurrent_frames.empty()) {
         throw std::runtime_error("SlotAssembler::runRecurrentSequence: "
-                                 "no recurrent bindings provided");
+                                 "no recurrent memory frames configured");
     }
 
     auto const input_slot_vec = _impl->model->inputSlots();
     auto const output_slot_vec = _impl->model->outputSlots();
 
     // ── t=0 initialization: populate recurrent cache ──
-    for (auto const & rb: recurrent_bindings) {
-        auto const key = recurrentCacheKey(rb.input_slot_name);
-        auto const mode = rb.initMode();
+    for (auto const * frame: recurrent_frames) {
+        auto const key = recurrentCacheKey(frame->slot_name);
+        auto const mode = dl::recurrentInitMode(*frame);
 
-        auto const * input_slot = findSlot(input_slot_vec, rb.input_slot_name);
+        auto const * input_slot = findSlot(input_slot_vec, frame->slot_name);
         if (!input_slot) {
             throw std::runtime_error(
-                    "SlotAssembler::runRecurrentSequence: unknown input slot '" + rb.input_slot_name + "'");
+                    "SlotAssembler::runRecurrentSequence: unknown input slot '" +
+                    frame->slot_name + "'");
         }
 
-        // For hybrid mode (target_memory_index >= 0), the init tensor is
-        // per-element (excluding sequence dim) rather than whole-slot.
         std::vector<int64_t> init_shape = {1};
-        if (rb.hasTargetMemoryIndex() && input_slot->hasSequenceDim()) {
-            // Per-element shape for the recurrent position
+        if (input_slot->hasSequenceDim()) {
             auto const elem = perElementShape(*input_slot);
             init_shape.insert(init_shape.end(), elem.begin(), elem.end());
         } else {
@@ -1462,36 +1414,35 @@ void SlotAssembler::runRecurrentSequence(
                     at::zeros(init_shape, toTorchDType(input_slot->dtype));
 
         } else if (mode == RecurrentInitMode::StaticCapture) {
-            int const mem_idx = rb.hasTargetMemoryIndex()
-                                        ? rb.target_memory_index
-                                        : 0;
+            int const mem_idx = frame->memory_index;
 
             std::optional<at::Tensor> init_tensor;
-            if (auto const * static_entry = findStaticInputEntry(
-                        static_inputs, rb.input_slot_name, mem_idx)) {
-                if (static_entry->sourceType() == StaticInputSource::DataBank) {
+            if (auto const * static_entry = findStaticMemoryFrame(
+                        memory_frames, frame->slot_name, mem_idx)) {
+                if (dl::staticSourceType(*static_entry) ==
+                    StaticInputSource::DataBank) {
                     init_tensor = getBankCachedTensor(
                             *static_entry, *_impl->data_bank, /*batch_size=*/1);
                 }
             }
             if (!init_tensor) {
-                auto const bank_id = defaultBankEntryId(rb.input_slot_name, mem_idx);
+                auto const bank_id =
+                        defaultBankEntryId(frame->slot_name, mem_idx);
                 init_tensor = _impl->data_bank->getEncoded(bank_id);
             }
 
+            auto const capture_key = dl::staticCaptureDataKey(*frame);
+            auto const capture_frame = dl::staticCaptureFrame(*frame);
             if (init_tensor) {
                 _impl->recurrent_cache[key] = init_tensor->clone();
-            } else if (!rb.init_data_key.empty() && rb.init_frame >= 0) {
-                StaticInputData temp_entry;
-                temp_entry.slot_name = rb.input_slot_name;
-                temp_entry.memory_index = mem_idx;
-                temp_entry.data_key = rb.init_data_key;
-                temp_entry.setSourceType(StaticInputSource::DataBank);
+            } else if (!capture_key.empty() && capture_frame >= 0) {
+                auto temp_entry = dl::makeCaptureBinding(
+                        frame->slot_name, mem_idx, capture_key);
 
-                if (captureStaticInput(dm, temp_entry, rb.init_frame,
+                if (captureStaticInput(dm, temp_entry, capture_frame,
                                        source_image_size)) {
                     if (auto encoded = _impl->data_bank->getEncoded(
-                                defaultBankEntryId(rb.input_slot_name, mem_idx))) {
+                                defaultBankEntryId(frame->slot_name, mem_idx))) {
                         _impl->recurrent_cache[key] = encoded->clone();
                     }
                 }
@@ -1501,50 +1452,42 @@ void SlotAssembler::runRecurrentSequence(
                 spdlog::warn(
                         "SlotAssembler: StaticCapture init failed for '{}', "
                         "falling back to zeros",
-                        rb.input_slot_name);
+                        frame->slot_name);
                 _impl->recurrent_cache[key] =
                         at::zeros(init_shape, toTorchDType(input_slot->dtype));
             }
 
         } else if (mode == RecurrentInitMode::FirstOutput) {
-            // Will be filled after the first forward pass below
             _impl->recurrent_cache[key] =
                     at::zeros(init_shape, toTorchDType(input_slot->dtype));
         }
     }
 
-    // ── Validate hybrid bindings ──
-    for (auto const & rb: recurrent_bindings) {
-        if (!rb.hasTargetMemoryIndex()) continue;
-
-        auto const * input_slot = findSlot(input_slot_vec, rb.input_slot_name);
+    // ── Validate sequence-position recurrent frames ──
+    for (auto const * frame: recurrent_frames) {
+        auto const * input_slot = findSlot(input_slot_vec, frame->slot_name);
         if (!input_slot || !input_slot->hasSequenceDim()) {
-            std::cerr << "SlotAssembler: recurrent binding for '"
-                      << rb.input_slot_name
-                      << "' has target_memory_index="
-                      << rb.target_memory_index
-                      << " but the slot has no sequence dimension\n";
             continue;
         }
 
         auto const seq_len = sequenceLength(*input_slot);
-        if (rb.target_memory_index >= static_cast<int>(seq_len)) {
-            std::cerr << "SlotAssembler: recurrent binding target_memory_index "
-                      << rb.target_memory_index
+        if (frame->memory_index >= static_cast<int>(seq_len)) {
+            std::cerr << "SlotAssembler: recurrent memory_index "
+                      << frame->memory_index
                       << " exceeds sequence length " << seq_len
-                      << " for slot '" << rb.input_slot_name << "'\n";
+                      << " for slot '" << frame->slot_name << "'\n";
         }
 
-        // Validate shape compatibility with output slot
-        auto const * output_slot = findSlot(output_slot_vec, rb.output_slot_name);
+        auto const * output_slot =
+                findSlot(output_slot_vec, dl::recurrentOutputSlot(*frame));
         if (output_slot) {
             auto const elem = perElementShape(*input_slot);
             if (output_slot->shape != elem) {
                 std::cerr << "SlotAssembler: shape mismatch — output slot '"
-                          << rb.output_slot_name << "' shape does not match "
-                          << "per-element shape of input slot '"
-                          << rb.input_slot_name << "' at position "
-                          << rb.target_memory_index << "\n";
+                          << dl::recurrentOutputSlot(*frame)
+                          << "' shape does not match per-element shape of input slot '"
+                          << frame->slot_name << "' at position "
+                          << frame->memory_index << "\n";
             }
         }
     }
@@ -1559,41 +1502,33 @@ void SlotAssembler::runRecurrentSequence(
 
         _updateSpatialPoint(dm, frame);
 
-        // 1. Assemble dynamic + static inputs (batch_size = 1)
-        //    In hybrid mode, assembleInputs skips recurrent-claimed positions.
         auto inputs = assembleInputs(
                 dm, *_impl->model,
-                input_bindings, static_inputs,
+                input_bindings, memory_frames,
                 *_impl->data_bank,
-                recurrent_bindings,
                 frame, /*batch_size=*/1);
 
-        // 2. Inject recurrent tensors into the input map
-        for (auto const & rb: recurrent_bindings) {
-            auto const key = recurrentCacheKey(rb.input_slot_name);
+        for (auto const * mem_frame: recurrent_frames) {
+            auto const key = recurrentCacheKey(mem_frame->slot_name);
             auto cache_it = _impl->recurrent_cache.find(key);
             if (cache_it == _impl->recurrent_cache.end()) continue;
 
-            if (rb.hasTargetMemoryIndex()) {
-                // Hybrid mode: inject into specific sequence position
-                auto const * input_slot = findSlot(input_slot_vec,
-                                                   rb.input_slot_name);
-                if (!input_slot || !input_slot->hasSequenceDim()) continue;
+            auto const * input_slot = findSlot(input_slot_vec, mem_frame->slot_name);
+            if (!input_slot) continue;
 
-                auto slot_it = inputs.find(rb.input_slot_name);
+            if (input_slot->hasSequenceDim()) {
+                auto slot_it = inputs.find(mem_frame->slot_name);
                 if (slot_it == inputs.end()) continue;
 
                 int const full_seq_dim = input_slot->sequence_dim + 1;
                 auto target_slice = slot_it->second.select(
-                        full_seq_dim, rb.target_memory_index);
+                        full_seq_dim, mem_frame->memory_index);
                 target_slice.copy_(cache_it->second);
             } else {
-                // Whole-slot replacement (original Phase 4 behavior)
-                inputs[rb.input_slot_name] = cache_it->second;
+                inputs[mem_frame->slot_name] = cache_it->second;
             }
         }
 
-        // 3. Forward pass and post-encoder
         auto outputs = runModelAndPostEncoder(
                 *_impl->model,
                 _impl->post_encoder_module.get(),
@@ -1602,58 +1537,59 @@ void SlotAssembler::runRecurrentSequence(
                 _impl->model.get(),
                 _impl->post_encoder_module.get());
 
-        // 4. For FirstOutput mode on t=0: use raw output, skip decoding
         if (f == 0) {
             bool has_first_output = false;
-            for (auto const & rb: recurrent_bindings) {
-                if (rb.initMode() == RecurrentInitMode::FirstOutput) {
+            for (auto const * mem_frame: recurrent_frames) {
+                if (dl::recurrentInitMode(*mem_frame) ==
+                    RecurrentInitMode::FirstOutput) {
                     has_first_output = true;
                     break;
                 }
             }
             if (has_first_output) {
-                // Cache outputs for recurrent slots that use FirstOutput
-                for (auto const & rb: recurrent_bindings) {
-                    if (rb.initMode() == RecurrentInitMode::FirstOutput) {
-                        auto out_it = outputs.find(rb.output_slot_name);
+                for (auto const * mem_frame: recurrent_frames) {
+                    if (dl::recurrentInitMode(*mem_frame) ==
+                        RecurrentInitMode::FirstOutput) {
+                        auto out_it = outputs.find(
+                                dl::recurrentOutputSlot(*mem_frame));
                         if (out_it != outputs.end()) {
-                            auto const rkey = recurrentCacheKey(rb.input_slot_name);
-                            _impl->recurrent_cache[rkey] = out_it->second.detach();
+                            auto const rkey =
+                                    recurrentCacheKey(mem_frame->slot_name);
+                            _impl->recurrent_cache[rkey] =
+                                    out_it->second.detach();
                         }
                     }
                 }
-                // Skip decoding for t=0 in FirstOutput mode — the output
-                // is just used as initialization, not as a real prediction
-                // Re-carry non-FirstOutput recurrent outputs
-                for (auto const & rb: recurrent_bindings) {
-                    if (rb.initMode() != RecurrentInitMode::FirstOutput) {
-                        auto out_it = outputs.find(rb.output_slot_name);
+                for (auto const * mem_frame: recurrent_frames) {
+                    if (dl::recurrentInitMode(*mem_frame) !=
+                        RecurrentInitMode::FirstOutput) {
+                        auto out_it = outputs.find(
+                                dl::recurrentOutputSlot(*mem_frame));
                         if (out_it != outputs.end()) {
-                            auto const rkey = recurrentCacheKey(rb.input_slot_name);
-                            _impl->recurrent_cache[rkey] = out_it->second.detach();
+                            auto const rkey =
+                                    recurrentCacheKey(mem_frame->slot_name);
+                            _impl->recurrent_cache[rkey] =
+                                    out_it->second.detach();
                         }
                     }
                 }
-                continue;// Skip to next frame
+                continue;
             }
         }
 
-        // 5. Decode outputs into DataManager
         decodeOutputs(
                 dm, outputs, output_bindings,
                 effective_slots, frame, source_image_size);
 
-        // 6. Cache output tensors for next frame's recurrent inputs
-        for (auto const & rb: recurrent_bindings) {
-            auto out_it = outputs.find(rb.output_slot_name);
+        for (auto const * mem_frame: recurrent_frames) {
+            auto out_it = outputs.find(dl::recurrentOutputSlot(*mem_frame));
             if (out_it != outputs.end()) {
-                auto const rkey = recurrentCacheKey(rb.input_slot_name);
+                auto const rkey = recurrentCacheKey(mem_frame->slot_name);
                 _impl->recurrent_cache[rkey] = out_it->second.detach();
             }
         }
     }
 
-    // Final progress callback
     if (progress) {
         progress(frame_count, frame_count);
     }

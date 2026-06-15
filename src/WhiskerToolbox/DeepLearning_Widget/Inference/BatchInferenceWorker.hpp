@@ -51,7 +51,7 @@ public:
             DataManager * dm,
             MediaOverrides media_overrides,
             std::vector<SlotBindingData> input_bindings,
-            std::vector<StaticInputData> static_inputs,
+            std::vector<dl::MemoryFrameBinding> memory_frames,
             std::vector<OutputBindingData> output_bindings,
             int start_frame,
             int end_frame,
@@ -88,7 +88,7 @@ private:
     DataManager * _dm;
     MediaOverrides _media_overrides;
     std::vector<SlotBindingData> _input_bindings;
-    std::vector<StaticInputData> _static_inputs;
+    std::vector<dl::MemoryFrameBinding> _memory_frames;
     std::vector<OutputBindingData> _output_bindings;
     int _start_frame;
     int _end_frame;

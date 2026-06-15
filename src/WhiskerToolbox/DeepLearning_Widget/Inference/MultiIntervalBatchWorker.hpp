@@ -53,7 +53,7 @@ public:
             DataManager * dm,
             MediaOverrides media_overrides,
             std::vector<SlotBindingData> input_bindings,
-            std::vector<StaticInputData> static_inputs,
+            std::vector<dl::MemoryFrameBinding> memory_frames,
             std::vector<OutputBindingData> output_bindings,
             std::vector<std::pair<int64_t, int64_t>> intervals,
             ImageSize source_image_size,
@@ -89,7 +89,7 @@ private:
     DataManager * _dm;
     MediaOverrides _media_overrides;
     std::vector<SlotBindingData> _input_bindings;
-    std::vector<StaticInputData> _static_inputs;
+    std::vector<dl::MemoryFrameBinding> _memory_frames;
     std::vector<OutputBindingData> _output_bindings;
     std::vector<std::pair<int64_t, int64_t>> _intervals;
     ImageSize _source_image_size;

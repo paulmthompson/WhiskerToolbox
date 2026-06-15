@@ -170,10 +170,6 @@ target_include_directories(test_dl_param_schemas PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
 )
 
-target_sources(test_dl_param_schemas PRIVATE
-    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp"
-)
-
 set_target_compiler_warnings(test_dl_param_schemas)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)

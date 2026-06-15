@@ -7,7 +7,7 @@
 #ifndef POST_ENCODER_WIDGET_HPP
 #define POST_ENCODER_WIDGET_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp" // dl::PostEncoderStepDescriptor
 
 #include <QWidget>
 

@@ -1,6 +1,5 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
-#include "DeepLearning_Widget/Core/BindingConversion.hpp"
 #include "DeepLearning/constraints/ConstraintEnforcer.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
@@ -10,9 +9,7 @@
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
-#include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
-#include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
-#include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/MemorySlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -527,12 +524,10 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
 void DeepLearningPropertiesWidget::_clearDynamicContent() {
     if (!_dynamic_layout) return;
     _dynamic_input_widgets.clear();
-    _static_input_widgets.clear();
-    _sequence_slot_widgets.clear();
+    _memory_slot_widgets.clear();
     _output_slot_widgets.clear();
     _post_encoder_widget = nullptr;
     _encoder_shape_widget = nullptr;
-    _recurrent_binding_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -595,44 +590,28 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
         }
     }
 
-    // ── Static (memory) inputs ──
-    bool has_static = false;
+    // ── Memory frame inputs ──
+    bool has_memory = false;
     for (auto const & slot: inputs) {
         if (slot.is_static && !slot.is_boolean_mask) {
-            if (!has_static) {
+            if (!has_memory) {
                 _dynamic_layout->addWidget(
-                        new QLabel(tr("<b>Static Inputs (Memory)</b>"),
-                                   _dynamic_container));
-                has_static = true;
+                        new QLabel(tr("<b>Memory Frames</b>"), _dynamic_container));
+                has_memory = true;
             }
-            if (slot.hasSequenceDim()) {
-                std::vector<std::string> output_names;
-                if (_current_info) {
-                    for (auto const & out: _current_info->outputs) {
-                        output_names.push_back(out.name);
-                    }
+            std::vector<std::string> output_names;
+            if (_current_info) {
+                for (auto const & out: _current_info->outputs) {
+                    output_names.push_back(out.name);
                 }
-                auto * seq_widget = new dl::widget::SequenceSlotWidget(
-                        slot, _data_manager, output_names, _dynamic_container);
-                seq_widget->setEntriesFromState(_state->staticInputs(),
-                                                _state->recurrentBindings());
-                connect(seq_widget,
-                        &dl::widget::SequenceSlotWidget::bindingChanged,
-                        this,
-                        &DeepLearningPropertiesWidget::_syncBindingsFromUi);
-                _sequence_slot_widgets.push_back(seq_widget);
-                _dynamic_layout->addWidget(seq_widget);
-            } else {
-                // Non-sequence static slot: use the new StaticInputSlotWidget
-                auto * slot_widget = new dl::widget::StaticInputSlotWidget(
-                        slot, _data_manager, _dynamic_container);
-                connect(slot_widget,
-                        &dl::widget::StaticInputSlotWidget::bindingChanged,
-                        this,
-                        &DeepLearningPropertiesWidget::_syncBindingsFromUi);
-                _static_input_widgets.push_back(slot_widget);
-                _dynamic_layout->addWidget(slot_widget);
             }
+            auto * mem_widget = new dl::widget::MemorySlotWidget(
+                    slot, _data_manager, output_names, _dynamic_container);
+            mem_widget->setBindings(_state->memoryFrames());
+            connect(mem_widget, &dl::widget::MemorySlotWidget::bindingChanged,
+                    this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+            _memory_slot_widgets.push_back(mem_widget);
+            _dynamic_layout->addWidget(mem_widget);
         }
     }
 
@@ -640,36 +619,6 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     for (auto const & slot: inputs) {
         if (slot.is_boolean_mask) {
             _dynamic_layout->addWidget(_buildBooleanMaskGroup(slot));
-        }
-    }
-
-    // ── Recurrent (feedback) inputs ──
-    // Show a recurrent binding panel for each non-sequence static input slot
-    // that could serve as a recurrent feedback target. Sequence slots handle
-    // recurrent bindings per-position via the unified sequence editor.
-    bool has_recurrent = false;
-    for (auto const & slot: inputs) {
-        if (slot.is_static && !slot.is_boolean_mask && !slot.hasSequenceDim()) {
-            if (!has_recurrent) {
-                _dynamic_layout->addWidget(
-                        new QLabel(tr("<b>Recurrent (Feedback) Inputs</b>"),
-                                   _dynamic_container));
-                has_recurrent = true;
-            }
-            auto * rb_widget = new dl::widget::RecurrentBindingWidget(
-                    slot, _current_info->outputs, _data_manager, _dynamic_container);
-            for (auto const & rb: _state->recurrentBindings()) {
-                if (rb.input_slot_name == slot.name) {
-                    rb_widget->setParams(
-                            dl::widget::RecurrentBindingWidget::paramsFromBinding(
-                                    rb));
-                    break;
-                }
-            }
-            connect(rb_widget, &dl::widget::RecurrentBindingWidget::bindingChanged,
-                    this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
-            _recurrent_binding_widgets.push_back(rb_widget);
-            _dynamic_layout->addWidget(rb_widget);
         }
     }
 
@@ -810,35 +759,13 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
         slot_widget->refreshDataSources();
     }
 
-    // Refresh static input source combos
-    for (auto const & slot: _current_info->inputs) {
-        if (slot.is_static && !slot.is_boolean_mask) {
-            if (slot.hasSequenceDim()) {
-                for (auto * seq_widget: _sequence_slot_widgets) {
-                    if (seq_widget->slotName() == slot.name) {
-                        seq_widget->refreshDataSources();
-                        break;
-                    }
-                }
-            } else {
-                for (auto * slot_widget: _static_input_widgets) {
-                    if (slot_widget->slotName() == slot.name) {
-                        slot_widget->refreshDataSources();
-                        break;
-                    }
-                }
-            }
-        }
+    for (auto * mem_widget: _memory_slot_widgets) {
+        mem_widget->refreshDataSources();
     }
 
     // Refresh output target combos
     for (auto * slot_widget: _output_slot_widgets) {
         slot_widget->refreshDataSources();
-    }
-
-    // Refresh recurrent binding data_key combos (StaticCapture init)
-    for (auto * rb_widget: _recurrent_binding_widgets) {
-        rb_widget->refreshDataSources();
     }
 
     // Refresh post-encoder point_key combo
@@ -857,11 +784,8 @@ void DeepLearningPropertiesWidget::_refreshBankEntryCombos() {
     }
 
     std::vector<std::string> const bank_ids = _assembler->dataBank().ids();
-    for (auto * slot_widget: _static_input_widgets) {
-        slot_widget->refreshBankEntries(bank_ids);
-    }
-    for (auto * seq_widget: _sequence_slot_widgets) {
-        seq_widget->refreshBankEntries(bank_ids);
+    for (auto * mem_widget: _memory_slot_widgets) {
+        mem_widget->refreshBankEntries(bank_ids);
     }
 
     if (_data_bank_properties) {
@@ -896,47 +820,13 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     }
     _state->setOutputBindings(std::move(output_bindings));
 
-    // ── Static inputs ──
-    std::vector<StaticInputData> static_inputs;
-    std::vector<RecurrentBindingData> hybrid_recurrent_bindings;
-
-    for (auto const & slot: _current_info->inputs) {
-        if (!slot.is_static || slot.is_boolean_mask) continue;
-
-        if (slot.hasSequenceDim()) {
-            for (auto const * seq_widget: _sequence_slot_widgets) {
-                if (seq_widget->slotName() != slot.name) continue;
-                for (auto si: seq_widget->getStaticInputs()) {
-                    static_inputs.push_back(std::move(si));
-                }
-                for (auto const & rb: seq_widget->getRecurrentBindings()) {
-                    hybrid_recurrent_bindings.push_back(rb);
-                }
-                break;
-            }
-        } else {
-            for (auto const * w: _static_input_widgets) {
-                if (w->slotName() != slot.name) continue;
-                auto si = dl::conversion::fromStaticInputParams(
-                        w->slotName(), w->params());
-                if (si.hasActiveSource()) {
-                    static_inputs.push_back(std::move(si));
-                }
-                break;
-            }
+    std::vector<dl::MemoryFrameBinding> memory_frames;
+    for (auto const * w: _memory_slot_widgets) {
+        for (auto frame: w->bindings()) {
+            memory_frames.push_back(std::move(frame));
         }
     }
-    _state->setStaticInputs(std::move(static_inputs));
-
-    // ── Recurrent bindings ──
-    std::vector<RecurrentBindingData> recurrent_bindings =
-            std::move(hybrid_recurrent_bindings);
-    for (auto const * w: _recurrent_binding_widgets) {
-        auto rb = dl::conversion::fromRecurrentParams(w->slotName(), w->params());
-        if (rb.output_slot_name.empty()) continue;
-        recurrent_bindings.push_back(std::move(rb));
-    }
-    _state->setRecurrentBindings(std::move(recurrent_bindings));
+    _state->setMemoryFrames(std::move(memory_frames));
 
     _updateBatchSizeConstraint();
 }
@@ -1113,7 +1003,7 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
     if (!_dynamic_container || !_batch_size_spin || !_current_info) return;
 
     auto const constraint = dl::constraints::computeBatchSizeConstraint(
-            *_current_info, _state->recurrentBindings());
+            *_current_info, _state->memoryFrames());
 
     auto const & mode = _current_info->batch_mode;
     bool const lock_to_one = (constraint.min == 1 && constraint.max == 1);
@@ -1168,11 +1058,10 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
         return;
     }
 
-    auto const & recurrent = _state->recurrentBindings();
-    if (recurrent.empty()) {
+    if (!_state->hasRecurrentBindings()) {
         QMessageBox::warning(this, tr("No Recurrent Bindings"),
-                             tr("Configure at least one recurrent feedback binding\n"
-                                "by selecting an output slot in the Recurrent Inputs section."));
+                             tr("Configure at least one recurrent memory frame\n"
+                                "by selecting Recurrent and an output slot."));
         return;
     }
 

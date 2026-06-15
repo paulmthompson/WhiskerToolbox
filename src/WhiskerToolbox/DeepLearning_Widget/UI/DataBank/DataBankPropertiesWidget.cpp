@@ -7,6 +7,7 @@
 
 #include "ui_DataBankPropertiesWidget.h"
 
+#include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
@@ -187,12 +188,7 @@ void DataBankPropertiesWidget::_onCaptureClicked() {
         return;
     }
 
-    StaticInputData entry;
-    entry.slot_name = slot->name;
-    entry.memory_index = _memoryIndex();
-    entry.data_key = data_key;
-    entry.setSourceType(StaticInputSource::DataBank);
-    entry.bank_entry_id = entry_id;
+    auto entry = dl::makeCaptureBinding(slot->name, _memoryIndex(), data_key);
 
     auto const source_size = resolveSourceImageSize(*_dm);
     bool const ok = _assembler->captureToBank(

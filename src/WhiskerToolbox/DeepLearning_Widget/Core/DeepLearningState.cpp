@@ -39,8 +39,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
     emit weightsPathChanged();
     emit inputBindingsChanged();
     emit outputBindingsChanged();
-    emit staticInputsChanged();
-    emit recurrentBindingsChanged();
+    emit memoryFramesChanged();
     emit postEncoderModuleChanged();
     emit modelConfigurationChanged();
     return true;
@@ -55,11 +54,9 @@ std::string const & DeepLearningState::selectedModelId() const {
 void DeepLearningState::setSelectedModelId(std::string const & id) {
     if (_data.selected_model_id != id) {
         _data.selected_model_id = id;
-        // Clear bindings when model changes — they are model-specific
         _data.input_bindings.clear();
         _data.output_bindings.clear();
-        _data.static_inputs.clear();
-        _data.recurrent_bindings.clear();
+        _data.memory_frames.clear();
         markDirty();
         emit modelChanged();
     }
@@ -121,28 +118,18 @@ void DeepLearningState::setOutputBindings(std::vector<OutputBindingData> binding
     emit outputBindingsChanged();
 }
 
-std::vector<StaticInputData> const & DeepLearningState::staticInputs() const {
-    return _data.static_inputs;
+std::vector<dl::MemoryFrameBinding> const & DeepLearningState::memoryFrames() const {
+    return _data.memory_frames;
 }
 
-void DeepLearningState::setStaticInputs(std::vector<StaticInputData> inputs) {
-    _data.static_inputs = std::move(inputs);
+void DeepLearningState::setMemoryFrames(std::vector<dl::MemoryFrameBinding> frames) {
+    _data.memory_frames = std::move(frames);
     markDirty();
-    emit staticInputsChanged();
-}
-
-std::vector<RecurrentBindingData> const & DeepLearningState::recurrentBindings() const {
-    return _data.recurrent_bindings;
-}
-
-void DeepLearningState::setRecurrentBindings(std::vector<RecurrentBindingData> bindings) {
-    _data.recurrent_bindings = std::move(bindings);
-    markDirty();
-    emit recurrentBindingsChanged();
+    emit memoryFramesChanged();
 }
 
 bool DeepLearningState::hasRecurrentBindings() const {
-    return !_data.recurrent_bindings.empty();
+    return dl::hasActiveRecurrentBindings(_data.memory_frames);
 }
 
 dl::PostEncoderStepDescriptor const & DeepLearningState::postEncoderParams() const {

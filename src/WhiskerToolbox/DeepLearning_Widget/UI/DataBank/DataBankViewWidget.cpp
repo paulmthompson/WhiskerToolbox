@@ -130,11 +130,13 @@ void DataBankViewWidget::refresh() {
         }
 
         if (data_key.empty() && _state) {
-            for (auto const & si: _state->staticInputs()) {
-                if ((!si.bank_entry_id.empty() && si.bank_entry_id == key) ||
-                    si.resolvedBankEntryId() == key) {
-                    if (si.sourceType() == StaticInputSource::DataManager) {
-                        data_key = si.data_key;
+            for (auto const & frame: _state->memoryFrames()) {
+                if (!dl::isStaticFrame(frame)) continue;
+                if ((!dl::staticBankEntryId(frame).empty() &&
+                     dl::staticBankEntryId(frame) == key) ||
+                    dl::resolvedBankEntryId(frame) == key) {
+                    if (dl::staticSourceType(frame) == StaticInputSource::DataManager) {
+                        data_key = dl::staticDataKey(frame);
                     }
                     break;
                 }

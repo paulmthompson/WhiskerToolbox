@@ -3,11 +3,9 @@
 
 #include "constraints/ConstraintEnforcer.hpp"
 
-#include "models_v2/ModelInfo.hpp"                    // dl::ModelInfo
-#include "models_v2/TensorSlotDescriptor.hpp"         // dl::isBatchLocked, min/maxBatchSizeFromMode
-#include "post_encoder/PostEncoderModuleRegistry.hpp" // dl::PostEncoderModuleRegistry
-
-#include <algorithm> // std::any_of
+#include "models_v2/ModelInfo.hpp"
+#include "models_v2/TensorSlotDescriptor.hpp"
+#include "post_encoder/PostEncoderModuleRegistry.hpp"
 
 namespace dl::constraints {
 
@@ -22,20 +20,13 @@ namespace {
 
 BatchSizeConstraint computeBatchSizeConstraint(
         dl::ModelInfo const & info,
-        std::vector<RecurrentBindingData> const & active_recurrent_bindings) {
+        std::vector<MemoryFrameBinding> const & memory_frames) {
     auto const & mode = info.batch_mode;
     bool const model_locked = dl::isBatchLocked(mode);
 
-    bool const has_recurrent = std::any_of(
-            active_recurrent_bindings.begin(),
-            active_recurrent_bindings.end(),
-            [](RecurrentBindingData const & rb) {
-                return !rb.output_slot_name.empty();
-            });
+    bool const has_recurrent = hasActiveRecurrentBindings(memory_frames);
 
     if (has_recurrent || model_locked) {
-        // Lock to batch=1; record whether it was due to recurrent bindings or
-        // an inherent model constraint.
         return BatchSizeConstraint{1, 1, has_recurrent};
     }
 
