@@ -56,6 +56,9 @@ set(DEEP_LEARNING_SOURCES
     channel_decoding/DecoderDispatch.hpp
     channel_decoding/DecoderDispatch.cpp
 
+    constraints/ConstraintEnforcer.hpp
+    constraints/ConstraintEnforcer.cpp
+
     device/DeviceManager.hpp
     device/DeviceManager.cpp
 

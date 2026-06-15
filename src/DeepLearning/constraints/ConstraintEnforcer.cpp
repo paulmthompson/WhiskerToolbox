@@ -1,12 +1,13 @@
 /// @file ConstraintEnforcer.cpp
-/// @brief Implementation of pure constraint computation functions.
+/// @brief Implementation of session constraint computation functions.
 
-#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
+#include "constraints/ConstraintEnforcer.hpp"
 
-#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"// dl::isBatchLocked, FixedBatch, DynamicBatch
-#include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
+#include "models_v2/ModelInfo.hpp"                    // dl::ModelInfo
+#include "models_v2/TensorSlotDescriptor.hpp"         // dl::isBatchLocked, min/maxBatchSizeFromMode
+#include "post_encoder/PostEncoderModuleRegistry.hpp" // dl::PostEncoderModuleRegistry
 
-#include <algorithm>// std::any_of
+#include <algorithm> // std::any_of
 
 namespace dl::constraints {
 
@@ -38,13 +39,10 @@ BatchSizeConstraint computeBatchSizeConstraint(
         return BatchSizeConstraint{1, 1, has_recurrent};
     }
 
-    if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
-        return BatchSizeConstraint{f->size, f->size, false};
-    }
-
-    // DynamicBatch: expose the model-reported range
-    auto const & d = std::get<dl::DynamicBatch>(mode);
-    return BatchSizeConstraint{d.min_size, d.max_size, false};
+    return BatchSizeConstraint{
+            dl::minBatchSizeFromMode(mode),
+            dl::maxBatchSizeFromMode(mode),
+            false};
 }
 
 std::vector<std::string> validDecodersForPostEncoder(

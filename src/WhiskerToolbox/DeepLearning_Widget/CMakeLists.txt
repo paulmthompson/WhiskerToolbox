@@ -6,8 +6,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     Core/BindingConversion.hpp
     Core/BindingConversion.cpp
-    Core/ConstraintEnforcer.hpp
-    Core/ConstraintEnforcer.cpp
     Core/DeepLearningParamSchemas.hpp
     Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningParamSchemasUIHints.hpp

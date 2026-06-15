@@ -48,6 +48,8 @@ add_executable(test_DeepLearning
     post_encoder/PostEncoderModuleRegistry.test.cpp
     post_encoder/PostEncoderOutputTransform.test.cpp
 
+    constraints/ConstraintEnforcer.test.cpp
+
     storage/DataBank.test.cpp
 )
 

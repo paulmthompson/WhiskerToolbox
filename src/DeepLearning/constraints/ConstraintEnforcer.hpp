@@ -1,18 +1,20 @@
 /**
  * @file ConstraintEnforcer.hpp
- * @brief Pure constraint computation functions for the deep learning widget.
+ * @brief Session constraint computation for deep learning inference.
  */
 
 #ifndef DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
-#include "DeepLearning/models_v2/ModelInfo.hpp"
-
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning/bindings/SlotBindingTypes.hpp"
+#include "bindings/DeepLearningBindingData.hpp" // RecurrentBindingData
+#include "bindings/SlotBindingTypes.hpp"       // dl::PostEncoderStepDescriptor
 
 #include <string>
 #include <vector>
+
+namespace dl {
+struct ModelInfo;
+}
 
 namespace dl::constraints {
 
@@ -23,15 +25,14 @@ namespace dl::constraints {
 /**
  * @brief Computed batch-size constraint derived from model batch mode and active
  *        recurrent bindings.
- * 
- * The widget applies this result to the batch-size spinbox: when @c min == @c max
- * the spinbox is locked to that single value; @c forced_by_recurrent distinguishes
- * the tooltip message.
+ *
+ * When @c min == @c max the effective batch size is locked to that single value.
+ * @c forced_by_recurrent distinguishes recurrent-binding locks from model locks.
  */
 struct BatchSizeConstraint {
-    int min = 1;                     ///< Minimum allowed batch size
-    int max = 0;                     ///< Maximum allowed batch size (0 = unlimited)
-    bool forced_by_recurrent = false;///< True if locked to 1 because of active recurrent bindings
+    int min = 1;                      ///< Minimum allowed batch size
+    int max = 0;                      ///< Maximum allowed batch size (0 = unlimited)
+    bool forced_by_recurrent = false; ///< True if locked to 1 because of active recurrent bindings
 };
 
 /**
@@ -41,20 +42,14 @@ struct BatchSizeConstraint {
  *             - Model RecurrentOnlyBatch or FixedBatch{1} → min=1, max=1, forced_by_recurrent=false
  *             - Model FixedBatch{N>1}                  → min=N, max=N, forced_by_recurrent=false
  *             - Model DynamicBatch                     → min/max from batch mode, forced_by_recurrent=false
- * 
+ *
  * A recurrent binding is considered active when its @c output_slot_name is
  * non-empty, i.e. the user has chosen an output slot to feed back.
- * 
- * Priority (most restrictive wins):
- *   - Active recurrent bindings              → min=1, max=1, forced_by_recurrent=true
- *   - Model RecurrentOnlyBatch or FixedBatch{1} → min=1, max=1, forced_by_recurrent=false
- *   - Model FixedBatch{N>1}                  → min=N, max=N, forced_by_recurrent=false
- *   - Model DynamicBatch                     → min/max from batch mode, forced_by_recurrent=false
- * 
+ *
  * @param info                      Model display info (contains @c batch_mode).
  * @param active_recurrent_bindings Recurrent bindings from state; activity is
  *                                  determined by checking @c output_slot_name.
- * @return BatchSizeConstraint that the widget can apply to the spinbox.
+ * @return BatchSizeConstraint describing the allowed batch-size range.
  */
 [[nodiscard]] BatchSizeConstraint computeBatchSizeConstraint(
         dl::ModelInfo const & info,
@@ -72,7 +67,7 @@ struct BatchSizeConstraint {
  * decoders to `FeatureVectorDecoderParams` only. @c module_key @c "none" permits
  * every decoder variant.
  *
- * @param params  Post-encoder slot configuration from state or widget.
+ * @param params  Post-encoder slot configuration from state or session.
  */
 [[nodiscard]] std::vector<std::string> validDecodersForPostEncoder(
         dl::PostEncoderStepDescriptor const & params);

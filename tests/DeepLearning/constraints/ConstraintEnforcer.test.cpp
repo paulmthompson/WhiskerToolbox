@@ -8,11 +8,12 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning/models_v2/ModelInfo.hpp"
-#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
+#include "bindings/DeepLearningBindingData.hpp"
+#include "constraints/ConstraintEnforcer.hpp"
+#include "models_v2/ModelInfo.hpp"
+#include "models_v2/TensorSlotDescriptor.hpp" // dl::DynamicBatch, FixedBatch, RecurrentOnlyBatch
 
-#include "models_v2/TensorSlotDescriptor.hpp"// dl::DynamicBatch, FixedBatch, RecurrentOnlyBatch
+#include <algorithm>
 
 using dl::constraints::BatchSizeConstraint;
 using dl::constraints::computeBatchSizeConstraint;

@@ -1,7 +1,7 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
-#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
+#include "DeepLearning/constraints/ConstraintEnforcer.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"

@@ -6,10 +6,10 @@
 #ifndef DEEP_LEARNING_BINDING_CONVERSION_HPP
 #define DEEP_LEARNING_BINDING_CONVERSION_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp" // DynamicInputSlotParams, StaticInputSlotParams, OutputSlotParams
 
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning/bindings/SlotBindingTypes.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp" // StaticInputData, RecurrentBindingData
+#include "DeepLearning/bindings/SlotBindingTypes.hpp" // SlotBindingData, OutputBindingData
 
 #include <string>
 
