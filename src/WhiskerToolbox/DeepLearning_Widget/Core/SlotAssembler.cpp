@@ -1,37 +1,33 @@
 #include "SlotAssembler.hpp"
 
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearningParamSchemas.hpp"
-#include "Inference/BatchInferenceResult.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
+#include "DeepLearning/channel_decoding/ChannelDecoder.hpp"
+#include "DeepLearning/channel_decoding/DecoderDispatch.hpp"
+#include "DeepLearning/channel_decoding/DecoderFactory.hpp"
+#include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
+#include "DeepLearning/channel_encoding/EncoderDispatch.hpp"
+#include "DeepLearning/channel_encoding/EncoderFactory.hpp"
+#include "DeepLearning/device/DeviceManager.hpp"
+#include "DeepLearning/models_v2/ModelBase.hpp"
+#include "DeepLearning/models_v2/TensorDTypeUtils.hpp"
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
+#include "DeepLearning/models_v2/general_encoder/GeneralEncoderModel.hpp"
+#include "DeepLearning/post_encoder/PostEncoderModule.hpp"
+#include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
+#include "DeepLearning/post_encoder/PostEncoderOutputTransform.hpp"
+#include "DeepLearning/post_encoder/SpatialPointExtractModule.hpp"
+#include "DeepLearning/registry/ModelRegistry.hpp"
+#include "DeepLearning/storage/DataBank.hpp"
+#include "DeepLearning/storage/DataBankEncode.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
-
-#include "channel_encoding/ChannelEncoder.hpp"
-#include "channel_encoding/EncoderDispatch.hpp"
-#include "channel_encoding/EncoderFactory.hpp"
-
-#include "channel_decoding/ChannelDecoder.hpp"
-#include "channel_decoding/DecoderDispatch.hpp"
-#include "channel_decoding/DecoderFactory.hpp"
-
-#include "models_v2/ModelBase.hpp"
-#include "models_v2/TensorDTypeUtils.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"
-#include "models_v2/general_encoder/GeneralEncoderModel.hpp"
-#include "post_encoder/PostEncoderModule.hpp"
-#include "post_encoder/PostEncoderModuleRegistry.hpp"
-#include "post_encoder/PostEncoderOutputTransform.hpp"
-#include "post_encoder/SpatialPointExtractModule.hpp"
-#include "registry/ModelRegistry.hpp"
-#include "storage/DataBank.hpp"
-#include "storage/DataBankEncode.hpp"
-
-#include "device/DeviceManager.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -363,7 +359,7 @@ void encodeDynamicSlot(
     SlotBindingData temp_binding;
     temp_binding.slot_name = encode_slot.name;
     temp_binding.data_key = entry.data_key;
-        dl::assignEncoderFromFactoryName(
+    dl::assignEncoderFromFactoryName(
             temp_binding.encoder, encode_slot.recommended_encoder);
     encodeDynamicSlot(
             dm, temp_binding, encode_slot, temp, frame, 0,
@@ -1124,7 +1120,7 @@ bool SlotAssembler::captureToBank(
     SlotBindingData temp_binding;
     temp_binding.slot_name = slot->name;
     temp_binding.data_key = entry.data_key;
-        dl::assignEncoderFromFactoryName(
+    dl::assignEncoderFromFactoryName(
             temp_binding.encoder, slot->recommended_encoder);
 
     auto const source = fetchEncodingSource(dm, temp_binding, frame);

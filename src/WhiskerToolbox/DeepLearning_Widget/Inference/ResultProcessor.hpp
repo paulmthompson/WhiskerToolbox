@@ -14,7 +14,7 @@
 #ifndef DEEP_LEARNING_RESULT_PROCESSOR_HPP
 #define DEEP_LEARNING_RESULT_PROCESSOR_HPP
 
-#include "Inference/BatchInferenceResult.hpp"    // FrameResult
+#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"    // FrameResult
 
 #include <QObject>
 

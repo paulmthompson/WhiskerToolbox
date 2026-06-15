@@ -5,16 +5,16 @@
 
 #include "InferenceController.hpp"
 
-#include "BatchInferenceWorker.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "DeepLearning_Widget/Inference/BatchInferenceWorker.hpp"
+#include "DeepLearning_Widget/Inference/MultiIntervalBatchWorker.hpp"
 #include "DeepLearning_Widget/Inference/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Inference/WriteReservation.hpp"
-#include "MultiIntervalBatchWorker.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DeepLearning/channel_encoding/EncoderDispatch.hpp" // isImageEncoder
+#include "DeepLearning/channel_encoding/EncoderDispatch.hpp"// isImageEncoder
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
 

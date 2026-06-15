@@ -6,9 +6,10 @@
 #ifndef DEEP_LEARNING_BINDING_CONVERSION_HPP
 #define DEEP_LEARNING_BINDING_CONVERSION_HPP
 
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 
 #include <string>
 

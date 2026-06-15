@@ -2,7 +2,7 @@
 #define MODEL_DISPLAY_INFO_HPP
 
 
-#include "models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor, DynamicBatch, BatchMode
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor, DynamicBatch, BatchMode
 
 #include <string>
 #include <vector>

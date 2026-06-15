@@ -2,7 +2,6 @@
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
 #include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
-#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"
@@ -17,13 +16,18 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning/storage/DataBank.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "EditorState/StrongTypes.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 #include "Tensors/TensorData.hpp"
 
 #include <QComboBox>
@@ -34,8 +38,6 @@
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -46,10 +48,6 @@
 #include <QSpinBox>
 #include <QStandardItemModel>
 #include <QVBoxLayout>
-
-#include "EditorState/StrongTypes.hpp"
-#include "KeymapSystem/KeyActionAdapter.hpp"
-#include "KeymapSystem/KeymapManager.hpp"
 
 #include <algorithm>
 #include <filesystem>

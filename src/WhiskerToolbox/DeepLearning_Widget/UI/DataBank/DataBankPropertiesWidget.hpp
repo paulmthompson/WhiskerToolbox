@@ -6,7 +6,7 @@
  * @brief Properties panel section for capturing and managing DataBank entries.
  */
 
-#include "models_v2/TensorSlotDescriptor.hpp"
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
 
 #include <QWidget>
 

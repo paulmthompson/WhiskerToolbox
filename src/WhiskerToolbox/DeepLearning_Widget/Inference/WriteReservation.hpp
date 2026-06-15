@@ -13,7 +13,7 @@
 #ifndef WRITE_RESERVATION_HPP
 #define WRITE_RESERVATION_HPP
 
-#include "BatchInferenceResult.hpp"
+#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"
 
 #include <mutex>
 #include <vector>

@@ -17,7 +17,6 @@
 
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
-
 #include "EditorState/EditorState.hpp"
 
 #include <memory>

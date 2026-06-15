@@ -3,8 +3,8 @@
 
 #include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"// dl::isBatchLocked, FixedBatch, DynamicBatch
 #include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"// dl::isBatchLocked, FixedBatch, DynamicBatch
 
 #include <algorithm>// std::any_of
 

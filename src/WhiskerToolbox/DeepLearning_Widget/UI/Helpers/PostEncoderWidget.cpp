@@ -3,14 +3,15 @@
 
 #include "PostEncoderWidget.hpp"
 
+#include "DeepLearning_Widget/Core/DeepLearningState.hpp"
+#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
 #include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningState.hpp"
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
-#include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 #include "Media/Media_Data.hpp"
 
 #include <QComboBox>

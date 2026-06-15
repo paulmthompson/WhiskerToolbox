@@ -14,10 +14,10 @@
  * so this header and translation unit never include torch.
  */
 
-#include "Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
+#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 
-#include "TimeFrame/TimeFrame.hpp"           // TimePosition
-#include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
+#include "TimeFrame/TimeFrame.hpp"                        // TimePosition
 
 #include <QWidget>
 

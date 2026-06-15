@@ -17,11 +17,12 @@
  * @see ModelBase for the model forward pass interface.
  */
 
+#include "DeepLearning_Widget/Core/MediaOverrides.hpp"
+#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"
+#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"// BatchInferenceResult
+
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
-#include "Inference/BatchInferenceResult.hpp"// BatchInferenceResult
-#include "MediaOverrides.hpp"
-#include "ModelDisplayInfo.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
 
 #include <atomic>
 #include <functional>

@@ -4,19 +4,17 @@
 #include "OutputSlotWidget.hpp"
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
+#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
 #include "DeepLearning/channel_decoding/DecoderDispatch.hpp"
 #include "DeepLearning/channel_decoding/DecoderParamSchemas.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
-#include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
-
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
-
-#include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <QGroupBox>
 #include <QLabel>

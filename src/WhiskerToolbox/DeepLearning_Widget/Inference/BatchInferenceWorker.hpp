@@ -12,10 +12,11 @@
  * @see MultiIntervalBatchWorker
  */
 
+ #include "DeepLearning_Widget/Core/MediaOverrides.hpp"         // MediaOverrides
+ #include "DeepLearning_Widget/Inference/WriteReservation.hpp"  // WriteReservation
+
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
-#include "Core/MediaOverrides.hpp"         // MediaOverrides
-#include "Inference/WriteReservation.hpp"  // WriteReservation
 
 #include "CoreGeometry/ImageSize.hpp"// ImageSize
 

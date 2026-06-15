@@ -5,8 +5,9 @@
 
 #include "MultiIntervalBatchWorker.hpp"
 
-#include "DataManager/DataManager.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+
+#include "DataManager/DataManager.hpp"
 
 #include <utility>
 

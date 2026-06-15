@@ -6,7 +6,7 @@
 
 #include "DeepLearningParamSchemas.hpp"
 
-#include "DeepLearningParamSchemasUIHints.hpp"
+#include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 
 void ParameterUIHints<dl::widget::DataManagerStaticSourceParams>::annotate(
         ParameterSchema & schema) {

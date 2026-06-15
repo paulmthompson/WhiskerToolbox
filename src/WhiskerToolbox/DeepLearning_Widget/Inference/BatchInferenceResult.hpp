@@ -9,7 +9,7 @@
 #ifndef BATCH_INFERENCE_RESULT_HPP
 #define BATCH_INFERENCE_RESULT_HPP
 
-#include "channel_decoding/DecoderDispatch.hpp"
+#include "DeepLearning/channel_decoding/DecoderDispatch.hpp"
 
 #include <string>
 #include <vector>

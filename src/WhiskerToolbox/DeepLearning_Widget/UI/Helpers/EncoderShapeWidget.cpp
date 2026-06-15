@@ -3,11 +3,11 @@
 
 #include "EncoderShapeWidget.hpp"
 
-#include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 
+#include "AutoParamWidget/AutoParamWidget.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <QGroupBox>
