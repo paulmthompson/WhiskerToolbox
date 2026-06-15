@@ -14,7 +14,7 @@
  * so this header and translation unit never include torch.
  */
 
-#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
+#include "DeepLearning/models_v2/ModelInfo.hpp"
 
 #include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor
 #include "TimeFrame/TimeFrame.hpp"                        // TimePosition
@@ -191,7 +191,7 @@ private:
     std::vector<dl::widget::RecurrentBindingWidget *> _recurrent_binding_widgets;
 
     // Cached model display info (clean — no torch types).
-    std::optional<ModelDisplayInfo> _current_info;
+    std::optional<dl::ModelInfo> _current_info;
 
     // Last weight-validation result; empty means validated OK.
     std::string _weights_validation_error;

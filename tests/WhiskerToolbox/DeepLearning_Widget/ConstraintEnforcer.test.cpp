@@ -8,9 +8,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"// ModelDisplayInfo
+#include "DeepLearning/models_v2/ModelInfo.hpp"
+#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 
 #include "models_v2/TensorSlotDescriptor.hpp"// dl::DynamicBatch, FixedBatch, RecurrentOnlyBatch
 
@@ -24,9 +24,9 @@ using dl::constraints::validDecodersForPostEncoder;
 
 namespace {
 
-/// Build a ModelDisplayInfo with only the batch_mode field set.
-ModelDisplayInfo makeInfo(dl::BatchMode mode) {
-    ModelDisplayInfo info;
+/// Build a dl::ModelInfo with only the batch_mode field set.
+dl::ModelInfo makeInfo(dl::BatchMode mode) {
+    dl::ModelInfo info;
     info.batch_mode = mode;
     return info;
 }

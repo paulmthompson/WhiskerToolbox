@@ -17,8 +17,8 @@
  * @see ModelBase for the model forward pass interface.
  */
 
+#include "DeepLearning/models_v2/ModelInfo.hpp"
 #include "DeepLearning_Widget/Core/MediaOverrides.hpp"
-#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"
 #include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
@@ -330,18 +330,18 @@ public:
     [[nodiscard]] static std::vector<std::string> availableModelIds();
 
     /**
-     * @brief Get display metadata for a registered model.
+     * @brief Get metadata for a registered model.
      */
-    [[nodiscard]] static std::optional<ModelDisplayInfo> getModelDisplayInfo(
+    [[nodiscard]] static std::optional<dl::ModelInfo> getModelInfo(
             std::string const & model_id);
 
     /**
-     * @brief Get display metadata from the currently loaded model instance.
-     * 
-     * Unlike the static `getModelDisplayInfo()`, this reflects any runtime
+     * @brief Get metadata from the currently loaded model instance.
+     *
+     * Unlike the static `getModelInfo()`, this reflects any runtime
      * reconfiguration (e.g. changed input resolution or output shape).
      */
-    [[nodiscard]] std::optional<ModelDisplayInfo> currentModelDisplayInfo() const;
+    [[nodiscard]] std::optional<dl::ModelInfo> currentModelInfo() const;
 
     // ── Static: encoder / decoder queries ──────────────────────────────────
 

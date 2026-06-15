@@ -321,7 +321,7 @@ void DeepLearningPropertiesWidget::_populateModelCombo() {
     _model_combo->addItem(tr("(None)"), QString{});
 
     for (auto const & id: SlotAssembler::availableModelIds()) {
-        auto info = SlotAssembler::getModelDisplayInfo(id);
+        auto info = SlotAssembler::getModelInfo(id);
         QString const display = info
                                         ? QString::fromStdString(info->display_name)
                                         : QString::fromStdString(id);
@@ -355,7 +355,7 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(
         _current_info.reset();
         _assembler->resetModel();
     } else {
-        _current_info = SlotAssembler::getModelDisplayInfo(model_id);
+        _current_info = SlotAssembler::getModelInfo(model_id);
         if (_current_info) {
             _model_desc_label->setText(
                     QString::fromStdString(_current_info->description));
@@ -389,7 +389,7 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(
             dl::ModelRegistry::instance().hasConfiguration(model_id)) {
             dl::widget::EncoderShapeWidget::applyConfigurationFromState(
                     _state.get(), _assembler.get());
-            _current_info = _assembler->currentModelDisplayInfo();
+            _current_info = _assembler->currentModelInfo();
         }
     }
 
@@ -465,7 +465,7 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
 
     if (ready && _post_encoder_widget) {
         _post_encoder_widget->syncToAssembler();
-        if (auto const info = _assembler->currentModelDisplayInfo()) {
+        if (auto const info = _assembler->currentModelInfo()) {
             _current_info = info;
         }
     }
@@ -560,7 +560,7 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 &dl::widget::EncoderShapeWidget::configurationApplied,
                 this,
                 [this]() {
-                    _current_info = _assembler->currentModelDisplayInfo();
+                    _current_info = _assembler->currentModelInfo();
                     _rebuildSlotPanels();
                     _loadModelIfReady();
                 });
@@ -672,7 +672,7 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     _post_encoder_widget = post_encoder_widget;
     _dynamic_layout->addWidget(post_encoder_widget);
 
-    if (auto const info = _assembler->currentModelDisplayInfo()) {
+    if (auto const info = _assembler->currentModelInfo()) {
         _current_info = info;
     }
 
@@ -726,7 +726,7 @@ void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
     if (!_post_encoder_widget || !_current_info) return;
 
     _post_encoder_widget->syncToAssembler();
-    if (auto const info = _assembler->currentModelDisplayInfo()) {
+    if (auto const info = _assembler->currentModelInfo()) {
         _current_info = info;
     }
 

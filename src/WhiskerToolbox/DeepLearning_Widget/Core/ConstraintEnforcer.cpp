@@ -20,7 +20,7 @@ namespace {
 }// namespace
 
 BatchSizeConstraint computeBatchSizeConstraint(
-        ModelDisplayInfo const & info,
+        dl::ModelInfo const & info,
         std::vector<RecurrentBindingData> const & active_recurrent_bindings) {
     auto const & mode = info.batch_mode;
     bool const model_locked = dl::isBatchLocked(mode);

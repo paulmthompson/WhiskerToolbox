@@ -1667,42 +1667,29 @@ std::vector<std::string> SlotAssembler::availableModelIds() {
     return dl::ModelRegistry::instance().availableModels();
 }
 
-std::optional<ModelDisplayInfo> SlotAssembler::getModelDisplayInfo(
+std::optional<dl::ModelInfo> SlotAssembler::getModelInfo(
         std::string const & model_id) {
 
-    auto info = dl::ModelRegistry::instance().getModelInfo(model_id);
-    if (!info) return std::nullopt;
-
-    ModelDisplayInfo display;
-    display.model_id = info->model_id;
-    display.display_name = info->display_name;
-    display.description = info->description;
-    display.inputs = info->inputs;
-    display.outputs = info->outputs;
-    display.preferred_batch_size = info->preferred_batch_size;
-    display.max_batch_size = info->max_batch_size;
-    display.batch_mode = info->batch_mode;
-    display.recommended_post_encoder = info->recommended_post_encoder;
-    return display;
+    return dl::ModelRegistry::instance().getModelInfo(model_id);
 }
 
-std::optional<ModelDisplayInfo> SlotAssembler::currentModelDisplayInfo() const {
+std::optional<dl::ModelInfo> SlotAssembler::currentModelInfo() const {
     if (!_impl || !_impl->model) return std::nullopt;
 
     auto const & model = *_impl->model;
-    ModelDisplayInfo display;
-    display.model_id = model.modelId();
-    display.display_name = model.displayName();
-    display.description = model.description();
-    display.inputs = model.inputSlots();
-    display.outputs = effectiveOutputSlotsFor(
+    dl::ModelInfo info;
+    info.model_id = model.modelId();
+    info.display_name = model.displayName();
+    info.description = model.description();
+    info.inputs = model.inputSlots();
+    info.outputs = effectiveOutputSlotsFor(
             _impl->model.get(),
             _impl->post_encoder_module.get());
-    display.preferred_batch_size = model.preferredBatchSize();
-    display.max_batch_size = model.maxBatchSize();
-    display.batch_mode = model.batchMode();
-    display.recommended_post_encoder = model.recommendedPostEncoderModule();
-    return display;
+    info.preferred_batch_size = model.preferredBatchSize();
+    info.max_batch_size = model.maxBatchSize();
+    info.batch_mode = model.batchMode();
+    info.recommended_post_encoder = model.recommendedPostEncoderModule();
+    return info;
 }
 
 // ════════════════════════════════════════════════════════════════════════════

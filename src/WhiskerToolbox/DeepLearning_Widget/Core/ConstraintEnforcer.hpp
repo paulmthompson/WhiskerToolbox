@@ -6,7 +6,7 @@
 #ifndef DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
-#include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
+#include "DeepLearning/models_v2/ModelInfo.hpp"
 
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
@@ -57,7 +57,7 @@ struct BatchSizeConstraint {
  * @return BatchSizeConstraint that the widget can apply to the spinbox.
  */
 [[nodiscard]] BatchSizeConstraint computeBatchSizeConstraint(
-        ModelDisplayInfo const & info,
+        dl::ModelInfo const & info,
         std::vector<RecurrentBindingData> const & active_recurrent_bindings);
 
 // ════════════════════════════════════════════════════════════════════════════

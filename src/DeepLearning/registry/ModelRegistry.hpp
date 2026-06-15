@@ -6,9 +6,10 @@
 #ifndef WHISKERTOOLBOX_MODEL_REGISTRY_HPP
 #define WHISKERTOOLBOX_MODEL_REGISTRY_HPP
 
-#include "models_v2/ModelBase.hpp"
-#include "models_v2/TensorSlotDescriptor.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
+#include "models_v2/ModelBase.hpp"
+#include "models_v2/ModelInfo.hpp"
+#include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <filesystem>
 #include <functional>
@@ -66,25 +67,6 @@ struct ModelConfigurationEntry {
 class ModelRegistry {
 public:
     using FactoryFn = std::function<std::unique_ptr<ModelBase>()>;
-
-    /**
-     * @brief Aggregated metadata for a registered model.
-     *
-     * Lazily populated on first query by constructing a temporary instance.
-     */
-    struct ModelInfo {
-        std::string model_id;
-        std::string display_name;
-        std::string description;
-        std::vector<TensorSlotDescriptor> inputs;
-        std::vector<TensorSlotDescriptor> outputs;
-        int preferred_batch_size = 0;
-        int max_batch_size = 0;
-        /** Rich batch-size constraint */
-        BatchMode batch_mode = DynamicBatch{1, 0};
-        /** Post-encoder module registry key; empty = none recommended */
-        std::string recommended_post_encoder;
-    };
 
     /**
      * @brief Get the singleton instance.

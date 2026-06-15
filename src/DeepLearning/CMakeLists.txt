@@ -60,6 +60,7 @@ set(DEEP_LEARNING_SOURCES
     device/DeviceManager.cpp
 
     models_v2/TensorSlotDescriptor.hpp
+    models_v2/ModelInfo.hpp
     models_v2/ModelBase.hpp
     models_v2/ModelExecution.hpp
     models_v2/ModelExecution.cpp

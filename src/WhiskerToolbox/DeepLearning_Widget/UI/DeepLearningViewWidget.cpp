@@ -78,7 +78,7 @@ void DeepLearningViewWidget::_onModelChanged() {
         return;
     }
 
-    auto info = SlotAssembler::getModelDisplayInfo(model_id);
+    auto info = SlotAssembler::getModelInfo(model_id);
     if (!info) {
         _status_label->setText(
                 tr("Unknown model: %1").arg(QString::fromStdString(model_id)));

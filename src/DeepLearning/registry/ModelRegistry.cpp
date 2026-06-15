@@ -146,8 +146,7 @@ std::unique_ptr<ModelBase> ModelRegistry::create(std::string const & model_id) c
     return it->second();
 }
 
-std::optional<ModelRegistry::ModelInfo>
-ModelRegistry::getModelInfo(std::string const & model_id) const {
+std::optional<ModelInfo> ModelRegistry::getModelInfo(std::string const & model_id) const {
     std::lock_guard const lock(_mutex);
     if (!_factories.contains(model_id)) {
         return std::nullopt;
