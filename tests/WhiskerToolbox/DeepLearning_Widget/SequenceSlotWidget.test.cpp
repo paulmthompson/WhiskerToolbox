@@ -9,7 +9,7 @@
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 

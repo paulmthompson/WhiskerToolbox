@@ -8,7 +8,7 @@
 #include "ui_DataBankViewWidget.h"
 
 #include "DeepLearning/storage/DataBank.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 

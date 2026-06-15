@@ -2,7 +2,7 @@
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
 #include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"

@@ -15,7 +15,7 @@
  * @see SlotAssembler for the DataManager-to-tensor bridge.
  */
 
-#include "DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 
 #include "EditorState/EditorState.hpp"

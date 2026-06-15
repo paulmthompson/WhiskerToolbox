@@ -7,7 +7,7 @@
 
 #include "ui_DataBankPropertiesWidget.h"
 
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp"
 

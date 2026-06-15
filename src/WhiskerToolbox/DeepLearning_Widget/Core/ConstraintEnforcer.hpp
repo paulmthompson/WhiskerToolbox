@@ -6,7 +6,7 @@
 #ifndef DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 #include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 

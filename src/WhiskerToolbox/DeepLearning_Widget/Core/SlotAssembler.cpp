@@ -1,6 +1,6 @@
 #include "SlotAssembler.hpp"
 
-#include "DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearningParamSchemas.hpp"
 #include "Inference/BatchInferenceResult.hpp"
 
@@ -304,7 +304,7 @@ void encodeDynamicSlot(
         ImageSize const & source_image_size,
         MediaOverrides const * media_overrides);
 
-/// Encode a static entry into a single-batch temp tensor (Relative mode).
+/// Encode a static entry into a single-batch temp tensor (DataManager or DataBank source).
 [[nodiscard]] bool encodeStaticEntryToTensor(
         DataManager & dm,
         StaticInputData const & entry,

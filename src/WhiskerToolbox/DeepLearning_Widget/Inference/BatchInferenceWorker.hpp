@@ -12,7 +12,7 @@
  * @see MultiIntervalBatchWorker
  */
 
-#include "Core/DeepLearningBindingData.hpp"// SlotBindingData, StaticInputData
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "Core/DeepLearningParamSchemas.hpp"// OutputBindingData
 #include "Core/MediaOverrides.hpp"         // MediaOverrides
 #include "Inference/WriteReservation.hpp"  // WriteReservation

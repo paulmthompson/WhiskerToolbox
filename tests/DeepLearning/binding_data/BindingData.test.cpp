@@ -9,7 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 // Pull in the header under test — no torch or Qt dependency needed.
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 
 // ════════════════════════════════════════════════════════════════════════════
 // computeEncodingFrame
@@ -134,27 +134,6 @@ TEST_CASE("StaticInputData - resolvedBankEntryId prefers explicit bank_entry_id"
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// staticCacheKey
-// ════════════════════════════════════════════════════════════════════════════
-
-TEST_CASE("staticCacheKey - generates correct format",
-          "[binding_data][capture_mode]") {
-    CHECK(staticCacheKey("memory_images", 0) == "memory_images:0");
-    CHECK(staticCacheKey("memory_images", 3) == "memory_images:3");
-    CHECK(staticCacheKey("", 0) == ":0");
-}
-
-TEST_CASE("staticCacheKey - different indices produce different keys",
-          "[binding_data][capture_mode]") {
-    CHECK(staticCacheKey("slot", 0) != staticCacheKey("slot", 1));
-}
-
-TEST_CASE("staticCacheKey - different slots produce different keys",
-          "[binding_data][capture_mode]") {
-    CHECK(staticCacheKey("a", 0) != staticCacheKey("b", 0));
-}
-
-// ════════════════════════════════════════════════════════════════════════════
 // RecurrentInitMode
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -192,13 +171,6 @@ TEST_CASE("recurrentCacheKey - generates correct format",
 TEST_CASE("recurrentCacheKey - different slots produce different keys",
           "[binding_data][recurrent]") {
     CHECK(recurrentCacheKey("a") != recurrentCacheKey("b"));
-}
-
-TEST_CASE("recurrentCacheKey - does not collide with staticCacheKey",
-          "[binding_data][recurrent]") {
-    // Static uses "slot:index", recurrent uses "recurrent:slot"
-    CHECK(recurrentCacheKey("slot") != staticCacheKey("slot", 0));
-    CHECK(recurrentCacheKey("slot") != staticCacheKey("recurrent", 0));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -254,27 +226,6 @@ TEST_CASE("StaticInputData - multiple entries per slot with different memory_ind
         CHECK(entries[static_cast<std::size_t>(i)].memory_index == i);
         CHECK(entries[static_cast<std::size_t>(i)].hasActiveSource());
     }
-}
-
-TEST_CASE("staticCacheKey - sequence entries produce unique keys per position",
-          "[binding_data][sequence]") {
-    std::vector<std::string> keys;
-    keys.reserve(4);
-    for (int i = 0; i < 4; ++i) {
-        keys.push_back(staticCacheKey("memory_images", i));
-    }
-
-    // All keys should be unique
-    for (std::size_t i = 0; i < keys.size(); ++i) {
-        for (std::size_t j = i + 1; j < keys.size(); ++j) {
-            CHECK(keys[i] != keys[j]);
-        }
-    }
-
-    CHECK(keys[0] == "memory_images:0");
-    CHECK(keys[1] == "memory_images:1");
-    CHECK(keys[2] == "memory_images:2");
-    CHECK(keys[3] == "memory_images:3");
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -9,7 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
+#include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"// ModelDisplayInfo
 
 #include "models_v2/TensorSlotDescriptor.hpp"// dl::DynamicBatch, FixedBatch, RecurrentOnlyBatch

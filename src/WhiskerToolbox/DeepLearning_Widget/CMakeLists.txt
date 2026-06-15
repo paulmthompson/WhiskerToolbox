@@ -8,7 +8,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/BindingConversion.cpp
     Core/ConstraintEnforcer.hpp
     Core/ConstraintEnforcer.cpp
-    Core/DeepLearningBindingData.hpp
     Core/DeepLearningParamSchemas.hpp
     Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningParamSchemasUIHints.hpp

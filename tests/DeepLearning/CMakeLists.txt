@@ -120,7 +120,7 @@ target_link_libraries(test_binding_data PRIVATE
 )
 
 target_include_directories(test_binding_data PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
 )
 
 set_target_compiler_warnings(test_binding_data)

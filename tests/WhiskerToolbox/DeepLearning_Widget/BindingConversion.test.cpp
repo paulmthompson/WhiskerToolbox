@@ -50,24 +50,6 @@ TEST_CASE("fromStaticInputParams round-trips DataManager source",
     CHECK(si.time_offset == -2);
 }
 
-TEST_CASE("toStaticInputParams migrates legacy Absolute to DataBank source",
-          "[dl_widget][binding_conversion]") {
-    StaticInputData si;
-    si.slot_name = "memory_masks";
-    si.capture_mode_str = "Absolute";
-    si.data_key = "masks/ref";
-
-    auto const params = dl::conversion::toStaticInputParams(si);
-    bool is_bank = false;
-    params.source.visit([&](auto const & src) {
-        using T = std::decay_t<decltype(src)>;
-        if constexpr (std::is_same_v<T, dl::widget::DataBankStaticSourceParams>) {
-            is_bank = true;
-        }
-    });
-    CHECK(is_bank);
-}
-
 TEST_CASE("fromStaticSequenceEntryParams round-trips DataBank source",
           "[dl_widget][binding_conversion]") {
     dl::widget::StaticSequenceEntryParams params{

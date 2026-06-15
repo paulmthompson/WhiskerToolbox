@@ -5,9 +5,10 @@
  * @file DeepLearningBindingData.hpp
  * @brief Pure-data structs for model slot bindings.
  *
- * These are deliberately kept in a separate header from DeepLearningState
- * so that SlotAssembler.cpp (which includes libtorch) can use them
- * without pulling in Qt headers via EditorState.
+ * Session I/O configuration types describing how DataManager, DataBank, and
+ * recurrent feedback populate model tensor slots. No Qt or libtorch dependencies.
+ *
+ * @see docs/developer/DeepLearning/vocabulary.qmd for terminology (slot vs Qt slot).
  */
 
 #include <algorithm>
@@ -65,16 +66,6 @@ enum class StaticInputSource {
 }
 
 /**
- * @brief Build a cache key for a static input entry.
- *
- * Legacy format used by recurrent hybrid resolution: "slot_name:memory_index".
- */
-[[nodiscard]] inline std::string staticCacheKey(
-        std::string const & slot_name, int memory_index) {
-    return slot_name + ":" + std::to_string(memory_index);
-}
-
-/**
  * @brief Serializable entry for a static (memory) model input.
  */
 struct StaticInputData {
@@ -94,24 +85,10 @@ struct StaticInputData {
     bool active = true;
 
     /**
-     * @brief Legacy capture mode string from workspace JSON ("Relative"/"Absolute").
-     *
-     * Read during deserialization for migration only; new bindings use
-     * @p source_type_str instead.
-     */
-    std::string capture_mode_str;
-
-    /**
-     * @brief Get the resolved source type, migrating legacy capture_mode_str.
+     * @brief Get the resolved source type from @p source_type_str.
      */
     [[nodiscard]] StaticInputSource sourceType() const {
-        if (source_type_str == "DataBank") {
-            return StaticInputSource::DataBank;
-        }
-        if (capture_mode_str == "Absolute") {
-            return StaticInputSource::DataBank;
-        }
-        return StaticInputSource::DataManager;
+        return staticInputSourceFromString(source_type_str);
     }
 
     /**
@@ -119,7 +96,6 @@ struct StaticInputData {
      */
     void setSourceType(StaticInputSource source) {
         source_type_str = staticInputSourceToString(source);
-        capture_mode_str.clear();
     }
 
     /**
@@ -133,7 +109,7 @@ struct StaticInputData {
     }
 
     /**
-     * @brief Resolve the bank entry ID, applying legacy migration defaults.
+     * @brief Resolve the bank entry ID, applying default when unset.
      */
     [[nodiscard]] std::string resolvedBankEntryId() const {
         if (!bank_entry_id.empty()) {
