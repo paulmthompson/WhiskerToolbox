@@ -142,11 +142,11 @@ bool DeepLearningState::hasRecurrentBindings() const {
     return !_data.recurrent_bindings.empty();
 }
 
-dl::widget::PostEncoderSlotParams const & DeepLearningState::postEncoderParams() const {
+dl::PostEncoderSlotParams const & DeepLearningState::postEncoderParams() const {
     return _data.post_encoder_params;
 }
 
-void DeepLearningState::setPostEncoderParams(dl::widget::PostEncoderSlotParams params) {
+void DeepLearningState::setPostEncoderParams(dl::PostEncoderSlotParams params) {
     if (rfl::json::write(_data.post_encoder_params) == rfl::json::write(params)) {
         return;
     }

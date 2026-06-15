@@ -42,9 +42,9 @@ TEST_CASE("EncoderDispatch identifies image encoders",
     CHECK_FALSE(dl::isImageEncoderParams<dl::Mask2DEncoderParams>());
     CHECK_FALSE(dl::isImageEncoderParams<dl::Line2DEncoderParams>());
 
-    CHECK(dl::isImageEncoder(dl::EncoderParamsVariant{dl::ImageEncoderParams{}}));
+    CHECK(dl::isImageEncoder(dl::EncoderVariant{dl::ImageEncoderParams{}}));
     CHECK_FALSE(dl::isImageEncoder(
-            dl::EncoderParamsVariant{dl::Point2DEncoderParams{}}));
+            dl::EncoderVariant{dl::Point2DEncoderParams{}}));
 }
 
 TEST_CASE("EncoderDispatch encodes point tensor via variant",

@@ -13,6 +13,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(DEEP_LEARNING_SOURCES
     bindings/DeepLearningBindingData.hpp
+    bindings/EncoderDecoderBindingTypes.hpp
+    bindings/SlotBindingTypes.hpp
     torch_helpers.hpp
     register_deeplearning_commands.hpp
     register_deeplearning_commands.cpp
@@ -116,7 +118,7 @@ target_include_directories(DeepLearning PUBLIC
 )
 
 target_link_libraries(DeepLearning PRIVATE "${TORCH_LIBRARIES}")
-target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(DeepLearning PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(DeepLearning PUBLIC WhiskerToolbox::ParameterSchema)
 
 if(ENABLE_EXECUTORCH)

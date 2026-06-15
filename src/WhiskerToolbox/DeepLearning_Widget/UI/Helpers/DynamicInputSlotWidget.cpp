@@ -8,6 +8,7 @@
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/channel_encoding/EncoderDispatch.hpp"
 #include "DeepLearning/channel_encoding/EncoderParamSchemas.hpp"
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemasUIHints.hpp"
@@ -76,7 +77,7 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
     // Set initial encoder from recommended_encoder hint
     if (!_recommended_encoder.empty()) {
         DynamicInputSlotParams initial;
-        assignEncoderFromFactoryName(initial.encoder, _recommended_encoder);
+        dl::assignEncoderFromFactoryName(initial.encoder, _recommended_encoder);
         auto json = rfl::json::write(initial);
         _auto_param->fromJson(json);
     }

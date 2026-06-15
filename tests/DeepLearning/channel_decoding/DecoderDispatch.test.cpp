@@ -44,9 +44,9 @@ TEST_CASE("DecoderDispatch identifies spatial decoders",
     CHECK(dl::isSpatialDecoderParams<dl::LineDecoderParams>());
     CHECK_FALSE(dl::isSpatialDecoderParams<dl::FeatureVectorDecoderParams>());
 
-    CHECK(dl::isSpatialDecoder(dl::DecoderParamsVariant{dl::MaskDecoderParams{}}));
+    CHECK(dl::isSpatialDecoder(dl::DecoderVariant{dl::MaskDecoderParams{}}));
     CHECK_FALSE(dl::isSpatialDecoder(
-            dl::DecoderParamsVariant{dl::FeatureVectorDecoderParams{}}));
+            dl::DecoderVariant{dl::FeatureVectorDecoderParams{}}));
 }
 
 TEST_CASE("DecoderDispatch decodes mask tensor via variant",

@@ -17,7 +17,7 @@
  * @see ModelBase for the model forward pass interface.
  */
 
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 #include "Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 #include "MediaOverrides.hpp"
 #include "ModelDisplayInfo.hpp"
@@ -360,7 +360,7 @@ public:
      * @returns "MediaData", "PointData", "MaskData", "LineData", or "".
      */
     [[nodiscard]] static std::string dataTypeForEncoder(
-            dl::widget::EncoderVariant const & encoder);
+            dl::EncoderVariant const & encoder);
 
     /**
      * @brief Map encoder factory name → DataManager data type name.
@@ -374,7 +374,7 @@ public:
      * @brief Map decoder params → DataManager data type name for combo filtering.
      */
     [[nodiscard]] static std::string dataTypeForDecoder(
-            dl::widget::DecoderVariant const & decoder);
+            dl::DecoderVariant const & decoder);
 
     /**
      * @brief Map decoder factory name → DataManager data type name.
@@ -397,7 +397,7 @@ public:
      *        coordinate scaling.
      */
     void configurePostEncoderModule(
-            dl::widget::PostEncoderSlotParams const & params,
+            dl::PostEncoderSlotParams const & params,
             ImageSize source_image_size = {});
 
     // ── Model shape configuration ──────────────────────────────────────────

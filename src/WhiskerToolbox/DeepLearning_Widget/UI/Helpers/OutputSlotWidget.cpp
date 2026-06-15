@@ -74,11 +74,7 @@ OutputSlotWidget::OutputSlotWidget(
         OutputSlotParams initial;
         if (auto const params =
                     dl::decoderParamsFromFactoryName(_recommended_decoder)) {
-            std::visit(
-                    [&](auto const & decoder_params) {
-                        initial.decoder = decoder_params;
-                    },
-                    *params);
+            initial.decoder = *params;
         }
         auto json = rfl::json::write(initial);
         _auto_param->fromJson(json);

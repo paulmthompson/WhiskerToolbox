@@ -99,8 +99,8 @@ PostEncoderWidget::~PostEncoderWidget() = default;
 // Public API
 // ════════════════════════════════════════════════════════════════════════════
 
-PostEncoderSlotParams PostEncoderWidget::params() const {
-    PostEncoderSlotParams p;
+dl::PostEncoderSlotParams PostEncoderWidget::params() const {
+    dl::PostEncoderSlotParams p;
     p.module_key = _selectedModuleKey();
 
     if (_auto_param) {
@@ -112,7 +112,7 @@ PostEncoderSlotParams PostEncoderWidget::params() const {
     return p;
 }
 
-void PostEncoderWidget::setParams(PostEncoderSlotParams const & p) {
+void PostEncoderWidget::setParams(dl::PostEncoderSlotParams const & p) {
     _suppress_signals = true;
 
     std::string const key =

@@ -8,6 +8,8 @@
 
 #include "ChannelEncoder.hpp"
 
+#include "bindings/EncoderDecoderBindingTypes.hpp"
+
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -17,7 +19,6 @@
 #include <optional>
 #include <string>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 namespace at {
@@ -25,15 +26,6 @@ class Tensor;
 }
 
 namespace dl {
-
-/**
- * @brief User-configurable encoder parameters for all registered channel encoders.
- */
-using EncoderParamsVariant = std::variant<
-        ImageEncoderParams,
-        Point2DEncoderParams,
-        Mask2DEncoderParams,
-        Line2DEncoderParams>;
 
 /**
  * @brief Pixel data for ImageEncoder::encode (uint8 or float32).
@@ -66,7 +58,7 @@ template<typename EncoderParams>
 /**
  * @brief Whether the active encoder alternative targets MediaData.
  */
-[[nodiscard]] bool isImageEncoder(EncoderParamsVariant const & params);
+[[nodiscard]] bool isImageEncoder(EncoderVariant const & params);
 
 /**
  * @brief Map encoder params type to DataManager data type name.
@@ -79,7 +71,7 @@ template<typename EncoderParams>
 /**
  * @brief Map active encoder params to DataManager data type name.
  */
-[[nodiscard]] std::string dataTypeForEncoder(EncoderParamsVariant const & params);
+[[nodiscard]] std::string dataTypeForEncoder(EncoderVariant const & params);
 
 /**
  * @brief Map encoder params type to EncoderFactory registry name.
@@ -90,15 +82,22 @@ template<typename EncoderParams>
 /**
  * @brief Map active encoder params to EncoderFactory registry name.
  */
-[[nodiscard]] std::string encoderFactoryName(EncoderParamsVariant const & params);
+[[nodiscard]] std::string encoderFactoryName(EncoderVariant const & params);
 
 /**
  * @brief Construct default encoder params from a factory registry name.
  *
  * @returns Params for the named encoder, or nullopt if @p factory_name is unknown.
  */
-[[nodiscard]] std::optional<EncoderParamsVariant> encoderParamsFromFactoryName(
+[[nodiscard]] std::optional<EncoderVariant> encoderParamsFromFactoryName(
         std::string const & factory_name);
+
+/**
+ * @brief Assign encoder variant from a factory registry name.
+ *
+ * Falls back to @c ImageEncoderParams when @p factory_name is unknown.
+ */
+void assignEncoderFromFactoryName(EncoderVariant & encoder, std::string const & factory_name);
 
 /**
  * @brief Encode pre-fetched source data into a tensor channel using typed params.
@@ -122,7 +121,7 @@ void encodeToTensor(
         at::Tensor & tensor,
         EncoderContext const & ctx,
         ImageSize source_image_size,
-        EncoderParamsVariant const & params);
+        EncoderVariant const & params);
 
 }// namespace dl
 

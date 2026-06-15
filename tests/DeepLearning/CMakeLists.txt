@@ -113,14 +113,19 @@ set_target_compiler_warnings(neurosam_test_driver)
 # --- Binding Data Tests (header-only, no libtorch needed) ---
 add_executable(test_binding_data
     binding_data/BindingData.test.cpp
+    bindings/BindingTypes.test.cpp
 )
 
 target_link_libraries(test_binding_data PRIVATE
     Catch2::Catch2WithMain
+    WhiskerToolbox::ParameterSchema
+    WhiskerToolbox::DeepLearning
+    reflectcpp::reflectcpp
 )
 
 target_include_directories(test_binding_data PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
 )
 
 set_target_compiler_warnings(test_binding_data)

@@ -146,7 +146,7 @@ bool DataBank::putEncoded(
 bool DataBank::encodeEntry(
         std::string_view id,
         TensorSlotDescriptor const & slot,
-        EncoderParamsVariant const & encoder_params) {
+        EncoderVariant const & encoder_params) {
 
     auto const id_str = std::string{id};
     auto const it = _entries.find(id_str);

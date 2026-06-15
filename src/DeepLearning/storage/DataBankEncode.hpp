@@ -6,7 +6,7 @@
  * @brief Free functions for encoding DataBank sources into model-ready tensors.
  */
 
-#include "channel_encoding/EncoderDispatch.hpp"// EncodingSourceVariant, EncoderParamsVariant
+#include "channel_encoding/EncoderDispatch.hpp"// EncodingSourceVariant, EncoderVariant
 #include "models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor
 
 #include "CoreGeometry/ImageSize.hpp"
@@ -55,7 +55,7 @@ namespace dl {
 [[nodiscard]] std::optional<at::Tensor> encodeSourceToTensor(
         EncodingSourceVariant const & source,
         TensorSlotDescriptor const & slot,
-        EncoderParamsVariant const & encoder_params,
+        EncoderVariant const & encoder_params,
         ImageSize source_image_size);
 
 }// namespace dl

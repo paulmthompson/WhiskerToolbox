@@ -55,7 +55,7 @@ EncoderContext makeEncoderContext(TensorSlotDescriptor const & slot, int batch_i
 std::optional<at::Tensor> encodeSourceToTensor(
         EncodingSourceVariant const & source,
         TensorSlotDescriptor const & slot,
-        EncoderParamsVariant const & encoder_params,
+        EncoderVariant const & encoder_params,
         ImageSize source_image_size) {
 
     auto const encode_shape = encodingShapeForSlot(slot);

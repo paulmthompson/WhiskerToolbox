@@ -13,8 +13,8 @@
 #include "DeepLearning_Widget/Inference/WriteReservation.hpp"
 #include "MultiIntervalBatchWorker.hpp"
 
-
 #include "DataManager/DataManager.hpp"
+#include "DeepLearning/channel_encoding/EncoderDispatch.hpp" // isImageEncoder
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
 
@@ -132,7 +132,7 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
 
     MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
-        if (!dl::widget::isImageEncoder(binding.encoder) || binding.data_key.empty())
+        if (!dl::isImageEncoder(binding.encoder) || binding.data_key.empty())
             continue;
         auto media = _impl->_dm->getData<MediaData>(binding.data_key);
         if (!media) continue;
@@ -237,7 +237,7 @@ void InferenceController::runBatchIntervals(
 
     MediaOverrides media_overrides;
     for (auto const & binding: _impl->_state->inputBindings()) {
-        if (!dl::widget::isImageEncoder(binding.encoder) || binding.data_key.empty())
+        if (!dl::isImageEncoder(binding.encoder) || binding.data_key.empty())
             continue;
         auto media = _impl->_dm->getData<MediaData>(binding.data_key);
         if (!media) continue;

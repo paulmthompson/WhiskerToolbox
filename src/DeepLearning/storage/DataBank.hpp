@@ -9,7 +9,7 @@
  * pre-encoded model input data (memory frames, reference masks, etc.).
  */
 
-#include "channel_encoding/EncoderDispatch.hpp"// EncoderParamsVariant, EncodingSourceVariant
+#include "channel_encoding/EncoderDispatch.hpp"// EncoderVariant, EncodingSourceVariant
 #include "models_v2/TensorSlotDescriptor.hpp"  // TensorSlotDescriptor
 #include "storage/DataBankEntry.hpp"           // DataBankEntry, DataBankEntryMetadata
 
@@ -105,7 +105,7 @@ public:
     bool encodeEntry(
             std::string_view id,
             TensorSlotDescriptor const & slot,
-            EncoderParamsVariant const & encoder_params);
+            EncoderVariant const & encoder_params);
 
     /**
      * @brief Remove a single entry.

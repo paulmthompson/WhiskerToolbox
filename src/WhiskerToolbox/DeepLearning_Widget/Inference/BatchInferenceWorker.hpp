@@ -13,7 +13,7 @@
  */
 
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "Core/DeepLearningParamSchemas.hpp"// OutputBindingData
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 #include "Core/MediaOverrides.hpp"         // MediaOverrides
 #include "Inference/WriteReservation.hpp"  // WriteReservation
 

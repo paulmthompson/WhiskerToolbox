@@ -8,6 +8,8 @@
 
 #include "ChannelDecoder.hpp"
 
+#include "bindings/EncoderDecoderBindingTypes.hpp"
+
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
@@ -23,15 +25,6 @@ class Tensor;
 }
 
 namespace dl {
-
-/**
- * @brief User-configurable decoder parameters for all registered channel decoders.
- */
-using DecoderParamsVariant = std::variant<
-        MaskDecoderParams,
-        PointDecoderParams,
-        LineDecoderParams,
-        FeatureVectorDecoderParams>;
 
 /**
  * @brief Geometry or feature-vector output from a channel decoder.
@@ -55,7 +48,7 @@ template<typename DecoderParams>
 /**
  * @brief Whether the active decoder alternative requires a spatial 4D tensor.
  */
-[[nodiscard]] bool isSpatialDecoder(DecoderParamsVariant const & params);
+[[nodiscard]] bool isSpatialDecoder(DecoderVariant const & params);
 
 /**
  * @brief Map decoder params type to DataManager data type name.
@@ -68,7 +61,7 @@ template<typename DecoderParams>
 /**
  * @brief Map active decoder params to DataManager data type name.
  */
-[[nodiscard]] std::string dataTypeForDecoder(DecoderParamsVariant const & params);
+[[nodiscard]] std::string dataTypeForDecoder(DecoderVariant const & params);
 
 /**
  * @brief Map decoder params type to DecoderFactory registry name.
@@ -79,14 +72,14 @@ template<typename DecoderParams>
 /**
  * @brief Map active decoder params to DecoderFactory registry name.
  */
-[[nodiscard]] std::string decoderFactoryName(DecoderParamsVariant const & params);
+[[nodiscard]] std::string decoderFactoryName(DecoderVariant const & params);
 
 /**
  * @brief Construct default decoder params from a factory registry name.
  *
  * @returns Params for the named decoder, or nullopt if @p factory_name is unknown.
  */
-[[nodiscard]] std::optional<DecoderParamsVariant> decoderParamsFromFactoryName(
+[[nodiscard]] std::optional<DecoderVariant> decoderParamsFromFactoryName(
         std::string const & factory_name);
 
 /**
@@ -104,7 +97,7 @@ template<typename DecoderParams>
 [[nodiscard]] DecodedGeometryVariant decodeToGeometry(
         at::Tensor const & tensor,
         DecoderContext const & ctx,
-        DecoderParamsVariant const & params);
+        DecoderVariant const & params);
 
 }// namespace dl
 

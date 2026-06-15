@@ -50,12 +50,12 @@ template<typename DecoderParams>
 
 }// namespace
 
-bool isSpatialDecoder(DecoderParamsVariant const & params) {
-    return std::visit(
-            []<typename DecoderParams>(DecoderParams const &) {
-                return isSpatialDecoderParams<DecoderParams>();
-            },
-            params);
+bool isSpatialDecoder(DecoderVariant const & params) {
+    bool result = false;
+    params.visit([&](auto const & decoder_params) {
+        result = isSpatialDecoderParams<std::decay_t<decltype(decoder_params)>>();
+    });
+    return result;
 }
 
 template<typename DecoderParams>
@@ -68,12 +68,12 @@ template std::string dataTypeForDecoderParams<PointDecoderParams>();
 template std::string dataTypeForDecoderParams<LineDecoderParams>();
 template std::string dataTypeForDecoderParams<FeatureVectorDecoderParams>();
 
-std::string dataTypeForDecoder(DecoderParamsVariant const & params) {
-    return std::visit(
-            []<typename DecoderParams>(DecoderParams const &) {
-                return dataTypeForDecoderParams<DecoderParams>();
-            },
-            params);
+std::string dataTypeForDecoder(DecoderVariant const & params) {
+    std::string data_type;
+    params.visit([&](auto const & decoder_params) {
+        data_type = dataTypeForDecoderParams<std::decay_t<decltype(decoder_params)>>();
+    });
+    return data_type;
 }
 
 template<typename DecoderParams>
@@ -86,27 +86,27 @@ template std::string decoderFactoryName<PointDecoderParams>();
 template std::string decoderFactoryName<LineDecoderParams>();
 template std::string decoderFactoryName<FeatureVectorDecoderParams>();
 
-std::string decoderFactoryName(DecoderParamsVariant const & params) {
-    return std::visit(
-            []<typename DecoderParams>(DecoderParams const &) {
-                return decoderFactoryName<DecoderParams>();
-            },
-            params);
+std::string decoderFactoryName(DecoderVariant const & params) {
+    std::string factory_name;
+    params.visit([&](auto const & decoder_params) {
+        factory_name = decoderFactoryName<std::decay_t<decltype(decoder_params)>>();
+    });
+    return factory_name;
 }
 
-std::optional<DecoderParamsVariant> decoderParamsFromFactoryName(
+std::optional<DecoderVariant> decoderParamsFromFactoryName(
         std::string const & factory_name) {
     if (factory_name == "TensorToMask2D") {
-        return MaskDecoderParams{};
+        return DecoderVariant{MaskDecoderParams{}};
     }
     if (factory_name == "TensorToPoint2D") {
-        return PointDecoderParams{};
+        return DecoderVariant{PointDecoderParams{}};
     }
     if (factory_name == "TensorToLine2D") {
-        return LineDecoderParams{};
+        return DecoderVariant{LineDecoderParams{}};
     }
     if (factory_name == "TensorToFeatureVector") {
-        return FeatureVectorDecoderParams{};
+        return DecoderVariant{FeatureVectorDecoderParams{}};
     }
     return std::nullopt;
 }
@@ -141,12 +141,12 @@ template DecodedGeometryVariant decodeToGeometry<FeatureVectorDecoderParams>(
 DecodedGeometryVariant decodeToGeometry(
         at::Tensor const & tensor,
         DecoderContext const & ctx,
-        DecoderParamsVariant const & params) {
-    return std::visit(
-            [&](auto const & decoder_params) {
-                return decodeToGeometry(tensor, ctx, decoder_params);
-            },
-            params);
+        DecoderVariant const & params) {
+    DecodedGeometryVariant result;
+    params.visit([&](auto const & decoder_params) {
+        result = decodeToGeometry(tensor, ctx, decoder_params);
+    });
+    return result;
 }
 
 }// namespace dl

@@ -16,7 +16,7 @@
  */
 
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
 #include "EditorState/EditorState.hpp"
 
@@ -37,7 +37,7 @@ struct DeepLearningStateData {
     std::string instance_id;
     std::string display_name = "Deep Learning";
     /// Post-encoder module configuration.
-    dl::widget::PostEncoderSlotParams post_encoder_params;
+    dl::PostEncoderSlotParams post_encoder_params;
     /// Custom input height for GeneralEncoderModel (0 = use default 224).
     int encoder_input_height = 0;
     /// Custom input width for GeneralEncoderModel (0 = use default 224).
@@ -103,8 +103,8 @@ public:
     [[nodiscard]] bool hasRecurrentBindings() const;
 
     // ── Post-Encoder Module ──
-    [[nodiscard]] dl::widget::PostEncoderSlotParams const & postEncoderParams() const;
-    void setPostEncoderParams(dl::widget::PostEncoderSlotParams params);
+    [[nodiscard]] dl::PostEncoderSlotParams const & postEncoderParams() const;
+    void setPostEncoderParams(dl::PostEncoderSlotParams params);
 
     // ── Encoder Shape Configuration ──
     [[nodiscard]] int encoderInputHeight() const;

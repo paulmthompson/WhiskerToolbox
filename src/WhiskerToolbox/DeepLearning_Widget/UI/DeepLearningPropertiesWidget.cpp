@@ -377,7 +377,7 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(
             }
 
             if (apply_recommendations) {
-                dl::widget::PostEncoderSlotParams pe;
+                dl::PostEncoderSlotParams pe;
                 auto const & rec = _current_info->recommended_post_encoder;
                 pe.module_key = rec.empty() ? "none" : rec;
                 _state->setPostEncoderParams(pe);

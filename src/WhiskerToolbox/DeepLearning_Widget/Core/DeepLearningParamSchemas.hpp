@@ -1,22 +1,18 @@
 /// @file DeepLearningParamSchemas.hpp
-/// @brief Widget-level reflect-cpp parameter structs and tagged unions for
-///        deep learning slot bindings.
+/// @brief Widget-level reflect-cpp parameter structs for deep learning forms.
 ///
-/// These types compose the per-component param structs from the DeepLearning
-/// library into widget-level binding variants. They describe how the UI
-/// organizes slot bindings and are NOT part of the DeepLearning library.
+/// AutoParamWidget form layouts for slot configuration. Session binding types
+/// (`SlotBindingData`, `EncoderVariant`, etc.) live in `DeepLearning/bindings/`.
 
 #ifndef DEEP_LEARNING_PARAM_SCHEMAS_HPP
 #define DEEP_LEARNING_PARAM_SCHEMAS_HPP
 
-#include "DeepLearning/channel_decoding/ChannelDecoder.hpp"
-#include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
-#include "DeepLearning/channel_encoding/EncoderDispatch.hpp"
+#include "DeepLearning/bindings/EncoderDecoderBindingTypes.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 
 #include <rfl.hpp>
 
 #include <string>
-#include <type_traits>
 
 namespace dl::widget {
 
@@ -114,94 +110,13 @@ using SequenceEntryVariant = rfl::TaggedUnion<
 
 /**
  * @brief Wrapper for AutoParamWidget
- * 
- *  variant must be a struct field (like encoder in DynamicInputSlotParams), 
+ *
+ *  variant must be a struct field (like encoder in DynamicInputSlotParams),
  * not the root type, so fromJson/toJson nesting works.
  */
 struct SequenceEntryParams {
     SequenceEntryVariant entry = StaticSequenceEntryParams{};
 };
-
-// ============================================================================
-// Post-Encoder Module — registry-driven module key + JSON parameters
-// ============================================================================
-
-/**
- * @brief Descriptor for one post-encoder pipeline step.
- *
- * @c module_key @c "none" or empty means no post-encoder processing.
- * Parameter schemas are resolved at runtime from `PostEncoderModuleRegistry`.
- */
-struct PostEncoderStepDescriptor {
-    std::string module_key = "none";
-    std::string parameters_json = "{}";
-};
-
-// ============================================================================
-// Decoder — which decoder to use for an output slot
-// ============================================================================
-
-/**
- * @brief Tagged union discriminated by "decoder".
- * 
- * All alternative structs are re-used from the DeepLearning library.
- */
-using DecoderVariant = rfl::TaggedUnion<
-        "decoder",
-        dl::MaskDecoderParams,
-        dl::PointDecoderParams,
-        dl::LineDecoderParams,
-        dl::FeatureVectorDecoderParams>;
-
-// ============================================================================
-// Encoder — which encoder to use for a dynamic input slot
-// ============================================================================
-
-/**
- * @brief Tagged union discriminated by "encoder".
- * 
- * All alternative structs are re-used from the DeepLearning library.
- */
-using EncoderVariant = rfl::TaggedUnion<
-        "encoder",
-        dl::ImageEncoderParams,
-        dl::Point2DEncoderParams,
-        dl::Mask2DEncoderParams,
-        dl::Line2DEncoderParams>;
-
-/**
- * @brief Whether the active encoder alternative targets MediaData.
- */
-[[nodiscard]] inline bool isImageEncoder(EncoderVariant const & encoder) {
-    bool result = false;
-    encoder.visit([&](auto const & params) {
-        result = dl::isImageEncoderParams<std::decay_t<decltype(params)>>();
-    });
-    return result;
-}
-
-/**
- * @brief Map encoder variant to DataManager data type name.
- */
-[[nodiscard]] inline std::string dataTypeForEncoder(EncoderVariant const & encoder) {
-    std::string data_type;
-    encoder.visit([&](auto const & params) {
-        data_type = dl::dataTypeForEncoderParams<std::decay_t<decltype(params)>>();
-    });
-    return data_type;
-}
-
-/**
- * @brief Assign default encoder params from a factory registry name.
- */
-inline void assignEncoderFromFactoryName(
-        EncoderVariant & encoder, std::string const & factory_name) {
-    if (auto params = dl::encoderParamsFromFactoryName(factory_name)) {
-        std::visit([&](auto const & p) { encoder = p; }, *params);
-    } else {
-        encoder = dl::ImageEncoderParams{};
-    }
-}
 
 // ============================================================================
 // Composite Slot Parameter Structs
@@ -211,9 +126,9 @@ inline void assignEncoderFromFactoryName(
  * @brief Full configuration for one dynamic (per-frame) input slot.
  */
 struct DynamicInputSlotParams {
-    std::string source;                               ///< DataManager key (dynamic combo)
-    EncoderVariant encoder = dl::ImageEncoderParams{};///< Encoder type + params
-    int time_offset = 0;                              ///< Temporal offset from current frame
+    std::string source;                          ///< DataManager key (dynamic combo)
+    dl::EncoderVariant encoder = dl::ImageEncoderParams{};///< Encoder type + params
+    int time_offset = 0;                         ///< Temporal offset from current frame
 };
 
 /**
@@ -227,8 +142,8 @@ struct StaticInputSlotParams {
  * @brief Parameters for an output slot binding (target key + decoder configuration).
  */
 struct OutputSlotParams {
-    std::string data_key;                        ///< DataManager key for results
-    DecoderVariant decoder = MaskDecoderParams{};///< Decoder configuration
+    std::string data_key;                         ///< DataManager key for results
+    dl::DecoderVariant decoder = dl::MaskDecoderParams{};///< Decoder configuration
 };
 
 /**
@@ -238,11 +153,6 @@ struct RecurrentBindingSlotParams {
     std::string output_slot_name;                 ///< Model output slot (dynamic combo)
     RecurrentInitVariant init = ZerosInitParams{};///< Init mode variant
 };
-
-/**
- * @brief Full configuration for the post-encoder module section.
- */
-using PostEncoderSlotParams = PostEncoderStepDescriptor;
 
 /**
  * @brief Custom encoder input/output dimensions (UI-only, passed to
@@ -255,37 +165,5 @@ struct EncoderShapeParams {
 };
 
 }// namespace dl::widget
-
-/**
- * @brief Serializable binding for a dynamic (per-frame) model input slot.
- *
- * Persisted in workspace JSON with a nested tagged `encoder` field (reflect-cpp),
- * matching `DynamicInputSlotParams` plus the model slot name.
- */
-struct SlotBindingData {
-    /** Model input slot name (e.g. "encoder_image") */
-    std::string slot_name;
-    /** DataManager key (e.g. "media/video_1") */
-    std::string data_key;
-    /** Encoder type and user-configurable parameters */
-    dl::widget::EncoderVariant encoder = dl::ImageEncoderParams{};
-    /** Temporal offset applied per frame (e.g. -1 for previous frame) */
-    int time_offset = 0;
-};
-
-/**
- * @brief Serializable binding for a model output slot.
- *
- * Persisted in workspace JSON with a nested tagged `decoder` field (reflect-cpp),
- * matching `OutputSlotParams` plus the model slot name.
- */
-struct OutputBindingData {
-    /** Model output slot name */
-    std::string slot_name;
-    /** DataManager key to write results into */
-    std::string data_key;
-    /** Decoder type and user-configurable parameters */
-    dl::widget::DecoderVariant decoder = dl::MaskDecoderParams{};
-};
 
 #endif// DEEP_LEARNING_PARAM_SCHEMAS_HPP

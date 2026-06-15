@@ -62,10 +62,10 @@ public:
     PostEncoderWidget & operator=(PostEncoderWidget &&) = delete;
 
     /// @brief Return the current parameter values.
-    [[nodiscard]] PostEncoderSlotParams params() const;
+    [[nodiscard]] dl::PostEncoderSlotParams params() const;
 
     /// @brief Set the parameter values and update the UI.
-    void setParams(PostEncoderSlotParams const & params);
+    void setParams(dl::PostEncoderSlotParams const & params);
 
     /// @brief Refresh the point_key combo from DataManager.
     void refreshDataSources();

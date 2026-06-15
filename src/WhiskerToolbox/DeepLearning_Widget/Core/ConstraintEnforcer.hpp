@@ -7,7 +7,7 @@
 #define DEEP_LEARNING_CONSTRAINT_ENFORCER_HPP
 
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
-#include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
+#include "DeepLearning/bindings/SlotBindingTypes.hpp"
 #include "DeepLearning_Widget/Core/ModelDisplayInfo.hpp"// ModelDisplayInfo
 
 #include <string>
@@ -74,7 +74,7 @@ struct BatchSizeConstraint {
  * @param params  Post-encoder slot configuration from state or widget.
  */
 [[nodiscard]] std::vector<std::string> validDecodersForPostEncoder(
-        dl::widget::PostEncoderSlotParams const & params);
+        dl::PostEncoderSlotParams const & params);
 
 }// namespace dl::constraints
 

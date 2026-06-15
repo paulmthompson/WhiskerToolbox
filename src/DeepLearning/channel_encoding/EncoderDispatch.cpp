@@ -62,12 +62,12 @@ template<typename EncoderParams>
 
 }// namespace
 
-bool isImageEncoder(EncoderParamsVariant const & params) {
-    return std::visit(
-            []<typename EncoderParams>(EncoderParams const &) {
-                return isImageEncoderParams<EncoderParams>();
-            },
-            params);
+bool isImageEncoder(EncoderVariant const & params) {
+    bool result = false;
+    params.visit([&](auto const & encoder_params) {
+        result = isImageEncoderParams<std::decay_t<decltype(encoder_params)>>();
+    });
+    return result;
 }
 
 template<typename EncoderParams>
@@ -80,12 +80,12 @@ template std::string dataTypeForEncoderParams<Point2DEncoderParams>();
 template std::string dataTypeForEncoderParams<Mask2DEncoderParams>();
 template std::string dataTypeForEncoderParams<Line2DEncoderParams>();
 
-std::string dataTypeForEncoder(EncoderParamsVariant const & params) {
-    return std::visit(
-            []<typename EncoderParams>(EncoderParams const &) {
-                return dataTypeForEncoderParams<EncoderParams>();
-            },
-            params);
+std::string dataTypeForEncoder(EncoderVariant const & params) {
+    std::string data_type;
+    params.visit([&](auto const & encoder_params) {
+        data_type = dataTypeForEncoderParams<std::decay_t<decltype(encoder_params)>>();
+    });
+    return data_type;
 }
 
 template<typename EncoderParams>
@@ -98,29 +98,38 @@ template std::string encoderFactoryName<Point2DEncoderParams>();
 template std::string encoderFactoryName<Mask2DEncoderParams>();
 template std::string encoderFactoryName<Line2DEncoderParams>();
 
-std::string encoderFactoryName(EncoderParamsVariant const & params) {
-    return std::visit(
-            []<typename EncoderParams>(EncoderParams const &) {
-                return encoderFactoryName<EncoderParams>();
-            },
-            params);
+std::string encoderFactoryName(EncoderVariant const & params) {
+    std::string factory_name;
+    params.visit([&](auto const & encoder_params) {
+        factory_name = encoderFactoryName<std::decay_t<decltype(encoder_params)>>();
+    });
+    return factory_name;
 }
 
-std::optional<EncoderParamsVariant> encoderParamsFromFactoryName(
+std::optional<EncoderVariant> encoderParamsFromFactoryName(
         std::string const & factory_name) {
     if (factory_name == "ImageEncoder") {
-        return ImageEncoderParams{};
+        return EncoderVariant{ImageEncoderParams{}};
     }
     if (factory_name == "Point2DEncoder") {
-        return Point2DEncoderParams{};
+        return EncoderVariant{Point2DEncoderParams{}};
     }
     if (factory_name == "Mask2DEncoder") {
-        return Mask2DEncoderParams{};
+        return EncoderVariant{Mask2DEncoderParams{}};
     }
     if (factory_name == "Line2DEncoder") {
-        return Line2DEncoderParams{};
+        return EncoderVariant{Line2DEncoderParams{}};
     }
     return std::nullopt;
+}
+
+void assignEncoderFromFactoryName(
+        EncoderVariant & encoder, std::string const & factory_name) {
+    if (auto params = encoderParamsFromFactoryName(factory_name)) {
+        encoder = *params;
+    } else {
+        encoder = ImageEncoderParams{};
+    }
 }
 
 template<typename EncoderParams>
@@ -210,12 +219,10 @@ void encodeToTensor(
         at::Tensor & tensor,
         EncoderContext const & ctx,
         ImageSize source_image_size,
-        EncoderParamsVariant const & params) {
-    std::visit(
-            [&](auto const & encoder_params) {
-                encodeToTensor(source, tensor, ctx, source_image_size, encoder_params);
-            },
-            params);
+        EncoderVariant const & params) {
+    params.visit([&](auto const & encoder_params) {
+        encodeToTensor(source, tensor, ctx, source_image_size, encoder_params);
+    });
 }
 
 }// namespace dl

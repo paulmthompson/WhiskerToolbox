@@ -363,7 +363,7 @@ void encodeDynamicSlot(
     SlotBindingData temp_binding;
     temp_binding.slot_name = encode_slot.name;
     temp_binding.data_key = entry.data_key;
-    dl::widget::assignEncoderFromFactoryName(
+        dl::assignEncoderFromFactoryName(
             temp_binding.encoder, encode_slot.recommended_encoder);
     encodeDynamicSlot(
             dm, temp_binding, encode_slot, temp, frame, 0,
@@ -460,7 +460,7 @@ assembleInputs(
     // so we need to know the original image dimensions for proper scaling.
     ImageSize source_image_size{0, 0};
     for (auto const & binding: input_bindings) {
-        if (dl::widget::isImageEncoder(binding.encoder) && !binding.data_key.empty()) {
+        if (dl::isImageEncoder(binding.encoder) && !binding.data_key.empty()) {
             // Check overrides first
             std::shared_ptr<MediaData> media;
             if (media_overrides) {
@@ -478,7 +478,7 @@ assembleInputs(
     // ── Determine max valid frame for clamping ──
     int max_frame = std::numeric_limits<int>::max();
     for (auto const & binding: input_bindings) {
-        if (dl::widget::isImageEncoder(binding.encoder) && !binding.data_key.empty()) {
+        if (dl::isImageEncoder(binding.encoder) && !binding.data_key.empty()) {
             std::shared_ptr<MediaData> media;
             if (media_overrides) {
                 auto ov_it = media_overrides->find(binding.data_key);
@@ -1124,7 +1124,7 @@ bool SlotAssembler::captureToBank(
     SlotBindingData temp_binding;
     temp_binding.slot_name = slot->name;
     temp_binding.data_key = entry.data_key;
-    dl::widget::assignEncoderFromFactoryName(
+        dl::assignEncoderFromFactoryName(
             temp_binding.encoder, slot->recommended_encoder);
 
     auto const source = fetchEncodingSource(dm, temp_binding, frame);
@@ -1723,8 +1723,8 @@ std::vector<std::string> SlotAssembler::availableDecoders() {
 }
 
 std::string SlotAssembler::dataTypeForEncoder(
-        dl::widget::EncoderVariant const & encoder) {
-    return dl::widget::dataTypeForEncoder(encoder);
+        dl::EncoderVariant const & encoder) {
+    return dl::dataTypeForEncoder(encoder);
 }
 
 std::string SlotAssembler::dataTypeForEncoder(std::string const & factory_name) {
@@ -1735,12 +1735,8 @@ std::string SlotAssembler::dataTypeForEncoder(std::string const & factory_name) 
 }
 
 std::string SlotAssembler::dataTypeForDecoder(
-        dl::widget::DecoderVariant const & decoder) {
-    std::string data_type;
-    decoder.visit([&](auto const & params) {
-        data_type = dl::dataTypeForDecoderParams<std::decay_t<decltype(params)>>();
-    });
-    return data_type;
+        dl::DecoderVariant const & decoder) {
+    return dl::dataTypeForDecoder(decoder);
 }
 
 std::string SlotAssembler::dataTypeForDecoder(
@@ -1756,7 +1752,7 @@ std::string SlotAssembler::dataTypeForDecoder(
 // ════════════════════════════════════════════════════════════════════════════
 
 void SlotAssembler::configurePostEncoderModule(
-        dl::widget::PostEncoderSlotParams const & params,
+        dl::PostEncoderSlotParams const & params,
         ImageSize source_image_size) {
     if (!_impl || !_impl->model) return;
 
