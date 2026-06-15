@@ -17,6 +17,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
+#include "DeepLearning/registry/ModelRegistry.hpp"
 #include "DeepLearning/storage/DataBank.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/StrongTypes.hpp"
@@ -384,9 +385,9 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(
 
         _assembler->loadModel(model_id);
 
-        // Apply saved encoder shape if configured
-        if (_current_info && model_id == "general_encoder") {
-            dl::widget::EncoderShapeWidget::applyEncoderShapeToAssembler(
+        if (_current_info &&
+            dl::ModelRegistry::instance().hasConfiguration(model_id)) {
+            dl::widget::EncoderShapeWidget::applyConfigurationFromState(
                     _state.get(), _assembler.get());
             _current_info = _assembler->currentModelDisplayInfo();
         }
@@ -434,10 +435,7 @@ void DeepLearningPropertiesWidget::_onDeviceComboChanged(int index) {
 void DeepLearningPropertiesWidget::_loadModelIfReady() {
     _updateWeightsStatus();
 
-    // Gate weight loading on shape being explicitly configured for
-    // general_encoder (shape fields default to 0 until Apply is clicked).
-    if (_assembler->currentModelId() == "general_encoder" &&
-        !_state->shapeConfigured()) {
+    if (!_state->configurationComplete()) {
         return;
     }
 
@@ -484,13 +482,11 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
         return;
     }
 
-    // For general_encoder, require the user to explicitly apply a shape
-    // before enabling weight loading — mismatched shapes cause silent errors.
-    if (_assembler->currentModelId() == "general_encoder" &&
-        !_state->shapeConfigured()) {
+    if (dl::ModelRegistry::instance().hasConfiguration(_assembler->currentModelId()) &&
+        !_state->configurationComplete()) {
         _weights_path_edit->setEnabled(false);
         _weights_browse_btn->setEnabled(false);
-        _weights_status_label->setText(tr("Set encoder shape first"));
+        _weights_status_label->setText(tr("Apply model configuration first"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: orange;"));
         return;
     }
@@ -556,18 +552,16 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     auto const & inputs = _current_info->inputs;
 
-    // ── Encoder shape configuration (GeneralEncoderModel only) ──
-    if (_current_info->model_id == "general_encoder") {
+    // ── Model configuration (when registered) ──
+    if (dl::ModelRegistry::instance().hasConfiguration(_current_info->model_id)) {
         _encoder_shape_widget = new dl::widget::EncoderShapeWidget(
                 _state, _assembler.get(), _dynamic_container);
         connect(_encoder_shape_widget,
-                &dl::widget::EncoderShapeWidget::shapeApplied,
+                &dl::widget::EncoderShapeWidget::configurationApplied,
                 this,
                 [this]() {
                     _current_info = _assembler->currentModelDisplayInfo();
                     _rebuildSlotPanels();
-                    // Now that shape is configured, attempt to load weights
-                    // if a path was already entered (gate is now satisfied).
                     _loadModelIfReady();
                 });
         _dynamic_layout->addWidget(_encoder_shape_widget);

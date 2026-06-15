@@ -154,16 +154,6 @@ struct RecurrentBindingSlotParams {
     RecurrentInitVariant init = ZerosInitParams{};///< Init mode variant
 };
 
-/**
- * @brief Custom encoder input/output dimensions (UI-only, passed to
- * SlotAssembler::configureModelShape()).
- */
-struct EncoderShapeParams {
-    rfl::Validator<int, rfl::Minimum<1>> input_height = 224;
-    rfl::Validator<int, rfl::Minimum<1>> input_width = 224;
-    std::string output_shape;///< Raw output shape string, e.g. "768,16,16"
-};
-
 }// namespace dl::widget
 
 #endif// DEEP_LEARNING_PARAM_SCHEMAS_HPP

@@ -40,6 +40,7 @@ add_executable(test_DeepLearning
     models_v2/NeuroSAMModel.test.cpp
 
     models_v2/GeneralEncoderModel.test.cpp
+    models_v2/GeneralEncoderConfiguration.test.cpp
 
     runtime/RuntimeModelSpec.test.cpp
 

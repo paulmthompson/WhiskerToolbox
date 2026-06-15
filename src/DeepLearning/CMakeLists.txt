@@ -72,6 +72,7 @@ set(DEEP_LEARNING_SOURCES
 
     registry/ModelRegistry.hpp
     registry/ModelRegistry.cpp
+    registry/RegisterModelConfiguration.hpp
 
     runtime/RuntimeModelSpec.hpp
     runtime/RuntimeModelSpec.cpp
@@ -83,6 +84,10 @@ set(DEEP_LEARNING_SOURCES
 
     models_v2/general_encoder/GeneralEncoderModel.hpp
     models_v2/general_encoder/GeneralEncoderModel.cpp
+    models_v2/general_encoder/GeneralEncoderModelParams.hpp
+    models_v2/general_encoder/GeneralEncoderParamSchemas.hpp
+    models_v2/general_encoder/GeneralEncoderConfiguration.hpp
+    models_v2/general_encoder/GeneralEncoderConfiguration.cpp
 
     channel_decoding/TensorToFeatureVector.hpp
     channel_decoding/TensorToFeatureVector.cpp

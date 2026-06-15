@@ -19,6 +19,7 @@
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
 #include "EditorState/EditorState.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,13 +38,8 @@ struct DeepLearningStateData {
     std::string display_name = "Deep Learning";
     /// Post-encoder module configuration.
     dl::PostEncoderSlotParams post_encoder_params;
-    /// Custom input height for GeneralEncoderModel (0 = use default 224).
-    int encoder_input_height = 0;
-    /// Custom input width for GeneralEncoderModel (0 = use default 224).
-    int encoder_input_width = 0;
-    /// Custom raw output shape string for GeneralEncoderModel.
-    /// Comma-separated dimensions, e.g. "768,16,16" (empty = use default).
-    std::string encoder_output_shape;
+    /// Per-model configuration JSON blobs keyed by model_id.
+    std::map<std::string, std::string> model_configurations;
 };
 
 /**
@@ -105,22 +101,21 @@ public:
     [[nodiscard]] dl::PostEncoderSlotParams const & postEncoderParams() const;
     void setPostEncoderParams(dl::PostEncoderSlotParams params);
 
-    // ── Encoder Shape Configuration ──
-    [[nodiscard]] int encoderInputHeight() const;
-    void setEncoderInputHeight(int height);
+    // ── Per-Model Configuration ──
+    [[nodiscard]] std::map<std::string, std::string> const & modelConfigurations() const;
+    [[nodiscard]] std::string configurationJsonForModel(
+            std::string const & model_id) const;
+    void setConfigurationJsonForModel(
+            std::string const & model_id,
+            std::string json);
+    [[nodiscard]] std::string activeConfigurationJson() const;
 
-    [[nodiscard]] int encoderInputWidth() const;
-    void setEncoderInputWidth(int width);
-
-    [[nodiscard]] std::string const & encoderOutputShape() const;
-    void setEncoderOutputShape(std::string const & shape);
-
-    /// @brief Whether the encoder shape has been explicitly configured.
-    ///
-    /// Returns true if the user has clicked "Apply Shape" at least once,
-    /// which stores non-zero height/width values in the state.
-    /// Used to gate weight loading for general_encoder models.
-    [[nodiscard]] bool shapeConfigured() const;
+    /**
+     * @brief Whether the active model's configuration is complete.
+     *
+     * Models without registered configuration hooks always return @c true.
+     */
+    [[nodiscard]] bool configurationComplete() const;
 
 signals:
     void modelChanged();
@@ -132,7 +127,7 @@ signals:
     void staticInputsChanged();
     void recurrentBindingsChanged();
     void postEncoderModuleChanged();
-    void encoderShapeChanged();
+    void modelConfigurationChanged();
 
 private:
     DeepLearningStateData _data;

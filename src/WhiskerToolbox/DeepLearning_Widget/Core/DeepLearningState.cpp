@@ -1,5 +1,7 @@
 #include "DeepLearningState.hpp"
 
+#include "DeepLearning/registry/ModelRegistry.hpp"
+
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -40,6 +42,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
     emit staticInputsChanged();
     emit recurrentBindingsChanged();
     emit postEncoderModuleChanged();
+    emit modelConfigurationChanged();
     return true;
 }
 
@@ -155,46 +158,40 @@ void DeepLearningState::setPostEncoderParams(dl::PostEncoderSlotParams params) {
     emit postEncoderModuleChanged();
 }
 
-// ── Encoder Shape Configuration ──
-
-int DeepLearningState::encoderInputHeight() const {
-    return _data.encoder_input_height;
+std::map<std::string, std::string> const & DeepLearningState::modelConfigurations() const {
+    return _data.model_configurations;
 }
 
-void DeepLearningState::setEncoderInputHeight(int height) {
-    if (_data.encoder_input_height != height) {
-        _data.encoder_input_height = height;
-        markDirty();
-        emit encoderShapeChanged();
+std::string DeepLearningState::configurationJsonForModel(
+        std::string const & model_id) const {
+    auto it = _data.model_configurations.find(model_id);
+    if (it == _data.model_configurations.end()) {
+        return dl::ModelRegistry::instance().defaultConfigurationJson(model_id);
     }
+    return it->second;
 }
 
-int DeepLearningState::encoderInputWidth() const {
-    return _data.encoder_input_width;
-}
-
-void DeepLearningState::setEncoderInputWidth(int width) {
-    if (_data.encoder_input_width != width) {
-        _data.encoder_input_width = width;
-        markDirty();
-        emit encoderShapeChanged();
+void DeepLearningState::setConfigurationJsonForModel(
+        std::string const & model_id,
+        std::string json) {
+    auto & stored = _data.model_configurations[model_id];
+    if (stored == json) {
+        return;
     }
+    stored = std::move(json);
+    markDirty();
+    emit modelConfigurationChanged();
 }
 
-std::string const & DeepLearningState::encoderOutputShape() const {
-    return _data.encoder_output_shape;
+std::string DeepLearningState::activeConfigurationJson() const {
+    return configurationJsonForModel(_data.selected_model_id);
 }
 
-void DeepLearningState::setEncoderOutputShape(std::string const & shape) {
-    if (_data.encoder_output_shape != shape) {
-        _data.encoder_output_shape = shape;
-        markDirty();
-        emit encoderShapeChanged();
+bool DeepLearningState::configurationComplete() const {
+    if (_data.selected_model_id.empty()) {
+        return false;
     }
-}
-
-bool DeepLearningState::shapeConfigured() const {
-    // encoder_input_height/width start at 0 (default); EncoderShapeWidget
-    // sets them to >= 1 (minimum 224) when the user clicks "Apply Shape".
-    return _data.encoder_input_height > 0 || _data.encoder_input_width > 0;
+    return dl::ModelRegistry::instance().configurationComplete(
+            _data.selected_model_id,
+            activeConfigurationJson());
 }

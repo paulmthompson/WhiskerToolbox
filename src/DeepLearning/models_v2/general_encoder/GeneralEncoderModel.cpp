@@ -5,8 +5,11 @@
 
 #include "GeneralEncoderModel.hpp"
 
+#include "GeneralEncoderConfiguration.hpp"
+#include "GeneralEncoderParamSchemas.hpp"
 #include "device/DeviceManager.hpp"
 #include "registry/ModelRegistry.hpp"
+#include "registry/RegisterModelConfiguration.hpp"
 
 #include <c10/core/DeviceType.h> // at::kCPU
 
@@ -183,6 +186,12 @@ GeneralEncoderModel::forward(
 // ---------------------------------------------------------------------------
 // Static registration
 // ---------------------------------------------------------------------------
-DL_REGISTER_MODEL(GeneralEncoderModel)
+DL_REGISTER_MODEL_WITH_CONFIG(
+        GeneralEncoderModel,
+        GeneralEncoderModelParams,
+        applyGeneralEncoderConfiguration,
+        generalEncoderConfigurationComplete,
+        generalEncoderFormJsonFromStored,
+        generalEncoderStoredJsonFromForm)
 
 }// namespace dl

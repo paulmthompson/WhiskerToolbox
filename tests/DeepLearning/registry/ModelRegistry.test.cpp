@@ -437,3 +437,32 @@ TEST_CASE("ModelRegistry - DL_REGISTER_MODEL macro auto-registers", "[ModelRegis
     // Clean up so this doesn't leak into other tests
     dl::ModelRegistry::instance().unregisterModel("gamma");
 }
+
+TEST_CASE("ModelRegistry general_encoder exposes configuration hooks",
+          "[ModelRegistry][configuration]") {
+    auto const & reg = dl::ModelRegistry::instance();
+
+    REQUIRE(reg.hasModel("general_encoder"));
+    CHECK(reg.hasConfiguration("general_encoder"));
+
+    auto schema = reg.getConfigurationSchema("general_encoder");
+    REQUIRE(schema.has_value());
+    CHECK(schema->field("input_height") != nullptr);
+    CHECK(schema->field("input_width") != nullptr);
+    CHECK(schema->field("output_shape") != nullptr);
+
+    auto const default_json = reg.defaultConfigurationJson("general_encoder");
+    CHECK_FALSE(default_json.empty());
+
+    CHECK_FALSE(reg.configurationComplete(
+            "general_encoder",
+            default_json));
+
+    auto model = reg.create("general_encoder");
+    REQUIRE(model != nullptr);
+    reg.applyConfiguration(
+            "general_encoder",
+            *model,
+            R"({"shape_applied":true,"input_height":256,"input_width":256,"output_shape":"384,7,7"})");
+    CHECK(model->inputSlots()[0].shape[1] == 256);
+}

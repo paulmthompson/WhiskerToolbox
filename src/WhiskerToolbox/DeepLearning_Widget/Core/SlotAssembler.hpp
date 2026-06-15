@@ -401,22 +401,13 @@ public:
             dl::PostEncoderSlotParams const & params,
             ImageSize source_image_size = {});
 
-    // ── Model shape configuration ──────────────────────────────────────────
+    // ── Model configuration ────────────────────────────────────────────────
     /**
-     * @brief Reconfigure input resolution and output shape on the current model.
-     * 
-     * Only applies when the current model is a `GeneralEncoderModel`.
-     * Must be called before `loadWeights()` or inference.
-     * 
-     * @param input_height  Input image height in pixels (> 0).
-     * @param input_width   Input image width in pixels (> 0).
-     * @param output_shape  Raw encoder output shape (excluding batch dim).
-     *                      If empty, only input resolution is changed.
+     * @brief Apply persisted model configuration JSON to the current model.
+     *
+     * @pre A model must be loaded.
      */
-    void configureModelShape(
-            int input_height,
-            int input_width,
-            std::vector<int64_t> const & output_shape = {});
+    void applyModelConfiguration(std::string const & configuration_json);
 
 private:
     /**

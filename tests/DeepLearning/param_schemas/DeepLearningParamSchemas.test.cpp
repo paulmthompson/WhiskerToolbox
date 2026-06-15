@@ -248,52 +248,12 @@ TEST_CASE("OutputSlotParams JSON round-trip",
 }
 
 // ============================================================================
-// EncoderShapeParams
+// GeneralEncoderModelParams (moved from widget EncoderShapeParams)
 // ============================================================================
 
-TEST_CASE("EncoderShapeParams schema extraction",
+TEST_CASE("GeneralEncoderModelParams schema is covered in GeneralEncoderConfiguration tests",
           "[dl_widget][param_schema][encoder_shape]") {
-    auto schema = extractParameterSchema<dl::widget::EncoderShapeParams>();
-
-    CHECK(schema.fields.size() == 3);
-
-    SECTION("input_height field") {
-        auto * f = schema.field("input_height");
-        REQUIRE(f != nullptr);
-        CHECK(f->tooltip == "Input image height in pixels (resized to this before encoding)");
-    }
-
-    SECTION("input_width field") {
-        auto * f = schema.field("input_width");
-        REQUIRE(f != nullptr);
-        CHECK(f->tooltip == "Input image width in pixels (resized to this before encoding)");
-    }
-
-    SECTION("output_shape field") {
-        auto * f = schema.field("output_shape");
-        REQUIRE(f != nullptr);
-        CHECK(f->type_name == "std::string");
-        CHECK(f->tooltip ==
-              "Comma-separated output dimensions (excluding batch), e.g.:\n"
-              "  384,7,7   — spatial feature map\n"
-              "  768,16,16 — larger backbone\n"
-              "  512       — 1D feature vector");
-    }
-}
-
-TEST_CASE("EncoderShapeParams JSON round-trip",
-          "[dl_widget][param_schema][encoder_shape][roundtrip]") {
-    dl::widget::EncoderShapeParams params;
-    params.input_height = 320;
-    params.input_width = 256;
-    params.output_shape = "768,16,16";
-
-    auto json = rfl::json::write(params);
-    auto result = rfl::json::read<dl::widget::EncoderShapeParams>(json);
-    REQUIRE(result);
-    CHECK(result.value().input_height.value() == 320);
-    CHECK(result.value().input_width.value() == 256);
-    CHECK(result.value().output_shape == "768,16,16");
+    SUCCEED("See tests/DeepLearning/models_v2/GeneralEncoderConfiguration.test.cpp");
 }
 
 // ============================================================================

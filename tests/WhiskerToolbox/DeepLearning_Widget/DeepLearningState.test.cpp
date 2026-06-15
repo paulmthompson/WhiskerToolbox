@@ -11,6 +11,35 @@
 
 #include <type_traits>
 
+TEST_CASE("DeepLearningState round-trips model_configurations",
+          "[dl_widget][deep_learning_state]") {
+    DeepLearningState state;
+    state.setSelectedModelId("general_encoder");
+    state.setConfigurationJsonForModel(
+            "general_encoder",
+            R"({"shape_applied":true,"input_height":512,"input_width":384,"output_shape":"768,16,16"})");
+
+    auto const json = state.toJson();
+    DeepLearningState restored;
+    REQUIRE(restored.fromJson(json));
+
+    CHECK(restored.selectedModelId() == "general_encoder");
+    CHECK(restored.configurationJsonForModel("general_encoder") ==
+          state.configurationJsonForModel("general_encoder"));
+}
+
+TEST_CASE("DeepLearningState configurationComplete delegates to registry",
+          "[dl_widget][deep_learning_state]") {
+    DeepLearningState state;
+    state.setSelectedModelId("general_encoder");
+    CHECK_FALSE(state.configurationComplete());
+
+    state.setConfigurationJsonForModel(
+            "general_encoder",
+            R"({"shape_applied":true,"input_height":224,"input_width":224,"output_shape":""})");
+    CHECK(state.configurationComplete());
+}
+
 TEST_CASE("DeepLearningState round-trips post_encoder_params",
           "[dl_widget][deep_learning_state]") {
     DeepLearningState state;

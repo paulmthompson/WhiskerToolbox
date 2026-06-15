@@ -15,7 +15,6 @@
 #include "DeepLearning/models_v2/ModelBase.hpp"
 #include "DeepLearning/models_v2/TensorDTypeUtils.hpp"
 #include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
-#include "DeepLearning/models_v2/general_encoder/GeneralEncoderModel.hpp"
 #include "DeepLearning/post_encoder/PostEncoderModule.hpp"
 #include "DeepLearning/post_encoder/PostEncoderModuleRegistry.hpp"
 #include "DeepLearning/post_encoder/PostEncoderOutputTransform.hpp"
@@ -1780,21 +1779,16 @@ void SlotAssembler::_updateSpatialPoint(DataManager & dm, int frame) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Model shape configuration
+// Model configuration
 // ════════════════════════════════════════════════════════════════════════════
 
-void SlotAssembler::configureModelShape(
-        int input_height,
-        int input_width,
-        std::vector<int64_t> const & output_shape) {
-    if (!_impl || !_impl->model) return;
-
-    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
-    if (!enc) return;
-
-    enc->setInputResolution(input_height, input_width);
-
-    if (!output_shape.empty()) {
-        enc->setOutputShape(output_shape);
+void SlotAssembler::applyModelConfiguration(std::string const & configuration_json) {
+    if (!_impl || !_impl->model || _impl->model_id.empty()) {
+        return;
     }
+
+    dl::ModelRegistry::instance().applyConfiguration(
+            _impl->model_id,
+            *_impl->model,
+            configuration_json);
 }

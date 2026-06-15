@@ -35,11 +35,6 @@ struct ParameterUIHints<dl::widget::DynamicInputSlotParams> {
 };
 
 template<>
-struct ParameterUIHints<dl::widget::EncoderShapeParams> {
-    static void annotate(ParameterSchema & schema);
-};
-
-template<>
 struct ParameterUIHints<dl::widget::OutputSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
