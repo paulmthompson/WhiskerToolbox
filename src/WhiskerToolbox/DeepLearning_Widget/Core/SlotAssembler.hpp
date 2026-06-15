@@ -17,12 +17,10 @@
  * @see ModelBase for the model forward pass interface.
  */
 
-#include "DeepLearning/models_v2/ModelInfo.hpp"
-#include "DeepLearning_Widget/Core/MediaOverrides.hpp"
+#include "DeepLearning_Widget/Core/MediaOverrides.hpp" // MediaOverrides
 #include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"// BatchInferenceResult
 
-#include "DeepLearning/bindings/SlotBindingTypes.hpp"
-#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
+#include "DeepLearning/models_v2/ModelInfo.hpp"       // dl::ModelInfo
 
 #include <atomic>
 #include <functional>
@@ -43,6 +41,7 @@ class MediaData;
 
 namespace dl {
 class DataBank;
+struct PostEncoderStepDescriptor;
 }
 
 
@@ -398,7 +397,7 @@ public:
      *        coordinate scaling.
      */
     void configurePostEncoderModule(
-            dl::PostEncoderSlotParams const & params,
+            dl::PostEncoderStepDescriptor const & params,
             ImageSize source_image_size = {});
 
     // ── Model configuration ────────────────────────────────────────────────

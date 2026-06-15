@@ -177,8 +177,8 @@ TEST_CASE("computeBatchSizeConstraint: RecurrentOnlyBatch, active binding — al
 
 namespace {
 
-dl::PostEncoderSlotParams paramsWithKey(std::string const & module_key) {
-    dl::PostEncoderSlotParams params;
+dl::PostEncoderStepDescriptor paramsWithKey(std::string const & module_key) {
+    dl::PostEncoderStepDescriptor params;
     params.module_key = module_key;
     params.parameters_json = "{}";
     return params;

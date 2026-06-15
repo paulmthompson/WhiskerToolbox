@@ -21,8 +21,6 @@ struct PostEncoderStepDescriptor {
     std::string parameters_json = "{}";
 };
 
-using PostEncoderSlotParams = PostEncoderStepDescriptor;
-
 }// namespace dl
 
 /**

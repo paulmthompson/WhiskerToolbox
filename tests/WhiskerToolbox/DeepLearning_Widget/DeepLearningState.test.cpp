@@ -47,7 +47,7 @@ TEST_CASE("DeepLearningState round-trips post_encoder_params",
     dl::SpatialPointModuleParams spatial;
     spatial.point_key = "points/query";
 
-    dl::PostEncoderSlotParams params;
+    dl::PostEncoderStepDescriptor params;
     params.module_key = "spatial_point";
     params.parameters_json = rfl::json::write(spatial);
     state.setPostEncoderParams(params);

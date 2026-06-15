@@ -75,7 +75,7 @@ struct BatchSizeConstraint {
  * @param params  Post-encoder slot configuration from state or widget.
  */
 [[nodiscard]] std::vector<std::string> validDecodersForPostEncoder(
-        dl::PostEncoderSlotParams const & params);
+        dl::PostEncoderStepDescriptor const & params);
 
 }// namespace dl::constraints
 

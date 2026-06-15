@@ -48,7 +48,7 @@ BatchSizeConstraint computeBatchSizeConstraint(
 }
 
 std::vector<std::string> validDecodersForPostEncoder(
-        dl::PostEncoderSlotParams const & params) {
+        dl::PostEncoderStepDescriptor const & params) {
     if (dl::PostEncoderModuleRegistry::instance().collapsesSpatialDims(
                 params.module_key)) {
         return {"FeatureVectorDecoderParams"};

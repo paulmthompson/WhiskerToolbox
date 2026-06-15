@@ -22,8 +22,8 @@
 
 namespace {
 
-[[nodiscard]] dl::PostEncoderSlotParams paramsForKey(std::string const & key) {
-    dl::PostEncoderSlotParams p;
+[[nodiscard]] dl::PostEncoderStepDescriptor paramsForKey(std::string const & key) {
+    dl::PostEncoderStepDescriptor p;
     p.module_key = key;
     p.parameters_json = "{}";
     return p;
@@ -99,7 +99,7 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for SpatialPoint",
     dl::SpatialPointModuleParams sp;
     sp.point_key = "points/query";
 
-    dl::PostEncoderSlotParams p;
+    dl::PostEncoderStepDescriptor p;
     p.module_key = "spatial_point";
     p.parameters_json = rfl::json::write(sp);
     widget.setParams(p);
@@ -144,7 +144,7 @@ TEST_CASE("PostEncoderWidget refreshDataSources populates point_key combo",
     dl::SpatialPointModuleParams sp;
     sp.point_key = "points/a";
 
-    dl::PostEncoderSlotParams p;
+    dl::PostEncoderStepDescriptor p;
     p.module_key = "spatial_point";
     p.parameters_json = rfl::json::write(sp);
     widget.setParams(p);

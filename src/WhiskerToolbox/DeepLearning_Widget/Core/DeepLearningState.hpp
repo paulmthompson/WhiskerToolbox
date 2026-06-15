@@ -37,7 +37,7 @@ struct DeepLearningStateData {
     std::string instance_id;
     std::string display_name = "Deep Learning";
     /// Post-encoder module configuration.
-    dl::PostEncoderSlotParams post_encoder_params;
+    dl::PostEncoderStepDescriptor post_encoder_params;
     /// Per-model configuration JSON blobs keyed by model_id.
     std::map<std::string, std::string> model_configurations;
 };
@@ -98,8 +98,8 @@ public:
     [[nodiscard]] bool hasRecurrentBindings() const;
 
     // ── Post-Encoder Module ──
-    [[nodiscard]] dl::PostEncoderSlotParams const & postEncoderParams() const;
-    void setPostEncoderParams(dl::PostEncoderSlotParams params);
+    [[nodiscard]] dl::PostEncoderStepDescriptor const & postEncoderParams() const;
+    void setPostEncoderParams(dl::PostEncoderStepDescriptor params);
 
     // ── Per-Model Configuration ──
     [[nodiscard]] std::map<std::string, std::string> const & modelConfigurations() const;

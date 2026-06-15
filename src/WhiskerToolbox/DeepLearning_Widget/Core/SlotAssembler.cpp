@@ -1734,7 +1734,7 @@ std::string SlotAssembler::dataTypeForDecoder(
 // ════════════════════════════════════════════════════════════════════════════
 
 void SlotAssembler::configurePostEncoderModule(
-        dl::PostEncoderSlotParams const & params,
+        dl::PostEncoderStepDescriptor const & params,
         ImageSize source_image_size) {
     if (!_impl || !_impl->model) return;
 
