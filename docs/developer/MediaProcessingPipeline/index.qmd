@@ -59,4 +59,4 @@ Currently registered steps: Linear Transform, Gamma Correction, Image Sharpening
 
 ## Design Rationale
 
-This library exists to support the phased refactoring of `MediaProcessing_Widget` from hand-written per-filter widgets to `AutoParamWidget`-driven generic UI. See the [refactoring roadmap](MediaProcessing_Refactoring_Roadmap.md) for the full plan.
+This library exists to support the phased refactoring of `MediaProcessing_Widget` from hand-written per-filter widgets to `AutoParamWidget`-driven generic UI.
