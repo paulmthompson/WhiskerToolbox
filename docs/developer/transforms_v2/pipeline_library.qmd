@@ -3,9 +3,7 @@ title: "Pipeline Library (TransformsV2)"
 format: html
 ---
 
-The **pipeline library** is the on-disk catalog of saved [`PipelineDescriptor`](../../../src/TransformsV2/core/PipelineLoader.hpp) JSON files. It is separate from Triage Session command sequences and from workspace-embedded pipeline provenance.
-
-See [pipeline_library_roadmap.md](pipeline_library_roadmap.md) for the full implementation plan.
+The **pipeline library** is the on-disk catalog of saved [`PipelineDescriptor`](../../../src/TransformsV2/io/PipelineLoader.hpp) JSON files. It is separate from Triage Session command sequences and from workspace-embedded pipeline provenance.
 
 ## Storage location
 
@@ -19,7 +17,7 @@ On Linux this is typically `~/.config/WhiskerToolbox/pipelines/transforms_v2/`.
 
 ## Core API (Qt-free)
 
-Headers live in `src/TransformsV2/core/`:
+Headers live in `src/TransformsV2/io/`:
 
 | Function | Purpose |
 |----------|---------|
@@ -37,9 +35,9 @@ To execute a saved file, use `loadPipelineFromFile` (builds a `TransformPipeline
 
 ## JSON format
 
-Files use the `PipelineDescriptor` schema documented in [`PipelineLoader.hpp`](../../../src/TransformsV2/core/PipelineLoader.hpp): `metadata`, optional `pre_reductions`, `steps`, optional `range_reduction`.
+Files use the `PipelineDescriptor` schema documented in [`PipelineLoader.hpp`](../../../src/TransformsV2/io/PipelineLoader.hpp): `metadata`, optional `pre_reductions`, `steps`, optional `range_reduction`.
 
-## Pipeline library dialog (Phase 3)
+## Pipeline library dialog
 
 [`PipelineLibraryDialog`](../../../src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineLibraryDialog.hpp) provides:
 
@@ -49,11 +47,11 @@ Files use the `PipelineDescriptor` schema documented in [`PipelineLoader.hpp`](.
 
 The TransformsV2 JSON panel adds **Library...** and **Save to Library** shortcuts that use the same directory.
 
-## Tensor column configuration (Phase 4)
+## Tensor column configuration
 
 [`ColumnConfigDialog`](../../../src/WhiskerToolbox/DataInspector_Widget/TensorData/ColumnConfigDialog.cpp) adds **Load from Library...**, which opens the same `PipelineLibraryDialog`. The library directory is resolved from `StateManager::configDir()` when the Data Inspector is registered and forwarded through `TensorDesigner`.
 
-## Widget integration (Phase 2)
+## Widget integration
 
 [`TransformsV2Properties_Widget`](../../../src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.cpp):
 

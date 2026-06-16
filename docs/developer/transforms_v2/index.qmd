@@ -17,5 +17,4 @@ format: html
 -   [Architecture](architecture.qmd): Deep dive into how pipelines, lifting, and fusion work.
 -   [Adding Transforms](adding_transforms.qmd): Guide to implementing and registering new transforms.
 -   [Pipeline Library](pipeline_library.qmd): Saving and loading `PipelineDescriptor` files from the user library.
--   [Pipeline Library Roadmap](pipeline_library_roadmap.md): Phased plan for library UI and widget integration.
 -   [Tensor Inspector](../ui/data_inspectors/tensor_inspector.qmd): Developer notes on the Tensor Inspector widget.
