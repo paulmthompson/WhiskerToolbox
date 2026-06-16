@@ -422,7 +422,7 @@ and [Command Introspection](command_introspection.qmd) for the full metadata tab
 | `SaveData` | Commands | Done | Save via `LoaderRegistry`; atomic write-ahead pattern |
 | `LoadData` | Commands | Done | Load via `LoaderRegistry`; undoable via `deleteData()` |
 | `SynthesizeData` | DataSynthesizer | Done | Generate data via `GeneratorRegistry` |
-| `RunTransformsV2PipelineAtTime` | TransformsV2 | Planned | Run a saved V2 pipeline on one frame; tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267) ([design doc](run_transforms_v2_pipeline_at_time.qmd)) |
+| `RunTransformsV2PipelineAtTime` | TransformsV2 | Planned | Run a saved V2 pipeline on one frame; tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267) |
 | `RunTransformPipeline` | TransformsV2 | Future | Full-series pipeline over an entire data object (not yet scoped) |
 
 ### MoveByTimeRange
@@ -461,8 +461,7 @@ Wraps `LoaderRegistry::tryLoad()`. Undoable via `deleteData()`. See [LoadData Co
 ### RunTransformsV2PipelineAtTime *(planned)*
 
 Single-frame bridge from Triage/command sequences to TransformsV2 `PipelineDescriptor` JSON.
-Implementation: [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
-Design: [run_transforms_v2_pipeline_at_time.qmd](run_transforms_v2_pipeline_at_time.qmd).
+Tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
 
 ### RunTransformPipeline *(future)*
 

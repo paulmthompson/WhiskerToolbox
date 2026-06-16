@@ -48,4 +48,7 @@ When a command delegates to `ElementRegistry` at runtime, consumers will also ne
 3. Add an idempotent guard (`if (reg.isKnown("CommandName")) return;`) once the first
    command is registered.
 
-See also: [Command Registry](../DataManager/Commands/command_registry.qmd).
+Planned first command: `RunTransformsV2PipelineAtTime` —
+[#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
+
+See also: [Command Registry](../Commands/command_registry.qmd).
