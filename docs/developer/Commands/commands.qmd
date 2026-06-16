@@ -291,4 +291,3 @@ frame commands are covered in `SetEventAtTime.test.cpp` and `AdvanceFrame.test.c
 - [Core Types](core_types.qmd) — `CommandResult`, `CommandContext`, `ICommand`
 - [getEntityIdsInRange](get_entity_ids_in_range.qmd) — Query helpers used by Move/Copy commands
 - [Sequence Execution](sequence_execution.qmd) — `executeSequence()` and variable substitution
-- [Roadmap](roadmap.qmd) — Implementation progress

@@ -21,7 +21,7 @@ modifying a central switch statement.
 ## Design
 
 The registry follows the **Explicit Dispatcher** pattern (see
-[Roadmap Phase 7](roadmap.qmd#phase-7-command-registration-api-explicit-dispatcher)):
+[Command Architecture](index.qmd)):
 
 1. Each library defines a free function (e.g., `register_core_commands()`) that calls
    `registerTypedCommand<>` for each command it owns.

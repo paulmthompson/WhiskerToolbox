@@ -102,4 +102,3 @@ have run.
 
 - [ParameterSchema Library](../ParameterSchema/index.qmd) — shared schema extraction
 - [Command Architecture](index.qmd) — full design document
-- [Roadmap](roadmap.qmd) — implementation progress

@@ -14,15 +14,11 @@ exhaustively auditing every widget up front:
    interaction. This narrows the audit surface immediately.
 2. **Detailed audit on-demand** — Full verb enumeration (Phase A–D) happens when you are
    about to implement commands for a widget or refactor it.
-3. **Runtime gap detection** — The `MutationGuard` (see [roadmap Step 1.13](roadmap.qmd))
-   automatically logs `DataManager` mutations that bypass the command system at runtime.
-   This replaces manual header-reading for gap discovery.
+3. **Runtime gap detection** — The `MutationGuard` automatically logs `DataManager`
+   mutations that bypass the command system at runtime. This replaces manual
+   header-reading for gap discovery.
 4. **Golden trace verification** — A widget is "done" when a recorded command sequence
-   replays successfully and produces the expected `DataManagerSnapshot` (see
-   [roadmap Step 1.14](roadmap.qmd)).
-
-This is the detailed plan for [Step 1.10](roadmap.qmd#step-1.10---gui-verb-audit) in the
-Command Architecture Roadmap.
+   replays successfully and produces the expected `DataManagerSnapshot`.
 
 ## Classification Scheme
 

@@ -50,7 +50,7 @@ The widget follows the standard EditorState registration pattern:
   and polls it for new entries.
 - Registration uses `Zone::Right`, single-instance, no properties panel.
 
-## Relationship to Roadmap
+## Relationship to Action Journal
 
 This widget implements the Command Log UI for session command recording. Integration
 testing (golden traces, `DataManagerSnapshot` replay) is tracked in
@@ -65,4 +65,3 @@ timestamped, filterable log.
   executed `CommandDescriptor` entries
 - [Sequence Execution](sequence_execution.qmd) — `executeSequence()` and
   its recording hook
-- [Command Architecture Roadmap](roadmap.qmd) — remaining command architecture work

@@ -9,8 +9,6 @@ operations as serializable, composable, and optionally undoable command objects.
 multi-step workflows (such as triage pipelines) to be defined as JSON documents and executed
 atomically.
 
-For the phased implementation plan, see the [Command Architecture Roadmap](roadmap.qmd).
-
 ## Source Location
 
 - Core command library: `src/Commands/` (standalone static library)
@@ -964,6 +962,5 @@ wrappers, making the command system the single execution path for all operations
 
 ## See Also
 
-- [Command Architecture Roadmap](roadmap.qmd) — phased implementation plan
 - [State Management Roadmap](../STATE_MANAGEMENT_ROADMAP.md) — related state management plans (Phases 4–6 superseded by this architecture)
 - [Data Manager](../DataManager/data_manager.qmd) — core data management documentation

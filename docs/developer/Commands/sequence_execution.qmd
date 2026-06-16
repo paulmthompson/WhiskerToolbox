@@ -150,4 +150,3 @@ Test file: `src/Commands/Core/VariableSubstitution.test.cpp`
 
 - [Command Core Types & Factory](core_types.qmd) — `CommandDescriptor`, `CommandContext`, factory
 - [Command Architecture](index.qmd) — full design document
-- [Command Architecture Roadmap](roadmap.qmd) — implementation plan

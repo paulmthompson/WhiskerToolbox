@@ -125,4 +125,3 @@ Tests cover:
 
 - [Command Architecture](index.qmd) — full design document
 - [Variable Substitution & Sequence Execution](sequence_execution.qmd) — runtime execution engine
-- [Command Architecture Roadmap](roadmap.qmd) — implementation plan
