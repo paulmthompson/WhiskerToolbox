@@ -5,8 +5,8 @@ title: "DeepLearning Widget Helpers"
 ## Overview
 
 The `DeepLearning_Widget/UI/Helpers/` directory contains reusable utility classes
-extracted from the monolithic `DeepLearningPropertiesWidget` as part of the
-[refactoring roadmap](refactoring_roadmap.md) (Phases 0.2 and 0.3).
+extracted from the monolithic `DeepLearningPropertiesWidget` during the widget
+refactoring (helper extraction and schema-driven sub-panels).
 
 ## DataSourceComboHelper
 
@@ -232,3 +232,54 @@ form). For runtime catalogs, ordered multi-step composition, and JSON-as-state,
 see [Schema-Driven Forms](../ui/schema_driven_forms.qmd), which documents how
 TransformsV2_Widget extends the same primitives and proposes phased improvements
 for this widget.
+
+## MemorySlotWidget {#memoryslotwidget}
+
+**Header:** `DeepLearning_Widget/UI/Helpers/MemorySlotWidget.hpp`
+
+A self-contained widget for configuring memory (static) input slots. Replaces the
+former `StaticInputSlotWidget`, `SequenceSlotWidget`, and `RecurrentBindingWidget`.
+
+### Architecture
+
+Each slot position is configured via `MemoryFrameBinding` in session state. The
+widget exposes a **Frame kind** combo (Static / Recurrent) and stacked
+`AutoParamWidget` forms backed by `StaticFrameSourceForm` and
+`RecurrentFrameSourceForm` from `BindingParamSchemas.hpp`.
+
+```cpp
+// Read back bindings for this slot only
+std::vector<dl::MemoryFrameBinding> frames = widget.bindings();
+
+// Restore from session state (filters by slot_name)
+widget.setBindings(state->memoryFrames());
+```
+
+Sequence slots (`sequence_dim >= 0`) support multiple position rows with Add/Remove
+controls up to the model sequence length. Single-frame slots use one row.
+
+### Signals
+
+| Signal | Emitted when |
+|---|---|
+| `bindingChanged()` | Any frame kind, static source, or recurrent parameter changes |
+
+### Typical usage
+
+```cpp
+auto * memory = new MemorySlotWidget(slot_descriptor, data_manager,
+                                     output_slot_names, this);
+layout->addWidget(memory);
+
+connect(memory, &MemorySlotWidget::bindingChanged, this, [&]() {
+    _syncBindingsFromUi();
+});
+
+memory->setBindings(_state->memoryFrames());
+memory->refreshDataSources();
+memory->refreshBankEntries(bank_entry_ids);
+memory->refreshOutputSlots(output_slot_names);
+```
+
+See [Memory Frame Bindings](../DeepLearning/bindings/memory_frames.qmd) for the
+core data model.
