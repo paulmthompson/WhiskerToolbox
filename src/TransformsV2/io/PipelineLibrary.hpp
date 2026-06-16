@@ -6,7 +6,7 @@
  * @brief Qt-free helpers for listing and persisting TransformsV2 PipelineDescriptor files
  *
  * User-saved pipelines live under {@code config_dir/pipelines/transforms_v2/} by convention.
- * This matches StateManager's application config root (see pipeline_library_roadmap.md).
+ * This matches StateManager's application config root (see docs/developer/transforms_v2/pipeline_library.qmd).
  */
 
 #include <rfl/Result.hpp>
