@@ -8,7 +8,6 @@
  * `DataManager` and skips frames that are (or are not) covered by an interval.
  *
  * @see TimeScrollBar for integration points (`_vidLoop`, `changeScrollBarValue`)
- * @see optimized_contact_triage_plan.md Phase 4 for design rationale
  */
 
 #ifndef FRAME_FILTER_HPP

@@ -6,7 +6,7 @@ title: "TriageSession"
 
 The `TriageSession` library provides a Mark/Commit/Recall state machine for
 triage workflows. It is a pure C++ library with no Qt dependency, designed as
-a **consumer** of the [Command Architecture](../DataManager/Commands/index.qmd).
+a **consumer** of the [Command Architecture](../Commands/index.qmd).
 
 ## Source Location
 
@@ -83,5 +83,4 @@ Test coverage includes:
 
 ## See Also
 
-- [Command Architecture](../DataManager/Commands/index.qmd) — the command system that TriageSession consumes
-- [Command Architecture Roadmap](../DataManager/Commands/roadmap.qmd) — phased implementation plan
+- [Command Architecture](../Commands/index.qmd) — the command system that TriageSession consumes
