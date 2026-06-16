@@ -29,9 +29,10 @@ Describes a single field in a parameter struct at runtime:
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `std::string` | Reflect-cpp field name (snake_case) |
-| `type_name` | `std::string` | Underlying type: `"float"`, `"int"`, `"std::string"`, `"bool"`, `"enum"` |
+| `type_name` | `std::string` | Underlying type: `"float"`, `"double"`, `"int"`, `"std::string"`, `"bool"`, `"enum"`, `"variant"`, or `"vector<...>"` (e.g. `"vector<std::string>"`) |
 | `raw_type_name` | `std::string` | Full raw type string from reflect-cpp |
 | `display_name` | `std::string` | Human-readable "Title Case" label |
+| `display_order` | `int` | Sequential field index (0-based) assigned during extraction |
 | `min_value` / `max_value` | `std::optional<double>` | From `rfl::Validator` constraints |
 | `is_exclusive_min/max` | `bool` | Exclusive vs. inclusive bound |
 | `allowed_values` | `std::vector<std::string>` | For enum-like string fields; auto-populated for `enum class` fields |
@@ -44,7 +45,7 @@ Describes a single field in a parameter struct at runtime:
 | `dynamic_combo` | `bool` | If true, create QComboBox even with empty `allowed_values` |
 | `include_none_sentinel` | `bool` | If true, prepend "(None)" sentinel to combo (maps to `""` in JSON) |
 | `is_vector` | `bool` | True for `std::vector<T>` fields |
-| `vector_element_type` | `std::string` | Element type for vector fields (e.g. `"string"`, `"int"`, `"float"`) |
+| `vector_element_type` | `std::string` | Element type for vector fields (e.g. `"std::string"`, `"int"`, `"float"`, `"double"`) |
 | `is_variant` | `bool` | True for `rfl::TaggedUnion` fields |
 | `variant_discriminator` | `std::string` | Tag field name (e.g. `"model"`) |
 | `variant_alternatives` | `std::vector<VariantAlternative>` | One entry per union alternative |
@@ -98,8 +99,8 @@ or lazily by the command factory (Command Architecture).
 automatically detected at compile time using `detail::is_std_vector_v<T>`. When detected:
 
 - `is_vector` is set to `true`
-- `vector_element_type` is set to the element type name (e.g. `"string"`, `"int"`, `"float"`)
-- `type_name` is set to `"vector<element_type>"` (e.g. `"vector<string>"`)
+- `vector_element_type` is set to the element type name (e.g. `"std::string"`, `"int"`, `"float"`)
+- `type_name` is set to `"vector<element_type>"` (e.g. `"vector<std::string>"`)
 - Default values serialize as JSON arrays (e.g. `["ch1","ch2"]` or `[0,1,2]`)
 
 ```cpp
@@ -112,7 +113,7 @@ struct MultiChannelParams {
 
 `AutoParamWidget` renders vector fields in two modes:
 
-1. **Multi-select list** — When `vector_element_type == "string"` and `dynamic_combo == true`,
+1. **Multi-select list** — When `vector_element_type == "std::string"` and `dynamic_combo == true`,
    a `QListWidget` with checkable items is created. Items are populated at runtime via
    `updateAllowedValues()`. All items are checked by default on first population. The list
    has a maximum height of 200px and scrolls for larger lists.
@@ -159,8 +160,8 @@ struct MyParams {
 
 **Limitations:**
 
-- Enum values must be in the range [-256, 256] (reflect-cpp default; configurable via
-  `rfl::config::enum_range<E>`).
+- Scoped enum underlying values are scanned in **[0, 127]** by default (reflect-cpp
+  compile-time name extraction via `rfl::get_enumerator_array<E>()`).
 - The enum must be in a named namespace (anonymous namespaces break reflect-cpp's
   compile-time name extraction).
 
@@ -198,7 +199,7 @@ struct SinusoidalMotionParams {
 
 struct BrownianMotionParams {
     float diffusion = 1.0f;
-    int seed = 42;
+    uint64_t seed = 42;
 };
 
 using MotionVariant = rfl::TaggedUnion<
@@ -229,7 +230,23 @@ JSON output:
 
 `AutoParamWidget` renders variant fields as a combo box (discriminator) above
 a `QStackedWidget` containing one sub-form per alternative. Changing the combo
-box selection swaps the visible sub-form.
+box selection swaps the visible sub-form. Each combo item stores its stack index
+in `Qt::UserRole` so that `updateVariantAlternatives()` can filter visible
+alternatives without breaking the combo-to-stack mapping.
+
+#### Runtime Variant Filtering
+
+Call `AutoParamWidget::updateVariantAlternatives()` to show only a subset of
+alternatives at runtime (e.g. when only some encoder types are valid for the
+current model):
+
+```cpp
+widget->updateVariantAlternatives("motion", {"LinearMotionParams", "SinusoidalMotionParams"});
+```
+
+If the currently selected alternative is hidden, the widget switches to the first
+visible alternative. See [AutoParam System](../ui/autoparam.qmd) for full
+behavior.
 
 **Important:** `rfl::TaggedUnion` has no default constructor. The variant field
 in your params struct must have a default member initializer that provides one
@@ -293,10 +310,3 @@ The library's `target_include_directories` exposes `src/` as the include root, s
 include works from any target that links `WhiskerToolbox::ParameterSchema` (directly or
 transitively through TransformsV2).
 
-## History
-
-The `ParameterSchema` types were originally defined inside
-`src/TransformsV2/core/ParameterSchema.hpp`. They were extracted into this standalone
-library (Step 1.11 of the Command Architecture Roadmap) to allow the Command Architecture
-(`src/DataManager/Commands/`) and future UI libraries to depend on schema extraction
-without coupling to TransformsV2.
