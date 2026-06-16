@@ -6,36 +6,40 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2025-07-22*
+*Last updated: 2026-06-16*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | **Complete** | 7 commands, factory, validation, variable substitution, recorder, mutation guard, golden traces |
-| **Phase 2:** Triage Session | **Nearly Complete** | Core, widget, guided editor all done. tracked-regions overlay (2.5) remains. |
+| **Phase 1:** Command Foundation | **Complete** | 10 core commands, factory/registry, validation, variable substitution, recorder, mutation guard, golden traces |
+| **Phase 2:** Triage Session | **Complete** | Core, widget, guided editor, unit tests |
 | **Phase 3:** Persistence & Save Registry | **Complete** | SaverRegistry, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
-| **Phase 3.5:** Command Recording & Test Generation | **Nearly Complete** | Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI). Only end-to-end verification (3.5.4) remains. |
+| **Phase 3.5:** Command Recording & Test Generation | **Nearly Complete** | Infrastructure done (3.5.1–3.5.3). Integration testing tracked in [#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288). |
 | **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal. Depends on Phase 3.5. |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
-| **Phase 6:** CLI Batch & Macro Recording | Not Started | Headless command execution; generalizes golden trace tests |
 | **Phase 7:** Command Registration API | **Complete** | `CommandRegistry` singleton, `register_core_commands()`, explicit dispatcher. All exit criteria met. |
-| **Widget Command-ification** | Ongoing | 9 new commands identified via audit; none yet implemented. See [GUI Verb Audit](gui_verb_audit.qmd). |
+| **Batch & sequence tooling** | **Complete** | `DataManagerPipelineRunner`, `JsonPipelineRunner`, `CommandLog_Widget`, Triage guided editor |
+| **Widget Command-ification** | Ongoing | [#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)–[#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292) filed; widget refactors remain. |
 
 For the full architectural design, types, and code examples, see the
 [Command Architecture Design Document](index.qmd).
 
 ## What Exists Today
 
-### Registered Commands (7)
+### Registered Commands (11)
 
-| Command | Category | Undoable | Description |
-|---------|----------|----------|-------------|
-| `MoveByTimeRange` | data_mutation | Yes | Move entities in a frame range between same-type data objects |
-| `CopyByTimeRange` | data_mutation | No | Copy entities (source unmodified) |
-| `AddInterval` | data_mutation | No | Append interval to `DigitalIntervalSeries`; creates series if missing |
-| `ForEachKey` | meta | No | Iterate a list of values, execute sub-commands per item |
-| `SaveData` | persistence | No | Save a data object via `LoaderRegistry::trySave()` |
-| `LoadData` | persistence | Yes | Load a data object via `LoaderRegistry::tryLoad()` |
-| `SynthesizeData` | data_creation | No | Generate data via `GeneratorRegistry` |
+| Command | Library | Category | Undoable | Description |
+|---------|---------|----------|----------|-------------|
+| `MoveByTimeRange` | Commands | data_mutation | Yes | Move entities in a frame range between same-type data objects |
+| `CopyByTimeRange` | Commands | data_mutation | No | Copy entities (source unmodified) |
+| `AddInterval` | Commands | data_mutation | No | Append interval to `DigitalIntervalSeries`; creates series if missing |
+| `SetEventAtTime` | Commands | data_mutation | No | Set or clear `DigitalIntervalSeries` membership at one frame |
+| `FlipEventAtTime` | Commands | data_mutation | No | Toggle `DigitalIntervalSeries` membership at one frame |
+| `ClearLineDataAtTime` | Commands | data_mutation | No | Remove all `LineData` entries at one frame |
+| `AdvanceFrame` | Commands | navigation | No | Shift current visualization frame via `TimeController` |
+| `ForEachKey` | Commands | meta | Conditional | Iterate a list of values, execute sub-commands per item |
+| `SaveData` | Commands | persistence | No | Save a data object via `LoaderRegistry::trySave()` |
+| `LoadData` | Commands | persistence | Yes | Load a data object via `LoaderRegistry::tryLoad()` |
+| `SynthesizeData` | DataSynthesizer | data_creation | No | Generate data via `GeneratorRegistry` |
 
 ### Infrastructure
 
@@ -43,9 +47,14 @@ For the full architectural design, types, and code examples, see the
 |-----------|----------|---------|
 | `CommandRegistry` | `src/Commands/Core/` | Singleton registry with `registerCommand()`, `isKnown()`, `create()`, `availableCommands()` |
 | `CommandFactory` | `src/Commands/Core/` | Thin wrappers delegating to `CommandRegistry::instance()` |
-| `register_core_commands()` | `src/Commands/Core/` | Explicit dispatcher registering all 7 built-in commands |
+| `register_core_commands()` | `src/Commands/` | Registers 10 built-in commands in the Commands library |
+| `register_datasynthesizer_commands()` | `src/DataSynthesizer/` | Registers `SynthesizeData` |
+| `register_transformsv2_commands()` | `src/TransformsV2/` | Placeholder for future TransformsV2 bridge commands |
 | `CommandRecorder` | `src/Commands/Core/` | Records executed commands for replay; hook in `executeSequence()` |
 | `CommandLog_Widget` | `src/WhiskerToolbox/CommandLog_Widget/` | Real-time command log with "Copy as JSON" export |
+| `JsonPipelineRunner` | `src/DataManager/JsonPipeline/` | Headless load/transform/command/save pipeline from JSON |
+| `DataManagerPipelineRunner` | `src/DataManagerPipelineRunner/` | CLI executable wrapping `runJsonPipelineFile()` |
+| `GuidedPipelineEditor` | `src/WhiskerToolbox/TriageSession_Widget/` | Visual command-sequence builder (synced with raw JSON) |
 | `MutationGuard` | `src/DataManager/Commands/` | Debug-only: warns when `DataManager` is mutated outside a command |
 | `DataManagerSnapshot` | `src/DataManager/` | Lightweight state snapshot (type, entity count, content hash) for golden trace tests |
 | `ParameterSchema` | `src/ParameterSchema/` | Compile-time parameter schema extraction from reflect-cpp structs |
@@ -70,32 +79,29 @@ For the full architectural design, types, and code examples, see the
 ## Dependency Graph (Remaining Work)
 
 ```
-Completed Foundation (Phases 1, 3, 3.5 nearly done, 7)
+Completed Foundation (Phases 1, 2, 3, 3.5 infra, 7)
    │
-   ├──► Phase 2 Remaining: tracked-regions viz (2.5)
-   │
-   ├──► Phase 3.5 Remaining: End-to-end verification (3.5.4)
-   │       Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI)
+   ├──► Phase 3.5 integration testing ([#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288))
+   │       Golden-trace / DataManagerSnapshot verification for recorded command sequences
    │
    ├──► Widget Command-ification (ongoing, on-demand)
-   │       Uses: MutationGuard for gap detection, golden traces for verification
-   │       Needed: CreateData, DeleteData, AddEvent, RemoveEvent, etc.
+   │       [#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)–[#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292)
    │
    ├──► Phase 4: Action Journal
-   │       Depends on: Phase 3.5 completion
+   │       Depends on: [#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288) (Phase 3.5 integration testing)
    │       Generalizes recorder into persistent timestamped log
    │
-   ├──► Phase 5: Undo/Redo
-   │       Independent of other phases
-   │       MoveByTimeRange already supports undo; needs CommandStack
-   │
-   └──► Phase 6: CLI Batch & Macro Recording
-           Depends on: Phase 4
-           Generalizes golden trace tests into CLI tool
+   └──► Phase 5: Undo/Redo
+           Independent of other phases
+           MoveByTimeRange already supports undo; needs CommandStack
 ```
 
-**Parallelizable:** Phase 3.5.4, Phase 5, and widget command-ification can proceed independently.
-Phase 4 depends on Phase 3.5. Phase 6 requires Phase 4.
+**Parallelizable:** [#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288), Phase 5, and widget command-ification can proceed independently.
+Phase 4 depends on #288.
+
+Headless batch execution and interactive sequence editing are **complete** — see
+[JSON Pipeline Runner](../DataManager/json_pipeline_runner.qmd) and
+[TriageSession Widget](../ui/TriageSession_Widget/index.qmd).
 
 ---
 
@@ -113,14 +119,14 @@ See the [design document](index.qmd) for architecture details.
 
 All steps complete. Delivered: `SaverInfo` metadata + `AtomicWrite` utility, 8 format savers (CSV ×6 data types, CapnProto LineData, OpenCV MaskData), all fuzz-tested. `SaveData` command (not undoable) and `LoadData` command (undoable via `deleteData()`).
 
-See [SaverInfo & AtomicWrite](../../IO/saver_infrastructure.qmd), [SaveData](save_data.qmd), [LoadData](load_data.qmd).
+See [SaverInfo & AtomicWrite](../DataManager/IO/saver_infrastructure.qmd), [SaveData](save_data.qmd), [LoadData](load_data.qmd).
 
 ### Phase 7 — Command Registration API (Complete)
 
 Replaced the hardcoded if-else chain in `CommandFactory` with `CommandRegistry` singleton + explicit dispatcher pattern. All exit criteria met:
 
 - `CommandFactory.cpp` contains zero if-else branches; delegates to `CommandRegistry::instance()`
-- `register_core_commands()` registers all 7 built-in commands
+- `register_core_commands()` registers all 10 built-in Commands-library commands
 - Called from `MainWindow` constructor (dedicated `register_all_commands.cpp` deferred until domain libraries contribute commands)
 - Reusable `tests/shared/RegisterCommandsListener.cpp` Catch2 listener for test setup
 - `CommandRegistry.test.cpp` verifies all commands registered (10 test cases)
@@ -132,49 +138,31 @@ Replaced the hardcoded if-else chain in `CommandFactory` with `CommandRegistry` 
 
 ---
 
-## Phase 2 — Triage Session (Nearly Complete)
+## Phase 2 — Triage Session (Complete)
 
 **Goal:** Mark/Commit/Recall workflow using command sequences.
 
-**Completed:** TriageSession core (state machine, `commit()` with runtime variables), TriageSessionState (EditorState subclass), TriageSessionWidget (UI), unit tests, AutoParamWidget extraction, Guided Pipeline Editor.
-
-### Remaining Steps
-
-#### Step 2.5 — Tracked-Regions Visualization
-
-- [ ] Render tracked-regions `DigitalIntervalSeries` as shaded overlay on the timeline/scrubber
+**Delivered:** TriageSession core (state machine, `commit()` with runtime variables), TriageSessionState (EditorState subclass), TriageSessionWidget (UI), unit tests, AutoParamWidget extraction, Guided Pipeline Editor.
 
 ---
 
-## Phase 3.5 — Command Recording & Test Generation (Nearly Complete)
+## Phase 3.5 — Command Recording (Nearly Complete)
 
 **Goal:** Wire `CommandRecorder` into the running application so GUI actions produce
 exportable `CommandSequenceDescriptor` JSON, enabling semi-automated golden trace test
 generation.
 
-**Completed:** Steps 3.5.1–3.5.3 all done:
+**Completed (3.5.1–3.5.3):**
 
-- **Step 3.5.1 (Centralized Recorder):** `CommandContext` has `CommandRecorder* recorder` field. `executeSequence()` falls back to `ctx.recorder`. `MainWindow` owns a `CommandRecorder` and exposes `commandRecorder()` getter.
-- **Step 3.5.2 (Route Widgets):** DataSynthesizer Generate, SaveData call sites, and TriageSession `commit()` all route through `executeSequence()` with the shared recorder.
-- **Step 3.5.3 (Command Log UI):** `CommandLog_Widget` displays recorded commands in real-time with "Copy as JSON" and "Clear" buttons. Accessible via Modules → Command Log.
+- **Centralized Recorder:** `CommandContext` has `CommandRecorder* recorder` field.
+  `executeSequence()` falls back to `ctx.recorder`. `MainWindow` owns a `CommandRecorder`
+  and exposes `commandRecorder()` getter.
+- **Route Widgets:** DataSynthesizer Generate, SaveData call sites, and TriageSession
+  `commit()` route through `executeSequence()` with the shared recorder.
+- **Command Log UI:** `CommandLog_Widget` displays recorded commands in real-time with
+  "Copy as JSON" and "Clear". Accessible via Modules → Command Log.
 
-### Remaining: Step 3.5.4 — End-to-End Verification
-
-- [ ] Demo workflow: Open app → open Command Log → generate a SineWave via Data Synthesizer
-  → save as CSV via DataInspector → Command Log shows 2 entries (`SynthesizeData`, `SaveData`)
-  → "Copy as JSON" → paste into a Catch2 golden trace test with `DataManagerSnapshot`
-  assertions → test passes.
-- [ ] Debug build: exercising recorded workflows produces no `MutationGuard` warnings.
-- [ ] Round-trip: `executeSequence(recorded_json)` then `executeSequence(recorder.toSequence())`
-  produce identical `DataManagerSnapshot`s.
-
-### Exit Criteria
-
-1. All GUI command execution paths go through `executeSequence()` with a recorder.
-2. Command Log widget displays recorded commands in real-time.
-3. "Copy as JSON" produces a valid `CommandSequenceDescriptor` that, when pasted into a
-   Catch2 test and executed via `executeSequence()`, reproduces the same
-   `DataManagerSnapshot`.
+**Remaining:** Integration and golden-trace testing — [#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288)
 
 ---
 
@@ -200,22 +188,21 @@ A widget is fully command-ified when:
 
 | Widget | Verbs | Covered | New Cmds Needed | Golden Trace |
 |--------|-------|---------|-----------------|--------------|
-| DataManager_Widget | 3 | 0 | 2 (`CreateData`, `DeleteData`) | Not yet |
-| DataInspector_Widget | ~30 | ~10 | ~14 | Not yet |
+| DataManager_Widget | 3 | 0 | 2 ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)) | Not yet |
+| DataInspector_Widget | ~30 | ~10 | ~12 ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291), [#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292)) | Not yet |
 
-### Commands Still Needed
+### Commands in progress
 
-9 commands identified by audit but not yet implemented. See
-[New Commands Identified](gui_verb_audit.qmd#new-commands-identified) for full designs.
+**Wave 1 — Core CRUD**
 
-**Wave 1 — Core CRUD:** `CreateData`, `DeleteData`, `AddEvent`, `RemoveEvent`
+- `CreateData`, `DeleteData` + `DataManager_Widget` routing — [#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)
+- `AddEvent`, `RemoveEvent` + `DigitalEventSeriesInspector` routing — [#290](https://github.com/paulmthompson/WhiskerToolbox/issues/290)
 
-**Wave 2 — Entity Operations:** `DeleteByEntityIds`, `RemoveInterval`, `ModifyInterval`
+**Wave 2 — Entity operations:** `DeleteByEntityIds`, `RemoveInterval`, `ModifyInterval` — [#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291)
 
-**Wave 3 — Group Operations:** `AssignToGroup`, `RemoveFromGroup`
+**Wave 3 — Group operations:** `AssignToGroup`, `RemoveFromGroup` — [#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292)
 
-Remaining widgets (DataImport, DataExport, Media, etc.) are audited on-demand as they are
-touched. MutationGuard provides automated runtime gap detection.
+Param struct designs: [GUI Verb Audit — New Commands Identified](gui_verb_audit.qmd#new-commands-identified).
 
 ---
 
@@ -223,7 +210,7 @@ touched. MutationGuard provides automated runtime gap detection.
 
 **Goal:** Commands auto-record to journal; journal can replay command entries.
 
-**Depends on:** Phase 3.5 (nearly complete — only 3.5.4 verification remains)
+**Depends on:** [#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288) (Phase 3.5 integration testing)
 
 Generalizes the `CommandRecorder` into a persistent, timestamped, filterable log with
 workspace integration. The `executeSequence()` hook from Step 1.13 is reused — the change
@@ -285,33 +272,18 @@ See [CommandStack](index.qmd#commandstack) in the design document.
 
 ---
 
-## Phase 6 — CLI Batch Executor & Macro Recording
+## Batch Execution & Sequence Editing (Complete)
 
-**Goal:** Execute command sequences headlessly; record GUI actions as commands.
+The original "Phase 6" plan assumed separate CLI, macro-recording, and standalone sequence-editor
+deliverables. These are now covered by existing components:
 
-**Depends on:** Phases 3 (done), 4
+| Original plan | Delivered by |
+|---------------|--------------|
+| Headless CLI executor | `DataManagerPipelineRunner` + `JsonPipelineRunner` — see [JSON Pipeline Runner](../DataManager/json_pipeline_runner.qmd) |
+| Macro / session recording | `CommandRecorder` + `CommandLog_Widget` ("Copy as JSON") — see [Command Log Widget](command_log_widget.qmd) |
+| Standalone sequence editor | `TriageSession_Widget` guided editor + raw JSON — see [TriageSession Widget](../ui/TriageSession_Widget/index.qmd) |
 
-### Step 6.1 — CLI Executor
-
-- [ ] CLI tool or application mode: load a `.json` command sequence, create `DataManager`, execute, exit
-- [ ] Variable substitution for batch parameterization
-- [ ] Exit code reflects success/failure
-
-### Step 6.2 — Macro Recorder
-
-- [ ] Intercept GUI actions and emit `CommandDescriptor`s
-- [ ] Record to an in-memory `CommandSequenceDescriptor` that can be saved to JSON
-
-### Step 6.3 — ConfigExportToolbar
-
-- [ ] Reusable toolbar component: "Copy as JSON", "Save Configuration..."
-- [ ] Attach to widgets that produce command sequences
-
-### Step 6.4 — CommandSequenceWidget
-
-- [ ] Standalone Qt widget for building, editing, and running command sequences
-- [ ] JSON editor with validation feedback
-- [ ] Command list view with run button
+No further work is planned for a generic `CommandSequenceWidget` or `ConfigExportToolbar`.
 
 ---
 
@@ -319,7 +291,8 @@ See [CommandStack](index.qmd#commandstack) in the design document.
 
 This roadmap replaces Phases 4–6 of the
 [State Management Roadmap](../../STATE_MANAGEMENT_ROADMAP.md) with a more comprehensive
-command-first architecture. Ideas carried forward: Action Journal, CommandStack, memento-based EditorState undo, command merging, ConfigExportToolbar, session replay, and incremental adoption.
+command-first architecture. Remaining ideas carried forward: Action Journal, CommandStack,
+memento-based EditorState undo, command merging, and incremental adoption.
 
 ## See Also
 
@@ -327,4 +300,4 @@ command-first architecture. Ideas carried forward: Action Journal, CommandStack,
 - [GUI Verb Audit](gui_verb_audit.qmd) — widget audit tables and new command designs
 - [Inter-Widget Communication Roadmap](../../inter_widget_communication_roadmap.md) — ContextActions, OperationContext, cross-roadmap sequence
 - [Tensor Transforms Roadmap](../../tensor_transforms_roadmap.md) — PCA, t-SNE, scatter integration
-- [Data Manager](../data_manager.qmd) — core data management documentation
+- [Data Manager](../DataManager/data_manager.qmd) — core data management documentation

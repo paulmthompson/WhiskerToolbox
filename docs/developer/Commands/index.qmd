@@ -14,12 +14,15 @@ For the phased implementation plan, see the [Command Architecture Roadmap](roadm
 ## Source Location
 
 - Core command library: `src/Commands/` (standalone static library)
-  - `src/Commands/Core/` — framework: `ICommand`, `CommandFactory`, `CommandRecorder`, `SequenceExecution`, `Validation`, `VariableSubstitution`
-  - `src/Commands/IO/` — persistence commands: `SaveData`, `LoadData`
-  - `src/Commands/` (root) — data mutation commands: `MoveByTimeRange`, `CopyByTimeRange`, `AddInterval`, `ForEachKey`
+  - `src/Commands/Core/` — framework: `ICommand`, `CommandFactory`, `CommandRegistry`, `CommandRecorder`, `SequenceExecution`, `Validation`, `VariableSubstitution`
+  - `src/Commands/IO/` — persistence commands: `SaveData`, `LoadData`, `SavePathResolver`
+  - `src/Commands/DataObjects/` — type-specific mutation commands (e.g. `AddInterval`, `SetEventAtTime`, `ClearLineDataAtTime`)
+  - `src/Commands/` (root) — range/meta commands: `MoveByTimeRange`, `CopyByTimeRange`, `ForEachKey`, `AdvanceFrame`
+- Domain command extensions: `src/DataSynthesizer/Commands/`, future `src/TransformsV2/` bridge commands
 - Triage session (non-Qt): `src/TriageSession/`
 - Triage widget (Qt): `src/WhiskerToolbox/TriageSession_Widget/`
-- Command sequence widget (Qt): `src/WhiskerToolbox/Commands/`
+- Headless batch runner: `src/DataManagerPipelineRunner/`, `src/DataManager/JsonPipeline/`
+- Command log (Qt): `src/WhiskerToolbox/CommandLog_Widget/`
 
 ## Problem Statement
 
@@ -90,9 +93,10 @@ widget and enumerating its buttons, menu items, keyboard shortcuts, and drag-and
                            │ used by
          ┌─────────────────┼─────────────────┐
          ▼                 ▼                 ▼
-   TriageSession     ActionJournal     Future consumers
-   (mark/commit)     (record/replay)   (CLI batch, macros,
-                                        Python bridge)
+   TriageSession     ActionJournal     JsonPipelineRunner
+   (mark/commit)     (record/replay)   (headless batch),
+                     CommandLog        Python bridge
+                     (record/export)
 ```
 
 ### Relationship to Existing Systems
@@ -100,8 +104,9 @@ widget and enumerating its buttons, menu items, keyboard shortcuts, and drag-and
 - **TransformsV2 operates at the element level** — transform individual data points within a
   single data object. The Command Architecture operates at the **DataManager level** — move
   entire objects, save files, create intervals, manage state.
-- **`RunTransformPipeline`** is a command that bridges the two: it takes an input key, output
-  key, and pipeline descriptor, and delegates to TransformsV2 for execution.
+- **`RunTransformsV2PipelineAtTime`** bridges Triage/command sequences to TransformsV2 for
+  single-frame pipeline execution ([#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267)).
+  A future full-series `RunTransformPipeline` command may cover entire data objects.
 - **EditorState** is not replaced and is not part of the command architecture. EditorState
   manages view/UI concerns (display options, zoom, active selections) which already have their
   own persistence via `toJson()`/`fromJson()` and workspace save.
@@ -148,14 +153,19 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 | `CommandDescriptor`, `CommandSequenceDescriptor` | `src/Commands/Core/` | **No** |
 | Concrete commands (`MoveByTimeRange`, `AddInterval`, etc.) | `src/Commands/` | **No** |
 | IO commands (`SaveData`, `LoadData`) | `src/Commands/IO/` | **No** |
-| `CommandFactory`, `CommandInfo` + `getAvailableCommands()` | `src/Commands/Core/` | **No** |
+| `CommandFactory`, `CommandRegistry`, `CommandInfo` + `getAvailableCommands()` | `src/Commands/Core/` | **No** |
+| `register_core_commands()` | `src/Commands/` | **No** |
 | `ParameterSchema` (shared library) | `src/ParameterSchema/` | **No** |
 | `AutoParamWidget` (shared UI library) | `src/WhiskerToolbox/AutoParamWidget/` | Yes |
 | `TriageSession` | `src/TriageSession/` | **No** |
-| `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession_Widget/` | Yes |
-| `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` *(planned)* | Yes |
+| `TriageSession_Widget` | `src/WhiskerToolbox/TriageSession_Widget/` | Yes |
+| `CommandLog_Widget` | `src/WhiskerToolbox/CommandLog_Widget/` | Yes |
+| `JsonPipelineRunner` | `src/DataManager/JsonPipeline/` | **No** |
+| `DataManagerPipelineRunner` | `src/DataManagerPipelineRunner/` | **No** |
 
-The command library lives in `src/Commands/` as a standalone static library above `DataManager`. This keeps it free from Qt, available to unit tests, Python bindings, and future CLI tools, and — crucially — allows commands to wrap libraries that sit *above* `DataManager` (such as `TransformsV2` and `DeepLearning`) without creating circular dependencies.
+The command library lives in `src/Commands/` as a standalone static library above `DataManager`. This keeps it free from Qt, available to unit tests, Python bindings, and headless batch tools (`DataManagerPipelineRunner`), and — crucially — allows commands to wrap libraries that sit *above* `DataManager` (such as `TransformsV2` and `DeepLearning`) without creating circular dependencies.
+
+For headless batch workflows, see [JSON Pipeline Runner](../DataManager/json_pipeline_runner.qmd). For interactive sequence authoring, see [TriageSession Widget](../ui/TriageSession_Widget/index.qmd) and [Command Log Widget](command_log_widget.qmd).
 
 ## Core Types
 
@@ -172,11 +182,10 @@ The four foundational types are defined in `src/Commands/Core/`:
 
 Full signatures and serialization examples: [Core Types & Factory](core_types.qmd).
 
-## ICommand Interface & Factory
+## ICommand Interface, Registry & Factory
 
 Commands use a virtual base class. Each command holds its own parameters, knows how to execute
-and (optionally) undo itself, and can serialize to JSON via reflect-cpp. No registry or static
-registration is needed.
+and (optionally) undo itself, and can serialize to JSON via reflect-cpp.
 
 ### ICommand Base Class
 
@@ -185,18 +194,20 @@ opt-in `isUndoable()` / `undo()` / `mergeId()` / `mergeWith()` (all defaulting t
 "not undoable" / "not mergeable"). There is **one interface** for both execution and undo — no
 separate `IUndoableCommand` hierarchy.
 
-### Command Factory
+### CommandRegistry & Factory
 
-`createCommand(name, params)` is the only place that needs to know about all command types. It
-maps a `command_name` string + `rfl::Generic` parameters to a concrete `ICommand` instance via
-a simple `if`-chain in `CommandFactory.cpp`. Returns `nullptr` for unknown names or
-deserialization failures. For a set of ~10–15 commands that grows slowly, a centralized
-factory is a feature, not a limitation — you can see every command the system supports in one
-place.
+`CommandRegistry` is a singleton that maps command name strings to creator functions and
+`CommandInfo` metadata. Domain libraries register commands via explicit dispatcher functions
+(e.g. `register_core_commands()`, `register_datasynthesizer_commands()`), called once from the
+application composition root (`MainWindow` constructor, test listeners).
 
-See [Core Types & Factory](core_types.qmd) for the interface definition and current implementation.
+`CommandFactory` provides thin backward-compatible wrappers (`createCommand()`,
+`getAvailableCommands()`, `getCommandInfo()`) that delegate to `CommandRegistry::instance()`.
 
-### Why Not a Static Registry?
+See [Command Registry](command_registry.qmd) for the registration API and
+[Core Types & Factory](core_types.qmd) for type definitions.
+
+### Why Explicit Registration (Not RAII Static Registration)?
 
 The TransformsV2 `ElementRegistry` uses static registration because the pipeline builder must
 **introspect transform metadata at assembly time**: input/output types, chaining compatibility,
@@ -207,15 +218,17 @@ Commands have none of this complexity. A command takes a `DataManager`, does som
 `CommandResult`. The sequence executor doesn't need to know what a command does internally — it
 just calls `execute()` in order and stops on error.
 
-This means:
+The command architecture therefore uses **explicit dispatcher registration** instead of RAII
+static registration:
 
-- **No `--whole-archive` linker flags.** Static registration requires RAII objects in anonymous
-  namespaces that the linker may strip. A factory in a `.cpp` file has no such issue.
-- **No type-erased storage.** The virtual interface provides dispatch directly.
-- **Undo is unified.** The same `ICommand` object implements both `execute()` and `undo()`,
-  holding any state needed between the two calls.
-- **Trivial to add commands.** Write a params struct, write a class, add one `if` branch to
-  the factory.
+- **No `--whole-archive` linker flags.** Registration functions are called directly at startup.
+- **No type-erased static init order issues.** Each library owns its registration function.
+- **Undo is unified.** The same `ICommand` object implements both `execute()` and `undo()`.
+- **Trivial to add commands.** Write a params struct, write a class, add one
+  `registerTypedCommand<>` call in the owning library's dispatcher.
+
+This is different from a hardcoded if-chain (removed in Phase 7) and different from RAII
+self-registration (used by TransformsV2/DataSynthesizer generators).
 
 ### Sequence Execution
 
@@ -298,9 +311,9 @@ std::vector<CommandInfo> getAvailableCommands();
 std::optional<CommandInfo> getCommandInfo(std::string const & name);
 ```
 
-These are implemented alongside the existing `createCommand()` if-chain in
-`CommandFactory.cpp`. Adding a new command means adding one `if`-branch to `createCommand()`
-and one entry to `getAvailableCommands()` — both in the same file.
+These are implemented alongside `createCommand()` in `CommandFactory.cpp`, which delegates to
+`CommandRegistry`. Each library's `register_*_commands()` function supplies both the creator
+and the `CommandInfo` entry when registering a command.
 
 ### Shared ParameterSchema Library
 
@@ -392,18 +405,25 @@ This approach reuses the centralized factory without introducing a static regist
 
 ## Commands
 
-The command library currently has four implemented commands (Phase 1) and three planned for
-future phases:
+The command library currently has **11 registered commands** across the Commands and
+DataSynthesizer libraries. See [Concrete Commands](commands.qmd) for per-command API details
+and [Command Introspection](command_introspection.qmd) for the full metadata table.
 
-| Command | Phase | Status | Description |
-|---------|-------|--------|-------------|
-| `MoveByTimeRange` | 1 | Done | Move entities in `[start, end]` between same-type data objects; undoable |
-| `CopyByTimeRange` | 1 | Done | Copy entities without modifying source; wider type support |
-| `AddInterval` | 1 | Done | Append interval to `DigitalIntervalSeries`, create if missing |
-| `ForEachKey` | 1 | Done | Meta-command: iterate a list, bind each to `${variable}`, run sub-commands |
-| `SaveData` | 3 | Planned | Uniform save via `SaverRegistry`; atomic write-ahead pattern |
-| `LoadData` | 3 | Planned | Wraps `LoaderRegistry` for uniform dispatch |
-| `RunTransformPipeline` | future | Planned | Bridges to TransformsV2 for element-level transforms |
+| Command | Library | Status | Description |
+|---------|---------|--------|-------------|
+| `MoveByTimeRange` | Commands | Done | Move entities in `[start, end]` between same-type data objects; undoable |
+| `CopyByTimeRange` | Commands | Done | Copy entities without modifying source |
+| `AddInterval` | Commands | Done | Append interval to `DigitalIntervalSeries`, create if missing |
+| `SetEventAtTime` | Commands | Done | Set or clear `DigitalIntervalSeries` membership at one frame |
+| `FlipEventAtTime` | Commands | Done | Toggle `DigitalIntervalSeries` membership at one frame |
+| `ClearLineDataAtTime` | Commands | Done | Remove all `LineData` entries at one frame |
+| `AdvanceFrame` | Commands | Done | Shift visualization frame via `TimeController` |
+| `ForEachKey` | Commands | Done | Meta-command: iterate a list, bind each to `${variable}`, run sub-commands |
+| `SaveData` | Commands | Done | Save via `LoaderRegistry`; atomic write-ahead pattern |
+| `LoadData` | Commands | Done | Load via `LoaderRegistry`; undoable via `deleteData()` |
+| `SynthesizeData` | DataSynthesizer | Done | Generate data via `GeneratorRegistry` |
+| `RunTransformsV2PipelineAtTime` | TransformsV2 | Planned | Run a saved V2 pipeline on one frame; tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267) ([design doc](run_transforms_v2_pipeline_at_time.qmd)) |
+| `RunTransformPipeline` | TransformsV2 | Future | Full-series pipeline over an entire data object (not yet scoped) |
 
 ### MoveByTimeRange
 
@@ -423,25 +443,30 @@ Pure query helpers that collect `EntityId`s in a time range. Template for
 Same shape as `MoveByTimeRange` but uses `copyByEntityIds()`. Source is unmodified. Wider type
 support: `DigitalIntervalSeries` supports copy but not move.
 
-### SaveData *(Phase 3 — planned)*
+### SaveData
 
-Will wrap existing savers behind a `SaverRegistry` with an atomic write-ahead pattern.
-Parameters: `data_key`, `format`, `path`, optional `format_options`.
+Wraps `LoaderRegistry::trySave()` with optional backup-on-overwrite. Parameters: `data_key`,
+`format`, `path`, optional `format_options`. See [SaveData Command](save_data.qmd) and
+[Save Path Resolver](IO/SavePathResolver.qmd).
 
 ### AddInterval
 
 Appends an interval to a `DigitalIntervalSeries`. When `create_if_missing = true` and the key
 does not exist, creates an empty series with the default `TimeKey("time")`.
 
-### LoadData *(Phase 3 — planned)*
+### LoadData
 
-Will wrap `LoaderRegistry` for uniform dispatch. Parameters: `data_key`, `data_type`,
-`filepath`, `format`, optional `format_options`.
+Wraps `LoaderRegistry::tryLoad()`. Undoable via `deleteData()`. See [LoadData Command](load_data.qmd).
+
+### RunTransformsV2PipelineAtTime *(planned)*
+
+Single-frame bridge from Triage/command sequences to TransformsV2 `PipelineDescriptor` JSON.
+Implementation: [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
+Design: [run_transforms_v2_pipeline_at_time.qmd](run_transforms_v2_pipeline_at_time.qmd).
 
 ### RunTransformPipeline *(future)*
 
-Will bridge the command system to TransformsV2. Parameters: `input_key`, `output_key`, and
-either an inline `PipelineDescriptor` or a `pipeline_file` path.
+Full-series pipeline execution over an entire data object. Not yet scoped as a GitHub issue.
 
 ### ForEachKey (Meta-Command)
 
@@ -467,7 +492,7 @@ IDLE  ──[Mark]──►  MARKING  ──[Commit]──►  IDLE
 
 `TriageSession` provides `setPipeline()`, `mark()`, `recall()`, and `commit()` along with
 state/mark-frame accessors and `lastCommitCommands()` / `takeLastCommitCommands()` for undo
-support. Full API: [TriageSession Core Library](../../TriageSession/index.qmd).
+support. Full API: [TriageSession Core Library](../TriageSession/index.qmd).
 
 ### Commit Implementation
 
@@ -493,7 +518,6 @@ The triage session doesn't manage tracked regions directly. Instead, the user in
 
 The resulting `DigitalIntervalSeries` in `DataManager` is a first-class data object. It can be:
 
-- Visualized on the timeline as a shaded overlay.
 - Queried by MLCore to know which frames have been manually triaged.
 - Used to compute complement regions (frames that haven't been inspected yet).
 - Saved/loaded like any other data object.
@@ -652,7 +676,7 @@ A complete pipeline for triaging 5 whisker line objects:
 Follows the standard EditorState pattern. `TriageSessionStateData` serializes the pipeline
 JSON and tracked-regions key; the state machine always resets to `Idle` on workspace load.
 Full EditorState class, registration, and Qt UI details:
-[TriageSession Widget](../../ui/TriageSession_Widget/index.qmd).
+[TriageSession Widget](../ui/TriageSession_Widget/index.qmd).
 
 ## Tracked Regions for Machine Learning
 
@@ -912,15 +936,17 @@ wrappers, making the command system the single execution path for all operations
 2. **JSON-serializable everything.** Every command descriptor, every parameter struct, every
    sequence is a plain C++ struct that reflect-cpp can round-trip. No manual JSON construction.
 
-3. **Virtual base class, not a static registry.** A plain factory function maps command names
-   to concrete types. No RAII registration, no `--whole-archive` linker flags.
+3. **Explicit dispatcher registration.** Domain libraries register commands via
+   `registerTypedCommand<>` in `register_*_commands()` functions. `CommandRegistry` is the
+   runtime lookup table; `CommandFactory` is a thin compatibility wrapper.
 
 4. **Two-tier variable substitution.** Static template variables (known at authoring time) and
    runtime variables (resolved at execution time) use the same `${variable}` syntax.
 
 5. **Triage is just a consumer.** The triage session is not special — it's a state machine that
-   builds a `CommandContext` and calls `executeSequence()`. Any other consumer (CLI, Python,
-   macro recorder) uses the same API.
+   builds a `CommandContext` and calls `executeSequence()`. The same API is used by
+   `JsonPipelineRunner` (headless batch), `CommandRecorder` (session export), and future
+   consumers such as the Python bridge.
 
 6. **Persistence is a command, not a side effect.** Saving data is an explicit `SaveData`
    command in the sequence. The user decides what gets saved and when. Atomic writes prevent
@@ -940,5 +966,5 @@ wrappers, making the command system the single execution path for all operations
 ## See Also
 
 - [Command Architecture Roadmap](roadmap.qmd) — phased implementation plan
-- [Data Manager](../data_manager.qmd) — core data management documentation
-- [State Management Roadmap](../../../developer/STATE_MANAGEMENT_ROADMAP.md) — related state management plans (Phases 4–6 superseded by this architecture)
+- [State Management Roadmap](../STATE_MANAGEMENT_ROADMAP.md) — related state management plans (Phases 4–6 superseded by this architecture)
+- [Data Manager](../DataManager/data_manager.qmd) — core data management documentation

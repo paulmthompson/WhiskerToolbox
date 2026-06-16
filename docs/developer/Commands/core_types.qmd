@@ -15,7 +15,8 @@ and command consumers depend on.
 - `src/Commands/Core/CommandContext.hpp` — Runtime context provided to commands
 - `src/Commands/Core/CommandDescriptor.hpp` — JSON-serializable command descriptors
 - `src/Commands/Core/ICommand.hpp` — Abstract base class for all commands
-- `src/Commands/Core/CommandFactory.hpp` / `.cpp` — Factory function mapping names to commands
+- `src/Commands/Core/CommandFactory.hpp` / `.cpp` — Thin wrappers delegating to `CommandRegistry`
+- `src/Commands/Core/CommandRegistry.hpp` / `.cpp` — Singleton registry and `registerTypedCommand<>`
 
 All types live in the `commands` namespace and have no Qt dependency.
 
@@ -88,25 +89,25 @@ All commands inherit from `ICommand`. The interface provides:
 There is no separate `IUndoableCommand` hierarchy. Commands opt into undo support by overriding
 `isUndoable()` and `undo()`.
 
-## Command Factory
+## Command Factory & Registry
 
-A single free function maps command name strings to concrete `ICommand` instances:
+`CommandRegistry` is the runtime lookup table. Libraries register commands at startup via
+`registerTypedCommand<>` in explicit dispatcher functions (see
+[Command Registry](command_registry.qmd)).
+
+`CommandFactory` exposes backward-compatible free functions that delegate to the registry:
 
 ```cpp
 std::unique_ptr<ICommand> createCommand(
     std::string const & name,
     rfl::Generic const & params);
+
+std::vector<CommandInfo> getAvailableCommands();
+std::optional<CommandInfo> getCommandInfo(std::string const & name);
 ```
 
-Returns `nullptr` if the command name is unknown or parameter deserialization fails. Concrete
-commands will be added as `if`-branches in `CommandFactory.cpp` as they are implemented
-(Step 1.7 in the [roadmap](roadmap.qmd)).
-
-::: {.callout-note}
-The factory uses a simple centralized if-chain rather than a static registry. This avoids
-`--whole-archive` linker requirements and keeps the full command list visible in one place.
-See the [design rationale](index.qmd#why-not-a-static-registry) for details.
-:::
+`createCommand()` returns `nullptr` if the command name is unknown or parameter deserialization
+fails.
 
 ## Tests
 

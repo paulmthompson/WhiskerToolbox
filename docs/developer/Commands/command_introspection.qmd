@@ -37,9 +37,9 @@ std::vector<CommandInfo> getAvailableCommands();
 std::optional<CommandInfo> getCommandInfo(std::string const & name);
 ```
 
-These are implemented alongside `createCommand()` in `CommandFactory.cpp`. Adding a new
-command requires one `if`-branch for creation and one entry in `getAvailableCommands()` —
-both in the same file.
+These delegate to `CommandRegistry::instance()`. Each library's `register_*_commands()`
+function supplies both the creator and `CommandInfo` when registering a command via
+`registerTypedCommand<>`.
 
 ## ParameterUIHints Specializations
 
@@ -81,15 +81,25 @@ if (info) {
 
 ## Registered Commands
 
-| Command | Category | Undo | Supported Types | Fields |
-|---------|----------|------|-----------------|--------|
-| `MoveByTimeRange` | data_mutation | Yes | LineData, PointData, MaskData, DigitalEventSeries | 4 |
-| `CopyByTimeRange` | data_mutation | No | LineData, PointData, MaskData, DigitalEventSeries | 4 |
-| `AddInterval` | data_mutation | No | DigitalIntervalSeries | 4 |
-| `ForEachKey` | meta | No | (any) | 3 |
+| Command | Library | Category | Undo | Supported Types | Fields |
+|---------|---------|----------|------|-----------------|--------|
+| `MoveByTimeRange` | Commands | data_mutation | Yes | LineData, PointData, MaskData, DigitalEventSeries | 4 |
+| `CopyByTimeRange` | Commands | data_mutation | No | LineData, PointData, MaskData, DigitalEventSeries, DigitalIntervalSeries | 4 |
+| `AddInterval` | Commands | data_mutation | No | DigitalIntervalSeries | 4 |
+| `SetEventAtTime` | Commands | data_mutation | No | DigitalIntervalSeries | 3 |
+| `FlipEventAtTime` | Commands | data_mutation | No | DigitalIntervalSeries | 2 |
+| `ClearLineDataAtTime` | Commands | data_mutation | No | LineData | 2 |
+| `AdvanceFrame` | Commands | navigation | No | (none) | 1 |
+| `ForEachKey` | Commands | meta | Conditional | (any) | 3 |
+| `SaveData` | Commands | persistence | No | All saver-supported types | 6 |
+| `LoadData` | Commands | persistence | Yes | All loader-supported types | 5 |
+| `SynthesizeData` | DataSynthesizer | data_creation | No | Generator-dependent | 5 |
+
+For the latest list, call `getAvailableCommands()` after all `register_*_commands()` functions
+have run.
 
 ## See Also
 
-- [ParameterSchema Library](../../ParameterSchema/index.qmd) — shared schema extraction
+- [ParameterSchema Library](../ParameterSchema/index.qmd) — shared schema extraction
 - [Command Architecture](index.qmd) — full design document
 - [Roadmap](roadmap.qmd) — implementation progress

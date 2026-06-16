@@ -13,10 +13,10 @@ modifying a central switch statement.
 
 - `src/Commands/Core/CommandRegistry.hpp` — class declaration and `registerTypedCommand<>` helper
 - `src/Commands/Core/CommandRegistry.cpp` — singleton implementation
-- `src/Commands/Core/register_core_commands.hpp` — declaration of the built-in dispatcher
+- `src/Commands/register_core_commands.hpp` — declaration of the built-in dispatcher
 - `src/Commands/register_core_commands.cpp` — registers core commands
 - `src/DataSynthesizer/register_datasynthesizer_commands.hpp` / `.cpp` — registers DataSynthesizer-owned commands (e.g., `SynthesizeData`)
-- `src/TransformsV2/register_transformsv2_commands.hpp` / `.cpp` — registers TransformsV2-owned commands (e.g., future `RunTransformPipeline`)
+- `src/TransformsV2/register_transformsv2_commands.hpp` / `.cpp` — registers TransformsV2-owned commands (e.g. `RunTransformsV2PipelineAtTime`; tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267))
 
 ## Design
 

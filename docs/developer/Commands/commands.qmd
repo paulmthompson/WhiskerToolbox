@@ -16,14 +16,16 @@ For the persistence command (`SaveData`), see [SaveData Command](save_data.qmd).
 
 - `src/Commands/MoveByTimeRange.hpp` / `.cpp`
 - `src/Commands/CopyByTimeRange.hpp` / `.cpp`
-- `src/Commands/AddInterval.hpp` / `.cpp`
-- `src/Commands/SetEventAtTime.hpp` / `.cpp`
-- `src/Commands/FlipEventAtTime.hpp` / `.cpp`
+- `src/Commands/DataObjects/DigitalTimeSeries/AddInterval.hpp` / `.cpp`
+- `src/Commands/DataObjects/DigitalTimeSeries/SetEventAtTime.hpp` / `.cpp`
+- `src/Commands/DataObjects/DigitalTimeSeries/FlipEventAtTime.hpp` / `.cpp`
+- `src/Commands/DataObjects/Lines/ClearLineDataAtTime.hpp` / `.cpp`
 - `src/Commands/AdvanceFrame.hpp` / `.cpp`
 - `src/Commands/ForEachKey.hpp` / `.cpp`
-- `src/Commands/Commands.test.cpp` — Unit tests (Move/Copy/AddInterval/ForEachKey)
-- `src/Commands/SetEventAtTime.test.cpp` — `SetEventAtTime`, `FlipEventAtTime`, triage sequences
-- `src/Commands/AdvanceFrame.test.cpp` — `AdvanceFrame` and `TimeController` wiring
+- `src/Commands/Commands.test.cpp` — Move/Copy/AddInterval/ForEachKey
+- `src/Commands/DataObjects/DigitalTimeSeries/SetEventAtTime.test.cpp` — Set/Flip event commands
+- `src/Commands/DataObjects/Lines/ClearLineDataAtTime.test.cpp` — ClearLineDataAtTime
+- `src/Commands/AdvanceFrame.test.cpp` — AdvanceFrame and TimeController wiring
 
 All code lives in the `commands` namespace with no Qt dependency.
 

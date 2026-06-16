@@ -320,8 +320,8 @@ Widgets intentionally excluded (no DataManager mutations):
 
 | Verb | Slot/Trigger | Category | Command | Notes |
 |------|-------------|----------|---------|-------|
-| Create new data object | `_createNewData()` via "Create New Data" button | **B** | `CreateData` (new) | Calls `setData<T>()` templated on type; also sets image size for geometry types |
-| Delete data object | `_deleteData()` via right-click context menu | **B** | `DeleteData` (new) | Calls `deleteData(key)` |
+| Create new data object | `_createNewData()` via "Create New Data" button | **B** | `CreateData` ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)) | Calls `setData<T>()` templated on type; also sets image size for geometry types |
+| Delete data object | `_deleteData()` via right-click context menu | **B** | `DeleteData` ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)) | Calls `deleteData(key)` |
 | Set output directory | `_changeOutputDir()` via "Set Output Dir" button | **D** | — | View/config state, not data mutation |
 
 ### DataInspector_Widget
@@ -338,46 +338,46 @@ verbs.
 |------|-------------|----------|---------|-------|
 | Move data to target | `_onMove*Requested()` | **A** | `MoveByTimeRange` | Already exists; widget should use command factory |
 | Copy data to target | `_onCopy*Requested()` | **A** | `CopyByTimeRange` | Already exists |
-| Delete selected entities | `_onDelete*Requested()` | **B** | `DeleteByEntityIds` (new) | Needs entity ID set, not time range |
-| Move entities to group | `_onMove*ToGroupRequested()` | **B** | `AssignToGroup` (new) | Group membership change |
-| Remove entities from group | `_onRemove*FromGroupRequested()` | **B** | `RemoveFromGroup` (new) | Group membership change |
+| Delete selected entities | `_onDelete*Requested()` | **B** | `DeleteByEntityIds` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291)) | Needs entity ID set, not time range |
+| Move entities to group | `_onMove*ToGroupRequested()` | **B** | `AssignToGroup` ([#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292)) | Group membership change |
+| Remove entities from group | `_onRemove*FromGroupRequested()` | **B** | `RemoveFromGroup` ([#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292)) | Group membership change |
 | Save to CSV/binary | `_handleSave*Requested()` | **A** | `SaveData` | Phase 3 complete — command exists, widget should dispatch through it |
 
 #### DigitalEventSeries-Specific
 
 | Verb | Slot/Trigger | Category | Command | Notes |
 |------|-------------|----------|---------|-------|
-| Add event at current time | `_addEventButton()` | **B** | `AddEvent` (new) | Single event insertion |
-| Remove selected event | `_removeEventButton()` | **B** | `RemoveEvent` (new) | Single event removal |
+| Add event at current time | `_addEventButton()` | **B** | `AddEvent` ([#290](https://github.com/paulmthompson/WhiskerToolbox/issues/290)) | Single event insertion |
+| Remove selected event | `_removeEventButton()` | **B** | `RemoveEvent` ([#290](https://github.com/paulmthompson/WhiskerToolbox/issues/290)) | Single event removal |
 
 #### DigitalIntervalSeries-Specific
 
 | Verb | Slot/Trigger | Category | Command | Notes |
 |------|-------------|----------|---------|-------|
 | Create interval | `_createIntervalButton()` | **A** | `AddInterval` | Already exists (check param compatibility) |
-| Remove selected interval | `_removeIntervalButton()` | **B** | `RemoveInterval` (new) | Single interval removal |
-| Flip interval (swap start/end) | `_flipIntervalButton()` | **B** | `ModifyInterval` (new) | In-place mutation |
-| Extend interval bounds | `_extendInterval()` | **B** | `ModifyInterval` (new) | Same command, different params |
+| Remove selected interval | `_removeIntervalButton()` | **B** | `RemoveInterval` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291)) | Single interval removal |
+| Flip interval (swap start/end) | `_flipIntervalButton()` | **B** | `ModifyInterval` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291)) | In-place mutation |
+| Extend interval bounds | `_extendInterval()` | **B** | `ModifyInterval` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291)) | Same command, different params |
 
 #### TensorData-Specific
 
 | Verb | Slot/Trigger | Category | Command | Notes |
 |------|-------------|----------|---------|-------|
-| Create tensor via designer | `_onTensorCreated()` | **B** | `CreateData` (new) | May share with DataManager_Widget's CreateData |
+| Create tensor via designer | `_onTensorCreated()` | **B** | `CreateData` ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)) | May share with DataManager_Widget's CreateData |
 
 ---
 
 ## New Commands Identified
 
-Commands discovered during the audit that need to be implemented. **None of these are
-implemented yet** — they are designs ready for implementation. See the
-[roadmap](roadmap.qmd#widget-command-ification-ongoing) for the implementation wave plan.
+Commands discovered during the audit. Tracked in
+[#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289)–[#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292);
+param structs below are design references.
 
 Ordered by priority (most commonly used across widgets first).
 
 ### High Priority
 
-#### `CreateData`
+#### `CreateData` ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289))
 
 Creates a new data object in `DataManager`.
 
@@ -395,7 +395,7 @@ struct CreateDataParams {
 **Undo:** Yes — `deleteData(key)` reverses creation.
 **Used by:** DataManager_Widget, TensorInspector, potentially others.
 
-#### `DeleteData`
+#### `DeleteData` ([#289](https://github.com/paulmthompson/WhiskerToolbox/issues/289))
 
 Deletes a data object from `DataManager` by key.
 
@@ -408,7 +408,7 @@ struct DeleteDataParams {
 **Undo:** Possible but complex (would need to snapshot the data). Start as non-undoable.
 **Used by:** DataManager_Widget context menu.
 
-#### `DeleteByEntityIds`
+#### `DeleteByEntityIds` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291))
 
 Deletes specific entities from a data object by their entity IDs.
 
@@ -422,7 +422,7 @@ struct DeleteByEntityIdsParams {
 **Undo:** Yes — capture deleted entities for restoration.
 **Used by:** All inspector delete operations.
 
-#### `AddEvent`
+#### `AddEvent` ([#290](https://github.com/paulmthompson/WhiskerToolbox/issues/290))
 
 Adds a single event to a `DigitalEventSeries`.
 
@@ -437,7 +437,7 @@ struct AddEventParams {
 **Undo:** Yes — remove the added event.
 **Used by:** DigitalEventSeriesInspector.
 
-#### `RemoveEvent`
+#### `RemoveEvent` ([#290](https://github.com/paulmthompson/WhiskerToolbox/issues/290))
 
 Removes a single event from a `DigitalEventSeries`.
 
@@ -453,7 +453,7 @@ struct RemoveEventParams {
 
 ### Medium Priority
 
-#### `RemoveInterval`
+#### `RemoveInterval` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291))
 
 Removes an interval from a `DigitalIntervalSeries` by index or by start/end match.
 
@@ -468,7 +468,7 @@ struct RemoveIntervalParams {
 **Undo:** Yes — re-add the interval.
 **Used by:** DigitalIntervalSeriesInspector.
 
-#### `ModifyInterval`
+#### `ModifyInterval` ([#291](https://github.com/paulmthompson/WhiskerToolbox/issues/291))
 
 Modifies an existing interval's bounds (flip, extend).
 
@@ -487,7 +487,7 @@ struct ModifyIntervalParams {
 
 ### Lower Priority (Group Operations)
 
-#### `AssignToGroup`
+#### `AssignToGroup` ([#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292))
 
 Assigns entities to a named group.
 
@@ -502,7 +502,7 @@ struct AssignToGroupParams {
 **Undo:** Yes — remove from group.
 **Used by:** All inspectors with group support.
 
-#### `RemoveFromGroup`
+#### `RemoveFromGroup` ([#292](https://github.com/paulmthompson/WhiskerToolbox/issues/292))
 
 Removes entities from a named group.
 
@@ -525,21 +525,25 @@ The recommended order for implementing new commands and refactoring widgets:
 
 ### Wave 1: Core CRUD Commands
 
-1. `CreateData` — enables DataManager_Widget refactoring
-2. `DeleteData` — enables DataManager_Widget refactoring
-3. `AddEvent` — small, self-contained, high utility
-4. `RemoveEvent` — pairs with AddEvent
+Tracked in GitHub (includes command implementation and widget routing):
+
+- [#289 — CreateData and DeleteData](https://github.com/paulmthompson/WhiskerToolbox/issues/289) (`DataManager_Widget`)
+- [#290 — AddEvent and RemoveEvent](https://github.com/paulmthompson/WhiskerToolbox/issues/290) (`DigitalEventSeriesInspector`)
 
 ### Wave 2: Entity-Level Operations
 
-5. `DeleteByEntityIds` — enables all inspector delete operations
-6. `RemoveInterval` — pairs with existing AddInterval
-7. `ModifyInterval` — interval manipulation
+Tracked in [#291 — Add Entity Commands](https://github.com/paulmthompson/WhiskerToolbox/issues/291):
+
+- `DeleteByEntityIds` — inspector entity delete operations
+- `RemoveInterval` — pairs with existing `AddInterval`
+- `ModifyInterval` — flip / extend interval bounds
 
 ### Wave 3: Group Operations
 
-8. `AssignToGroup` — depends on Group infrastructure
-9. `RemoveFromGroup` — pairs with AssignToGroup
+Tracked in [#292 — Add Group Commands](https://github.com/paulmthompson/WhiskerToolbox/issues/292):
+
+- `AssignToGroup`
+- `RemoveFromGroup`
 
 ### Wave 4: Remaining Widget Audits
 

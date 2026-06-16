@@ -52,13 +52,12 @@ The widget follows the standard EditorState registration pattern:
 
 ## Relationship to Roadmap
 
-This widget implements **Step 3.5.3** of the
-[Command Architecture Roadmap](roadmap.qmd). It is a prerequisite for:
+This widget implements the Command Log UI for session command recording. Integration
+testing (golden traces, `DataManagerSnapshot` replay) is tracked in
+[#288](https://github.com/paulmthompson/WhiskerToolbox/issues/288).
 
-- **Step 3.5.4** (End-to-End Verification): The demo workflow uses the
-  Command Log to verify that executed commands are recorded and exportable.
-- **Phase 4** (Action Journal): The Action Journal will replace this
-  minimal widget with a persistent, timestamped, filterable log.
+Future **Action Journal** work will replace this minimal widget with a persistent,
+timestamped, filterable log.
 
 ## See Also
 
@@ -66,5 +65,4 @@ This widget implements **Step 3.5.3** of the
   executed `CommandDescriptor` entries
 - [Sequence Execution](sequence_execution.qmd) — `executeSequence()` and
   its recording hook
-- [Command Architecture Roadmap](roadmap.qmd) — full roadmap with Phase 3.5
-  details
+- [Command Architecture Roadmap](roadmap.qmd) — remaining command architecture work
