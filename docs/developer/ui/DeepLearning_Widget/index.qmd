@@ -29,7 +29,9 @@ DeepLearning_Widget/
 │   ├── InferenceController.hpp/cpp            ← Run orchestration
 │   ├── BatchInferenceWorker.hpp/cpp           ← Single-range batch worker
 │   ├── MultiIntervalBatchWorker.hpp/cpp       ← Multi-interval batch worker
-│   └── ResultProcessor.hpp/cpp                ← Result merge helpers
+│   ├── WriteReservation.hpp                   ← Thread-safe result buffer
+│   ├── BatchInferenceResult.hpp               ← FrameResult / offline result types
+│   └── ResultProcessor.hpp/cpp                ← Timer-driven merge into DataManager
 └── UI/
     ├── DeepLearningViewWidget.hpp/cpp         ← View panel
     ├── DeepLearningPropertiesWidget.hpp/cpp   ← Properties panel coordinator
@@ -39,6 +41,8 @@ DeepLearning_Widget/
 
 ## Related documentation
 
+- [Batch range inference](Inference/batch_inference.qmd)
+- [InferenceController](Inference/inference_controller.qmd)
 - [Binding parameter schemas](../../DeepLearning/bindings/binding_param_schemas.qmd)
 - [Memory frame bindings](../../DeepLearning/bindings/memory_frames.qmd)
 - [Post-encoder modules](../../DeepLearning/post_encoder_modules.qmd)

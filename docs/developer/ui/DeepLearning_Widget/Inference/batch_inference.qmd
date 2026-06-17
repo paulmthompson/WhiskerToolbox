@@ -1,0 +1,195 @@
+---
+title: "Batch Range Inference"
+---
+
+## Overview
+
+Batch range inference runs a model independently on every frame in a
+user-specified range `[start_frame, end_frame]`. Unlike [recurrent
+inference](inference_controller.qmd#recurrent-sequence) (where each frame's
+output feeds into the next), batch range inference treats each frame as a
+standalone prediction — no state is carried between frames.
+
+Runs execute on a background `QThread` so the UI stays responsive during long
+jobs. Decoded geometry (masks, points, lines) appears progressively in the
+view as frames complete; feature vectors are flushed to `TensorData` when the
+run finishes.
+
+Orchestration lives in [`InferenceController`](inference_controller.qmd).
+Model batch-size constraints are documented in
+[Batch Mode Guide](../../../DeepLearning/batch_mode_guide.qmd).
+
+## User workflow
+
+1. Configure model and slot bindings as for single-frame inference.
+2. Click **▶▶ Run Batch** in the Properties panel.
+3. Choose a mode in the dialog:
+   - **Manual range** — enter start and end frame indices.
+   - **From interval series** — select a `DigitalIntervalSeries` key; each
+     interval is processed sequentially with unified progress.
+4. The View widget progress bar shows per-frame progress.
+5. On completion or cancellation, results are written to DataManager at their
+   respective frame indices.
+
+While a batch runs:
+
+- **Run Batch** becomes **Cancel Batch**.
+- **Run Single** and **Run Recurrent** are disabled.
+- The Qt event loop stays free (no `processEvents()` hacks).
+
+## Architecture
+
+```
+DeepLearningPropertiesWidget::_onRunBatch()
+    → InferenceController::runBatch() / runBatchIntervals()
+        → BatchInferenceWorker / MultiIntervalBatchWorker (QThread)
+            → SlotAssembler::runBatchRangeOffline()
+                → ResultCallback → WriteReservation::push()
+        → ResultProcessor (QTimer 200 ms) → WriteReservation::drain()
+            → acceptResults() → DataManager::addAtTime()
+```
+
+| Component | Header | Role |
+|-----------|--------|------|
+| `InferenceController` | `Inference/InferenceController.hpp` | Owns worker lifecycle, media clones, cancel flag |
+| `BatchInferenceWorker` | `Inference/BatchInferenceWorker.hpp` | Single contiguous frame range |
+| `MultiIntervalBatchWorker` | `Inference/MultiIntervalBatchWorker.hpp` | Multiple intervals, cumulative progress |
+| `WriteReservation` | `Inference/WriteReservation.hpp` | Thread-safe buffer between worker and main thread |
+| `ResultProcessor` | `Inference/ResultProcessor.hpp` | Timer-driven merge into DataManager |
+| `BatchInferenceResult` | `Inference/BatchInferenceResult.hpp` | `FrameResult`, `DecodedOutputVariant`, error status |
+| `SlotAssembler` | `Core/SlotAssembler.hpp` | `runBatchRangeOffline()` inference loop |
+| `MediaOverrides` | `Core/MediaOverrides.hpp` | `data_key → MediaData` map for thread-safe reads |
+
+Workers are dedicated header/`.cpp` pairs (not anonymous namespaces) so
+AUTOMOC can generate meta-object code without `.moc` includes in `.cpp` files.
+
+## SlotAssembler offline API
+
+`SlotAssembler::runBatchRangeOffline()` is the core per-frame loop. It is
+identical to the synchronous `runBatchRange()` except:
+
+- **`MediaOverrides`** — worker reads media through cloned `VideoData` instances
+  keyed by `data_key`, avoiding FFmpeg decoder contention with the UI thread.
+- **No direct DataManager writes** — decoded outputs are returned as
+  `FrameResult` entries (`DecodedOutputVariant` geometry or feature vector)
+  instead of calling `addAtTime()` on the worker thread.
+- **Cancellation** — polls `std::atomic<bool> const & cancel_requested` before
+  each batch chunk; returns partial success on early exit.
+- **`batch_size`** — number of frames per forward pass (last chunk may be
+  smaller). See [Batch Mode Guide](../../../DeepLearning/batch_mode_guide.qmd).
+
+Optional callbacks:
+
+```cpp
+using ProgressCallback = std::function<void(int current_frame, int total_frames)>;
+using ResultCallback   = std::function<void(std::vector<FrameResult>)>;
+```
+
+When a `ResultCallback` is provided, results are pushed per chunk via the
+callback and **not** accumulated in `BatchInferenceResult::results`. Workers
+always pass a callback that forwards to `WriteReservation::push()`.
+
+`runBatchRange()` (synchronous, writes directly to DataManager) remains in
+`SlotAssembler` for tests and programmatic use; the widget always uses the
+offline path through `InferenceController`.
+
+## Background threading pattern
+
+The implementation follows the **thread confinement + merge** model from the
+[Concurrency Architecture](../../../DataManager/concurrency_architecture.qmd):
+
+1. **DataManager stays single-threaded.** All writes happen on the main (Qt) thread.
+2. **The worker uses private media.** Cloned `VideoData` gives the worker its
+   own FFmpeg decoder. Non-video `MediaData` is shared (stateless reads).
+   Static memory-frame sources that reference video are cloned the same way.
+3. **Results merge on the main thread.** `ResultProcessor` runs a `QTimer`
+   (200 ms) that drains `WriteReservation` and writes geometry via
+   `addAtTime(..., NotifyObservers::No)`, then calls `notifyObservers()` once
+   per affected key.
+4. **Qt signals cross threads.** `progressChanged` and completion signals use
+   `Qt::QueuedConnection` automatically.
+
+```
+Worker thread                    Main thread
+─────────────                    ───────────
+runBatchRangeOffline()
+  decode chunk ──→ push(results)
+                                 QTimer (200 ms) ──→ drain()
+  decode chunk ──→ push(results)                     ├─ acceptResults()
+                                                     │    └─ addAtTime(...)
+                                                     └─ notifyObservers()
+QThread::finished ──────────────→ stopMergeTimer()
+                                    ├─ final drain()
+                                    └─ flushFeatureVectors()
+```
+
+### WriteReservation
+
+Thread-safe accumulation buffer. The worker calls `push()` after each decoded
+chunk; `ResultProcessor` calls `drain()` on timer ticks and on worker
+completion. A `std::mutex` protects only the pending vector — DataManager is
+never touched under the lock.
+
+### ResultProcessor
+
+Owns the merge timer and writes drained results into DataManager:
+
+- **Geometry** (`Mask2D`, `Point2D<float>`, `Line2D`) — written immediately
+  via `addAtTime(..., NotifyObservers::No)`, then `notifyObservers()` per key.
+- **Feature vectors** (`std::vector<float>`) — accumulated in
+  `_pending_feature_rows` and flushed to `TensorData` via `upsertRows()` in
+  `flushFeatureVectors()` when the worker finishes.
+
+`InferenceController` calls `clear()` at batch start, `startMergeTimer()` when
+the worker launches, and `stopMergeTimer()` + `flushFeatureVectors()` in the
+`QThread::finished` handler.
+
+### Why a separate VideoData?
+
+`VideoData` wraps a stateful FFmpeg decoder (seek position, codec context,
+frame buffer). Two threads cannot read from the same instance without corrupting
+each other's state. `InferenceController` clones `VideoData` at the same file
+path for every image-encoder binding and static memory-frame video source.
+
+This aligns with `ConcurrencyTraits<VideoData>::supports_cheap_clone = true`.
+
+## Cancellation
+
+`InferenceController::cancel()` sets a shared `std::atomic<bool>` flag read by
+`runBatchRangeOffline()` between batch chunks. Clicking **Cancel Batch** (or
+starting a new run while one is active) triggers this path. Partial results
+already pushed to `WriteReservation` are merged on the next timer tick and in
+the final drain.
+
+The destructor also sets the cancel flag and waits for the worker to exit
+cleanly.
+
+## Progress reporting
+
+| Path | Signal chain |
+|------|--------------|
+| Single range | `BatchInferenceWorker::progressChanged` → `InferenceController::batchProgressChanged` → `DeepLearningPropertiesWidget` → `DeepLearningViewWidget` |
+| Multi-interval | `MultiIntervalBatchWorker` reports cumulative progress across all intervals |
+
+Recurrent inference runs synchronously on the GUI thread and uses
+`recurrentProgressChanged` instead; see
+[InferenceController](inference_controller.qmd).
+
+## Generalizing to other components
+
+The same write-reservation + timer merge pattern applies to any long-running
+computation that must keep DataManager on the main thread:
+
+1. Share a `WriteReservation` between worker and main thread.
+2. Push results from the worker via callback.
+3. Drain periodically with `QTimer` on the main thread.
+4. Perform a final drain on `QThread::finished`.
+
+See [Concurrency Architecture](../../../DataManager/concurrency_architecture.qmd)
+for the full design.
+
+## See also
+
+- [InferenceController](inference_controller.qmd) — public API, signals, recurrent path
+- [Batch Mode Guide](../../../DeepLearning/batch_mode_guide.qmd) — model batch-size constraints
+- [Concurrency Architecture](../../../DataManager/concurrency_architecture.qmd) — merge pattern rationale

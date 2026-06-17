@@ -88,3 +88,8 @@ Worker::progressChanged(current, total)
         → DeepLearningPropertiesWidget::batchProgressChanged(current, total)
             → DeepLearningViewWidget::updateRecurrentProgress(current, total)
 ```
+
+## See also
+
+- [Batch Range Inference](batch_inference.qmd) — offline inference loop,
+  `WriteReservation` merge pattern, `ResultProcessor`, and `VideoData` cloning

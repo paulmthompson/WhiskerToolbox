@@ -170,7 +170,8 @@ at static initialization time using the `DL_REGISTER_MODEL` macro:
 DL_REGISTER_MODEL(MyModel);  // registers with modelId() as the key
 ```
 
-The widget UI queries the registry for available models and their metadata.
+The widget UI queries the registry for available models and their metadata via
+[`ModelInfo`](models_v2/ModelInfo.qmd).
 
 ### Runtime Models (`runtime/`)
 
@@ -215,14 +216,20 @@ PIMPL (Pointer to Implementation) pattern:
 
 - **`SlotAssembler`** — a bridge class with a clean public API (no torch headers in the .hpp). 
   Its `Impl` struct (in the .cpp) holds all torch-dependent code.
-- **`DeepLearningBindingData`** — pure data structs with no Qt or torch dependencies, used to 
-  pass binding information between the UI and SlotAssembler. Includes:
-    - `SlotBindingData` — dynamic (per-frame) input binding with a `time_offset` field for 
-      temporal shifting (e.g. `-1` reads one frame behind)
-    - `StaticInputData` — static (memory) input binding
-    - `OutputBindingData` — output slot binding
-    - `computeEncodingFrame(current_frame, batch_index, time_offset, max_frame)` — utility 
-      that combines frame, batch index, and temporal offset with clamping to `[0, max_frame]`
+- **`DeepLearningBindingData`** (`src/DeepLearning/bindings/DeepLearningBindingData.hpp`) —
+  pure data structs with no Qt or torch dependencies, used to pass session binding
+  information between the UI and `SlotAssembler`. See [Vocabulary](vocabulary.qmd)
+  for terminology (tensor slot vs Qt slot). Includes:
+    - `MemoryFrameBinding` — unified static/recurrent memory position binding
+    - `SlotBindingData` / `OutputBindingData` — dynamic input and output bindings
+      (see [Slot Binding Types](bindings/slot_binding_types.qmd))
+    - `computeEncodingFrame(current_frame, batch_index, time_offset, max_frame)` —
+      utility that combines frame, batch index, and temporal offset with clamping
+      to `[0, max_frame]`
+- AutoParamWidget form structs for slot bindings live in
+  [`BindingParamSchemas.hpp`](bindings/binding_param_schemas.qmd) and
+  [memory frame bindings](bindings/memory_frames.qmd) — no separate widget-level
+  param header.
 
 This ensures Qt headers and torch headers never appear in the same translation unit.
 
@@ -231,6 +238,8 @@ This ensures Qt headers and torch headers never appear in the same translation u
 ```
 src/DeepLearning/
 ├── CMakeLists.txt
+├── bindings/                      # Session I/O binding structs (no Qt/torch)
+│   └── DeepLearningBindingData.hpp
 ├── torch_helpers.hpp              # Legacy helper (device global)
 ├── channel_encoding/              # Encoders: data → tensor
 │   ├── ChannelEncoder.hpp         # Abstract base
@@ -278,6 +287,8 @@ ctest --preset linux-clang-release --output-on-failure -R "DeepLearning"
 
 ## See Also
 
+- [Batch range inference](../ui/DeepLearning_Widget/Inference/batch_inference.qmd) — background threading, workers, and result merge (widget layer)
+- [Vocabulary](vocabulary.qmd) — tensor slot vs Qt slot, bindings vs model schema
 - [Creating a C++ Model Wrapper](model_wrapper_guide.qmd) — how to wrap a Python model for use in Neuralyzer
 - [AOT Inductor Export Tutorial](aot_inductor_tutorial.qmd) — step-by-step guide for exporting a toy model
 - [Deep Learning Roadmap](roadmap.qmd) — remaining development tasks

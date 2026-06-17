@@ -168,7 +168,7 @@ progressive merge), see
 [Concurrency Architecture](concurrency_architecture.qmd).
 
 For applying the merge pattern to deep learning inference, see 
-[Background Inference Roadmap](../DeepLearning/background_inference_roadmap.qmd).
+[Batch Range Inference](../ui/DeepLearning_Widget/Inference/batch_inference.qmd).
 
 | Aspect | Data Loading | Deep Learning Inference |
 |--------|-------------|------------------------|

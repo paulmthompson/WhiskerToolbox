@@ -254,7 +254,7 @@ See [Threaded Loading Roadmap](threaded_loading_roadmap.qmd).
 
 Worker runs model inference over a frame range, producing mask/point/line data. Worker clones `VideoData` for independent frame access. Writes to a private buffer (write reservation). Main thread merges periodically for progressive visibility. User can simultaneously interact with the media widget and existing data.
 
-See [Background Inference Roadmap](../DeepLearning/background_inference_roadmap.qmd).
+See [Batch Range Inference](../ui/DeepLearning_Widget/Inference/batch_inference.qmd).
 
 ### Data Transforms (Fork-Join or Merge)
 
