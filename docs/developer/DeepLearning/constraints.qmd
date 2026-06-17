@@ -1,0 +1,109 @@
+---
+title: "Session Constraints"
+---
+
+## Overview
+
+`dl::constraints` ([`ConstraintEnforcer.hpp`](../../../../src/DeepLearning/constraints/ConstraintEnforcer.hpp),
+[`ConstraintEnforcer.cpp`](../../../../src/DeepLearning/constraints/ConstraintEnforcer.cpp))
+provides pure, Qt-free functions that derive allowed batch sizes and decoder
+alternatives from `ModelInfo` plus session binding configuration. Shared by
+the Deep Learning Properties widget and future command-interface inference paths.
+
+## API
+
+```cpp
+namespace dl::constraints {
+
+struct BatchSizeConstraint {
+    int min = 1;
+    int max = 0;              // 0 = unlimited
+    bool forced_by_recurrent = false;
+};
+
+BatchSizeConstraint computeBatchSizeConstraint(
+    dl::ModelInfo const& info,
+    std::vector<dl::MemoryFrameBinding> const& memory_frames);
+
+std::vector<std::string> validDecodersForPostEncoder(
+    dl::PostEncoderStepDescriptor const& params);
+
+} // namespace dl::constraints
+```
+
+## Batch-size constraint
+
+`computeBatchSizeConstraint()` reads `info.batch_mode` and checks
+`hasActiveRecurrentBindings(memory_frames)`.
+
+A recurrent binding is **active** when `hasActiveRecurrentBinding()` is true:
+`output_slot_name` is non-empty and not `"(None)"` (see
+`DeepLearningBindingData.hpp`).
+
+Implementation logic:
+
+1. If **any active recurrent binding** OR **`isBatchLocked(batch_mode)`**
+   (`RecurrentOnlyBatch` or `FixedBatch{1}`) → return `{1, 1, has_recurrent}`.
+   `forced_by_recurrent` is `true` only when recurrent bindings caused the lock.
+2. Else if **`FixedBatch{N>1}`** → `{N, N, false}`.
+3. Else **`DynamicBatch`** → `{minBatchSizeFromMode, maxBatchSizeFromMode, false}`.
+
+Priority table (most restrictive wins):
+
+| Condition | `min` | `max` | `forced_by_recurrent` |
+|-----------|-------|-------|------------------------|
+| Active recurrent bindings | 1 | 1 | `true` |
+| `RecurrentOnlyBatch` or `FixedBatch{1}` | 1 | 1 | `false` |
+| `FixedBatch{N>1}` | N | N | `false` |
+| `DynamicBatch{min, max}` | `min` | `max` (`0` = unlimited) | `false` |
+
+When both active recurrent bindings and `FixedBatch{N>1}` apply, recurrent
+wins (batch locked to 1 with `forced_by_recurrent=true`).
+
+### Widget usage
+
+`DeepLearningPropertiesWidget::_updateBatchSizeConstraint()` maps the result to
+the batch spinbox (range, enabled state, tooltips). See
+[Batch Mode Guide](batch_mode_guide.qmd) for model-level `BatchMode` semantics.
+
+## Post-encoder / decoder consistency
+
+`validDecodersForPostEncoder(params)` queries
+`PostEncoderModuleRegistry::collapsesSpatialDims(params.module_key)`.
+
+| Post-encoder | Allowed decoders |
+|--------------|------------------|
+| `module_key == "none"` | All four: `MaskDecoderParams`, `PointDecoderParams`, `LineDecoderParams`, `FeatureVectorDecoderParams` |
+| Module collapses `[B,C,H,W]` → `[B,C]` (e.g. `global_avg_pool`) | `FeatureVectorDecoderParams` only |
+
+Returned strings are reflect-cpp alternative names for
+`AutoParamWidget::updateVariantAlternatives()`.
+
+`DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency()` calls
+this after post-encoder changes and filters each `OutputSlotWidget`'s decoder
+combo. `SlotAssembler` rank guards provide a second line of defense for
+misconfigured sessions.
+
+See [Post-encoder modules](post_encoder_modules.qmd) for registry metadata.
+
+## Consumers
+
+| Consumer | Usage |
+|----------|-------|
+| `DeepLearningPropertiesWidget` | `_updateBatchSizeConstraint()` — spinbox; `_enforcePostEncoderDecoderConsistency()` — output decoder filtering |
+| Command interface (planned) | Pre-run session validation |
+
+## Tests
+
+`tests/DeepLearning/constraints/ConstraintEnforcer.test.cpp`
+
+| Tag | Coverage |
+|-----|----------|
+| `[dl_constraints]` | `computeBatchSizeConstraint` across batch modes and recurrent binding states |
+| `[dl_constraints][decoder_compat]` | `validDecodersForPostEncoder` for `"none"` vs spatial-collapsing modules |
+
+## See also
+
+- [Batch Mode Guide](batch_mode_guide.qmd) — `BatchMode`, widget spinbox mapping
+- [ModelInfo](models_v2/ModelInfo.qmd) — `batch_mode` field source
+- [Memory frame bindings](bindings/memory_frames.qmd) — recurrent vs static frames

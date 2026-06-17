@@ -1,0 +1,107 @@
+---
+title: "ModelInfo"
+---
+
+## Overview
+
+`dl::ModelInfo` ([`ModelInfo.hpp`](../../../../src/DeepLearning/models_v2/ModelInfo.hpp)) is a
+torch-free struct that aggregates display and constraint metadata for a deep-learning
+model. It bundles identity fields, input/output `TensorSlotDescriptor` vectors,
+batch-size hints, and an optional post-encoder recommendation.
+
+The type lives in `models_v2/` alongside
+[`TensorSlotDescriptor.hpp`](../../../../src/DeepLearning/models_v2/TensorSlotDescriptor.hpp)
+so UI, registry, and constraint code can query model metadata without including
+libtorch headers.
+
+## Struct
+
+```cpp
+struct ModelInfo {
+    std::string model_id;
+    std::string display_name;
+    std::string description;
+    std::vector<TensorSlotDescriptor> inputs;
+    std::vector<TensorSlotDescriptor> outputs;
+    int preferred_batch_size = 0;   // 0 = no preference
+    int max_batch_size = 0;         // 0 = unlimited (legacy hint)
+    BatchMode batch_mode = DynamicBatch{1, 0};
+    std::string recommended_post_encoder;  // empty = none
+};
+```
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `model_id`, `display_name`, `description` | `ModelBase` | Registry key and UI labels |
+| `inputs` | `ModelBase::inputSlots()` | Raw model input schema |
+| `outputs` | See below | May be raw or post-encoder-adjusted |
+| `preferred_batch_size`, `max_batch_size` | `ModelBase` | Legacy hints; spinbox uses `preferred_batch_size` for dynamic models |
+| `batch_mode` | `ModelBase::batchMode()` | Primary batch constraint; see [Batch Mode Guide](../batch_mode_guide.qmd) |
+| `recommended_post_encoder` | `ModelBase::recommendedPostEncoderModule()` | Registry key (e.g. `"global_avg_pool"`); empty if none |
+
+Each `TensorSlotDescriptor` describes one named tensor slot (shape excluding batch,
+encoder/decoder hints, `is_static`, `sequence_dim`, `dtype`, etc.). See the
+[Deep Learning overview](../index.qmd#model-layer-models_v2) for slot field summary.
+
+## Registry vs live instance
+
+Two query paths populate `ModelInfo` differently:
+
+| API | When to use | `outputs` |
+|-----|-------------|-----------|
+| `ModelRegistry::getModelInfo(model_id)` | Model picker, initial slot layout before load | Raw `ModelBase::outputSlots()` |
+| `SlotAssembler::currentModelInfo()` | Active session with weights loaded | `effectiveOutputSlots(raw_outputs, post_encoder_module)` |
+
+`SlotAssembler::getModelInfo(model_id)` forwards to the registry.
+
+`currentModelInfo()` returns `std::nullopt` when no model is loaded. When a
+post-encoder module is active, only the **first** output slot descriptor is
+shape-transformed (e.g. `[B,C,H,W]` → `[B,C]` after global average pool). This
+matches what decoders see at inference time.
+
+The Properties widget typically:
+
+1. Loads registry `ModelInfo` when the user selects a model from the combo box.
+2. Refreshes to `currentModelInfo()` after weights load, post-encoder sync, or
+   configurable models (e.g. General Encoder) apply runtime shape settings.
+
+## ModelRegistry cache
+
+`ModelRegistry::getModelInfo()` is thread-safe and lazily populates an internal
+`_info_cache` on first query per `model_id`:
+
+1. Instantiate a temporary `ModelBase` via the registered factory.
+2. Copy metadata fields into `ModelInfo`.
+3. Store and return the cached copy.
+
+Subsequent queries return the cache without reconstructing the model. `clear()`
+wipes factories and cache (primarily for tests).
+
+Runtime JSON models registered via `registerFromJson()` follow the same path:
+a `RuntimeModel` factory is added and cached like any C++-registered model.
+
+Slot lookup helpers read from the same cache:
+
+- `getInputSlot(model_id, slot_name)`
+- `getOutputSlot(model_id, slot_name)` — raw output slots only (no post-encoder)
+
+## Consumers
+
+| Consumer | Usage |
+|----------|-------|
+| `DeepLearningPropertiesWidget` | Model description, batch spinbox constraints, slot panel rebuild; holds `_current_info` refreshed from registry then live instance |
+| `DeepLearningViewWidget` | Slot metadata for the view panel |
+| `dl::constraints::computeBatchSizeConstraint` | Reads `batch_mode` with session memory frames |
+| `ModelRegistry` | Internal cache; combo population via `availableModels()` |
+
+## Related documentation
+
+- [Batch Mode Guide](../batch_mode_guide.qmd) — `batch_mode` semantics and JSON mapping
+- [Session Constraints](../constraints.qmd) — `computeBatchSizeConstraint()`
+- [Post-encoder modules](../post_encoder_modules.qmd) — shape propagation into `effectiveOutputSlots()`
+
+## Tests
+
+- `tests/DeepLearning/registry/ModelRegistry.test.cpp` — `[ModelRegistry]` cache and field population
+- `tests/DeepLearning/models_v2/NeuroSAMModel.test.cpp` — registry `ModelInfo` for NeuroSAM
+- `tests/DeepLearning/constraints/ConstraintEnforcer.test.cpp` — `[dl_constraints]` with synthetic `ModelInfo`

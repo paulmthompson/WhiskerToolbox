@@ -1,0 +1,185 @@
+---
+title: "DataBank"
+---
+
+## Overview
+
+`dl::DataBank` provides a DataManager-independent named store for geometry
+sources and channel-encoded tensors. It holds pre-encoded static (memory) model
+inputs that can be reused across inference runs without re-fetching from
+DataManager on every forward pass.
+
+Encoded tensors use libtorch (`at::Tensor`); geometry sources use
+`EncodingSourceVariant` from `EncoderDispatch`.
+
+**Location:** `src/DeepLearning/storage/`
+
+| File | Role |
+|------|------|
+| `DataBankEntry.hpp` | `DataBankEntry`, `DataBankEntryMetadata` |
+| `DataBank.hpp` / `DataBank.cpp` | Named entry library |
+| `DataBankEncode.hpp` / `DataBankEncode.cpp` | Standalone encoding helpers |
+
+## Types
+
+### `DataBankEntryMetadata`
+
+Provenance recorded at capture time:
+
+| Field | Purpose |
+|-------|---------|
+| `label` | Optional UI display name |
+| `data_key` | DataManager key the source was captured from |
+| `captured_frame` | Frame index in that object's timebase (`-1` if unknown) |
+| `source_image_size` | Original image dimensions for geometry scaling |
+| `encoder_factory_name` | Encoder used when encoding (e.g. `"Mask2DEncoder"`) |
+
+### `DataBankEntry`
+
+| Member | Purpose |
+|--------|---------|
+| `source` | Optional raw `EncodingSourceVariant` (mask, point, line, image) |
+| `encoded` | Optional channel-encoded tensor with **batch dimension = 1** |
+| `metadata` | Provenance fields above |
+
+### `DataBank`
+
+Keyed library of entries. Default capacity: `kDefaultMaxEntries` (64). New
+`put*` operations fail when the limit is reached (unless overwriting an
+existing ID).
+
+## Entry ID validation
+
+`validateEntryId(id)` rejects:
+
+- Empty strings
+- Whitespace-only strings
+- Any internal whitespace
+- `:` (reserved for legacy slot-bound cache keys)
+
+Returns `std::optional<std::string>` — engaged value is an error message.
+
+## API
+
+| Method | Purpose |
+|--------|---------|
+| `contains(id)` | Whether an entry exists |
+| `get(id)` | Copy of full entry |
+| `getEncoded(id)` / `getSource(id)` | Lookup helpers |
+| `putSource(id, source, metadata)` | Store raw geometry/image only |
+| `putEncoded(id, tensor, metadata, source?)` | Store encoded tensor; optional source retained |
+| `encodeEntry(id, slot, encoder_params)` | Encode stored source in place via `EncoderDispatch` |
+| `remove(id)` / `clear()` | Delete one or all entries |
+| `ids()` / `size()` / `maxEntries()` | Inventory |
+| `encodedShape(id)` / `encodedRange(id)` | UI preview helpers |
+
+`putEncoded` requires the tensor to be defined with leading batch size 1.
+
+## Encoding helpers (`DataBankEncode.hpp`)
+
+Free functions usable without storing in a bank:
+
+| Function | Purpose |
+|----------|---------|
+| `perElementShape(slot)` | Shape of one sequence element (requires `sequence_dim >= 0`) |
+| `encodingShapeForSlot(slot)` | Shape passed to encoders (strips sequence axis when present) |
+| `makeEncoderContext(slot, batch_index)` | Build `EncoderContext` from encoding shape |
+| `encodeSourceToTensor(source, slot, encoder, source_image_size)` | Allocate `{1, ...}` tensor and encode |
+
+## Provenance
+
+`metadata.data_key` and `metadata.captured_frame` record where an entry was
+captured. Widget code can use these to re-fetch the same DataManager object
+when refreshing UI, even though the bank itself does not depend on
+DataManager at read time.
+
+## Session binding
+
+Static memory positions choose a **source** via `StaticInputSourceVariant`
+(see [Memory frame bindings](bindings/memory_frames.qmd)):
+
+| Source | Binding fields | Assembly behaviour |
+|--------|----------------|-------------------|
+| `DataManager` | `data_key`, `time_offset` | Re-encode from DataManager each run |
+| `DataBank` | `bank_entry_id` (or default `{slot_name}_{memory_index}`) | Copy `DataBank::getEncoded()` into the input tensor |
+
+Helpers in `DeepLearningBindingData.hpp`:
+
+- `defaultBankEntryId(slot_name, memory_index)`
+- `resolvedBankEntryId(binding)` — explicit ID or default when in DataBank mode
+- `hasActiveStaticSource(binding)` — DataBank mode needs a resolved entry ID;
+  DataManager mode needs a non-empty `data_key`
+
+`SlotAssembler` owns a session-scoped `dl::DataBank` via `dataBank()`.
+`resetModel()` does **not** clear it; call `clearDataBank()` explicitly.
+
+## SlotAssembler integration
+
+### Capture
+
+| Method | Role |
+|--------|------|
+| `captureToBank(dm, bank_entry_id, entry, frame, source_image_size)` | Fetch from DataManager using `staticDataKey(entry)`, `putSource()`, then `encodeEntry()` with the slot's `recommended_encoder` |
+| `captureStaticInput(dm, entry, frame, source_image_size)` | Same as `captureToBank()` using `resolvedBankEntryId(entry)` as the bank key |
+
+`captureToBank()` requirements:
+
+- Model loaded (`isModelReady()`)
+- `bank_entry_id` passes `validateEntryId()`
+- `staticDataKey(entry)` non-empty
+- Target slot exists, `is_static == true`
+- Slot `recommended_encoder` resolves via `EncoderFactory`
+
+Properties-panel capture (`DataBankPropertiesWidget`) calls `captureToBank()`
+with a user-selected DataManager source and the resolved entry ID for the
+chosen static slot / memory index.
+
+### Assembly
+
+`assembleInputs()` fills static slots from memory-frame bindings:
+
+- **DataBank** — `getBankCachedTensor()` copies `getEncoded()` and expands
+  batch dimension when `batch_size > 1`. Missing encoded data logs an error and
+  leaves zeros.
+- **DataManager** — re-encodes at `current_frame + time_offset` each run.
+
+At inference time, DataBank bindings use the **cached encoded tensor**, not
+a live re-encode from `getSource()` (source is retained for capture,
+`encodeEntry()`, and potential future refresh paths).
+
+### Recurrent `StaticCapture` init
+
+At t=0, `runRecurrentSequence()` seeds recurrent cache by:
+
+1. Matching static `MemoryFrameBinding` at the same slot/index with DataBank
+   source → `getBankCachedTensor()`
+2. Else `getEncoded(defaultBankEntryId(slot, index))`
+3. Else capture from `StaticCaptureInit` `data_key` / `frame` into the default
+   bank entry via `captureStaticInput()`
+4. Else fall back to zeros
+
+## UI
+
+Widget triplets under `DeepLearning_Widget/UI/DataBank/`:
+
+| Widget | Zone | Role |
+|--------|------|------|
+| `DataBankPropertiesWidget` | Properties | Capture: target slot, memory index, DataManager source, capture button — [details](../../ui/DeepLearning_Widget/UI/DataBank/DataBankPropertiesWidget.qmd) |
+| `DataBankViewWidget` | View | Preview cards (shape, value range, provenance) — [details](../../ui/DeepLearning_Widget/UI/DataBank/DataBankViewWidget.qmd) |
+
+`DeepLearningPropertiesWidget` embeds the properties widget above the dynamic
+slot area and refreshes bank-entry combo boxes from `dataBank().ids()`.
+`DeepLearningViewWidget` embeds the view widget and calls
+`refreshDataBankView()` on bank changes.
+
+Static memory slot widgets (`MemorySlotWidget`) configure DataManager vs
+DataBank bindings only; capture is centralized in `DataBankPropertiesWidget`.
+
+## Tests
+
+`tests/DeepLearning/storage/DataBank.test.cpp` — tagged `[storage][DataBank]`.
+
+## See also
+
+- [Memory frame bindings](bindings/memory_frames.qmd) — `MemoryFrameBinding`, DataBank vs DataManager sources
+- [Encoder dispatch](channel_encoding/EncoderDispatch.qmd) — `EncodingSourceVariant`, `encodeToTensor`
