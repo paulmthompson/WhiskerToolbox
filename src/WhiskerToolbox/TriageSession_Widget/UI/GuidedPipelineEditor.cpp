@@ -71,6 +71,8 @@ void GuidedPipelineEditor::fromSequence(
         connect(row, &CommandRowWidget::parametersChanged,
                 this, &GuidedPipelineEditor::_onRowChanged);
 
+        _applyDataManagerToRow(row);
+
         _rows_layout->addWidget(row);
         _rows.push_back(row);
     }
@@ -85,6 +87,20 @@ void GuidedPipelineEditor::clear() {
         row->deleteLater();
     }
     _rows.clear();
+}
+
+void GuidedPipelineEditor::setDataManager(std::shared_ptr<DataManager> dm) {
+    _data_manager = std::move(dm);
+    for (auto * row: _rows) {
+        _applyDataManagerToRow(row);
+    }
+}
+
+void GuidedPipelineEditor::_applyDataManagerToRow(CommandRowWidget * row) const {
+    if (!row) {
+        return;
+    }
+    row->setDataManager(_data_manager);
 }
 
 void GuidedPipelineEditor::_onAddCommandClicked() {
@@ -118,6 +134,8 @@ void GuidedPipelineEditor::_addCommandRow(std::string const & command_name) {
             this, [this, row]() { _moveRowDown(row); });
     connect(row, &CommandRowWidget::parametersChanged,
             this, &GuidedPipelineEditor::_onRowChanged);
+
+    _applyDataManagerToRow(row);
 
     _rows_layout->addWidget(row);
     _rows.push_back(row);

@@ -65,8 +65,9 @@ fallback directory via `AutoParamWidget::registerDialogFallback()` pointing at
 `defaultUserPipelineDirectory(configDir())`, sharing session path memory with
 `TransformsV2Properties_Widget`.
 
-`input_key` and `output_key` set `dynamic_combo = true` for future runtime
-population from DataManager keys in `CommandRowWidget`.
+`input_key` and `output_key` set `dynamic_combo = true`. `CommandRowWidget`
+registers a DataManager observer and calls `AutoParamWidget::updateAllowedValues()`
+for those fields, filtered by the command's `supported_data_types`.
 
 ## Related
 

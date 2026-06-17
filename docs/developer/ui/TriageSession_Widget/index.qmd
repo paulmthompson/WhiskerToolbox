@@ -104,9 +104,12 @@ Three buttons for the triage workflow:
   `commands::getAvailableCommands()`. Shows command description and category.
 - **CommandRowWidget** — Expandable row with command name header, move-up/down
   buttons, remove button, and a collapsible `AutoParamWidget` for parameters.
+  Registers a DataManager observer to populate `dynamic_combo` fields via
+  `updateAllowedValues()`.
 - **GuidedPipelineEditor** — Container managing the list of `CommandRowWidget`s
-  plus an "Add Command..." button. Provides `toSequence()`/`fromSequence()`
-  for bidirectional `CommandSequenceDescriptor` conversion.
+  plus an "Add Command..." button. Forwards the shared `DataManager` to each row.
+  Provides `toSequence()`/`fromSequence()` for bidirectional
+  `CommandSequenceDescriptor` conversion.
 
 #### Tracked Regions Section
 Displays a summary of the tracked regions `DigitalIntervalSeries`:
@@ -128,5 +131,4 @@ The summary updates automatically when the time position changes (on each
 ## See Also
 
 - [TriageSession Core Library](../../TriageSession/index.qmd) — non-Qt state machine
-- [Command Architecture](../../DataManager/Commands/index.qmd) — underlying command system
-- [Command Architecture Roadmap](../../DataManager/Commands/roadmap.qmd) — implementation plan
+- [Command Architecture](../../Commands/index.qmd) — underlying command system

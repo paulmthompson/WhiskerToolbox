@@ -11,10 +11,12 @@
 
 #include <QWidget>
 
+#include <memory>
 #include <optional>
 #include <string>
 
 class AutoParamWidget;
+class DataManager;
 class QLabel;
 class QPushButton;
 class QToolButton;
@@ -32,6 +34,7 @@ class CommandRowWidget : public QWidget {
 public:
     explicit CommandRowWidget(commands::CommandInfo info,
                               QWidget * parent = nullptr);
+    ~CommandRowWidget() override;
 
     /// @brief Get the command name
     [[nodiscard]] std::string commandName() const;
@@ -48,6 +51,15 @@ public:
     /// @brief Enable/disable the move-down button
     void setMoveDownEnabled(bool enabled);
 
+    /**
+     * @brief Bind a DataManager and refresh dynamic combo fields
+     * @param dm Shared DataManager used to populate `dynamic_combo` parameters
+     */
+    void setDataManager(std::shared_ptr<DataManager> dm);
+
+    /// @brief Re-populate all `dynamic_combo` fields from the bound DataManager
+    void refreshDynamicCombos();
+
 signals:
     void removeRequested();
     void moveUpRequested();
@@ -57,8 +69,11 @@ signals:
 private:
     void _buildUI();
     void _toggleExpanded();
+    void _registerDataManagerObserver();
 
     commands::CommandInfo _info;
+    std::shared_ptr<DataManager> _data_manager;
+    int _dm_observer_id = -1;
     bool _expanded = false;
 
     // Header bar

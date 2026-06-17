@@ -81,6 +81,9 @@ TriageSessionProperties_Widget::TriageSessionProperties_Widget(
 
     _buildUI();
     _connectSignals();
+    if (_guided_editor && _state) {
+        _guided_editor->setDataManager(_state->dataManager());
+    }
     _syncSlotEditorFromState();
     _updateStateDisplay();
     _updateButtonStates();

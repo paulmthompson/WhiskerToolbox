@@ -10,10 +10,12 @@
 
 #include <QWidget>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 class CommandRowWidget;
+class DataManager;
 class QPushButton;
 class QVBoxLayout;
 
@@ -46,6 +48,12 @@ public:
     /// @brief Clear all command rows
     void clear();
 
+    /**
+     * @brief Bind a DataManager and refresh dynamic combo fields on all rows
+     * @param dm Shared DataManager used to populate command parameter combos
+     */
+    void setDataManager(std::shared_ptr<DataManager> dm);
+
 signals:
     /// @brief Emitted when any command is added, removed, reordered, or has params changed
     void pipelineChanged();
@@ -60,11 +68,13 @@ private:
     void _moveRowDown(CommandRowWidget * row);
     void _updateMoveButtons();
     void _onRowChanged();
+    void _applyDataManagerToRow(CommandRowWidget * row) const;
 
     QVBoxLayout * _rows_layout = nullptr;
     QPushButton * _add_button = nullptr;
 
     std::vector<CommandRowWidget *> _rows;
+    std::shared_ptr<DataManager> _data_manager;
     bool _updating = false;///< Guard against recursive signal emission
 };
 

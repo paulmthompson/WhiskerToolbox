@@ -6,6 +6,9 @@
 #include "CommandRowWidget.hpp"
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/utils/DataManagerKeys.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include <rfl/json.hpp>
 
@@ -15,11 +18,49 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <vector>
+
+namespace {
+
+[[nodiscard]] std::vector<DM_DataType>
+dataTypesFromClassNames(std::vector<std::string> const & class_names) {
+    std::vector<DM_DataType> types;
+    types.reserve(class_names.size());
+
+    for (auto const & name: class_names) {
+        if (name == "MediaData") {
+            types.push_back(DM_DataType::Video);
+            types.push_back(DM_DataType::Images);
+        } else if (name == "PointData") {
+            types.push_back(DM_DataType::Points);
+        } else if (name == "MaskData") {
+            types.push_back(DM_DataType::Mask);
+        } else if (name == "LineData") {
+            types.push_back(DM_DataType::Line);
+        } else if (name == "AnalogTimeSeries") {
+            types.push_back(DM_DataType::Analog);
+        } else if (name == "TensorData") {
+            types.push_back(DM_DataType::Tensor);
+        }
+    }
+
+    return types;
+}
+
+}// namespace
+
 CommandRowWidget::CommandRowWidget(commands::CommandInfo info,
                                    QWidget * parent)
     : QWidget(parent),
       _info(std::move(info)) {
     _buildUI();
+}
+
+CommandRowWidget::~CommandRowWidget() {
+    if (_data_manager && _dm_observer_id >= 0) {
+        _data_manager->removeObserver(_dm_observer_id);
+        _dm_observer_id = -1;
+    }
 }
 
 std::string CommandRowWidget::commandName() const {
@@ -54,6 +95,46 @@ void CommandRowWidget::setMoveUpEnabled(bool enabled) {
 
 void CommandRowWidget::setMoveDownEnabled(bool enabled) {
     _move_down_button->setEnabled(enabled);
+}
+
+void CommandRowWidget::setDataManager(std::shared_ptr<DataManager> dm) {
+    if (_data_manager && _dm_observer_id >= 0) {
+        _data_manager->removeObserver(_dm_observer_id);
+        _dm_observer_id = -1;
+    }
+
+    _data_manager = std::move(dm);
+
+    if (_data_manager) {
+        _registerDataManagerObserver();
+        refreshDynamicCombos();
+    }
+}
+
+void CommandRowWidget::refreshDynamicCombos() {
+    if (!_data_manager || !_param_widget) {
+        return;
+    }
+
+    auto const types = dataTypesFromClassNames(_info.supported_data_types);
+    auto const keys = getKeysForTypes(*_data_manager, types);
+
+    for (auto const & field: _info.parameter_schema.fields) {
+        if (!field.dynamic_combo) {
+            continue;
+        }
+        _param_widget->updateAllowedValues(field.name, keys);
+    }
+}
+
+void CommandRowWidget::_registerDataManagerObserver() {
+    if (!_data_manager) {
+        return;
+    }
+
+    _dm_observer_id = _data_manager->addObserver(
+            [this]() { refreshDynamicCombos(); },
+            "CommandRowWidget - Refresh Dynamic Combos");
 }
 
 void CommandRowWidget::_buildUI() {
