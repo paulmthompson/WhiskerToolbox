@@ -4,62 +4,84 @@ title: "General Encoder Model"
 
 ## Overview
 
-The `GeneralEncoderModel` is a reusable `ModelBase` subclass that wraps any image 
-encoder backbone (e.g. ConvNeXt, ViT, ResNet) as a single-input, single-output model 
-for spatial feature extraction. It maps an input image to a feature tensor without 
-requiring a task-specific C++ wrapper for each architecture.
+`GeneralEncoderModel` is a reusable `ModelBase` subclass that wraps any image
+encoder backbone (e.g. ConvNeXt, ViT, ResNet) as a single-input, single-output
+model for spatial feature extraction. It maps an input image to a raw feature
+tensor without requiring a task-specific C++ wrapper for each architecture.
+
+Post-encoder processing (global pooling, spatial point extraction, etc.) is
+**not** part of this model. Post-encoder modules are a separate, model-agnostic
+pipeline stage owned by `SlotAssembler` and configurable for any loaded model.
+See [Post-Encoder Modules](post_encoder_modules.qmd).
+
+**Source:** `src/DeepLearning/models_v2/general_encoder/`
 
 ## Architecture
 
 ```
-Input Image [B, C, H, W]  →  GeneralEncoderModel  →  Features [B, C_out, H_out, W_out]
-         "image" slot              (any .pt/.pt2)          "features" slot
+Input Image [B, C, H, W]  →  GeneralEncoderModel::forward()  →  Features [B, C_out, H_out, W_out]
+         "image" slot              (any .pt/.pt2)                    "features" slot
+                                                                    │
+                                                                    ▼
+                                              PostEncoderModule (optional, session config)
+                                                                    │
+                                                                    ▼
+                                              Channel decoder (e.g. TensorToFeatureVector)
 ```
 
-### Design Decisions
+### Design decisions
 
-The `GeneralEncoderModel` is intentionally minimal:
+`GeneralEncoderModel` is intentionally minimal:
 
 - **Single input slot** (`"image"`) — accepts any image tensor
-- **Single output slot** (`"features"`) — produces the raw encoder output
-- **Configurable shapes** — input resolution and output feature shape are set at 
-  construction time, allowing the same C++ class to work with any backbone
-- **DynamicBatch** — supports arbitrary batch sizes, controlled by the caller
+- **Single output slot** (`"features"`) — produces the raw backbone output
+- **Configurable shapes** — input resolution and output feature shape are set at
+  construction time or via registered model configuration
+- **DynamicBatch** — `DynamicBatch{1, 0}` (min 1, unlimited max)
 
-For most users, defining an encoder via a `RuntimeModelSpec` JSON file (which 
-internally creates a `RuntimeModel`) is sufficient and requires no C++ changes. 
-The `GeneralEncoderModel` provides a convenience wrapper with sensible defaults 
-that auto-registers in the `ModelRegistry`.
+For most users, defining an encoder via a `RuntimeModelSpec` JSON file (which
+creates a `RuntimeModel`) is sufficient and requires no C++ changes.
+`GeneralEncoderModel` provides a convenience wrapper with sensible defaults that
+auto-registers in `ModelRegistry` with a configuration schema.
 
-### Compile-Time vs. Runtime Shapes
+### Compile-time vs. runtime shapes
 
 Input and output resolution **do not need to be known at compile time:**
 
 - **TorchScript** (`.pt`) accepts arbitrary dynamic shapes natively
-- **AOT Inductor** (`.pt2`) supports dynamic shapes via `torch.export.Dim()` — 
+- **AOT Inductor** (`.pt2`) supports dynamic shapes via `torch.export.Dim()` —
   dimensions marked as dynamic can vary at runtime within declared bounds
 - **`RuntimeModel`** reads shapes from a JSON spec at runtime
 
-The shapes declared in `GeneralEncoderModel` (or `RuntimeModelSpec`) are **metadata 
-for the UI and pre-allocation**, not hard constraints enforced at the C++ level.
+The shapes declared in `GeneralEncoderModel` (or `RuntimeModelSpec`) are
+**metadata for the UI and pre-allocation**, not hard constraints enforced at the
+C++ level.
+
+### Post-encoder recommendation
+
+`GeneralEncoderModel::recommendedPostEncoderModule()` returns `"global_avg_pool"`.
+The output slot recommends `TensorToFeatureVector` as its decoder — appropriate
+after spatial collapse to `[B, C]`.
+
+On model selection, `DeepLearningPropertiesWidget` pre-populates
+`DeepLearningState::postEncoderParams()` from `ModelInfo::recommended_post_encoder`.
+The user can override the module for any model in `PostEncoderWidget`.
 
 ## Usage
 
-### Option 1: C++ `GeneralEncoderModel` (Compiled)
+### Option 1: C++ `GeneralEncoderModel` (compiled)
 
-The default constructor creates a model expecting 3×224×224 RGB input and 
-384×7×7 output (matching ConvNeXt-Tiny):
+The default constructor creates a model expecting 3×224×224 RGB input and
+384×7×7 output:
 
 ```cpp
 auto model = std::make_unique<dl::GeneralEncoderModel>();
 model->loadWeights("/path/to/convnext_tiny_encoder.pt");
 
-// Prepare input
 auto image = torch::randn({1, 3, 224, 224});
 std::unordered_map<std::string, torch::Tensor> inputs;
 inputs["image"] = image;
 
-// Run inference
 auto outputs = model->forward(inputs);
 auto features = outputs["features"];  // [1, 384, 7, 7]
 ```
@@ -67,12 +89,11 @@ auto features = outputs["features"];  // [1, 384, 7, 7]
 For a different backbone, pass custom dimensions:
 
 ```cpp
-// ConvNeXt-Base: 1024-dim features
 auto model = std::make_unique<dl::GeneralEncoderModel>(
-    3, 224, 224, std::vector<int64_t>{1024, 7, 7});
+    3, 224, 224, std::vector<int64_t>{768, 7, 7});
 ```
 
-### Option 2: `RuntimeModelSpec` JSON (No Recompilation)
+### Option 2: `RuntimeModelSpec` JSON (no recompilation)
 
 Create a JSON spec file (see `examples/convnext_encoder_spec.json`):
 
@@ -86,12 +107,13 @@ Create a JSON spec file (see `examples/convnext_encoder_spec.json`):
     { "name": "image", "shape": [3, 224, 224], "recommended_encoder": "ImageEncoder" }
   ],
   "outputs": [
-    { "name": "features", "shape": [768, 7, 7] }
-  ]
+    { "name": "features", "shape": [768, 7, 7], "recommended_decoder": "TensorToFeatureVector" }
+  ],
+  "recommended_post_encoder": "global_avg_pool"
 }
 ```
 
-Load it via the `ModelRegistry`:
+Load via `ModelRegistry`:
 
 ```cpp
 dl::ModelRegistry::instance().loadFromJson("/path/to/spec.json");
@@ -100,35 +122,53 @@ auto model = dl::ModelRegistry::instance().create("convnext_tiny_encoder");
 
 ### Option 3: Widget UI
 
-The `GeneralEncoderModel` appears in the Deep Learning widget's model selector as 
-"General Encoder". By default the widget recommends **Global Average Pooling** as 
-the post-encoder module and **TensorToFeatureVector** as the output decoder. Select 
-the model, configure the image binding, load weights, and run inference through the 
-standard widget workflow.
+`GeneralEncoderModel` appears in the Deep Learning widget model selector as
+**General Encoder**. The standard workflow:
 
-#### Runtime Shape Configuration
+1. Select the model
+2. Configure input/output shapes in the **Model Configuration** section
+   (`EncoderShapeWidget`) and click **Apply Configuration**
+3. Load weights
+4. Configure the image binding and optional post-encoder module
+5. Run inference
 
-Different encoder backbones produce different output shapes and may require different 
-input resolutions. For example:
+#### Runtime shape configuration
 
-- ConvNeXt-Tiny: 224×224 input → 384×7×7 output
-- EfficientViT: 256×256 input → 192×16×16 output
-- ViT-Base: 224×224 input → 768×14×14 output
+Different backbones produce different output shapes and may require different
+input resolutions:
 
-The widget provides an **Encoder Shape** section (visible when "General Encoder" is 
-selected) with spinboxes for Input Height, Input Width, and a text field for Output 
-Shape. Set these to match your compiled model *before* loading weights.
+| Backbone | Typical input | Typical output |
+|---|---|---|
+| ConvNeXt-Tiny | 224×224 | 768×7×7 |
+| ConvNeXt-Base | 224×224 | 1024×7×7 |
+| EfficientViT | 256×256 | 192×16×16 |
+| ViT-Base | 224×224 | 768×14×14 |
+
+`EncoderShapeWidget` drives an `AutoParamWidget` form from
+`GeneralEncoderModelParams`:
+
+| Field | Purpose |
+|---|---|
+| `input_height` / `input_width` | Input resolution in pixels |
+| `output_shape` | Comma-separated output dims (e.g. `"768,7,7"`) |
+| `shape_applied` | Set when the user clicks Apply Configuration |
+
+Configuration persists in
+`DeepLearningStateData::model_configurations["general_encoder"]` and is applied
+via `SlotAssembler::applyModelConfiguration()`.
+
+Weights loading is blocked until `generalEncoderConfigurationComplete()` returns
+true (`shape_applied` and positive height/width).
 
 ::: {.callout-important}
-**AOT Inductor models compiled with fixed spatial dimensions will produce NaN output 
-if fed the wrong input size.** Always match the input resolution to what was used 
-during `torch.export.export()`. When using `torch.export.Dim()` for dynamic shapes, 
-only the batch dimension is typically dynamic — spatial dimensions remain fixed.
+**AOT Inductor models compiled with fixed spatial dimensions will produce NaN
+output if fed the wrong input size.** Match the input resolution to what was used
+during `torch.export.export()`. When using `torch.export.Dim()` for dynamic
+shapes, only the batch dimension is typically dynamic — spatial dimensions remain
+fixed.
 :::
 
-#### Programmatic Shape Configuration
-
-From C++, use the setter methods after construction:
+#### Programmatic shape configuration
 
 ```cpp
 auto model = std::make_unique<dl::GeneralEncoderModel>();
@@ -137,29 +177,29 @@ model->setOutputShape({192, 16, 16});
 model->loadWeights("/path/to/efficientvit_encoder.pt2");
 ```
 
-The `SlotAssembler` also exposes `configureModelShape()` for widget-level access:
+Helpers in `GeneralEncoderConfiguration.hpp`:
 
-```cpp
-assembler->configureModelShape(256, 256, {192, 16, 16});
-```
+- `applyGeneralEncoderConfiguration()` — apply params to a live instance
+- `parseGeneralEncoderOutputShape()` — parse comma-separated shape string
+- `generalEncoderConfigurationComplete()` — validate before weight load
 
-## Exporting Models
+## Exporting models
 
-Use the provided Python export script to convert a torchvision ConvNeXt to 
-TorchScript and/or AOT Inductor format:
+Use the provided Python export script:
 
 ```bash
 python examples/export_convnext_encoder.py --model convnext_tiny --output-dir ./models
 ```
 
 This produces:
-- `convnext_tiny_encoder.pt` — TorchScript format
-- `convnext_tiny_encoder.pt2` — AOT Inductor format (requires PyTorch 2.1+)
-- `convnext_tiny_encoder_spec.json` — RuntimeModelSpec for the exported model
+
+- `convnext_tiny_encoder.pt` — TorchScript
+- `convnext_tiny_encoder.pt2` — AOT Inductor (PyTorch 2.1+)
+- `convnext_tiny_encoder_spec.json` — `RuntimeModelSpec`
 
 See `examples/export_convnext_encoder.py --help` for all options.
 
-## Slot Descriptors
+## Slot descriptors
 
 ### Input: `"image"`
 
@@ -167,7 +207,7 @@ See `examples/export_convnext_encoder.py --help` for all options.
 |---|---|
 | Shape | `[C, H, W]` (default: `[3, 224, 224]`) |
 | DType | `Float32` |
-| Recommended Encoder | `ImageEncoder` |
+| Recommended encoder | `ImageEncoder` |
 | Static | No |
 
 ### Output: `"features"`
@@ -176,21 +216,39 @@ See `examples/export_convnext_encoder.py --help` for all options.
 |---|---|
 | Shape | Configurable (default: `[384, 7, 7]`) |
 | DType | `Float32` |
-| Recommended Decoder | (none — raw features) |
+| Recommended decoder | `TensorToFeatureVector` (after post-encoder collapse) |
 | Static | No |
+
+`ModelBase::outputSlots()` always reports raw backbone shapes. Effective shapes
+seen by decoders come from `effectiveOutputSlots()` after the session
+post-encoder module is applied.
 
 ## Registration
 
-`GeneralEncoderModel` self-registers via `DL_REGISTER_MODEL(GeneralEncoderModel)` 
-at static initialization time. It is available in the `ModelRegistry` under the 
-ID `"general_encoder"`.
+`GeneralEncoderModel` self-registers via `DL_REGISTER_MODEL_WITH_CONFIG` at
+static initialization. Registry ID: `"general_encoder"`.
+
+The registration bundles:
+
+- `GeneralEncoderModelParams` — configuration schema
+- `applyGeneralEncoderConfiguration()` — apply params to instance
+- `generalEncoderConfigurationComplete()` — weight-load gate
+- Form/stored JSON converters for `AutoParamWidget`
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `src/DeepLearning/models_v2/general_encoder/GeneralEncoderModel.hpp` | Header |
-| `src/DeepLearning/models_v2/general_encoder/GeneralEncoderModel.cpp` | Implementation |
+| `GeneralEncoderModel.hpp` / `.cpp` | Model wrapper |
+| `GeneralEncoderModelParams.hpp` | Serializable configuration |
+| `GeneralEncoderConfiguration.hpp` / `.cpp` | Apply/validate helpers |
+| `GeneralEncoderParamSchemas.hpp` | `ParameterUIHints` for shape form |
 | `tests/DeepLearning/models_v2/GeneralEncoderModel.test.cpp` | Unit tests |
-| `examples/convnext_encoder_spec.json` | Example RuntimeModelSpec |
+| `examples/convnext_encoder_spec.json` | Example `RuntimeModelSpec` |
 | `examples/export_convnext_encoder.py` | Python export script |
+
+## Related documentation
+
+- [Post-Encoder Modules](post_encoder_modules.qmd) — model-agnostic output processing
+- [ModelInfo](models_v2/ModelInfo.qmd) — `recommended_post_encoder` metadata
+- `EncoderShapeWidget` — `src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp`
