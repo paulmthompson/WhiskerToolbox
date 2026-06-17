@@ -44,6 +44,8 @@ Describes a single field in a parameter struct at runtime:
 | `is_bound` | `bool` | True if typically populated from a value store |
 | `dynamic_combo` | `bool` | If true, create QComboBox even with empty `allowed_values` |
 | `include_none_sentinel` | `bool` | If true, prepend "(None)" sentinel to combo (maps to `""` in JSON) |
+| `path_field_kind` | `PathFieldKind` | `None`, `FilePath`, or `DirectoryPath` for browse-enabled path fields |
+| `file_dialog_id` | `std::string` | AppFileDialog session id when `path_field_kind != None` |
 | `is_vector` | `bool` | True for `std::vector<T>` fields |
 | `vector_element_type` | `std::string` | Element type for vector fields (e.g. `"std::string"`, `"int"`, `"float"`, `"double"`) |
 | `is_variant` | `bool` | True for `rfl::TaggedUnion` fields |

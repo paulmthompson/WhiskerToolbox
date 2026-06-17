@@ -285,6 +285,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Python_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 target_link_libraries(WhiskerToolbox PRIVATE StateManagement)
+target_link_libraries(WhiskerToolbox PRIVATE AutoParamWidget)
 
 # Force whole-archive linking for MediaData to ensure static media type/loader registration
 # (VideoDataRegistration.cpp, ImageDataRegistration.cpp etc. have file-scope RAII objects

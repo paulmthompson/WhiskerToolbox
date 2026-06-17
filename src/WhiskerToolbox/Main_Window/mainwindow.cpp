@@ -77,12 +77,14 @@
 #include "StateManagement/WorkspaceData.hpp"
 #include "StateManagement/WorkspaceManager.hpp"
 
+#include "AutoParamWidget/AutoParamWidget.hpp"
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/register_core_commands.hpp"
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "DeepLearning/register_deeplearning_commands.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
 #include "TransformsV2/register_transformsv2_commands.hpp"
 #include "utils/DataLoadUtils.hpp"
 
@@ -128,6 +130,30 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Initialize the global file dialog wrapper with session path memory
     AppFileDialog::init(_state_manager->session());
+
+    AutoParamWidget::setFileDialogOpener(
+            [](QWidget * parent,
+               QString id,
+               QString caption,
+               QString filter,
+               QString fallback,
+               bool pick_dir) -> QString {
+                if (pick_dir) {
+                    return AppFileDialog::getExistingDirectory(
+                            parent, id, caption, fallback);
+                }
+                return AppFileDialog::getOpenFileName(
+                        parent, id, caption, filter, fallback);
+            });
+    AutoParamWidget::registerDialogFallback(
+            QStringLiteral("transformv2_pipeline_open"),
+            [this]() -> QString {
+                return QString::fromStdString(
+                        WhiskerToolbox::Transforms::V2::Examples::defaultUserPipelineDirectory(
+                                std::filesystem::path{
+                                        _state_manager->configDir().toStdString()})
+                                .string());
+            });
 
     // Register Qt metatypes for TimeFrame types (required for signal/slot)
     qRegisterMetaType<TimeKey>("TimeKey");

@@ -1,6 +1,7 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
 add_library(ParameterSchema STATIC
+    PathFieldKind.hpp
     ParameterSchema.hpp
     ParameterSchema.cpp
 )

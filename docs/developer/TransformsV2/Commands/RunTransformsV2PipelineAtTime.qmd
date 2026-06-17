@@ -1,0 +1,64 @@
+---
+title: "RunTransformsV2PipelineAtTime Command"
+---
+
+## Overview
+
+`RunTransformsV2PipelineAtTime` bridges Triage/command sequences to saved
+TransformsV2 `PipelineDescriptor` JSON files. It is registered from
+`src/TransformsV2/register_transformsv2_commands.cpp` and appears in
+`CommandPickerDialog` via the shared `CommandRegistry`.
+
+**Status:** Draft stub — validates `pipeline_path` and logs parameters; does not
+yet subset DataManager, execute the pipeline, or merge output. Tracked in
+[#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
+
+## Source Files
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/Commands/RunTransformsV2PipelineAtTime.hpp` | Command + params struct |
+| `src/TransformsV2/Commands/RunTransformsV2PipelineAtTime.cpp` | Stub `execute()` |
+| `src/TransformsV2/Commands/RunTransformsV2PipelineAtTimeUIHints.hpp` | `ParameterUIHints` (path browse for `pipeline_path`) |
+
+## Parameters
+
+```cpp
+struct RunTransformsV2PipelineAtTimeParams {
+    std::string input_key;
+    std::string output_key;
+    int64_t time = 0;  // sequence JSON may use "${current_frame}" / "${mark_frame}"
+    std::string pipeline_path;
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `input_key` | DataManager key of the source object for the frame subset |
+| `output_key` | DataManager key where results will be merged |
+| `time` | Frame index; use `"${current_frame}"` or `"${mark_frame}"` in sequence JSON (expanded to a JSON number before deserialization, same as `ClearLineDataAtTime`) |
+| `pipeline_path` | Absolute path to a pipeline JSON file (browse defaults to the user pipeline library) |
+
+## UI Hints
+
+`pipeline_path` uses `PathFieldKind::FilePath` with
+`file_dialog_id = "transformv2_pipeline_open"`. `MainWindow` registers a
+fallback directory via `AutoParamWidget::registerDialogFallback()` pointing at
+`defaultUserPipelineDirectory(configDir())`, sharing session path memory with
+`TransformsV2Properties_Widget`.
+
+`input_key` and `output_key` set `dynamic_combo = true` for future runtime
+population from DataManager keys in `CommandRowWidget`.
+
+## Future Execution (not implemented)
+
+1. Resolve `time` after variable substitution.
+2. `createTemporalSubset` for `input_key` at that frame.
+3. Run `TransformPipeline` from `PipelineDescriptor` off-DataManager.
+4. `mergeOverwriteData` into `output_key` at the resolved time ([#269](https://github.com/paulmthompson/WhiskerToolbox/issues/269)).
+
+## Related
+
+- [Command Registration](../transforms_v2/command_registration.qmd)
+- [Pipeline Library](../transforms_v2/pipeline_library.qmd)
+- [Command Architecture](../../Commands/index.qmd)

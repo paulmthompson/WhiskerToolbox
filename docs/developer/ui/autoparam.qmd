@@ -57,6 +57,7 @@ The `AutoParamWidget` is a generic Qt widget that takes a `ParameterSchema` and 
 - `int` → `QSpinBox`
 - `bool` → `QCheckBox`
 - `std::string` → `QLineEdit` or `QComboBox` (if `allowed_values` or `dynamic_combo` is set)
+- `std::string` + `path_field_kind` → `QLineEdit` + Browse button (file or directory dialog)
 - `enum class` → `QComboBox` (enumerator names auto-populated by `extractParameterSchema`)
 - `std::vector<T>` → multi-select `QListWidget` or CSV `QLineEdit` (see [ParameterSchema](../ParameterSchema/index.qmd))
 - `rfl::TaggedUnion` → discriminator `QComboBox` + `QStackedWidget` sub-form per alternative
@@ -194,6 +195,43 @@ widget->updateVariantAlternatives("encoder", {"ImageEncoderParams", "MaskEncoder
 - If the current selection is hidden, switches to the first visible alternative.
 - Preserves the combo → stacked-widget index mapping via `Qt::UserRole` item data.
 - Emits `parametersChanged` only if the active alternative changes.
+
+## Path Fields (File / Directory Browse)
+
+Set `path_field_kind` to `FilePath` or `DirectoryPath` on a `std::string` field
+to render a line edit with a **Browse…** button. Use `file_dialog_id` to key
+session path memory in `AppFileDialog` (same ids as hand-written widgets, e.g.
+`transformv2_pipeline_open`).
+
+```cpp
+if (auto* f = schema.field("pipeline_path")) {
+    f->path_field_kind = PathFieldKind::FilePath;
+    f->file_dialog_id = "transformv2_pipeline_open";
+}
+```
+
+Fallback directories (when no session memory exists) are **not** stored in the
+schema. Register them once at app startup:
+
+```cpp
+AutoParamWidget::setFileDialogOpener([](QWidget* parent, QString id, QString caption,
+                                        QString filter, QString fallback, bool pick_dir) {
+    if (pick_dir) {
+        return AppFileDialog::getExistingDirectory(parent, id, caption, fallback);
+    }
+    return AppFileDialog::getOpenFileName(parent, id, caption, filter, fallback);
+});
+AutoParamWidget::registerDialogFallback("transformv2_pipeline_open", [] {
+    return QString::fromStdString(defaultUserPipelineDirectory(configDir).string());
+});
+```
+
+Without app wiring, `AutoParamWidget` falls back to `QFileDialog` directly
+(sufficient for unit tests).
+
+First consumer: `RunTransformsV2PipelineAtTime.pipeline_path` in TriageSession.
+`TransformsV2Properties_Widget` still uses hand-written Load/Library buttons;
+consolidation is optional in a later IO migration step.
 
 ## See also
 

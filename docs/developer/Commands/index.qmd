@@ -420,7 +420,7 @@ and [Command Introspection](command_introspection.qmd) for the full metadata tab
 | `SaveData` | Commands | Done | Save via `LoaderRegistry`; atomic write-ahead pattern |
 | `LoadData` | Commands | Done | Load via `LoaderRegistry`; undoable via `deleteData()` |
 | `SynthesizeData` | DataSynthesizer | Done | Generate data via `GeneratorRegistry` |
-| `RunTransformsV2PipelineAtTime` | TransformsV2 | Planned | Run a saved V2 pipeline on one frame; tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267) |
+| `RunTransformsV2PipelineAtTime` | TransformsV2 | Draft (stub) | Run a saved V2 pipeline on one frame; browse UI + validation only — [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267) |
 | `RunTransformPipeline` | TransformsV2 | Future | Full-series pipeline over an entire data object (not yet scoped) |
 
 ### MoveByTimeRange
@@ -456,10 +456,14 @@ does not exist, creates an empty series with the default `TimeKey("time")`.
 
 Wraps `LoaderRegistry::tryLoad()`. Undoable via `deleteData()`. See [LoadData Command](load_data.qmd).
 
-### RunTransformsV2PipelineAtTime *(planned)*
+### RunTransformsV2PipelineAtTime *(draft stub)*
 
 Single-frame bridge from Triage/command sequences to TransformsV2 `PipelineDescriptor` JSON.
+Currently validates `pipeline_path`, provides pipeline-library browse UI via
+`PathFieldKind`, and logs parameters. Execution and merge are not yet implemented.
 Tracked in [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
+
+See [RunTransformsV2PipelineAtTime Command](../TransformsV2/Commands/RunTransformsV2PipelineAtTime.qmd).
 
 ### RunTransformPipeline *(future)*
 

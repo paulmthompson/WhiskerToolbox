@@ -5,12 +5,15 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QFileDialog>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QPushButton>
 #include <QSizePolicy>
 #include <QSpinBox>
 #include <QStackedWidget>
@@ -21,6 +24,51 @@
 #include <algorithm>
 #include <limits>
 #include <sstream>
+#include <unordered_map>
+
+namespace {
+
+AutoParamWidget::FileDialogOpener defaultFileDialogOpener() {
+    return [](QWidget * parent,
+              QString const & /*dialog_id*/,
+              QString const & caption,
+              QString const & filter,
+              QString const & fallback_dir,
+              bool pick_directory) -> QString {
+        if (pick_directory) {
+            return QFileDialog::getExistingDirectory(parent, caption, fallback_dir);
+        }
+        return QFileDialog::getOpenFileName(parent, caption, fallback_dir, filter);
+    };
+}
+
+AutoParamWidget::FileDialogOpener s_file_dialog_opener = defaultFileDialogOpener();
+std::unordered_map<QString, std::function<QString()>> s_dialog_fallbacks;
+
+[[nodiscard]] QString resolveDialogFallback(QString const & dialog_id) {
+    if (dialog_id.isEmpty()) {
+        return {};
+    }
+    auto const it = s_dialog_fallbacks.find(dialog_id);
+    if (it == s_dialog_fallbacks.end() || !it->second) {
+        return {};
+    }
+    return it->second();
+}
+
+}// namespace
+
+void AutoParamWidget::setFileDialogOpener(FileDialogOpener opener) {
+    s_file_dialog_opener = opener ? std::move(opener) : defaultFileDialogOpener();
+}
+
+void AutoParamWidget::registerDialogFallback(QString const & dialog_id,
+                                             std::function<QString()> resolver) {
+    if (dialog_id.isEmpty()) {
+        return;
+    }
+    s_dialog_fallbacks[dialog_id] = std::move(resolver);
+}
 
 // ============================================================================
 // Construction / Destruction
@@ -247,6 +295,12 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         value_widget = edit;
     }
 
+    if (desc.path_field_kind != PathFieldKind::None && row.line_edit != nullptr) {
+        buildPathFieldRow(desc, layout, row, value_widget);
+        _field_rows.push_back(std::move(row));
+        return;
+    }
+
     // For optional fields, wrap with a checkbox gate
     if (desc.is_optional && value_widget) {
         auto * container = new QWidget(this);
@@ -281,6 +335,63 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
     }
 
     _field_rows.push_back(std::move(row));
+}
+
+// ============================================================================
+// buildPathFieldRow — QLineEdit + Browse for file/directory path fields
+// ============================================================================
+
+void AutoParamWidget::buildPathFieldRow(ParameterFieldDescriptor const & desc,
+                                        QFormLayout * layout,
+                                        FieldRow & row,
+                                        QWidget * value_widget) {
+    auto * container = new QWidget(this);
+    auto * h_layout = new QHBoxLayout(container);
+    h_layout->setContentsMargins(0, 0, 0, 0);
+    h_layout->setSpacing(4);
+
+    h_layout->addWidget(value_widget, 1);
+
+    auto * browse = new QPushButton(tr("Browse…"), this);
+    h_layout->addWidget(browse);
+
+    bool const pick_directory = desc.path_field_kind == PathFieldKind::DirectoryPath;
+    QString const dialog_id = QString::fromStdString(desc.file_dialog_id);
+    QString const caption = pick_directory
+                                    ? tr("Select Directory")
+                                    : tr("Select File");
+
+    connect(browse, &QPushButton::clicked, this,
+            [this, line_edit = row.line_edit, pick_directory, dialog_id, caption]() {
+                if (line_edit == nullptr || !s_file_dialog_opener) {
+                    return;
+                }
+
+                QString const fallback = resolveDialogFallback(dialog_id);
+                QString const filter = pick_directory
+                                             ? QString{}
+                                             : QStringLiteral("JSON Files (*.json);;All Files (*)");
+
+                QString const selected = s_file_dialog_opener(
+                        this,
+                        dialog_id,
+                        caption,
+                        filter,
+                        fallback,
+                        pick_directory);
+
+                if (!selected.isEmpty()) {
+                    line_edit->setText(selected);
+                }
+            });
+
+    QString const label = QString::fromStdString(desc.display_name);
+    layout->addRow(label, container);
+
+    if (!desc.tooltip.empty()) {
+        value_widget->setToolTip(QString::fromStdString(desc.tooltip));
+        browse->setToolTip(QString::fromStdString(desc.tooltip));
+    }
 }
 
 // ============================================================================

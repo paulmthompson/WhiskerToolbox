@@ -51,4 +51,10 @@ When a command delegates to `ElementRegistry` at runtime, consumers will also ne
 Planned first command: `RunTransformsV2PipelineAtTime` —
 [#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
 
+**Current status:** Registered as a **draft stub** — validates `pipeline_path`,
+exposes browse UI for pipeline JSON, and logs parameters. Pipeline execution
+and output merge are deferred to a follow-up PR.
+
+See [RunTransformsV2PipelineAtTime](../TransformsV2/Commands/RunTransformsV2PipelineAtTime.qmd).
+
 See also: [Command Registry](../Commands/command_registry.qmd).

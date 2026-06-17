@@ -216,34 +216,48 @@ The implementation:
 - **Files to modify**: `DataExport_Widget/CMakeLists.txt`
 - **Tests**: Layout constraint test via `LayoutTesting` — verify no zero-dimension widgets.
 
-#### Step 1.2: Add file/directory browsing support to `AutoParamWidget` or `GenericSaverPanel`
+#### Step 1.2: Add file/directory browsing support to `AutoParamWidget` — **implemented**
 
 The loader/saver Options structs have fields like `filepath`, `filename`, `parent_dir`, `directory_path`. These should get a browse button rather than a plain `QLineEdit`.
 
-**Option A**: Add a `ParameterFieldDescriptor` flag (`bool is_file_path = false; bool is_directory_path = false;`) and teach `AutoParamWidget` to create a `QLineEdit + QPushButton("Browse...")` combo for these fields.
+**Implemented design:** `ParameterFieldDescriptor` uses a `PathFieldKind` enum
+(`None`, `FilePath`, `DirectoryPath`) plus optional `file_dialog_id`. This
+replaces the earlier proposal of separate `is_file_path` / `is_directory_path`
+booleans (mutually exclusive). `AutoParamWidget` renders `QLineEdit` + Browse
+for non-`None` kinds. Fallback directories are registered at app startup via
+`AutoParamWidget::registerDialogFallback()`, keyed by `file_dialog_id` — not as
+a per-field schema hint.
 
-**Option B**: Handle this in `GenericSaverPanel` / `GenericLoaderPanel` by detecting field names containing "filepath", "filename", "directory", "parent_dir" and overlaying browse buttons.
-
-**Recommendation**: Option A is cleaner and reusable. Add the flags to `ParameterFieldDescriptor` and handle them in `AutoParamWidget`. Use `ParameterUIHints` specializations to mark which fields are file/directory paths:
+Use `ParameterUIHints` to mark path fields:
 
 ```cpp
 template<>
 struct ParameterUIHints<CSVPointSaverOptions> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("filename")) {
-            f->is_file_path = true;
+            f->path_field_kind = PathFieldKind::FilePath;
+            f->file_dialog_id = "export_csv";
             f->tooltip = "Output filename";
         }
         if (auto * f = schema.field("parent_dir")) {
-            f->is_directory_path = true;
+            f->path_field_kind = PathFieldKind::DirectoryPath;
+            f->file_dialog_id = "export_dir";
             f->tooltip = "Output directory";
         }
     }
 };
 ```
 
-- **Files to modify**: `ParameterSchema.hpp` (add `is_file_path`, `is_directory_path` to `ParameterFieldDescriptor`), `AutoParamWidget.cpp` (create browse button layout for these fields).
-- **Tests**: Unit test that `extractParameterSchema` preserves the flags after annotation.
+`MainWindow` wires `AutoParamWidget::setFileDialogOpener()` to `AppFileDialog`
+and registers fallbacks (e.g. `transformv2_pipeline_open` → user pipeline
+library). First command consumer:
+`RunTransformsV2PipelineAtTime.pipeline_path` in TriageSession.
+`TransformsV2Properties_Widget` still uses hand-written buttons (no schema).
+
+- **Files modified:** `ParameterSchema.hpp`, `AutoParamWidget.hpp/cpp`,
+  `mainwindow.cpp`
+- **Tests:** `RunTransformsV2PipelineAtTime.test.cpp` schema hint extraction;
+  `GenericLoaderPanel` / `GenericSaverPanel` browse UX still future work.
 
 #### Step 1.3: Refactor `DataExport_Widget` to use registry-driven discovery
 
@@ -457,7 +471,7 @@ If `DataImport_Widget` now discovers loaders entirely from `LoaderRegistry`, the
 
 ## Key Design Decisions
 
-1. **`filepath` handling**: Loader Options structs have a `filepath` field. In the auto-generated UI, this needs a browse button. Add `is_file_path` / `is_directory_path` flags to `ParameterFieldDescriptor` and teach `AutoParamWidget` to create browse buttons for these.
+1. **`filepath` handling**: Loader Options structs have a `filepath` field. In the auto-generated UI, this needs a browse button. Use `PathFieldKind` + `file_dialog_id` on `ParameterFieldDescriptor` and `AutoParamWidget` browse rows (implemented — see Step 1.2).
 
 2. **Saver `parent_dir` + `filename` pattern**: Many savers split the output path into `parent_dir` and `filename`. The auto-generated UI will show both as browseable fields. This is actually cleaner than the current approach where some widgets combine them.
 
@@ -474,7 +488,7 @@ If `DataImport_Widget` now discovers loaders entirely from `LoaderRegistry`, the
 | Risk | Mitigation |
 |------|-----------|
 | AutoParamWidget doesn't support a field type used in an Options struct | The `rfl::Validator` types are already proven. Only risk is custom validators like `ValidBinaryDataType` — add `ParameterUIHints` to map these to combo boxes. |
-| File browse UX is worse than hand-written | Add `is_file_path` / `is_directory_path` to `ParameterFieldDescriptor` (Step 1.2) to get proper browse dialogs. |
+| File browse UX is worse than hand-written | `PathFieldKind` + `file_dialog_id` on `ParameterFieldDescriptor` and `AutoParamWidget::registerDialogFallback()` (Step 1.2 — implemented for commands; IO panels pending). |
 | Batch loading UI needs custom logic | Keep batch handling in `GenericLoaderPanel` as a flag, not in `AutoParamWidget`. The param widget only handles the schema. |
 | Some import widgets have validation logic (e.g., "column X must be different from column Y") | Use `PostEditHook` on the `AutoParamWidget` for cross-field validation. |
 | Performance of extractParameterSchema at startup | Negligible — these are small structs. Schema extraction is already used for all savers. |

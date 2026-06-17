@@ -28,7 +28,10 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+class QString;
 
 struct ParameterSchema;
 struct ParameterFieldDescriptor;
@@ -40,6 +43,7 @@ class QFormLayout;
 class QGroupBox;
 class QLineEdit;
 class QListWidget;
+class QPushButton;
 class QSpinBox;
 class QStackedWidget;
 class QVBoxLayout;
@@ -127,6 +131,39 @@ public:
     void updateVariantAlternatives(std::string const & field_name,
                                    std::vector<std::string> const & allowed_tags);
 
+    /**
+     * @brief Callback invoked when the user clicks Browse on a path field
+     *
+     * @param parent Parent widget for the dialog
+     * @param dialog_id Session id for path memory (AppFileDialog)
+     * @param caption Dialog window title
+     * @param filter File filter when picking files; ignored for directories
+     * @param fallback_dir Initial directory when no session memory exists
+     * @param pick_directory True for directory picker, false for file open
+     * @return Selected path, or empty if cancelled
+     */
+    using FileDialogOpener = std::function<QString(
+            QWidget * parent,
+            QString dialog_id,
+            QString caption,
+            QString filter,
+            QString fallback_dir,
+            bool pick_directory)>;
+
+    /**
+     * @brief Install the global file/directory dialog opener (defaults to QFileDialog)
+     * @param opener Callback; pass empty function to restore the built-in default
+     */
+    static void setFileDialogOpener(FileDialogOpener opener);
+
+    /**
+     * @brief Register a fallback directory resolver for a dialog id
+     *
+     * Used when no session path memory exists yet. Typically registered once at app startup.
+     */
+    static void registerDialogFallback(QString const & dialog_id,
+                                       std::function<QString()> resolver);
+
 signals:
     /**
      * @brief Emitted whenever any parameter value changes
@@ -170,6 +207,10 @@ private:
 
     void buildFieldRow(ParameterFieldDescriptor const & desc,
                        QFormLayout * layout);
+    void buildPathFieldRow(ParameterFieldDescriptor const & desc,
+                           QFormLayout * layout,
+                           FieldRow & row,
+                           QWidget * value_widget);
     void buildVectorFieldRow(ParameterFieldDescriptor const & desc,
                              QFormLayout * layout);
     void buildVariantRow(ParameterFieldDescriptor const & desc,

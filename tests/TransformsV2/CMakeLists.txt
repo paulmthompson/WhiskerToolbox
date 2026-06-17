@@ -25,6 +25,7 @@ add_executable(test_TransformsV2
         test_pipeline_value_store.test.cpp
         test_parameter_binding.test.cpp
         test_parameter_schema.test.cpp
+        RunTransformsV2PipelineAtTime.test.cpp
         test_transform_lineage_integration.test.cpp
         test_tensor_column_builders.test.cpp
         test_nonanalog_column_builders.test.cpp
@@ -64,6 +65,8 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorCAR/TensorCAR.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.test.cpp
 
+    ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
+
     test_tensor_column_views.test.cpp
 )
 
@@ -75,6 +78,11 @@ target_include_directories(test_TransformsV2 PRIVATE
     )
 
 target_link_libraries(test_TransformsV2 PRIVATE Catch2::Catch2WithMain)
+
+target_link_libraries(test_TransformsV2 PRIVATE Commands)
+target_link_libraries(test_TransformsV2 PRIVATE DeepLearning)
+target_link_libraries(test_TransformsV2 PRIVATE DataSynthesizer)
+
 target_link_libraries(test_TransformsV2 PRIVATE DataManager)
 target_link_libraries(test_TransformsV2 PRIVATE WhiskerToolbox::TensorData)
 

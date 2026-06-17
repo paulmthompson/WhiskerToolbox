@@ -12,6 +12,7 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include "ParameterSchema/PathFieldKind.hpp"
 #include "TimeFrame/TimeFrameIndexReflector.hpp"
 
 #include <memory>
@@ -88,6 +89,10 @@ struct ParameterFieldDescriptor {
     // Dynamic combo support (for fields populated at runtime, e.g. DataManager keys)
     bool dynamic_combo = false;        ///< If true, create QComboBox even with empty allowed_values
     bool include_none_sentinel = false;///< If true, prepend "(None)" sentinel to combo
+
+    // Path field support (for file/directory browse in AutoParamWidget)
+    PathFieldKind path_field_kind = PathFieldKind::None;
+    std::string file_dialog_id;///< AppFileDialog session id when path_field_kind != None
 
     // Variant support (populated only when type_name == "variant")
     bool is_variant = false;                             ///< True for rfl::TaggedUnion fields
