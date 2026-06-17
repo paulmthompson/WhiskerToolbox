@@ -291,4 +291,3 @@ ctest --preset linux-clang-release --output-on-failure -R "DeepLearning"
 - [Vocabulary](vocabulary.qmd) — tensor slot vs Qt slot, bindings vs model schema
 - [Creating a C++ Model Wrapper](model_wrapper_guide.qmd) — how to wrap a Python model for use in Neuralyzer
 - [AOT Inductor Export Tutorial](aot_inductor_tutorial.qmd) — step-by-step guide for exporting a toy model
-- [Deep Learning Roadmap](roadmap.qmd) — remaining development tasks
