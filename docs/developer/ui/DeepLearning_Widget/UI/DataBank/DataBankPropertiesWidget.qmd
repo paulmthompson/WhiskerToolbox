@@ -1,0 +1,41 @@
+---
+title: "DataBankPropertiesWidget"
+---
+
+## Overview
+
+`dl::widget::DataBankPropertiesWidget` is the properties-panel section for the
+deep learning memory bank. It is embedded in `DeepLearningPropertiesWidget`
+between the weights controls and the dynamic slot scroll area.
+
+**Location:** `src/WhiskerToolbox/DeepLearning_Widget/UI/DataBank/`
+
+## API
+
+| Method | Purpose |
+|--------|---------|
+| `setAssembler()` | Connect to the session `SlotAssembler` for capture |
+| `setDataManager()` | Bind DataManager for the data-source combo |
+| `setStaticSlots()` | Populate the target static-slot combo from model metadata |
+| `setModelReady()` | Enable capture when weights are loaded |
+| `setCurrentFrame()` | Frame index used for capture |
+| `refreshDataSources()` | Re-populate the data-source combo |
+| `refreshCaptureStatus()` | Update status label for the selected entry ID |
+
+## Signals
+
+| Signal | Emitted when |
+|---|---|
+| `dataBankChanged()` | After a successful capture or when bank contents change |
+
+## Capture workflow
+
+1. Select a **target slot** (static model input, e.g. `memory_masks`).
+2. For sequence static slots, set the **memory index** (0-based position).
+3. The **entry ID** defaults to `{slot_name}_{memory_index}`.
+4. Choose a **data source** from DataManager (filtered by the slot encoder).
+5. Click **Capture Current Frame** to call `SlotAssembler::captureToBank()`.
+
+`dataBankChanged` is emitted on success. The parent forwards this to
+`DeepLearningViewWidget::refreshDataBankView()` and refreshes `bank_entry_id`
+combos on memory input slot widgets.

@@ -8,6 +8,8 @@ The `DeepLearning_Widget/UI/Helpers/` directory contains reusable utility classe
 extracted from the monolithic `DeepLearningPropertiesWidget` during the widget
 refactoring (helper extraction and schema-driven sub-panels).
 
+**Source:** `src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/`
+
 ## DataSourceComboHelper
 
 **Header:** `DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp`
@@ -44,134 +46,72 @@ helper->track(my_combo, "PointData");
 dm->addObserver([&]{ helper->refreshAll(); });
 ```
 
-## SlotBindingWidget
-
-**Header:** `DeepLearning_Widget/UI/Helpers/SlotBindingWidget.hpp`
-
-A composite widget that pairs a DataManager-aware data-source combo (driven by
-`DataSourceComboHelper`) with an `AutoParamWidget` for the remaining parameter
-fields. This implements **Option C** from the refactoring roadmap (Phase 0.2).
-
-### Layout
-
-```
-┌──────────────────────────────┐
-│  [Data Source label] [combo] │  ← DataSourceComboHelper-managed
-├──────────────────────────────┤
-│  AutoParamWidget form        │  ← schema-driven from ParameterSchema
-└──────────────────────────────┘
-```
-
-### Signals
-
-| Signal | Emitted when |
-|---|---|
-| `dataSourceChanged(QString)` | User selects a different data source key |
-| `parametersChanged()` | Any AutoParamWidget field changes |
-| `bindingChanged()` | Either of the above (unified convenience signal) |
-
-### Typical usage
-
-```cpp
-auto* slot = new SlotBindingWidget(combo_helper, this);
-slot->setDataSourceTypes("PointData");
-slot->setParameterSchema(extractParameterSchema<Point2DEncoderParams>());
-
-connect(slot, &SlotBindingWidget::bindingChanged, this, &MyWidget::onChanged);
-
-// Read back
-QString key = slot->selectedDataSource();
-nlohmann::json params = slot->parametersJson();
-```
-
-::: {.callout-warning}
-`SlotBindingWidget` is **deprecated** as of Phase 0.2 revision.
-Phase 1 sub-widgets use the unified struct approach via `DynamicInputSlotWidget`
-and `AutoParamWidget::updateAllowedValues()` instead.
-:::
-
 ## DynamicInputSlotWidget
 
 **Header:** `DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp`
 
 A self-contained widget for configuring one dynamic (per-frame) input slot.
-Introduced in Phase 1.1 of the refactoring roadmap, it replaces the hand-built
-`_buildDynamicInputGroup()` panel with a schema-driven form powered by
-`AutoParamWidget`.
+It replaces the hand-built `_buildDynamicInputGroup()` panel with a
+schema-driven `AutoParamWidget` form.
 
 ### Architecture
 
-The widget is driven by the `DynamicInputSlotParams` reflect-cpp struct:
+The widget is driven by `dl::DynamicInputBindingForm` from
+`BindingParamSchemas.hpp`:
 
 ```cpp
-using EncoderVariant = rfl::TaggedUnion<
-    "encoder",
-    dl::ImageEncoderParams,
-    dl::Point2DEncoderParams,
-    dl::Mask2DEncoderParams,
-    dl::Line2DEncoderParams>;
-
-struct DynamicInputSlotParams {
-    std::string source;       ///< DataManager key (dynamic combo)
-    EncoderVariant encoder;   ///< Encoder type + per-encoder params
-    int time_offset = 0;      ///< Temporal offset from current frame
+struct DynamicInputBindingForm {
+    std::string data_key;
+    EncoderVariant encoder = ImageEncoderParams{};
+    int time_offset = 0;
 };
 ```
 
-AutoParamWidget automatically generates:
-
-- **`source`** → QComboBox (dynamic, populated from DataManager via `updateAllowedValues`)
-- **`encoder`** → QComboBox (Image/Point2D/Mask2D/Line2D) + QStackedWidget with
-  per-encoder sub-parameter forms (mode, gaussian_sigma, normalize)
-- **`time_offset`** → QSpinBox
+`AutoParamWidget` generates the data-source combo, encoder tagged-union selector
+with per-encoder sub-forms, and the time-offset spin box. The widget exposes
+full `SlotBindingData` via `binding()` / `setBinding()`.
 
 ### Cross-field constraints
 
 When the encoder selection changes, the widget uses
 `SlotAssembler::dataTypeForEncoder()` and `DataSourceComboHelper::typesFromHint()`
-to filter the source combo to only show compatible DataManager keys. This is
-the **Encoder → Source** constraint direction.
+to filter the `data_key` combo to compatible DataManager keys (encoder → source
+direction).
 
 ### Typical usage
 
 ```cpp
-// In the coordinator widget (DeepLearningPropertiesWidget or its replacement)
 auto* slot_widget = new DynamicInputSlotWidget(slot_descriptor, data_manager, this);
 layout->addWidget(slot_widget);
 
-// Respond to binding changes
 connect(slot_widget, &DynamicInputSlotWidget::bindingChanged, this, [&]() {
-    auto params = slot_widget->params();
+    auto binding = slot_widget->binding();
     // Update state...
 });
 
-// Refresh data sources when DataManager changes
 dm_observer_callback = [slot_widget]() {
     slot_widget->refreshDataSources();
 };
 ```
 
-### Advantages over the old design
+## OutputSlotWidget
 
-| Aspect | Old (`_buildDynamicInputGroup`) | New (`DynamicInputSlotWidget`) |
-|---|---|---|
-| Form construction | ~90 lines of manual widget creation | Auto-generated from `ParameterSchema` |
-| State marshaling | `findChild<QComboBox*>("source_" + name)` | `params()` returns typed struct |
-| Encoder sub-params | Flat mode + sigma fields for all encoders | Per-encoder stacked forms |
-| JSON round-trip | Manual field-by-field extraction | `rfl::json::write/read` on the struct |
-| Testing | Requires full widget + DM integration | Struct tests are Qt-free |
+**Header:** `DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp`
+
+See [OutputSlotWidget](OutputSlotWidget.qmd) for the per-output binding editor.
 
 ## PostEncoderWidget {#postencoderwidget}
 
 **Header:** `DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp`
 
-A self-contained widget for configuring the post-encoder module section. Introduced
-in the DeepLearning widget refactoring, it replaces the hand-built
-`_buildPostEncoderSection()` panel with a schema-driven `AutoParamWidget` form.
+A self-contained widget for configuring the post-encoder module section. It
+replaces the hand-built `_buildPostEncoderSection()` panel with a module combo
+(from `PostEncoderModuleRegistry`) and a schema-driven `AutoParamWidget` form.
 
 ### Architecture
 
-The widget is driven by `PostEncoderSlotParams` (`module_key` + `parameters_json`):
+The widget is driven by `dl::PostEncoderStepDescriptor` (`module_key` +
+`parameters_json`):
 
 ```cpp
 struct PostEncoderStepDescriptor {
@@ -206,7 +146,6 @@ connect(post_encoder, &PostEncoderWidget::bindingChanged, this, [&]() {
     // Coordinator reacts to module or point_key changes
 });
 
-// Refresh when DataManager keys change
 dm_observer_callback = [post_encoder]() {
     post_encoder->refreshDataSources();
 };
@@ -214,12 +153,11 @@ dm_observer_callback = [post_encoder]() {
 
 ### State and apply path
 
-- **Read:** `params()` returns `PostEncoderSlotParams` via `toJson()` →
-  `rfl::json::read`.
-- **Write:** `setParams(p)` serializes with `rfl::json::write` → `fromJson`.
+- **Read:** `params()` returns `PostEncoderStepDescriptor`.
+- **Write:** `setParams(p)` updates the UI from saved state.
 - **Persist:** `DeepLearningState::postEncoderParams()` is the workspace source
   of truth (embedded in `DeepLearningStateData` via reflect-cpp).
-- **Apply:** `_applyToStateAndAssembler()` calls `setPostEncoderParams()`, then
+- **Apply:** coordinator calls `setPostEncoderParams()`, then
   `SlotAssembler::configurePostEncoderModule(params, ...)` when the model is ready.
 - **Re-sync:** `syncToAssembler()` re-applies params after `loadModel()` clears the
   assembler module (called from `_loadModelIfReady()` and
@@ -229,9 +167,8 @@ dm_observer_callback = [post_encoder]() {
 
 `PostEncoderWidget` is the **simple** schema-driven pattern (one fixed struct, one
 form). For runtime catalogs, ordered multi-step composition, and JSON-as-state,
-see [Schema-Driven Forms](../ui/schema_driven_forms.qmd), which documents how
-TransformsV2_Widget extends the same primitives and proposes phased improvements
-for this widget.
+see [Schema-Driven Forms](../../../schema_driven_forms.qmd), which documents how
+TransformsV2_Widget extends the same primitives.
 
 ## MemorySlotWidget {#memoryslotwidget}
 
@@ -281,5 +218,5 @@ memory->refreshBankEntries(bank_entry_ids);
 memory->refreshOutputSlots(output_slot_names);
 ```
 
-See [Memory Frame Bindings](../DeepLearning/bindings/memory_frames.qmd) for the
+See [Memory Frame Bindings](../../../../DeepLearning/bindings/memory_frames.qmd) for the
 core data model.

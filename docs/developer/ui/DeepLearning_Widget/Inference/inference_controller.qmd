@@ -1,0 +1,90 @@
+---
+title: "InferenceController"
+---
+
+## Overview
+
+**Header:** `DeepLearning_Widget/Inference/InferenceController.hpp`  
+**Source:** `src/WhiskerToolbox/DeepLearning_Widget/Inference/`
+
+`InferenceController` orchestrates deep learning inference runs (single frame,
+batch, multi-interval batch, and recurrent sequence). It owns the background
+worker thread lifecycle and delegates result merging to `ResultProcessor`.
+
+The properties widget delegates run actions to this controller and forwards
+progress signals to the view.
+
+## Public API
+
+| Method | Purpose |
+|--------|---------|
+| `runSingleFrame(frame)` | Encode and decode one frame on the GUI thread |
+| `runBatch(start, end, batch_size)` | Independent batch over a contiguous range |
+| `runBatchIntervals(intervals, batch_size)` | Batch over multiple inclusive ranges |
+| `runRecurrentSequence(start, frame_count)` | Sequential recurrent inference |
+| `cancel()` | Request cancellation of the current batch worker |
+| `isRunning()` | Whether a background worker is active |
+
+## Batch workers
+
+Batch inference runs on dedicated `QThread` worker classes so AUTOMOC can
+generate meta-object code from headers (no `.moc` include in `.cpp` files).
+
+| Class | Header | Role |
+|-------|--------|------|
+| `BatchInferenceWorker` | `Inference/BatchInferenceWorker.hpp` | Single contiguous frame range |
+| `MultiIntervalBatchWorker` | `Inference/MultiIntervalBatchWorker.hpp` | Multiple intervals with unified progress |
+
+Both workers call `SlotAssembler::runBatchRangeOffline()`, push decoded
+`FrameResult` entries into a shared `WriteReservation`, and emit
+`progressChanged(current, total)` for connection to `InferenceController`.
+
+### Single range
+
+`runBatch(start, end, batch_size)` launches a `BatchInferenceWorker` on a
+background `QThread`. Progress is reported via `batchProgressChanged(current, total)`.
+
+### Multi-interval batch
+
+`runBatchIntervals(intervals, batch_size)` accepts a vector of `(start, end)`
+frame ranges (e.g. from a `DigitalIntervalSeries`) and processes each interval
+sequentially on a single background thread. Progress is reported against the
+**total** frame count across all intervals.
+
+The `_onRunBatch()` dialog in `DeepLearningPropertiesWidget` offers two modes:
+
+- **Manual range**: User specifies start/end frames directly.
+- **From interval series**: User selects a `DigitalIntervalSeries` key from
+  DataManager. The combo box auto-populates and refreshes via a DataManager
+  observer callback cleaned up when the dialog is destroyed.
+
+### Recurrent sequence
+
+`runRecurrentSequence(start, frame_count)` runs frames in order so recurrent
+memory bindings can feed prior outputs back into the model. Progress is reported
+via `recurrentProgressChanged(current, total)`.
+
+## Cancellation
+
+All worker types share a `std::shared_ptr<std::atomic<bool>>` cancel flag owned
+by the `InferenceController::Impl`. Calling `cancel()` sets this flag, which is
+polled by `SlotAssembler::runBatchRangeOffline()` between batches. The same flag
+is set in the destructor to ensure clean shutdown.
+
+## Signals
+
+| Signal | Purpose |
+|--------|---------|
+| `batchProgressChanged(current, total)` | Independent batch progress (queued from worker thread) |
+| `recurrentProgressChanged(current, total)` | Recurrent sequence progress |
+| `batchFinished(success, error_message)` | Batch or recurrent run completed |
+| `runningChanged(running)` | Background worker started or stopped |
+
+## Signal chain
+
+```
+Worker::progressChanged(current, total)
+    → InferenceController::batchProgressChanged(current, total)
+        → DeepLearningPropertiesWidget::batchProgressChanged(current, total)
+            → DeepLearningViewWidget::updateRecurrentProgress(current, total)
+```

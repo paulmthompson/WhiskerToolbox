@@ -1,0 +1,59 @@
+---
+title: "OutputSlotWidget"
+---
+
+## Overview
+
+`dl::widget::OutputSlotWidget` is the per-output editor used by
+`DeepLearningPropertiesWidget`. It configures where decoded model outputs are
+written in DataManager.
+
+**Header:** `DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp`  
+**Source:** `src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/`
+
+## Architecture
+
+The widget wraps a single `AutoParamWidget` driven by `dl::OutputBindingForm`:
+
+```cpp
+struct OutputBindingForm {
+    std::string data_key;
+    DecoderVariant decoder = MaskDecoderParams{};
+};
+```
+
+The widget shell supplies `slot_name` from `TensorSlotDescriptor`. Full bindings
+are exposed as `OutputBindingData` via `binding()` / `setBinding()`.
+
+UI layout per slot:
+
+- Group box titled with the model output slot name and optional description tooltip
+- Shape label from slot metadata
+- Schema-driven decoder tagged-union form and target (`data_key`) combo
+
+When the decoder selection changes, `SlotAssembler::dataTypeForDecoder()` filters
+the target combo to compatible DataManager keys. The parent may call
+`updateDecoderAlternatives()` to restrict visible decoders when the post-encoder
+module changes effective output shapes.
+
+## API
+
+| Method | Purpose |
+|--------|---------|
+| `binding()` | Current `OutputBindingData` for this slot |
+| `setBinding()` | Restore binding from session state |
+| `refreshDataSources()` | Re-populate the target combo from DataManager |
+| `updateDecoderAlternatives()` | Restrict decoder choices (e.g. post-encoder filtering) |
+| `slotName()` | Model output slot name |
+
+## Signals
+
+| Signal | Emitted when |
+|---|---|
+| `bindingChanged()` | Any decoder or target field changes |
+
+## Inference path
+
+The widget owns only UI state. `SlotAssembler` validates bindings and performs
+terminal decoding during inference. See
+[Binding parameter schemas](../../../../DeepLearning/bindings/binding_param_schemas.qmd).

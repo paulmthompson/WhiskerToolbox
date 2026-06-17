@@ -1,0 +1,35 @@
+---
+title: "DataBankViewWidget"
+---
+
+## Overview
+
+`dl::widget::DataBankViewWidget` displays captured memory-bank tensor metadata
+in the deep learning view panel. It is embedded in `DeepLearningViewWidget`
+below the model status header.
+
+**Location:** `src/WhiskerToolbox/DeepLearning_Widget/UI/DataBank/`
+
+## API
+
+| Method | Purpose |
+|--------|---------|
+| `setAssembler()` | Connect to the session `SlotAssembler` for DataBank queries |
+| `refresh()` | Rebuild preview cards for each encoded entry |
+
+The constructor takes `std::shared_ptr<DeepLearningState>` for session context;
+`setAssembler()` must be called before `refresh()` can resolve encoded tensors.
+
+## Preview content
+
+For each DataBank entry ID with an encoded tensor (`dataBank().ids()` filtered
+by `getEncoded()`):
+
+- Tensor shape and value range
+- DataManager source key (from `DataBank` metadata or static input binding)
+- Captured frame index
+- Ready-for-inference status indicator
+
+`DeepLearningPropertiesWidget::dataBankChanged` triggers
+`DeepLearningViewWidget::refreshDataBankView()`, which delegates to
+`DataBankViewWidget::refresh()`.

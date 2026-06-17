@@ -1,0 +1,45 @@
+---
+title: "Deep Learning Widget"
+---
+
+## Overview
+
+The `DeepLearning_Widget` library provides the Qt UI for loading TorchScript
+models, binding DataManager inputs and outputs, capturing static memory tensors
+into the session DataBank, and running single-frame, batch, and recurrent
+inference.
+
+Core model logic lives in the [`DeepLearning`](../DeepLearning/index.qmd)
+library; this widget coordinates `SlotAssembler`, `DeepLearningState`, and
+`InferenceController` from the GUI.
+
+## Source location
+
+`src/WhiskerToolbox/DeepLearning_Widget/`
+
+## Directory structure
+
+```
+DeepLearning_Widget/
+├── DeepLearningWidgetRegistration.hpp/cpp   ← EditorRegistry module entry
+├── Core/
+│   ├── DeepLearningState.hpp/cpp              ← EditorState subclass
+│   └── SlotAssembler.hpp/cpp                  ← Binding assembly + inference
+├── Inference/
+│   ├── InferenceController.hpp/cpp            ← Run orchestration
+│   ├── BatchInferenceWorker.hpp/cpp           ← Single-range batch worker
+│   ├── MultiIntervalBatchWorker.hpp/cpp       ← Multi-interval batch worker
+│   └── ResultProcessor.hpp/cpp                ← Result merge helpers
+└── UI/
+    ├── DeepLearningViewWidget.hpp/cpp         ← View panel
+    ├── DeepLearningPropertiesWidget.hpp/cpp   ← Properties panel coordinator
+    ├── DataBank/                              ← Memory bank capture + preview
+    └── Helpers/                               ← Per-slot schema-driven sub-widgets
+```
+
+## Related documentation
+
+- [Binding parameter schemas](../../DeepLearning/bindings/binding_param_schemas.qmd)
+- [Memory frame bindings](../../DeepLearning/bindings/memory_frames.qmd)
+- [Post-encoder modules](../../DeepLearning/post_encoder_modules.qmd)
+- [Schema-driven forms](../schema_driven_forms.qmd)
