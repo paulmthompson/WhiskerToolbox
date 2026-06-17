@@ -4,41 +4,78 @@ title: "Batch Mode & Multi-Variant Model Loading"
 
 ## Overview
 
-Phase 6 of the Deep Learning input pipeline introduces a structured `BatchMode` type 
-that models use to declare their batch-size constraints, and a multi-variant weights 
-system that allows a single model definition to load different compiled artifacts 
-depending on the active batch size.
+`dl::BatchMode` describes what batch sizes a model accepts per forward pass.
+Models report constraints via `ModelBase::batchMode()`; metadata is aggregated in
+`ModelInfo::batch_mode` for the widget and constraint helpers.
+
+Runtime JSON models use `BatchModeSpec` in `RuntimeModelSpec`. Optional
+`weights_variants` let a single spec reference multiple compiled artifacts keyed
+by batch size; `RuntimeModel::loadWeightsForBatchSize()` selects among them.
+
+**Source files:**
+
+| File | Role |
+|------|------|
+| `models_v2/TensorSlotDescriptor.hpp` | `BatchMode` variant and query helpers |
+| `models_v2/ModelBase.hpp` | Virtual `batchMode()` default |
+| `models_v2/ModelInfo.hpp` | Cached `batch_mode` for UI |
+| `runtime/RuntimeModelSpec.hpp` | `BatchModeSpec`, `WeightsVariant` JSON types |
+| `runtime/RuntimeModel.hpp` | `loadWeightsForBatchSize()` |
+| `constraints/ConstraintEnforcer.hpp` | `computeBatchSizeConstraint()` |
 
 ## BatchMode
 
-Every `ModelBase` subclass reports its batch-size constraints via `batchMode()`. The 
-return type is `dl::BatchMode`, a `std::variant` with three alternatives:
+`dl::BatchMode` is a `std::variant` with three alternatives defined in
+`TensorSlotDescriptor.hpp`:
 
-| Mode | Meaning | Example |
-|------|---------|---------|
-| `FixedBatch{N}` | Model is compiled for exactly N samples per call | AOT-compiled `.pt2` with fixed shapes |
-| `DynamicBatch{min, max}` | Model accepts a range of batch sizes (max=0 → unlimited) | TorchScript model with dynamic shapes |
-| `RecurrentOnlyBatch{}` | Batch size is locked to 1 (sequential feedback loop) | NeuroSAM |
+| Mode | Struct | Meaning |
+|------|--------|---------|
+| Fixed | `FixedBatch{size}` | Compiled for exactly `size` samples per call |
+| Dynamic | `DynamicBatch{min_size, max_size}` | Accepts a range (`max_size=0` → unlimited) |
+| Recurrent-only | `RecurrentOnlyBatch{}` | Model architecture requires batch = 1 |
 
-### C++ API
+### Registered model examples
+
+| Model | `batchMode()` | Notes |
+|-------|---------------|-------|
+| `NeuroSAMModel` | `DynamicBatch{1, 0}` | Supports batched inference; batch locks to 1 when recurrent bindings are active (see constraints) |
+| `GeneralEncoderModel` | `DynamicBatch{1, 0}` | Arbitrary batch sizes |
+| `ModelBase` default | `DynamicBatch{1, maxBatchSize()}` | Subclasses override as needed |
+
+`RecurrentOnlyBatch` is for models whose **architecture** cannot run with
+batch > 1. Models like NeuroSAM that support batching but are often used
+sequentially rely on `DynamicBatch` plus session recurrent bindings to lock
+the spinbox when needed.
+
+### Query helpers
 
 ```cpp
-// In your ModelBase subclass:
-dl::BatchMode batchMode() const override {
-    return dl::RecurrentOnlyBatch{};   // or FixedBatch{4}, DynamicBatch{1, 8}
-}
-
-// Querying:
 auto mode = model->batchMode();
-bool locked = dl::isBatchLocked(mode);          // true for RecurrentOnly or Fixed(1)
-int  max    = dl::maxBatchSizeFromMode(mode);   // 0 = unlimited
-int  min    = dl::minBatchSizeFromMode(mode);
-auto desc   = dl::batchModeDescription(mode);   // "RecurrentOnly", "Fixed(4)", etc.
+
+bool locked = dl::isBatchLocked(mode);
+// true for RecurrentOnlyBatch or FixedBatch{1}
+
+int min_b = dl::minBatchSizeFromMode(mode);
+int max_b = dl::maxBatchSizeFromMode(mode);  // 0 = unlimited (DynamicBatch only)
+
+std::string desc = dl::batchModeDescription(mode);
+// e.g. "Fixed(4)", "Dynamic(1, unlimited)", "RecurrentOnly"
 ```
 
-### JSON Specification (RuntimeModelSpec)
+### ModelBase override
 
-Runtime-defined models specify batch mode in their JSON spec:
+```cpp
+dl::BatchMode batchMode() const override {
+    return dl::FixedBatch{4};           // fixed-shape AOT export
+    // return dl::DynamicBatch{1, 8};    // bounded dynamic range
+    // return dl::RecurrentOnlyBatch{};  // architecture requires batch=1
+}
+```
+
+## JSON specification (`RuntimeModelSpec`)
+
+`BatchModeSpec` maps to `BatchMode` via `toBatchMode()` with this precedence:
+`recurrent_only` → `fixed` → `dynamic` → default `DynamicBatch{1, 0}`.
 
 ```json
 {
@@ -50,61 +87,107 @@ Runtime-defined models specify batch mode in their JSON spec:
 }
 ```
 
-Supported formats:
+Supported `batch_mode` shapes:
 
-- `{ "fixed": N }` — Fixed batch size
-- `{ "dynamic": { "min": 1, "max": 8 } }` — Dynamic range (max=0 for unlimited)
-- `{ "recurrent_only": true }` — Recurrent-only
+| JSON | `BatchMode` |
+|------|-------------|
+| `{ "fixed": N }` | `FixedBatch{N}` (`N >= 1`) |
+| `{ "dynamic": { "min": 1, "max": 8 } }` | `DynamicBatch{1, 8}` (`max: 0` = unlimited) |
+| `{ "recurrent_only": true }` | `RecurrentOnlyBatch{}` |
 
-If `batch_mode` is omitted, the legacy `preferred_batch_size` / `max_batch_size` fields 
-are used to construct a `DynamicBatch`.
+If `batch_mode` is omitted, `RuntimeModel::batchMode()` falls back to legacy
+fields: `DynamicBatch{1, max_batch_size}` where `max_batch_size` defaults to
+`0` (unlimited) when absent.
 
-## Widget Batch-Size Logic
+`RuntimeModelSpec::validate()` rejects:
 
-The Properties widget automatically determines the batch-size spinbox constraints by 
-combining the model's `BatchMode` with the active binding configuration:
+- More than one of `fixed`, `dynamic`, or `recurrent_only` set
+- `fixed < 1`
+- `dynamic.min < 1`
+- `dynamic.max` strictly less than `dynamic.min` (when `max > 0`)
 
-1. **Recurrent bindings active** → batch locked to 1 (highest priority)
-2. **Model reports `RecurrentOnlyBatch`** → batch locked to 1
-3. **Model reports `FixedBatch{N}`** → batch locked to N
-4. **Model reports `DynamicBatch{min, max}`** → spinbox range set to [min, max]
+Relative `weights_path` and `weights_variants[].path` values are resolved
+against the JSON file's directory in `fromJsonFile()`.
 
-The constraint reasoning is surfaced as a tooltip on the batch-size spinbox.
+## Session batch-size constraints
 
-## Multi-Variant Model Loading
+The Properties widget calls `dl::constraints::computeBatchSizeConstraint()` with
+`ModelInfo` and `memory_frames` from `DeepLearningState`. See
+[Session Constraints](constraints.qmd) for the full API.
 
-Some models are compiled multiple times for different batch sizes — for example, 
-a recurrent variant with batch=1 and a batched variant with batch=8. The 
-`weights_variants` field in `RuntimeModelSpec` supports this:
+Priority (most restrictive wins):
+
+1. **Active recurrent bindings** (`hasActiveRecurrentBindings`) → `min=1`,
+   `max=1`, `forced_by_recurrent=true`. A recurrent frame is active when
+   `output_slot_name` is non-empty and not `"(None)"`.
+2. **`RecurrentOnlyBatch` or `FixedBatch{1}`** → locked to 1,
+   `forced_by_recurrent=false`
+3. **`FixedBatch{N>1}`** → `min=max=N`
+4. **`DynamicBatch`** → `min`/`max` from batch mode
+
+Widget spinbox behaviour (`DeepLearningPropertiesWidget::_updateBatchSizeConstraint`):
+
+| Constraint | Spinbox |
+|------------|---------|
+| Locked to 1 | Value forced to 1, disabled; tooltip distinguishes recurrent vs model lock |
+| `FixedBatch{N>1}` | Range `[N, N]`, disabled |
+| `DynamicBatch` | Enabled; min from constraint; max from constraint or 9999 when unlimited |
+
+On model selection, the spinbox initial value comes from `FixedBatch` size,
+`1` for `RecurrentOnlyBatch`, or `preferred_batch_size` (default 1) for
+dynamic models.
+
+Batch size is stored in `DeepLearningState::batchSize()` and passed to
+`InferenceController::runBatch()` as frames per forward pass. See
+[Batch range inference](../ui/DeepLearning_Widget/Inference/batch_inference.qmd).
+
+## Multi-variant model loading
+
+Some models are compiled multiple times for different batch sizes. The
+`weights_variants` array in `RuntimeModelSpec` lists each artifact:
 
 ```json
 {
   "model_id": "neurosam_multi",
   "display_name": "NeuroSAM (Multi-Variant)",
+  "weights_path": "neurosam_default.pt2",
   "batch_mode": { "dynamic": { "min": 1, "max": 8 } },
   "weights_variants": [
     { "path": "neurosam_b1.pt2", "batch_size": 1, "label": "recurrent" },
-    { "path": "neurosam_b8.pt2", "batch_size": 8, "label": "batched" }
+    { "path": "neurosam_b8.pt2", "batch_size": 8, "label": "batched", "backend": "aotinductor" }
   ],
   "inputs": [...],
   "outputs": [...]
 }
 ```
 
-Each variant specifies:
+Each `WeightsVariant` entry:
 
-- **`path`** — Path to the weights file (resolved relative to the JSON file's directory)
-- **`batch_size`** — The batch size this variant was compiled for
-- **`label`** (optional) — Human-readable label for display
-- **`backend`** (optional) — Backend override (e.g., `"aotinductor"`, `"torchscript"`)
+| Field | Required | Description |
+|-------|----------|-------------|
+| `path` | yes | Weights file (relative paths resolved in `fromJsonFile()`) |
+| `batch_size` | yes | Batch size the variant was compiled for (`>= 1`, unique per spec) |
+| `label` | no | Display hint |
+| `backend` | no | Override: `"auto"`, `"torchscript"`, `"aotinductor"`, `"executorch"` |
 
-The `RuntimeModel::loadWeightsForBatchSize(int)` method selects and loads the matching 
-variant. If no exact match is found, it falls back to the default `weights_path`.
+`RuntimeModel::loadWeightsForBatchSize(int batch_size)` searches
+`weights_variants` for an **exact** `batch_size` match. On match it rebuilds
+`ModelExecution` with the variant's backend (or `Auto`) and loads that path,
+returning `true` if loading succeeded. Returns `false` when no variants are
+defined or no entry matches — it does **not** reload `weights_path` automatically;
+callers must fall back explicitly if desired.
 
-## Dynamic-Shape AOT Export
+`RuntimeModel::weightsVariants()` returns the variant list (empty when unset).
 
-For models that support variable batch sizes with a single `.pt2` file, use 
-`torch.export` with `dynamic_shapes` to mark the batch dimension as dynamic:
+At construction, `RuntimeModel` auto-loads `weights_path` when present.
+**The Properties widget does not yet call `loadWeightsForBatchSize()` when the
+batch spinbox changes**; multi-variant selection is a `RuntimeModel` API for
+programmatic or future UI integration.
+
+## Dynamic-shape AOT export
+
+For a single `.pt2` that accepts variable batch sizes, export with a dynamic
+batch dimension:
 
 ```python
 import torch
@@ -113,31 +196,27 @@ from torch.export import export, Dim
 model = MyModel()
 model.eval()
 
-# Define a dynamic batch dimension
 batch = Dim("batch", min=1, max=32)
-
-# Example inputs with batch dimension marked dynamic
 example_inputs = (torch.randn(1, 3, 256, 256),)
 dynamic_shapes = {"x": {0: batch}}
 
-# Export with dynamic shapes
 exported = export(model, example_inputs, dynamic_shapes=dynamic_shapes)
-
-# Compile to AOT Inductor package
-so_path = torch._inductor.aot_compile(
-    exported.module(),
-    example_inputs,
-)
-# The resulting .so can be loaded by AOTInductorBackend
+so_path = torch._inductor.aot_compile(exported.module(), example_inputs)
 ```
 
-### When to Use Dynamic vs Multi-Variant
+Pair with `"batch_mode": { "dynamic": { "min": 1, "max": 32 } }` in the JSON spec.
+
+### When to use dynamic vs multi-variant
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| Dynamic shapes | Single file, flexible | May be slightly slower than fixed-shape |
-| Multi-variant | Optimal per-batch performance | Multiple files to manage |
+| Dynamic shapes | Single file, flexible | May be slower than fixed-shape kernels |
+| Multi-variant | Optimal per-batch performance | Multiple files; caller must select variant |
 
-For most use cases, **dynamic shapes** is simpler and sufficient. Use multi-variant 
-only when profiling shows a meaningful performance gap between dynamic and fixed-shape 
-compilation for your specific model.
+Use dynamic shapes unless profiling shows a meaningful gap for your model.
+
+## See also
+
+- [Session Constraints](constraints.qmd) — `computeBatchSizeConstraint()`
+- [Batch range inference](../ui/DeepLearning_Widget/Inference/batch_inference.qmd) — how batch size drives frame grouping
+- [RuntimeModelSpec tests](../../../tests/DeepLearning/runtime/RuntimeModelSpec.test.cpp) — JSON round-trip and validation (`[BatchMode]`, `[WeightsVariant]` tags)
