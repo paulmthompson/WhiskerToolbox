@@ -1,0 +1,89 @@
+---
+title: "DecoderDispatch"
+---
+
+## Overview
+
+`DecoderDispatch` provides type-safe dispatch from `DecoderVariant` parameter
+alternatives to static `TensorTo*` `decode()` calls. It centralizes factory-name
+and DataManager-type mapping used by `SlotAssembler`, `OutputSlotWidget`, and
+model metadata (`recommended_decoder` hints).
+
+**Location:** `src/DeepLearning/channel_decoding/DecoderDispatch.hpp`  
+**Implementation:** `src/DeepLearning/channel_decoding/DecoderDispatch.cpp`
+
+Concrete decoders register via `DecoderFactory` (`DecoderFactory.hpp`) for
+name-based lookup; `DecoderDispatch` is the params-variant entry point used
+during inference.
+
+## Pipeline position
+
+```
+encoder output [B, C, H, W]
+     → (optional) PostEncoderModule::apply()   // torch → torch
+     → decodeToGeometry() / TensorTo*::decode() // torch → geometry / vector
+     → DataManager write
+```
+
+`DecoderContext` (in `ChannelDecoder.hpp`) carries runtime indexing and
+coordinate scaling. Per-decoder user settings live in `*DecoderParams` structs
+in the same header.
+
+## Decoder registry mapping
+
+| Params struct | Factory name | `dataTypeForDecoder()` | Spatial 4D? | Output type |
+|---|---|---|---|---|
+| `MaskDecoderParams` | `TensorToMask2D` | `MaskData` | yes | `Mask2D` |
+| `PointDecoderParams` | `TensorToPoint2D` | `PointData` | yes | `Point2D<float>` |
+| `LineDecoderParams` | `TensorToLine2D` | `LineData` | yes | `Line2D` |
+| `FeatureVectorDecoderParams` | `TensorToFeatureVector` | `TensorData` | no | `std::vector<float>` |
+
+See the per-decoder pages for algorithm details:
+[TensorToMask2D](TensorToMask2D.qmd),
+[TensorToPoint2D](TensorToPoint2D.qmd),
+[TensorToLine2D](TensorToLine2D.qmd),
+[TensorToFeatureVector](TensorToFeatureVector.qmd).
+
+## API
+
+| Function | Purpose |
+|---|---|
+| `decodeToGeometry(tensor, ctx, params)` | Decode using typed params or `DecoderVariant` |
+| `isSpatialDecoderParams<Params>()` | Compile-time: params need 4D `[B,C,H,W]` input |
+| `isSpatialDecoder(params)` | Runtime variant of the above |
+| `dataTypeForDecoderParams<Params>()` / `dataTypeForDecoder(params)` | Map to `MaskData`, `PointData`, etc. |
+| `decoderFactoryName<Params>()` / `decoderFactoryName(params)` | Map to `TensorToMask2D`, etc. |
+| `decoderParamsFromFactoryName(name)` | Default params from model `recommended_decoder` hint |
+
+## Types
+
+- `DecoderVariant` — `rfl::TaggedUnion` of all `*DecoderParams` structs (defined in
+  `bindings/EncoderDecoderBindingTypes.hpp`)
+- `DecodedGeometryVariant` — `std::variant<Mask2D, Point2D<float>, Line2D, std::vector<float>>`
+
+`DecodedOutputVariant` in `BatchInferenceResult.hpp` aliases `DecodedGeometryVariant`.
+
+`decodeToGeometry()` always calls each decoder's primary `decode()` method.
+`TensorToPoint2D::decodeMultiple()` is available for multi-peak extraction but is
+not wired through dispatch or `SlotAssembler` today.
+
+## SlotAssembler integration
+
+`SlotAssembler::makeDecoderContext()` populates `DecoderContext` from output slot
+metadata:
+
+- `source_channel` — fixed at `0` (first channel)
+- `batch_index` — current batch element
+- `height` / `width` — last two entries of the slot shape when `shape.size() >= 2`
+- `target_image_size` — source image size for coordinate upscaling
+
+Spatial decoders are skipped (with a logged error) when the output tensor rank is
+less than 4.
+
+## Tests
+
+`tests/DeepLearning/channel_decoding/DecoderDispatch.test.cpp` — factory-name
+mapping, DataManager type mapping, `decoderParamsFromFactoryName` round-trip,
+`isSpatialDecoder`, and end-to-end mask decode via `decodeToGeometry`.
+
+Filter with `ctest -R "decoder_dispatch"`.

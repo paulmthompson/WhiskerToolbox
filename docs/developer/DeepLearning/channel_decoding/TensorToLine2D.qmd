@@ -4,10 +4,25 @@ title: "TensorToLine2D"
 
 ## Overview
 
-`TensorToLine2D` decodes a spatial model output channel into an ordered `Line2D` polyline by
-thresholding, skeletonizing with Zhang-Suen thinning, and tracing connected skeleton pixels.
+`TensorToLine2D` decodes a spatial model output channel into an ordered `Line2D`
+polyline by thresholding, skeletonizing with Zhang-Suen thinning, and tracing
+connected skeleton pixels.
 
-## Tensor Layout
+**Header:** `src/DeepLearning/channel_decoding/TensorToLine2D.hpp`  
+**Registry:** `DecoderFactory::create("TensorToLine2D")` — `outputTypeName()` is `"Line2D"`
+
+Dispatched via [`DecoderDispatch`](DecoderDispatch.qmd) when
+`OutputBindingData::decoder` holds `LineDecoderParams`.
+
+## Parameters
+
+```cpp
+struct LineDecoderParams {
+    float threshold = 0.5f;
+};
+```
+
+## Tensor layout
 
 The decoder expects a **4D** tensor in **NCHW** order:
 
@@ -21,12 +36,26 @@ The decoder expects a **4D** tensor in **NCHW** order:
 `DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
 `tensor.size(3)` respectively.
 
+The selected channel is converted to CPU `float32` before thresholding.
+
 ## Pipeline
 
-1. Threshold channel activations using `LineDecoderParams::threshold`
-2. Skeletonize the binary mask to a 1-pixel-wide centerline
-3. Trace the skeleton from an endpoint (or any pixel for closed loops) into an ordered polyline
-4. Scale coordinates to `DecoderContext::target_image_size` when non-zero
+1. Threshold channel activations using `LineDecoderParams::threshold` (strict `>`)
+2. Skeletonize the binary mask to a 1-pixel-wide centerline (Zhang-Suen thinning)
+3. Find a skeleton endpoint (pixel with one neighbor), or any skeleton pixel for
+   closed loops
+4. Trace connected skeleton pixels into an ordered polyline
+5. Scale coordinates to `DecoderContext::target_image_size` when non-zero
+
+Returns an empty `Line2D` when no pixels exceed the threshold or the skeleton is empty.
+
+## Coordinate scaling
+
+When `DecoderContext::target_image_size` is non-zero, polyline vertices are
+scaled linearly from tensor space to the original image size.
+
+When `target_image_size` is `{0, 0}`, coordinates are returned in tensor pixel
+space.
 
 ## Validation
 
@@ -36,5 +65,12 @@ The decoder expects a **4D** tensor in **NCHW** order:
 - `batch_index` and `source_channel` are in range
 - `height` and `width` are positive and match the tensor spatial dimensions
 
-Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the
-failure at `spdlog::debug` level.
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging
+at `spdlog::debug` level.
+
+## Tests
+
+`tests/DeepLearning/channel_decoding/TensorToLine2D.test.cpp` — horizontal and
+vertical lines, scaling, batch/channel selection, empty input, validation errors.
+
+Filter with `ctest -R "TensorToLine2D"`.

@@ -4,10 +4,28 @@ title: "TensorToMask2D"
 
 ## Overview
 
-`TensorToMask2D` decodes a single spatial channel from a model output tensor into a `Mask2D`
-by collecting all pixels whose activation exceeds a configurable threshold.
+`TensorToMask2D` decodes a single spatial channel from a model output tensor
+into a `Mask2D` by collecting all pixels whose activation is **strictly greater
+than** `MaskDecoderParams::threshold`.
 
-## Tensor Layout
+**Header:** `src/DeepLearning/channel_decoding/TensorToMask2D.hpp`  
+**Registry:** `DecoderFactory::create("TensorToMask2D")` — `outputTypeName()` is `"Mask2D"`
+
+Dispatched via [`DecoderDispatch`](DecoderDispatch.qmd) when
+`OutputBindingData::decoder` holds `MaskDecoderParams`.
+
+## Parameters
+
+```cpp
+struct MaskDecoderParams {
+    float threshold = 0.5f;
+};
+```
+
+`ParameterUIHints` in `DecoderParamSchemas.hpp` constrain the threshold to
+`(0.01, 1.0]`.
+
+## Tensor layout
 
 The decoder expects a **4D** tensor in **NCHW** order:
 
@@ -19,14 +37,19 @@ The decoder expects a **4D** tensor in **NCHW** order:
 | 3   | Width   | `DecoderContext::width` |
 
 `DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
-`tensor.size(3)` respectively. `SlotAssembler` populates these from the output slot metadata
-(last two entries of the slot shape).
+`tensor.size(3)` respectively. `SlotAssembler` sets these from the output slot
+shape (last two dimensions).
 
-## Coordinate Scaling
+The selected channel is converted to CPU `float32` before thresholding.
 
-When `DecoderContext::target_image_size` is non-zero, mask coordinates are upsampled from tensor
-space to the original image size using nearest-neighbor mapping. When `target_image_size` is
-`{0, 0}`, coordinates are returned in tensor pixel space.
+## Coordinate scaling
+
+When `DecoderContext::target_image_size` is non-zero, mask coordinates are
+upsampled from tensor space to the original image size by iterating destination
+pixels and sampling the nearest source pixel (inverse nearest-neighbor mapping).
+
+When `target_image_size` is `{0, 0}`, mask pixels are returned in tensor pixel
+coordinates (integer `x`, `y` in `[0, width)` × `[0, height)`).
 
 ## Validation
 
@@ -36,5 +59,12 @@ space to the original image size using nearest-neighbor mapping. When `target_im
 - `batch_index` and `source_channel` are in range
 - `height` and `width` are positive and match the tensor spatial dimensions
 
-Invalid inputs throw `std::invalid_argument` or `std::out_of_range`, consistent with the other
-channel decoders.
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging
+at `spdlog::debug` level.
+
+## Tests
+
+`tests/DeepLearning/channel_decoding/TensorToMask2D.test.cpp` — thresholding,
+empty masks, batch/channel selection, target scaling, validation errors.
+
+Filter with `ctest -R "TensorToMask2D"`.

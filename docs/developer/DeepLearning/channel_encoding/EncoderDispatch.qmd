@@ -4,27 +4,146 @@ title: "EncoderDispatch"
 
 ## Overview
 
-`EncoderDispatch` provides type-safe dispatch from encoder parameter variants to
-`ImageEncoder` / `Point2DEncoder` / … encode calls. It replaces string-based
-`encoder_id` switches in `SlotAssembler` and centralizes factory-name /
-DataManager-type mapping.
+`EncoderDispatch` provides type-safe dispatch from `EncoderVariant` parameter
+alternatives to static `ImageEncoder` / `Point2DEncoder` / … `encode()` calls.
+It centralizes factory-name and DataManager-type mapping used by
+`SlotAssembler`, `DynamicInputSlotWidget`, `DataBank`, and model metadata
+(`recommended_encoder` hints).
 
-**Location:** `src/DeepLearning/channel_encoding/EncoderDispatch.hpp`
+**Location:** `src/DeepLearning/channel_encoding/EncoderDispatch.hpp`  
+**Implementation:** `src/DeepLearning/channel_encoding/EncoderDispatch.cpp`
+
+Concrete encoders register via `EncoderFactory` (`EncoderFactory.hpp`) for
+name-based lookup; `EncoderDispatch` is the params-variant entry point used
+during input assembly.
+
+## Pipeline position
+
+```
+DataManager / DataBank source fetch
+     → EncodingSourceVariant (geometry or image pixels)
+     → encodeToTensor() / ImageEncoder::encode() / …  // source → torch channel
+     → model forward()
+```
+
+`EncoderContext` (in `ChannelEncoder.hpp`) carries runtime indexing into the
+pre-allocated input tensor. Per-encoder user settings live in `*EncoderParams`
+structs in the same header.
+
+## Encoder registry mapping
+
+| Params struct | Factory name | `dataTypeForEncoder()` | Source alternative | Encoder class |
+|---|---|---|---|---|
+| `ImageEncoderParams` | `ImageEncoder` | `MediaData` | `ImageEncodingSource` | `ImageEncoder` |
+| `Point2DEncoderParams` | `Point2DEncoder` | `PointData` | `std::vector<Point2D<float>>` | `Point2DEncoder` |
+| `Mask2DEncoderParams` | `Mask2DEncoder` | `MaskData` | `Mask2D` | `Mask2DEncoder` |
+| `Line2DEncoderParams` | `Line2DEncoder` | `LineData` | `Line2D` | `Line2DEncoder` |
+
+Encoder algorithms and `RasterMode` options are summarized in the
+[DeepLearning overview](../index.qmd).
 
 ## API
 
 | Function | Purpose |
 |---|---|
-| `encodeToTensor()` | Encode pre-fetched source data using typed or variant params |
-| `isImageEncoder()` | Whether the active encoder targets MediaData |
-| `dataTypeForEncoder()` | Map params to `MediaData`, `PointData`, etc. |
-| `encoderFactoryName()` | Map params to registry name (`ImageEncoder`, …) |
-| `encoderParamsFromFactoryName()` | Default params from model `recommended_encoder` hint |
+| `encodeToTensor(source, tensor, ctx, source_image_size, params)` | Write one channel of a pre-allocated `[B,C,H,W]` tensor |
+| `isImageEncoderParams<Params>()` / `isImageEncoder(params)` | Whether params target `MediaData` image input |
+| `dataTypeForEncoderParams<Params>()` / `dataTypeForEncoder(params)` | Map to `MediaData`, `PointData`, etc. |
+| `encoderFactoryName<Params>()` / `encoderFactoryName(params)` | Map to `ImageEncoder`, etc. |
+| `encoderParamsFromFactoryName(name)` | Default params from model `recommended_encoder` hint |
+| `assignEncoderFromFactoryName(encoder, name)` | Assign variant; falls back to `ImageEncoderParams` when unknown |
 
 ## Types
 
-- `EncoderParamsVariant` — `std::variant` of all `*EncoderParams` structs
-- `EncodingSourceVariant` — image pixels, point vector, mask, or line source data
+### `EncoderVariant`
 
-`SlotBindingData` in workspace JSON stores a nested tagged `encoder` field
-(reflect-cpp), matching `DynamicInputSlotParams`.
+`rfl::TaggedUnion` of all `*EncoderParams` structs, defined in
+`bindings/EncoderDecoderBindingTypes.hpp`. Persisted in workspace JSON as the
+nested `encoder` field of `SlotBindingData` (edited via
+`DynamicInputBindingForm` in the widget).
+
+### `EncodingSourceVariant`
+
+`std::variant` of pre-fetched source data paired with encoder params at encode
+time:
+
+```cpp
+struct ImageEncodingSource {
+    ImageSize size;
+    int channels = 1;
+    bool is_8bit = true;
+    std::vector<uint8_t> data_u8;
+    std::vector<float> data_f32;
+};
+
+using EncodingSourceVariant = std::variant<
+        ImageEncodingSource,
+        std::vector<Point2D<float>>,
+        Mask2D,
+        Line2D>;
+```
+
+`SlotAssembler::fetchEncodingSource()` builds the appropriate alternative from
+DataManager (or `MediaOverrides` during batch inference). `DataBank` stores
+optional `EncodingSourceVariant` provenance alongside encoded tensors.
+
+`encodeToTensor()` checks that the source alternative matches the active encoder
+type. On mismatch it logs to `std::cerr` and returns without writing.
+
+### `EncoderContext`
+
+Runtime indexing into the destination tensor (not user-configurable):
+
+| Field | Role |
+|---|---|
+| `target_channel` | Channel index to write (fixed at `0` for dynamic slots today) |
+| `batch_index` | Batch dimension index |
+| `height` / `width` | Spatial dimensions of the destination channel |
+
+## `encodeToTensor` behavior
+
+- Writes into an **existing** `at::Tensor` slice; does not allocate the full input map.
+- `source_image_size` supplies original image dimensions for geometry coordinate
+  scaling. When width/height are non-positive, `(ctx.width, ctx.height)` is used
+  as the fallback source size.
+- `ImageEncoder` selects `data_u8` or `data_f32` from `ImageEncodingSource`
+  based on `is_8bit`.
+
+## SlotAssembler integration
+
+`SlotAssembler::encodeDynamicSlot()`:
+
+1. Fetches `EncodingSourceVariant` from DataManager at
+   `computeEncodingFrame(current_frame, batch_index, time_offset, max_frame)`.
+2. Builds `EncoderContext` from slot shape (last two dims → `height`/`width`).
+3. Calls `encodeToTensor()` with the binding's `EncoderVariant`.
+
+`SlotAssembler` scans input bindings for an `ImageEncoder` with a non-empty
+`data_key` to determine `source_image_size` for scaling geometry encoders.
+`SlotAssembler::dataTypeForEncoder()` delegates to `dl::dataTypeForEncoder()`.
+
+`InferenceController` uses `isImageEncoder()` when preparing `MediaOverrides`
+for thread-safe batch reads.
+
+## DataBank integration
+
+`DataBank::putSource()` stores an `EncodingSourceVariant`. Re-encoding uses
+`encodeSourceToTensor()` in `DataBankEncode.hpp`, which calls `encodeToTensor()`
+with the stored source and requested `EncoderVariant`.
+
+## ParameterUIHints
+
+Per-encoder form annotations live in `EncoderParamSchemas.hpp` (`normalize`,
+`mode`, `gaussian_sigma` tooltips and allowed values).
+
+## Tests
+
+`tests/DeepLearning/channel_encoding/EncoderDispatch.test.cpp` — factory-name
+mapping, DataManager type mapping, `encoderParamsFromFactoryName` round-trip,
+`isImageEncoder`, and end-to-end point encode via `encodeToTensor`.
+
+Individual encoder behavior is covered by
+`tests/DeepLearning/channel_encoding/ImageEncoder.test.cpp` and
+`tests/DeepLearning/channel_encoding/RoundTrip.test.cpp`.
+
+Filter with `ctest -R "encoder_dispatch"`.

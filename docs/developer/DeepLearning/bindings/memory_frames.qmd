@@ -1,0 +1,188 @@
+---
+title: "Memory Frame Bindings"
+---
+
+## Overview
+
+Memory (static) input slots hold tensors that persist across frames — reference
+images, prior masks, or other context the model reads but does not recompute
+every step. Each **position** along the slot's memory buffer is configured as
+either:
+
+- **Static** — data already exists in DataManager or DataBank and is encoded (or
+  reused) at inference time.
+- **Recurrent** — the raw output tensor from a model output slot at the previous
+  frame is fed back into this position.
+
+This replaces the former split between `StaticInputData`, `RecurrentBindingData`,
+and widget-only sequence-entry variants. One struct (`MemoryFrameBinding`) covers
+single-frame slots (`sequence_dim = -1`, one position) and multi-frame sequence
+slots (`sequence_dim >= 0`, one binding per position).
+
+**Core types:** `src/DeepLearning/bindings/DeepLearningBindingData.hpp`  
+**AutoParamWidget forms:** `src/DeepLearning/bindings/BindingParamSchemas.hpp`  
+**UI hints:** `src/DeepLearning/bindings/BindingParamSchemas.cpp`  
+**Widget:** `src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/MemorySlotWidget.hpp`
+
+## Data model
+
+### MemoryFrameBinding
+
+```cpp
+struct MemoryFrameBinding {
+    std::string slot_name;           // e.g. "memory_masks"
+    int memory_index = 0;            // position along sequence_dim
+    MemoryFrameSourceVariant frame;  // StaticFrameSource | RecurrentFrameSource
+    bool active = true;              // boolean mask slots only
+};
+```
+
+Session state stores all memory positions in a single vector:
+
+```cpp
+std::vector<dl::MemoryFrameBinding> memory_frames;  // DeepLearningStateData
+```
+
+### Tagged unions
+
+All variants use `rfl::TaggedUnion` with an internal discriminator field.
+`extractParameterSchema<>()` auto-detects these for AutoParamWidget.
+
+| Union | Discriminator | Alternatives |
+|---|---|---|
+| `MemoryFrameSourceVariant` | `"frame_kind"` | `StaticFrameSource`, `RecurrentFrameSource` |
+| `StaticInputSourceVariant` | `"static_source"` | `DataManagerStaticSource`, `DataBankStaticSource` |
+| `RecurrentInitVariant` | `"init_mode"` | `ZerosInit`, `StaticCaptureInit`, `FirstOutputInit` |
+
+**Static frame** — input already exists:
+
+- `DataManagerStaticSource` — re-encode `data_key` at `current_frame + time_offset`.
+- `DataBankStaticSource` — reuse tensor from `bank_entry_id`. When empty,
+  `resolvedBankEntryId()` falls back to `{slot_name}_{memory_index}` via
+  `defaultBankEntryId()`.
+
+**Recurrent frame** — feedback from a prior model step:
+
+- `output_slot_name` — which model output feeds this position.
+- `init` — how to seed the recurrent tensor at t=0 (`ZerosInit`,
+  `StaticCaptureInit`, `FirstOutputInit`).
+
+A parallel `RecurrentInitMode` enum and string converters
+(`recurrentInitModeToString`, `recurrentInitModeFromString`) exist for
+engine code; bindings store the tagged `RecurrentInitVariant` in JSON.
+
+Example JSON (recurrent position):
+
+```json
+{
+  "slot_name": "memory_masks",
+  "memory_index": 0,
+  "frame": {
+    "frame_kind": "RecurrentFrameSource",
+    "output_slot_name": "mask_out",
+    "init": { "init_mode": "ZerosInit" }
+  },
+  "active": true
+}
+```
+
+### Access helpers
+
+`DeepLearningBindingData.hpp` provides Qt-free accessors over the tagged unions.
+Because `rfl::TaggedUnion` wraps `rfl::Variant`, helpers use `rfl::get` and
+`rfl::holds_alternative` on `.variant()`:
+
+```cpp
+if (dl::isRecurrentFrame(binding)) { ... }
+auto key = dl::staticDataKey(binding);
+auto mode = dl::recurrentInitMode(binding);
+```
+
+| Helper | Purpose |
+|---|---|
+| `isStaticFrame` / `isRecurrentFrame` | Frame kind |
+| `staticSourceType` | `StaticInputSource::DataManager` or `DataBank` |
+| `staticDataKey` / `staticTimeOffset` | DataManager static fields |
+| `staticBankEntryId` / `resolvedBankEntryId` | DataBank entry ID (explicit or default) |
+| `hasActiveStaticSource` | Enough config to participate in assembly |
+| `recurrentOutputSlot` | Output slot name for recurrent frames |
+| `hasActiveRecurrentBinding` | Recurrent frame with a non-empty, non-`(None)` output slot |
+| `hasActiveRecurrentBindings` | Any active recurrent frame in a vector |
+| `findMemoryFrame` | Lookup by `slot_name` + `memory_index` |
+| `recurrentInitMode` | `RecurrentInitMode` enum from tagged init |
+| `staticCaptureDataKey` / `staticCaptureFrame` | `StaticCaptureInit` fields |
+
+`recurrentCacheKey(input_slot_name)` (global helper) builds the carried-tensor
+cache key `"recurrent:{input_slot_name}"` used during recurrent sequences.
+
+## AutoParamWidget forms
+
+Form structs omit `slot_name` and `memory_index` (the widget shell supplies those).
+
+| Form struct | Binding projection | Fields |
+|---|---|---|
+| `StaticFrameSourceForm` | `StaticFrameSource` | `source` (`StaticInputSourceVariant`) |
+| `RecurrentFrameSourceForm` | `RecurrentFrameSource` | `output_slot_name`, `init` |
+
+Conversion helpers in `BindingParamSchemas.hpp`:
+
+| Helper | Direction |
+|---|---|
+| `toStaticMemoryFrame(slot_name, memory_index, form)` | static form → `MemoryFrameBinding` |
+| `toRecurrentMemoryFrame(slot_name, memory_index, form)` | recurrent form → `MemoryFrameBinding` |
+| `fromStaticMemoryFrame(binding)` | static binding → form (empty when not static) |
+| `fromRecurrentMemoryFrame(binding)` | recurrent binding → form (empty when not recurrent) |
+| `makeCaptureBinding(slot_name, memory_index, data_key)` | DataManager capture helper for DataBank workflows |
+
+Dynamic and output slot forms remain in
+[binding_param_schemas.qmd](binding_param_schemas.qmd).
+
+## UI: MemorySlotWidget
+
+`MemorySlotWidget` replaces the former `StaticInputSlotWidget`,
+`SequenceSlotWidget`, and `RecurrentBindingWidget`. One widget instance is created
+per memory input slot in `DeepLearningPropertiesWidget`.
+
+For each sequence position (or the single position when `sequence_dim = -1`):
+
+1. **Frame kind** combo — Static or Recurrent (mutually exclusive).
+2. **Stacked form** — `AutoParamWidget` for `StaticFrameSourceForm` or
+   `RecurrentFrameSourceForm`.
+
+Sequence slots (`sequence_dim >= 0`) expose **Add Entry** / **Remove Last** controls
+up to the model's sequence length. Each row maps to one `MemoryFrameBinding` with
+a distinct `memory_index`.
+
+See [DeepLearning Widget Helpers — MemorySlotWidget](../../ui/DeepLearning_Widget/UI/Helpers/helpers.qmd#memoryslotwidget).
+
+## Engine integration
+
+| Component | Role |
+|---|---|
+| `SlotAssembler::assembleInputs()` | Encodes static positions; skips empty bindings |
+| `SlotAssembler::runRecurrentSequence()` | Injects recurrent tensors per active recurrent frame |
+| `dl::constraints::computeBatchSizeConstraint()` | Forces batch size 1 when any recurrent frame is active |
+| `InferenceController` / batch workers | Pass `memory_frames` from `DeepLearningState` |
+
+Hybrid sequence configurations (e.g. NeuroSAM with four static reference frames
+and one recurrent tail position) are expressed as multiple `MemoryFrameBinding`
+entries for the same `slot_name` with different `memory_index` values and
+per-position `frame_kind`. See
+[Hybrid Sequence Inputs](../hybrid_sequence_inputs.qmd).
+
+## ParameterUIHints
+
+Implementations live in `BindingParamSchemas.cpp` — see
+[binding_param_schemas.qmd](binding_param_schemas.qmd#parameteruihints) for the
+full table. Memory-frame-specific structs: `DataManagerStaticSource`,
+`DataBankStaticSource`, `StaticFrameSourceForm`, `StaticCaptureInit`,
+`RecurrentFrameSourceForm`.
+
+## Test coverage
+
+| Test file | Coverage |
+|---|---|
+| `tests/DeepLearning/binding_data/BindingData.test.cpp` | `MemoryFrameBinding` accessors, `computeEncodingFrame`, `RecurrentInitMode` strings, `recurrentCacheKey` |
+| `tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp` | `StaticInputSourceVariant` / `RecurrentInitVariant` schema + JSON, `MemoryFrameBinding` JSON round-trip, memory-frame `ParameterUIHints` |
+| `tests/WhiskerToolbox/DeepLearning_Widget/MemorySlotWidget.test.cpp` | Widget `setBindings` / `bindings` round-trip |
+| `tests/DeepLearning/constraints/ConstraintEnforcer.test.cpp` | Batch constraint with active recurrent `memory_frames` |

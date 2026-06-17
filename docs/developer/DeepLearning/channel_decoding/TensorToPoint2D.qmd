@@ -4,10 +4,26 @@ title: "TensorToPoint2D"
 
 ## Overview
 
-`TensorToPoint2D` decodes peak locations from a spatial model output channel into `Point2D<float>`
-coordinates. It supports single-peak argmax decoding and multi-peak local-maximum detection.
+`TensorToPoint2D` decodes peak locations from a spatial model output channel into
+`Point2D<float>` coordinates. It supports single-peak argmax decoding and
+multi-peak local-maximum detection.
 
-## Tensor Layout
+**Header:** `src/DeepLearning/channel_decoding/TensorToPoint2D.hpp`  
+**Registry:** `DecoderFactory::create("TensorToPoint2D")` — `outputTypeName()` is `"Point2D<float>"`
+
+`DecoderDispatch` and `SlotAssembler` call `decode()` only.
+`decodeMultiple()` is available for direct use but is not wired through dispatch.
+
+## Parameters
+
+```cpp
+struct PointDecoderParams {
+    bool subpixel = true;   // parabolic refinement around argmax / local maxima
+    float threshold = 0.5f; // minimum activation for decodeMultiple()
+};
+```
+
+## Tensor layout
 
 The decoder expects a **4D** tensor in **NCHW** order:
 
@@ -21,17 +37,34 @@ The decoder expects a **4D** tensor in **NCHW** order:
 `DecoderContext::height` and `DecoderContext::width` must match `tensor.size(2)` and
 `tensor.size(3)` respectively.
 
-## Decode Modes
+The selected channel is converted to CPU `float32` before peak detection.
 
-- `decode()` — returns the global argmax location, optionally refined with parabolic subpixel
-  fitting. Returns `{0, 0}` when the selected channel is entirely non-positive.
-- `decodeMultiple()` — returns all local maxima above `PointDecoderParams::threshold`.
+## Decode modes
 
-## Coordinate Scaling
+### `decode()` — single peak
 
-When `DecoderContext::target_image_size` is non-zero, coordinates are scaled linearly from tensor
-space to the original image size. When `target_image_size` is `{0, 0}`, coordinates are returned
-in tensor pixel space.
+1. Flatten the channel and take the global argmax.
+2. If the peak value is `<= 0`, return `{0, 0}` (scaled to target image size when configured).
+3. Otherwise return integer pixel coordinates, optionally refined with parabolic
+   subpixel fitting along each axis when `params.subpixel` is true.
+
+### `decodeMultiple()` — all local maxima
+
+Returns every pixel that:
+
+- exceeds `params.threshold`, and
+- is strictly greater than all eight neighbors (local maximum)
+
+Each peak is optionally subpixel-refined and scaled to target image coordinates.
+
+## Coordinate scaling
+
+When `DecoderContext::target_image_size` is non-zero, coordinates are scaled
+linearly from tensor space to the original image size
+(`dest = tensor * target / tensor_dim`).
+
+When `target_image_size` is `{0, 0}`, coordinates are returned in tensor pixel
+space.
 
 ## Validation
 
@@ -41,5 +74,16 @@ Both entry points validate at runtime:
 - `batch_index` and `source_channel` are in range
 - `height` and `width` are positive and match the tensor spatial dimensions
 
-Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the failure at
-`spdlog::debug` level.
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging
+at `spdlog::debug` level.
+
+## Tests
+
+`tests/DeepLearning/channel_decoding/TensorToPoint2D.test.cpp` — argmax, subpixel
+refinement, all-zero channel, scaling, batch/channel selection, `decodeMultiple`,
+validation errors.
+
+Also covered by `tests/DeepLearning/channel_decoding/RoundTrip.test.cpp` encoder
+round-trips.
+
+Filter with `ctest -R "TensorToPoint2D"`.

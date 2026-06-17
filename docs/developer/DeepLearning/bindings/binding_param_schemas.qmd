@@ -1,0 +1,69 @@
+---
+title: "Binding Parameter Schemas"
+---
+
+## Overview
+
+`BindingParamSchemas.hpp` defines **AutoParamWidget form structs** — thin
+projections of persisted binding types without fields the widget shell supplies
+(`slot_name`, `memory_index`). Conversion helpers map between forms and full
+binding structs, normalizing `(None)` combo sentinels to empty strings via
+`normalizeBindingDataKey()`.
+
+**Location:** `src/DeepLearning/bindings/BindingParamSchemas.hpp`  
+**UI hints:** `src/DeepLearning/bindings/BindingParamSchemas.cpp`
+
+## Dynamic and output forms
+
+| Form struct | Binding type | Fields |
+|---|---|---|
+| `dl::DynamicInputBindingForm` | `SlotBindingData` | `data_key`, `encoder`, `time_offset` |
+| `dl::OutputBindingForm` | `OutputBindingData` | `data_key`, `decoder` |
+
+### Conversion helpers
+
+| Helper | Direction |
+|---|---|
+| `toSlotBindingData(slot_name, form)` | form → `SlotBindingData` |
+| `fromSlotBindingData(binding)` | `SlotBindingData` → form |
+| `toOutputBindingData(slot_name, form)` | form → `OutputBindingData` |
+| `fromOutputBindingData(binding)` | `OutputBindingData` → form |
+
+Memory frame forms (`StaticFrameSourceForm`, `RecurrentFrameSourceForm`) and
+their conversion helpers are documented in
+[memory_frames.qmd](memory_frames.qmd).
+
+## ParameterUIHints
+
+`BindingParamSchemas.cpp` annotates schemas for AutoParamWidget:
+
+| Struct | Notable annotations |
+|---|---|
+| `DynamicInputBindingForm` | `data_key` → dynamic combo with `(None)` sentinel; `time_offset` display name |
+| `OutputBindingForm` | `data_key` labeled "Target", dynamic combo |
+| `DataManagerStaticSource` | `data_key` dynamic combo; `time_offset` tooltip |
+| `DataBankStaticSource` | `bank_entry_id` labeled "Bank Entry", dynamic combo |
+| `StaticFrameSourceForm` | `source` display name "Source" |
+| `StaticCaptureInit` | `data_key` dynamic combo; `frame` tooltip |
+| `RecurrentFrameSourceForm` | `output_slot_name` labeled "Output Slot"; `init` labeled "Init Mode" |
+
+Tagged unions (`EncoderVariant`, `StaticInputSourceVariant`, `RecurrentInitVariant`)
+inherit field schemas from their alternative structs; no separate `ParameterUIHints`
+specializations are required for the union wrappers themselves.
+
+## Widget usage
+
+| Widget | Form struct | Binding type |
+|---|---|---|
+| `DynamicInputSlotWidget` | `DynamicInputBindingForm` | `SlotBindingData` |
+| `OutputSlotWidget` | `OutputBindingForm` | `OutputBindingData` |
+| `MemorySlotWidget` | `StaticFrameSourceForm` / `RecurrentFrameSourceForm` | `MemoryFrameBinding` |
+
+See [DeepLearning Widget helpers](../../ui/DeepLearning_Widget/UI/Helpers/helpers.qmd).
+
+## Tests
+
+| Test file | Coverage |
+|---|---|
+| `tests/DeepLearning/bindings/BindingTypes.test.cpp` | `DynamicInputBindingForm` / `OutputBindingForm` schema extraction, `normalizeBindingDataKey`, `toSlotBindingData` / `toOutputBindingData` |
+| `tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp` | `StaticInputSourceVariant` / `RecurrentInitVariant` schema + JSON, memory-frame `ParameterUIHints`, `MemoryFrameBinding` JSON round-trip |

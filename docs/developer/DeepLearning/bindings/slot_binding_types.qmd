@@ -1,0 +1,110 @@
+---
+title: "Slot Binding Types"
+---
+
+## Overview
+
+Session binding types for deep learning inference live under
+`src/DeepLearning/bindings/`. They are Qt-free, reflect-cpp serializable, and
+consumed by `SlotAssembler`, `InferenceController`, `DeepLearningState`, and
+planned headless commands.
+
+| Header | Contents |
+|---|---|
+| `DeepLearningBindingData.hpp` | Memory frame bindings, static/recurrent variants, `computeEncodingFrame`, `recurrentCacheKey` |
+| `EncoderDecoderBindingTypes.hpp` | `dl::EncoderVariant`, `dl::DecoderVariant` (`rfl::TaggedUnion`) |
+| `SlotBindingTypes.hpp` | `SlotBindingData`, `OutputBindingData`, `dl::PostEncoderStepDescriptor` |
+| `BindingParamSchemas.hpp` | AutoParamWidget form structs, `ParameterUIHints`, conversion helpers |
+
+Memory-frame types and accessors are documented in
+[memory_frames.qmd](memory_frames.qmd). UI form projections are in
+[binding_param_schemas.qmd](binding_param_schemas.qmd).
+
+## EncoderVariant / DecoderVariant
+
+Tagged unions over the per-component param structs in `channel_encoding/` and
+`channel_decoding/`. These are the **only** encoder/decoder parameter variant
+types — `EncoderDispatch` and `DecoderDispatch` take `EncoderVariant` /
+`DecoderVariant` directly (no parallel `std::variant` aliases).
+
+| Union | Discriminator | Alternatives |
+|---|---|---|
+| `dl::EncoderVariant` | `"encoder"` | `ImageEncoderParams`, `Point2DEncoderParams`, `Mask2DEncoderParams`, `Line2DEncoderParams` |
+| `dl::DecoderVariant` | `"decoder"` | `MaskDecoderParams`, `PointDecoderParams`, `LineDecoderParams`, `FeatureVectorDecoderParams` |
+
+JSON uses internally tagged discriminators, e.g.:
+
+```json
+{"encoder":"ImageEncoderParams","normalize":true}
+```
+
+## SlotBindingData
+
+Persisted dynamic (per-frame) input binding for workspace JSON:
+
+```cpp
+struct SlotBindingData {
+    std::string slot_name;              // model input slot name
+    std::string data_key;               // DataManager key (empty = unconfigured)
+    dl::EncoderVariant encoder = dl::ImageEncoderParams{};
+    int time_offset = 0;                // added to current_frame (+ batch index)
+};
+```
+
+`time_offset` is combined with the current frame via `computeEncodingFrame()` in
+`DeepLearningBindingData.hpp`, which clamps the result to `[0, max_frame]`.
+
+## OutputBindingData
+
+Persisted model output binding:
+
+```cpp
+struct OutputBindingData {
+    std::string slot_name;
+    std::string data_key;               // DataManager write target
+    dl::DecoderVariant decoder = dl::MaskDecoderParams{};
+};
+```
+
+## PostEncoderStepDescriptor
+
+Post-encoder module configuration stored alongside slot bindings:
+
+```cpp
+namespace dl {
+struct PostEncoderStepDescriptor {
+    std::string module_key = "none";    // "none" or empty = disabled
+    std::string parameters_json = "{}";
+};
+}
+```
+
+Parameter schemas are resolved at runtime from `PostEncoderModuleRegistry` when
+the widget loads a module's form.
+
+## Session persistence
+
+`DeepLearningStateData` (serialized by `DeepLearningState`) holds the full
+inference session configuration:
+
+```cpp
+struct DeepLearningStateData {
+    std::vector<SlotBindingData> input_bindings;
+    std::vector<OutputBindingData> output_bindings;
+    std::vector<dl::MemoryFrameBinding> memory_frames;
+    dl::PostEncoderStepDescriptor post_encoder_params;
+    // ... model_id, weights_path, batch_size, current_frame, etc.
+};
+```
+
+Vectors are keyed by `slot_name` at runtime; the UI creates one widget per
+model slot and reads/writes the matching binding entry.
+
+## Tests
+
+| Test file | Coverage |
+|---|---|
+| `tests/DeepLearning/bindings/BindingTypes.test.cpp` | `EncoderVariant` / `DecoderVariant` schema + JSON, `SlotBindingData` / `OutputBindingData` round-trips, `PostEncoderStepDescriptor`, form helper mapping |
+| `tests/DeepLearning/binding_data/BindingData.test.cpp` | `computeEncodingFrame`, `MemoryFrameBinding` accessors, `RecurrentInitMode` string conversion, `recurrentCacheKey` |
+
+Filter with `ctest -R "dl_bindings"` or `ctest -R "binding_data"`.

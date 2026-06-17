@@ -4,10 +4,23 @@ title: "TensorToFeatureVector"
 
 ## Overview
 
-`TensorToFeatureVector` decodes a global feature descriptor from a model output tensor into a
-flat `std::vector<float>` for storage in `TensorData`.
+`TensorToFeatureVector` decodes a global feature descriptor from a model output
+tensor into a flat `std::vector<float>`. `SlotAssembler` writes the result to
+`TensorData` in DataManager (one row per frame in batch inference).
 
-## Tensor Layout
+**Header:** `src/DeepLearning/channel_decoding/TensorToFeatureVector.hpp`  
+**Registry:** `DecoderFactory::create("TensorToFeatureVector")` — `outputTypeName()` is `"std::vector<float>"`
+
+Dispatched via [`DecoderDispatch`](DecoderDispatch.qmd) when
+`OutputBindingData::decoder` holds `FeatureVectorDecoderParams`.
+
+## Parameters
+
+```cpp
+struct FeatureVectorDecoderParams {};  // no user-configurable fields
+```
+
+## Tensor layout
 
 The decoder accepts **1D** or **2D** tensors:
 
@@ -16,8 +29,14 @@ The decoder accepts **1D** or **2D** tensors:
 | 1    | `[C]`  | Returns all `C` feature values. `ctx.batch_index` is ignored. |
 | 2    | `[B, C]` | Returns the `C`-length vector at `ctx.batch_index`. |
 
-This decoder is typically used after a post-encoder such as `GlobalAvgPoolModule`, which
-reduces a spatial `[B, C, H, W]` feature map to `[B, C]`.
+`DecoderContext::source_channel`, `height`, `width`, and `target_image_size` are
+not used by this decoder.
+
+This decoder is typically used after a post-encoder such as `GlobalAvgPoolModule`,
+which reduces a spatial `[B, C, H, W]` feature map to `[B, C]`.
+
+The tensor is converted to CPU `float32` and copied with `memcpy` into the result
+vector.
 
 ## Validation
 
@@ -27,5 +46,18 @@ reduces a spatial `[B, C, H, W]` feature map to `[B, C]`.
 - Tensor rank is 1 or 2 (not 0D, 3D, or higher)
 - For 2D inputs, `batch_index` is in `[0, B)`
 
-Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging the
-failure at `spdlog::debug` level.
+Invalid inputs throw `std::invalid_argument` or `std::out_of_range` after logging
+at `spdlog::debug` level.
+
+## Batch inference
+
+For batch runs with this decoder, `SlotAssembler` accumulates per-frame feature
+rows and writes a single ordinal 2D `TensorData` matrix at batch completion.
+See [post-encoder modules](../post_encoder_modules.qmd).
+
+## Tests
+
+`tests/DeepLearning/channel_decoding/TensorToFeatureVector.test.cpp` — unbatched
+1D decode, batched 2D decode, rank validation.
+
+Filter with `ctest -R "TensorToFeatureVector"`.
