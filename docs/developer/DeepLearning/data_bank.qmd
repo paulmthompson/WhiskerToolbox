@@ -182,4 +182,5 @@ DataBank bindings only; capture is centralized in `DataBankPropertiesWidget`.
 ## See also
 
 - [Memory frame bindings](bindings/memory_frames.qmd) — `MemoryFrameBinding`, DataBank vs DataManager sources
+- [Static input capture](static_input_capture.qmd) — capture workflow and assembly sourcing
 - [Encoder dispatch](channel_encoding/EncoderDispatch.qmd) — `EncodingSourceVariant`, `encodeToTensor`

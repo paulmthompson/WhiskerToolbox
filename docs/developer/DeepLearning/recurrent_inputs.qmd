@@ -4,106 +4,152 @@ title: "Recurrent (Feedback) Inputs"
 
 ## Overview
 
-Recurrent inputs enable sequential frame-by-frame inference where the model's 
-output at frame *t* feeds back into an input slot at frame *t+1*. This is 
-essential for architectures like NeuroSAM that track objects across video frames 
+Recurrent inputs enable sequential frame-by-frame inference where the model's
+output at frame *t* feeds back into a memory input slot at frame *t+1*. This is
+essential for architectures like NeuroSAM that track objects across video frames
 by conditioning each prediction on the previous one.
 
-## Architecture
+Recurrent positions are configured as `MemoryFrameBinding` entries whose
+`frame` variant is `RecurrentFrameSource`. They live in the same
+`memory_frames` vector as static positions — see
+[Memory Frame Bindings](bindings/memory_frames.qmd) and
+[Hybrid Sequence Inputs](hybrid_sequence_inputs.qmd).
 
-### RecurrentBindingData
+**Core types:** `src/DeepLearning/bindings/DeepLearningBindingData.hpp`  
+**Engine:** `src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp`  
+**Orchestration:** `src/WhiskerToolbox/DeepLearning_Widget/Inference/InferenceController.cpp`
 
-The `RecurrentBindingData` struct (in `DeepLearningBindingData.hpp`) maps a model 
-output slot to an input slot:
+## Data model
+
+### RecurrentFrameSource
 
 | Field | Type | Description |
-|-------|------|-------------|
-| `input_slot_name` | `string` | Model input slot to feed the tensor into |
-| `output_slot_name` | `string` | Model output slot to read the tensor from |
-| `init_mode_str` | `string` | How to initialize at t=0: `"Zeros"`, `"StaticCapture"`, or `"FirstOutput"` |
-| `init_data_key` | `string` | DataManager key for `StaticCapture` init mode |
-| `init_frame` | `int` | Frame number for `StaticCapture` init mode |
+|---|---|---|
+| `slot_name` | `string` | Memory input slot name (on `MemoryFrameBinding`) |
+| `memory_index` | `int` | Position along `sequence_dim` (0 for single-frame slots) |
+| `frame.output_slot_name` | `string` | Model output slot to read the tensor from |
+| `frame.init` | `RecurrentInitVariant` | How to seed the cache at t=0 |
 
-### Initialization Modes
+A recurrent binding is **active** when `hasActiveRecurrentBinding()` is true:
+`output_slot_name` is non-empty and not `"(None)"`.
 
-At t=0, the recurrent input slot needs an initial tensor since no previous 
-output exists. Three strategies are supported:
+### Initialization modes
 
-1. **Zeros** — All-zeros tensor matching the input slot shape. Simple default.
-2. **StaticCapture** — Use a previously captured tensor (e.g., a ground-truth 
-   mask at a reference frame). Falls back to zeros if no capture exists.
-3. **FirstOutput** — Run the model once with zeros, use the raw output tensor 
-   as the initial state, then start the real sequence from frame 1. The t=0 
-   output is *not* decoded into DataManager.
+At t=0, the recurrent cache needs an initial tensor because no previous output
+exists. Three strategies are supported via `RecurrentInitVariant`:
 
-### Sequential Inference Loop
+| Mode | Struct | Behavior |
+|---|---|---|
+| **Zeros** | `ZerosInit` | All-zeros tensor matching the per-element input shape |
+| **StaticCapture** | `StaticCaptureInit` | Use a DataBank tensor or capture from DataManager at `data_key` / `frame`; falls back to zeros |
+| **FirstOutput** | `FirstOutputInit` | Run forward once with zeros at frame 0, skip decoding, use raw output as initial state; real sequence starts at frame 1 |
+
+`StaticCaptureInit` resolution (see `runRecurrentSequence()` t=0 block):
+
+1. Static `MemoryFrameBinding` at the same `memory_index` with DataBank source.
+2. `defaultBankEntryId(slot_name, memory_index)` in the session DataBank.
+3. On-the-fly `captureStaticInput()` from `StaticCaptureInit.data_key` at
+   `StaticCaptureInit.frame`.
+4. Zeros fallback with warning.
+
+## Sequential inference loop
 
 `SlotAssembler::runRecurrentSequence()` implements the frame loop:
 
 ```
 for each frame in [start_frame, start_frame + frame_count):
-    1. Assemble dynamic + static inputs (batch_size = 1)
-    2. Inject recurrent tensors from cache into input map
-    3. Call model.forward()
-    4. Decode outputs into DataManager
-    5. Cache output tensors for next frame's recurrent inputs
+    1. assembleInputs() — static positions + dynamic inputs (batch_size = 1)
+    2. Inject recurrent cache tensors at each active recurrent memory_index
+    3. runModelAndPostEncoder()
+    4. On frame 0 with FirstOutputInit: update cache, skip decode, continue
+    5. decodeOutputs() into DataManager
+    6. Cache output tensors for next frame's recurrent inputs
 ```
 
-Batch size is forced to 1 during recurrent inference because each frame 
-depends on the previous frame's output — parallel batching is impossible.
+Batch size is always 1 during recurrent inference — each frame depends on the
+previous frame's output.
 
-### Recurrent Cache
+### Recurrent cache
 
-The recurrent tensor cache lives in `SlotAssembler::Impl::recurrent_cache` 
-alongside the existing static tensor cache. Keys use the format 
-`"recurrent:input_slot_name"` (via `recurrentCacheKey()`).
+The cache lives in `SlotAssembler::Impl::recurrent_cache`:
+
+```cpp
+std::unordered_map<std::string, at::Tensor> recurrent_cache;
+```
+
+Keys use `recurrentCacheKey(input_slot_name)` → `"recurrent:{input_slot_name}"`.
 
 The cache is cleared:
+
 - When the model is reset (`resetModel()`)
-- At the start of each `runRecurrentSequence()` call
+- At the start of each `InferenceController::runRecurrentSequence()` call
+  (`clearRecurrentCache()`)
 - Explicitly via `clearRecurrentCache()`
 
-## UI Integration
+`resetModel()` does **not** clear the session `DataBank`.
 
-### Properties Widget
+### FirstOutput frame-0 behavior
 
-Each static (non-boolean-mask) input slot gets a "Recurrent" panel with:
+When any active recurrent binding uses `FirstOutputInit`, frame 0:
 
-- **Output slot combo** — Select which output slot feeds into this input
-- **Init mode combo** — Select initialization strategy (Zeros / Static Capture / First Output)
-- **Status label** — Shows the configured feedback mapping
+- Runs forward and decodes are **skipped** (`continue` before `decodeOutputs`).
+- All active recurrent bindings update their cache from the corresponding output
+  slots (including non-`FirstOutput` bindings on the same frame).
+- The real decoded sequence begins at frame 1.
+
+## UI integration
+
+### MemorySlotWidget
+
+Each memory input slot gets a `MemorySlotWidget`. Recurrent positions expose
+output-slot and init-mode controls via `RecurrentFrameSourceForm` (schema-driven
+`AutoParamWidget`).
 
 When any recurrent binding is active:
-- Batch size spinbox is locked to 1 and disabled
-- An explanatory tooltip explains why
 
-### View Widget
+- `dl::constraints::computeBatchSizeConstraint()` forces min=max=1
+- `DeepLearningPropertiesWidget::_updateBatchSizeConstraint()` disables the
+  batch spinbox with an explanatory tooltip
 
-The progress bar (normally hidden) shows frame-by-frame progress during 
-recurrent inference: "Frame N / M".
+### View widget
 
-### Run Action
+`recurrentProgressChanged(current, total)` drives the progress display during
+recurrent inference ("Frame N / M").
 
-The "↻ Recurrent" button in the bottom bar triggers 
-`_onRunRecurrentSequence()`, which:
+### Run action
 
-1. Prompts the user for how many frames to process
-2. Clears the recurrent cache
-3. Calls `runRecurrentSequence()` with progress reporting
-4. Updates the status label on completion
+The **↻ Recurrent** button calls `DeepLearningPropertiesWidget::_onRunRecurrentSequence()`:
 
-## State Persistence
+1. Validates model readiness and active recurrent bindings
+2. Prompts for frame count (default from batch spinbox or 100)
+3. Syncs bindings from UI to `DeepLearningState`
+4. Delegates to `InferenceController::runRecurrentSequence()`
 
-`RecurrentBindingData` entries are stored in `DeepLearningStateData::recurrent_bindings` 
-and serialized via reflect-cpp. They are cleared when the model changes 
-(model-specific bindings).
+Unlike batch inference, recurrent sequences run **synchronously on the main
+thread** inside `InferenceController` (no `QThread` worker). Progress is
+reported via `recurrentProgressChanged`, not `batchProgressChanged`.
 
-## Batch Size Constraints
+## State persistence
 
-Recurrent bindings force `batch_size = 1`. This is enforced both:
-- **In the UI**: spinbox disabled with tooltip explanation
-- **In the engine**: `runRecurrentSequence()` always passes `batch_size=1` 
-  to `assembleInputs()`
+`MemoryFrameBinding` entries (static and recurrent) are stored in
+`DeepLearningStateData::memory_frames` and serialized via reflect-cpp. Bindings
+are cleared when the model changes (model-specific configuration).
 
-This constraint exists because the output at frame *t* must be computed 
-before it can feed into frame *t+1* — the frames are inherently sequential.
+Encoded tensors in the session `DataBank` are **not** serialized — re-capture
+after workspace restore. See [Static Input Capture](static_input_capture.qmd).
+
+## Batch size constraints
+
+Recurrent bindings force `batch_size = 1`. Enforced in:
+
+- **UI** — spinbox disabled when `constraint.forced_by_recurrent` is true
+- **Engine** — `runRecurrentSequence()` always passes `batch_size=1` to
+  `assembleInputs()`
+
+See [Session Constraints](constraints.qmd).
+
+## Related documentation
+
+- [Hybrid Sequence Inputs](hybrid_sequence_inputs.qmd) — mixing static and recurrent positions
+- [Static Input Capture](static_input_capture.qmd) — DataBank capture for static and `StaticCaptureInit`
+- [InferenceController](../../ui/DeepLearning_Widget/Inference/inference_controller.qmd) — run orchestration and signals
