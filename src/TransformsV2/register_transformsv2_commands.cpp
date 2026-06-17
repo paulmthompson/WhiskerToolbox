@@ -19,12 +19,12 @@ void register_transformsv2_commands() {
     }
 
     commands::registerTypedCommand<commands::RunTransformsV2PipelineAtTime,
-                                 commands::RunTransformsV2PipelineAtTimeParams>(
+                                   commands::RunTransformsV2PipelineAtTimeParams>(
             reg,
             "RunTransformsV2PipelineAtTime",
             {.name = "RunTransformsV2PipelineAtTime",
              .description =
-                     "Run a saved TransformsV2 pipeline on a single frame (stub)",
+                     "Run a saved TransformsV2 pipeline on a single frame",
              .category = "transforms",
              .supports_undo = false,
              .supported_data_types = {"LineData", "MaskData", "PointData"}});

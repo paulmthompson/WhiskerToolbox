@@ -9,16 +9,17 @@ TransformsV2 `PipelineDescriptor` JSON files. It is registered from
 `src/TransformsV2/register_transformsv2_commands.cpp` and appears in
 `CommandPickerDialog` via the shared `CommandRegistry`.
 
-**Status:** Draft stub — validates `pipeline_path` and logs parameters; does not
-yet subset DataManager, execute the pipeline, or merge output. Tracked in
-[#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267).
+The command loads a widget/library-format pipeline JSON (not
+`DataManagerPipelineDescriptor`), subsets one frame from an input DataManager key,
+runs the pipeline off-DataManager via `executePipeline`, then creates or updates
+the output key.
 
 ## Source Files
 
 | File | Role |
 |------|------|
 | `src/TransformsV2/Commands/RunTransformsV2PipelineAtTime.hpp` | Command + params struct |
-| `src/TransformsV2/Commands/RunTransformsV2PipelineAtTime.cpp` | Stub `execute()` |
+| `src/TransformsV2/Commands/RunTransformsV2PipelineAtTime.cpp` | `execute()` implementation |
 | `src/TransformsV2/Commands/RunTransformsV2PipelineAtTimeUIHints.hpp` | `ParameterUIHints` (path browse for `pipeline_path`) |
 
 ## Parameters
@@ -35,9 +36,26 @@ struct RunTransformsV2PipelineAtTimeParams {
 | Field | Description |
 |-------|-------------|
 | `input_key` | DataManager key of the source object for the frame subset |
-| `output_key` | DataManager key where results will be merged |
+| `output_key` | DataManager key where results are created or merged |
 | `time` | Frame index; use `"${current_frame}"` or `"${mark_frame}"` in sequence JSON (expanded to a JSON number before deserialization, same as `ClearLineDataAtTime`) |
 | `pipeline_path` | Absolute path to a pipeline JSON file (browse defaults to the user pipeline library) |
+
+## Execution Flow
+
+1. Validate `input_key`, `output_key`, and `pipeline_path`; require `input_key` in DataManager.
+2. `loadPipelineFromFile(pipeline_path)` builds a typed `TransformPipeline`.
+3. `createTemporalSubset(input_key, [time, time])` extracts a single-frame input.
+4. `executePipeline(subset, pipeline)` runs transforms off-DataManager (multi-step
+   `PipelineStepDescriptor` chains are supported when types chain correctly).
+5. Store output:
+   - Inherit the input object's `TimeKey` when creating a new key.
+   - If `output_key` exists and the result type supports merge-overwrite
+     (`MaskData`, `LineData`, `PointData`), call `mergeOverwriteData`.
+   - If `output_key` exists with an incompatible type, return an error.
+   - Otherwise call `setData` to create or replace the output object.
+
+Terminal `range_reduction` entries in the JSON are loaded but not applied by
+`executePipeline` (same behavior as the TransformsV2 widget).
 
 ## UI Hints
 
@@ -49,13 +67,6 @@ fallback directory via `AutoParamWidget::registerDialogFallback()` pointing at
 
 `input_key` and `output_key` set `dynamic_combo = true` for future runtime
 population from DataManager keys in `CommandRowWidget`.
-
-## Future Execution (not implemented)
-
-1. Resolve `time` after variable substitution.
-2. `createTemporalSubset` for `input_key` at that frame.
-3. Run `TransformPipeline` from `PipelineDescriptor` off-DataManager.
-4. `mergeOverwriteData` into `output_key` at the resolved time ([#269](https://github.com/paulmthompson/WhiskerToolbox/issues/269)).
 
 ## Related
 

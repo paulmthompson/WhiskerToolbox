@@ -1,6 +1,6 @@
 /**
  * @file RunTransformsV2PipelineAtTime.hpp
- * @brief Command to run a saved TransformsV2 pipeline on a single frame (stub)
+ * @brief Command to run a saved TransformsV2 pipeline on a single frame
  */
 
 #ifndef RUN_TRANSFORMS_V2_PIPELINE_AT_TIME_COMMAND_HPP
@@ -28,7 +28,7 @@ struct RunTransformsV2PipelineAtTimeParams {
 };
 
 /**
- * @brief Runs a saved TransformsV2 pipeline on one frame (execution stub)
+ * @brief Runs a saved TransformsV2 pipeline on one frame
  */
 class RunTransformsV2PipelineAtTime : public ICommand {
 public:
@@ -40,8 +40,9 @@ public:
     [[nodiscard]] std::string commandName() const override;
     [[nodiscard]] std::string toJson() const override;
 
-    /// @pre `ctx.data_manager` is non-null
-    /// @post No DataManager mutation (stub implementation)
+    /// @pre `ctx.data_manager` is non-null; `input_key` and `output_key` are non-empty
+    /// @pre `input_key` exists in the DataManager
+    /// @post On success, `output_key` is created or updated with pipeline output at `time`
     CommandResult execute(CommandContext const & ctx) override;
 
 private:
