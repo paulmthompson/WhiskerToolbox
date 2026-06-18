@@ -44,18 +44,27 @@ TEST_CASE("binaryDistanceTransformEuclidean - single foreground pixel",
     REQUIRE_THAT(distance[2 * width + 1], WithinAbs(2.0F, 1.0e-4F));
 }
 
-TEST_CASE("binaryDistanceTransformEuclidean - filled rectangle center is farthest from edge",
+TEST_CASE("binaryForegroundDistanceTransformEuclidean - interior center is farthest from edge",
           "[distance_transform][masks]") {
 
     size_t const height = 7;
     size_t const width = 9;
-    auto const image = filledRectangle(height, width);
+    std::vector<uint8_t> image(height * width, 0);
+    for (size_t row = 1; row + 1 < height; ++row) {
+        for (size_t col = 1; col + 1 < width; ++col) {
+            image[row * width + col] = 1;
+        }
+    }
 
-    auto const distance = binaryDistanceTransformEuclidean(image, static_cast<int>(width), static_cast<int>(height));
+    auto const distance = binaryForegroundDistanceTransformEuclidean(
+            image,
+            static_cast<int>(width),
+            static_cast<int>(height));
 
     float const center = distance[(height / 2) * width + (width / 2)];
     float const corner = distance[0];
 
+    REQUIRE_THAT(corner, WithinAbs(0.0F, 1.0e-4F));
     REQUIRE(center > corner);
     REQUIRE_THAT(center, WithinAbs(3.0F, 0.25F));
 }
@@ -63,13 +72,15 @@ TEST_CASE("binaryDistanceTransformEuclidean - filled rectangle center is farthes
 TEST_CASE("distanceTransform1DSquared - three point line",
           "[distance_transform][masks]") {
 
+    // Seeds at indices 0 and 1 (f=0); index 2 is not a seed (f=100).
+    // d(2) = min((2-0)^2 + 0, (2-1)^2 + 0, (2-2)^2 + 100) = 1
     std::vector<float> const samples{0.0F, 0.0F, 100.0F};
     auto const transformed = distanceTransform1DSquared(samples);
 
     REQUIRE(transformed.size() == 3);
     REQUIRE_THAT(transformed[0], WithinAbs(0.0F, 1.0e-4F));
     REQUIRE_THAT(transformed[1], WithinAbs(0.0F, 1.0e-4F));
-    REQUIRE_THAT(transformed[2], WithinAbs(0.0F, 1.0e-4F));
+    REQUIRE_THAT(transformed[2], WithinAbs(1.0F, 1.0e-4F));
 }
 
 TEST_CASE("binaryForegroundDistanceTransformEuclidean - foreground distance to background",

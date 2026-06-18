@@ -12,7 +12,7 @@ struct ArcLengthFractionSpan {
 };
 
 /**
- * @brief Orthonormal right-handed basis in the plane: ê_x, ê_y (column vectors as components).
+ * @brief Orthonormal right-handed basis in the plane ex, ey (column vectors as components).
  */
 struct PlanarOrthonormalBasis2D {
     float ex_x = 1.0f;
