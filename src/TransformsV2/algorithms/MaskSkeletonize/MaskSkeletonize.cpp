@@ -20,13 +20,16 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 
 namespace {
 
+/// @brief One-pixel border so Zhang–Suen thinning is not biased at the raster edge
+static constexpr int kTightCanvasBorderPadding = 1;
+
 /// @brief Whether params specify an explicit full canvas (e.g. from MaskData image size)
 bool hasExplicitCanvas(MaskSkeletonizeParams const & params) {
     return params.image_width > 0 && params.image_height > 0;
 }
 
 /**
- * @brief Canvas sized to the axis-aligned bounding box of mask points
+ * @brief Canvas sized to the axis-aligned bounding box of mask points plus border padding
  */
 struct TightCanvas {
     ImageSize size;
@@ -37,19 +40,22 @@ struct TightCanvas {
 /**
  * @brief Compute tight canvas dimensions from mask point min/max extents
  * @pre mask must not be empty
+ * @post Canvas includes @ref kTightCanvasBorderPadding pixels of background on each side
  */
 TightCanvas computeTightCanvas(Mask2D const & mask) {
     auto const [min_point, max_point] = get_bounding_box(mask);
     TightCanvas canvas;
     canvas.min_x = min_point.x;
     canvas.min_y = min_point.y;
-    canvas.size.width = static_cast<int>(max_point.x - min_point.x + 1);
-    canvas.size.height = static_cast<int>(max_point.y - min_point.y + 1);
+    canvas.size.width = static_cast<int>(max_point.x - min_point.x + 1) +
+                        2 * kTightCanvasBorderPadding;
+    canvas.size.height = static_cast<int>(max_point.y - min_point.y + 1) +
+                         2 * kTightCanvasBorderPadding;
     return canvas;
 }
 
 /**
- * @brief Convert mask points to a binary image on a tight local canvas
+ * @brief Convert mask points to a binary image on a tight local canvas with border padding
  * @pre mask must not be empty
  */
 Image maskToBinaryImageTight(Mask2D const & mask, TightCanvas const & canvas) {
@@ -58,8 +64,8 @@ Image maskToBinaryImageTight(Mask2D const & mask, TightCanvas const & canvas) {
             0);
 
     for (auto const & point: mask) {
-        int const x = static_cast<int>(point.x - canvas.min_x);
-        int const y = static_cast<int>(point.y - canvas.min_y);
+        int const x = static_cast<int>(point.x - canvas.min_x) + kTightCanvasBorderPadding;
+        int const y = static_cast<int>(point.y - canvas.min_y) + kTightCanvasBorderPadding;
         image_data[static_cast<size_t>(y) * static_cast<size_t>(canvas.size.width) +
                    static_cast<size_t>(x)] = 1;
     }
@@ -68,16 +74,19 @@ Image maskToBinaryImageTight(Mask2D const & mask, TightCanvas const & canvas) {
 }
 
 /**
- * @brief Convert a local binary image back to mask coordinates with an origin offset
+ * @brief Convert a padded tight-canvas binary image back to absolute mask coordinates
  */
-Mask2D binaryImageToMaskWithOffset(Image const & binary_image, uint32_t offset_x, uint32_t offset_y) {
+Mask2D binaryImageToMaskWithTightCanvasOffset(Image const & binary_image, TightCanvas const & canvas) {
+    int const offset_x = static_cast<int>(canvas.min_x) - kTightCanvasBorderPadding;
+    int const offset_y = static_cast<int>(canvas.min_y) - kTightCanvasBorderPadding;
+
     std::vector<Point2D<uint32_t>> mask_points;
 
     for (int y = 0; y < binary_image.size.height; ++y) {
         for (int x = 0; x < binary_image.size.width; ++x) {
             if (binary_image.at(y, x) > 0) {
-                mask_points.emplace_back(static_cast<uint32_t>(x) + offset_x,
-                                       static_cast<uint32_t>(y) + offset_y);
+                mask_points.emplace_back(static_cast<uint32_t>(x + offset_x),
+                                       static_cast<uint32_t>(y + offset_y));
             }
         }
     }
@@ -102,7 +111,7 @@ Mask2D skeletonizeMaskOnTightCanvas(Mask2D const & mask) {
     TightCanvas const canvas = computeTightCanvas(mask);
     Image const binary_image = maskToBinaryImageTight(mask, canvas);
     Image const skeleton_image = fast_skeletonize(binary_image);
-    return binaryImageToMaskWithOffset(skeleton_image, canvas.min_x, canvas.min_y);
+    return binaryImageToMaskWithTightCanvasOffset(skeleton_image, canvas);
 }
 
 }// namespace

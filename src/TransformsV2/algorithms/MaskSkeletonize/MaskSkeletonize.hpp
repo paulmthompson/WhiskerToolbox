@@ -48,6 +48,9 @@ struct MaskSkeletonizeParams {
  * Converts the mask to a binary image on a canvas, applies morphological
  * thinning via `fast_skeletonize`, and converts the result back to mask points.
  *
+ * When canvas dimensions are omitted, the raster is sized to the mask bounding box
+ * plus a one-pixel background border so thinning is not biased at the image edge.
+ *
  * When applied to containers:
  * - MaskData → MaskData (one skeletonized mask per input mask)
  *
