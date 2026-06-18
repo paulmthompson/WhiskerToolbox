@@ -1,0 +1,77 @@
+/**
+ * @file MaskSkeletonize.hpp
+ * @brief Element-level mask skeletonization transform (Mask2D → Mask2D).
+ */
+
+#ifndef WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP
+#define WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP
+
+class Mask2D;
+
+namespace WhiskerToolbox::Transforms::V2 {
+struct ComputeContext;
+}
+
+namespace WhiskerToolbox::Transforms::V2::Examples {
+
+/**
+ * @brief Parameters for mask skeletonization
+ *
+ * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ *
+ * Example JSON:
+ * ```json
+ * {}
+ * ```
+ *
+ * Optional canvas dimensions (when both are positive):
+ * ```json
+ * {
+ *   "image_width": 640,
+ *   "image_height": 480
+ * }
+ * ```
+ */
+struct MaskSkeletonizeParams {
+    /// Canvas width in pixels; <= 0 uses 256 (matches V1 default)
+    int image_width = -1;
+
+    /// Canvas height in pixels; <= 0 uses 256 (matches V1 default)
+    int image_height = -1;
+};
+
+/**
+ * @brief Skeletonize a single mask element
+ *
+ * Element-level transform: Mask2D → Mask2D
+ *
+ * Converts the mask to a binary image on a canvas, applies morphological
+ * thinning via `fast_skeletonize`, and converts the result back to mask points.
+ *
+ * When applied to containers:
+ * - MaskData → MaskData (one skeletonized mask per input mask)
+ *
+ * @param mask Input mask points
+ * @param params Canvas dimensions (optional; defaults to 256×256)
+ * @return Skeletonized mask, or empty mask if input is empty or skeletonization yields no pixels
+ */
+Mask2D skeletonizeMask(
+        Mask2D const & mask,
+        MaskSkeletonizeParams const & params);
+
+/**
+ * @brief Skeletonize a mask with progress reporting and cancellation support
+ *
+ * @param mask Input mask points
+ * @param params Canvas dimensions (optional; defaults to 256×256)
+ * @param ctx Compute context for progress and cancellation
+ * @return Skeletonized mask, or empty mask on cancellation or empty input
+ */
+Mask2D skeletonizeMaskWithContext(
+        Mask2D const & mask,
+        MaskSkeletonizeParams const & params,
+        ComputeContext const & ctx);
+
+}// namespace WhiskerToolbox::Transforms::V2::Examples
+
+#endif// WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP

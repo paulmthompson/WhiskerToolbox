@@ -17,6 +17,7 @@
 #include "algorithms/LineSubsegment/LineSubsegment.hpp"
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
+#include "algorithms/MaskSkeletonize/MaskSkeletonize.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
@@ -60,6 +61,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<NoParams>();
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<MaskCentroidParams>();
+    registerPipelineStepFactoryFor<MaskSkeletonizeParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
@@ -170,6 +172,44 @@ auto const register_mask_centroid_ctx = RegisterContextTransform<Mask2D, Point2D
                 .output_type_name = "Point2D<float>",
                 .params_type_name = "MaskCentroidParams",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register MaskSkeletonizeTransform (Unary - takes Mask2D, returns Mask2D)
+auto const register_mask_skeletonize = RegisterTransform<Mask2D, Mask2D, MaskSkeletonizeParams>(
+        "SkeletonizeMask",
+        skeletonizeMask,
+        TransformMetadata{
+                .name = "SkeletonizeMask",
+                .description = "Skeletonize a binary mask to a single-pixel-wide centerline",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Mask2D),
+                .params_type = typeid(MaskSkeletonizeParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Mask2D",
+                .params_type_name = "MaskSkeletonizeParams",
+                .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of MaskSkeletonize
+auto const register_mask_skeletonize_ctx = RegisterContextTransform<Mask2D, Mask2D, MaskSkeletonizeParams>(
+        "SkeletonizeMaskWithContext",
+        skeletonizeMaskWithContext,
+        TransformMetadata{
+                .name = "SkeletonizeMaskWithContext",
+                .description = "Skeletonize a binary mask with progress reporting",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Mask2D),
+                .params_type = typeid(MaskSkeletonizeParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Mask2D",
+                .params_type_name = "MaskSkeletonizeParams",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

@@ -50,6 +50,7 @@ add_executable(test_TransformsV2
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineSubsegment/LineSubsegment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/MaskCentroid/MaskCentroid.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/MaskSkeletonize/MaskSkeletonize.test.cpp
         #Range Reductions
         #SumReduction
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.test.cpp

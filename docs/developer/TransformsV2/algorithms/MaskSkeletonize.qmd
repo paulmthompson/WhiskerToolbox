@@ -1,0 +1,92 @@
+---
+title: "SkeletonizeMask (TransformsV2)"
+---
+
+## Overview
+
+`SkeletonizeMask` is a V2 element-level transform that reduces a binary mask to a
+single-pixel-wide skeleton using morphological thinning (`fast_skeletonize`).
+
+| Property | Value |
+|----------|-------|
+| Registry name | `SkeletonizeMask` |
+| Element signature | `Mask2D → Mask2D` |
+| Container lift | `MaskData → MaskData` |
+| Context variant | `SkeletonizeMaskWithContext` |
+
+Source files:
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/algorithms/MaskSkeletonize/MaskSkeletonize.hpp` | Params + API |
+| `src/TransformsV2/algorithms/MaskSkeletonize/MaskSkeletonize.cpp` | Implementation |
+| `src/TransformsV2/core/RegisteredTransforms.cpp` | Static registration |
+
+## Algorithm
+
+For each input `Mask2D`:
+
+1. Resolve canvas size from `MaskSkeletonizeParams` (or default 256×256, matching V1 `apply_binary_image_algorithm`).
+2. `mask_to_binary_image` → `fast_skeletonize` → `binary_image_to_mask`.
+3. Return empty `Mask2D` if input is empty or skeletonization yields no pixels.
+
+V1 used container-level `apply_binary_image_algorithm`; V2 applies the same per-mask
+logic as an elemental function and relies on `TransformPipeline` for `MaskData` lifting.
+
+## Parameters
+
+```cpp
+struct MaskSkeletonizeParams {
+    int image_width = -1;   // <= 0 → 256
+    int image_height = -1;  // <= 0 → 256
+};
+```
+
+Empty JSON `{}` is valid (V1 had no parameters). Set both dimensions when the source
+`MaskData` has a defined image size:
+
+```json
+{
+  "image_width": 640,
+  "image_height": 480
+}
+```
+
+## Usage
+
+### Direct element call
+
+```cpp
+MaskSkeletonizeParams params;
+auto skeleton = skeletonizeMask(mask, params);
+```
+
+### Pipeline
+
+```cpp
+TransformPipeline pipeline;
+pipeline.addStep("SkeletonizeMask", params);
+auto view = pipeline.executeAsViewTyped<MaskData, Mask2D>(mask_data);
+```
+
+### DataManager JSON (V2)
+
+```json
+{
+  "steps": [{
+    "step_id": "1",
+    "transform_name": "SkeletonizeMask",
+    "input_key": "input_masks",
+    "output_key": "skeletonized_masks",
+    "parameters": {}
+  }]
+}
+```
+
+## Testing
+
+Tests live in `MaskSkeletonize.test.cpp` and share scenario fixtures with V1:
+
+- `tests/DataManager/fixtures/scenarios/mask/skeletonize_scenarios.hpp`
+
+Run via `ctest --preset linux-clang-release -R "mask_skeletonize"`.

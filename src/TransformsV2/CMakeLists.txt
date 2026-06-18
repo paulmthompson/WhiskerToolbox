@@ -77,6 +77,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/LinePointExtraction/LinePointExtraction.cpp
         algorithms/MaskCentroid/MaskCentroid.hpp
         algorithms/MaskCentroid/MaskCentroid.cpp
+        algorithms/MaskSkeletonize/MaskSkeletonize.hpp
+        algorithms/MaskSkeletonize/MaskSkeletonize.cpp
         algorithms/SincInterpolation/SincInterpolation.hpp
         algorithms/SincInterpolation/SincInterpolation.cpp
         algorithms/TensorPCA/TensorPCA.hpp
