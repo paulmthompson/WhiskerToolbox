@@ -33,10 +33,10 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  * ```
  */
 struct MaskSkeletonizeParams {
-    /// Canvas width in pixels; <= 0 uses 256 (matches V1 default)
+    /// Canvas width in pixels; <= 0 derives size from mask point extents
     int image_width = -1;
 
-    /// Canvas height in pixels; <= 0 uses 256 (matches V1 default)
+    /// Canvas height in pixels; <= 0 derives size from mask point extents
     int image_height = -1;
 };
 
@@ -52,7 +52,7 @@ struct MaskSkeletonizeParams {
  * - MaskData → MaskData (one skeletonized mask per input mask)
  *
  * @param mask Input mask points
- * @param params Canvas dimensions (optional; defaults to 256×256)
+ * @param params Optional full-canvas dimensions; when unset, canvas is sized to mask extents
  * @return Skeletonized mask, or empty mask if input is empty or skeletonization yields no pixels
  */
 Mask2D skeletonizeMask(
@@ -63,7 +63,7 @@ Mask2D skeletonizeMask(
  * @brief Skeletonize a mask with progress reporting and cancellation support
  *
  * @param mask Input mask points
- * @param params Canvas dimensions (optional; defaults to 256×256)
+ * @param params Optional full-canvas dimensions; when unset, canvas is sized to mask extents
  * @param ctx Compute context for progress and cancellation
  * @return Skeletonized mask, or empty mask on cancellation or empty input
  */

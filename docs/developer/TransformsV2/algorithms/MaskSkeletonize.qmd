@@ -26,8 +26,10 @@ Source files:
 
 For each input `Mask2D`:
 
-1. Resolve canvas size from `MaskSkeletonizeParams` (or default 256×256, matching V1 `apply_binary_image_algorithm`).
-2. `mask_to_binary_image` → `fast_skeletonize` → `binary_image_to_mask`.
+1. Resolve canvas size from `MaskSkeletonizeParams` when both dimensions are positive
+   (e.g. copied from `MaskData::getImageSize()`), otherwise size the canvas to the mask's
+   axis-aligned point extents via `get_bounding_box`.
+2. `mask_to_binary_image` / tight local rasterization → `fast_skeletonize` → mask points.
 3. Return empty `Mask2D` if input is empty or skeletonization yields no pixels.
 
 V1 used container-level `apply_binary_image_algorithm`; V2 applies the same per-mask
@@ -37,13 +39,14 @@ logic as an elemental function and relies on `TransformPipeline` for `MaskData` 
 
 ```cpp
 struct MaskSkeletonizeParams {
-    int image_width = -1;   // <= 0 → 256
-    int image_height = -1;  // <= 0 → 256
+    int image_width = -1;   // <= 0 → tight bbox from mask points
+    int image_height = -1;  // <= 0 → tight bbox from mask points
 };
 ```
 
-Empty JSON `{}` is valid (V1 had no parameters). Set both dimensions when the source
-`MaskData` has a defined image size:
+Empty JSON `{}` is valid. When both dimensions are omitted, each mask is rasterized on a
+canvas sized to its min/max point extents (minimal allocation per element). Set both
+dimensions when the source `MaskData` has a defined full image canvas:
 
 ```json
 {
