@@ -77,6 +77,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/LinePointExtraction/LinePointExtraction.cpp
         algorithms/MaskCentroid/MaskCentroid.hpp
         algorithms/MaskCentroid/MaskCentroid.cpp
+        algorithms/MaskMedianFilter/MaskMedianFilter.hpp
+        algorithms/MaskMedianFilter/MaskMedianFilter.cpp
         algorithms/MaskSkeletonize/MaskSkeletonize.hpp
         algorithms/MaskSkeletonize/MaskSkeletonize.cpp
         algorithms/MaskToLine/MaskToLine.hpp

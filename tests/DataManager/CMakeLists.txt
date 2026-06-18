@@ -73,6 +73,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/hole_filling.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/median_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/skeletonize.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/distance_transform.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/medial_axis_skeletonize.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/mask_utils.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp

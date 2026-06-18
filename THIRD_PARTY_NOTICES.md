@@ -64,6 +64,26 @@ from the build (no compilation or linking of the above paths).
 | **Files** | `src/DataObjects/Masks/utils/skeletonize.cpp`, `skeletonize.hpp` |
 | **Notes** | Attribution and license notice retained in `skeletonize.cpp` |
 
+### scikit-image medial_axis (single-pass connectivity thinning)
+
+| | |
+|---|---|
+| **Upstream** | scikit-image `morphology/_skeletonize.py` (`medial_axis`), `_skeletonize_various_cy.pyx` (`_skeletonize_loop`) |
+| **Copyright** | Massachusetts Institute of Technology, Broad Institute, scikit-image contributors |
+| **License** | BSD-3-Clause |
+| **Files** | `src/DataObjects/Masks/utils/medial_axis_skeletonize.cpp`, `medial_axis_skeletonize.hpp` |
+| **Notes** | Uses Felzenszwalb distance transform (below) for EDT; attribution in source file |
+
+### Felzenszwalb distance transform
+
+| | |
+|---|---|
+| **Upstream** | [Distance Transforms of Sampled Functions](https://cs.brown.edu/~pff/papers/dt-final.pdf) reference implementation |
+| **Copyright** | Pedro Felzenszwalb (2006) |
+| **License** | GPL-2.0-or-later |
+| **Files** | `src/DataObjects/Masks/utils/distance_transform.cpp`, `distance_transform.hpp` |
+| **Notes** | Adapted from user-provided reference code in `~/Downloads/dt`; original license header retained |
+
 ### Kd-Tree (SpatialIndex)
 
 | | |

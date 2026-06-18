@@ -1,0 +1,97 @@
+---
+title: "MedianFilterMask (TransformsV2)"
+---
+
+## Overview
+
+`MedianFilterMask` is a V2 element-level transform that applies median filtering to a
+binary mask to remove salt-and-pepper noise and smooth jagged boundaries.
+
+| Property | Value |
+|----------|-------|
+| Registry name | `MedianFilterMask` |
+| Element signature | `Mask2D → Mask2D` |
+| Container lift | `MaskData → MaskData` |
+| Context variant | `MedianFilterMaskWithContext` |
+
+Source files:
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/algorithms/MaskMedianFilter/MaskMedianFilter.hpp` | Params + API |
+| `src/TransformsV2/algorithms/MaskMedianFilter/MaskMedianFilter.cpp` | Implementation |
+| `src/DataObjects/Masks/utils/median_filter.cpp` | Core median filter |
+| `src/TransformsV2/core/RegisteredTransforms.cpp` | Static registration |
+
+## Algorithm
+
+For each input `Mask2D`:
+
+1. Resolve canvas size from `MaskMedianFilterParams` when both dimensions are positive,
+   otherwise size the canvas to the mask's axis-aligned point extents plus background
+   border padding (`max(1, window_size / 2)`).
+2. Rasterize mask points to a binary image on the chosen canvas.
+3. Apply `median_filter` with the configured odd window size.
+4. Convert filtered pixels back to absolute mask coordinates.
+5. Return empty `Mask2D` if input is empty or filtering removes all pixels.
+
+Invalid `window_size` values (even or non-positive) fall back to `3`.
+
+## Parameters
+
+```cpp
+struct MaskMedianFilterParams {
+    int window_size = 3;    // odd, >= 1
+    int image_width = -1;   // <= 0 → tight bbox from mask points
+    int image_height = -1;  // <= 0 → tight bbox from mask points
+};
+```
+
+Example JSON for pre-skeletonization smoothing:
+
+```json
+{
+  "window_size": 3
+}
+```
+
+## Usage
+
+### Pipeline chain (median → skeletonize → line)
+
+```cpp
+TransformPipeline pipeline;
+pipeline.addStep("MedianFilterMask", MaskMedianFilterParams{.window_size = 3});
+pipeline.addStep("SkeletonizeMask", MaskSkeletonizeParams{.method = SkeletonizeMethod::MedialAxis});
+pipeline.addStep("MaskToLine", MaskToLineParams{});
+auto view = pipeline.executeAsViewTyped<MaskData, Line2D>(mask_data);
+```
+
+### DataManager JSON (V2)
+
+```json
+{
+  "steps": [
+    {
+      "step_id": "1",
+      "transform_name": "MedianFilterMask",
+      "input_key": "input_masks",
+      "output_key": "smoothed_masks",
+      "parameters": { "window_size": 3 }
+    },
+    {
+      "step_id": "2",
+      "transform_name": "SkeletonizeMask",
+      "input_key": "smoothed_masks",
+      "output_key": "skeletonized_masks",
+      "parameters": { "method": "MedialAxis" }
+    }
+  ]
+}
+```
+
+## Testing
+
+Tests live in `MaskMedianFilter.test.cpp`.
+
+Run via `ctest --preset my-clang-release -R "mask_median_filter"`.

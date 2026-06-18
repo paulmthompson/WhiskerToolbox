@@ -5,7 +5,7 @@ title: "SkeletonizeMask (TransformsV2)"
 ## Overview
 
 `SkeletonizeMask` is a V2 element-level transform that reduces a binary mask to a
-single-pixel-wide skeleton using morphological thinning (`fast_skeletonize`).
+single-pixel-wide skeleton.
 
 | Property | Value |
 |----------|-------|
@@ -20,6 +20,9 @@ Source files:
 |------|------|
 | `src/TransformsV2/algorithms/MaskSkeletonize/MaskSkeletonize.hpp` | Params + API |
 | `src/TransformsV2/algorithms/MaskSkeletonize/MaskSkeletonize.cpp` | Implementation |
+| `src/DataObjects/Masks/utils/skeletonize.cpp` | Zhang–Suen thinning |
+| `src/DataObjects/Masks/utils/medial_axis_skeletonize.cpp` | Medial-axis skeleton |
+| `src/DataObjects/Masks/utils/distance_transform.cpp` | Felzenszwalb EDT |
 | `src/TransformsV2/core/RegisteredTransforms.cpp` | Static registration |
 
 ## Algorithm
@@ -28,28 +31,46 @@ For each input `Mask2D`:
 
 1. Resolve canvas size from `MaskSkeletonizeParams` when both dimensions are positive
    (e.g. copied from `MaskData::getImageSize()`), otherwise size the canvas to the mask's
-   axis-aligned point extents via `get_bounding_box`.
-2. `mask_to_binary_image` / tight local rasterization → `fast_skeletonize` → mask points.
-3. Return empty `Mask2D` if input is empty or skeletonization yields no pixels.
+   axis-aligned point extents via `get_bounding_box`, plus a one-pixel background border
+   on each side so thinning is not biased at the raster edge.
+2. Rasterize mask points to a binary image on the chosen canvas.
+3. Apply the selected skeletonization method (see below).
+4. Convert skeleton pixels back to absolute mask coordinates.
+5. Return empty `Mask2D` if input is empty or skeletonization yields no pixels.
 
-V1 used container-level `apply_binary_image_algorithm`; V2 applies the same per-mask
-logic as an elemental function and relies on `TransformPipeline` for `MaskData` lifting.
+### Methods
+
+| `method` | Algorithm | Best for |
+|----------|-----------|----------|
+| `ZhangSuen` (default) | Morphological thinning (`fast_skeletonize`, scikit-image) | Fast, general-purpose thinning |
+| `MedialAxis` | Euclidean distance transform (Felzenszwalb) + single-pass medial-axis thinning (scikit-image) | Thick, staggered, or off-center masks where a geometric centerline is desired |
+
+Medial-axis skeletonization is typically more centered on thick bars than Zhang–Suen, which
+can hug the top edge of staggered rectangular shapes. For jagged whisker-like masks, chain
+with `MedianFilterMask` first (`window_size: 3`) to reduce boundary noise before skeletonizing.
+Note that medial axis may still produce short side branches; see scikit-image guidance to
+prefer `ZhangSuen` when fewer branches matter more than centering.
 
 ## Parameters
 
 ```cpp
+enum class SkeletonizeMethod {
+    ZhangSuen,
+    MedialAxis,
+};
+
 struct MaskSkeletonizeParams {
+    SkeletonizeMethod method = SkeletonizeMethod::ZhangSuen;
     int image_width = -1;   // <= 0 → tight bbox from mask points
     int image_height = -1;  // <= 0 → tight bbox from mask points
 };
 ```
 
-Empty JSON `{}` is valid. When both dimensions are omitted, each mask is rasterized on a
-canvas sized to its min/max point extents (minimal allocation per element). Set both
-dimensions when the source `MaskData` has a defined full image canvas:
+Empty JSON `{}` uses `ZhangSuen` on a tight canvas. Example with medial axis on a full canvas:
 
 ```json
 {
+  "method": "MedialAxis",
   "image_width": 640,
   "image_height": 480
 }
@@ -61,6 +82,7 @@ dimensions when the source `MaskData` has a defined full image canvas:
 
 ```cpp
 MaskSkeletonizeParams params;
+params.method = SkeletonizeMethod::MedialAxis;
 auto skeleton = skeletonizeMask(mask, params);
 ```
 
@@ -81,15 +103,18 @@ auto view = pipeline.executeAsViewTyped<MaskData, Mask2D>(mask_data);
     "transform_name": "SkeletonizeMask",
     "input_key": "input_masks",
     "output_key": "skeletonized_masks",
-    "parameters": {}
+    "parameters": {
+      "method": "MedialAxis"
+    }
   }]
 }
 ```
 
 ## Testing
 
-Tests live in `MaskSkeletonize.test.cpp` and share scenario fixtures with V1:
+Tests live in:
 
-- `tests/DataManager/fixtures/scenarios/mask/skeletonize_scenarios.hpp`
+- `MaskSkeletonize.test.cpp` — V2 transform, canvas modes, Zhang vs MedialAxis on `mask_207252`
+- `distance_transform.test.cpp`, `medial_axis_skeletonize.test.cpp` — low-level algorithms
 
-Run via `ctest --preset linux-clang-release -R "mask_skeletonize"`.
+Run via `ctest --preset my-clang-release -R "mask_skeletonize|distance_transform|medial_axis"`.

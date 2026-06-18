@@ -15,6 +15,10 @@ set(MASKDATA_SOURCES
     utils/mask_utils.cpp
     utils/skeletonize.cpp
     utils/skeletonize.hpp
+    utils/distance_transform.cpp
+    utils/distance_transform.hpp
+    utils/medial_axis_skeletonize.cpp
+    utils/medial_axis_skeletonize.hpp
 )
 
 add_library(MaskData STATIC ${MASKDATA_SOURCES})

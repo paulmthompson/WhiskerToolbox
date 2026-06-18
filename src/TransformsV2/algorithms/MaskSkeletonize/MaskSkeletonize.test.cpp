@@ -245,6 +245,20 @@ TEST_CASE("V2 MaskSkeletonizeParams - JSON Validation",
         REQUIRE(params.value().image_height == 480);
     }
 
+    SECTION("Accept MedialAxis method") {
+        std::string const json = R"({"method": "MedialAxis"})";
+        auto const params = loadParametersFromJson<MaskSkeletonizeParams>(json);
+        REQUIRE(params);
+        REQUIRE(params.value().method == SkeletonizeMethod::MedialAxis);
+    }
+
+    SECTION("Default method is ZhangSuen") {
+        std::string const json = R"({})";
+        auto const params = loadParametersFromJson<MaskSkeletonizeParams>(json);
+        REQUIRE(params);
+        REQUIRE(params.value().method == SkeletonizeMethod::ZhangSuen);
+    }
+
     SECTION("Reject malformed JSON") {
         std::string const json = R"({
             "image_width": 640,
@@ -321,17 +335,32 @@ TEST_CASE("V2 Mask Skeletonize - Multiple time frames via scenario",
 TEST_CASE("V2 Mask Skeletonize - Tight canvas preserves absolute coordinates",
           "[transforms][v2][mask_skeletonize][tight_canvas][coordinates]") {
 
-    SECTION("3x3 square at (3,3) skeletonizes to center pixel (4,4)") {
-        Mask2D const input = filledSquareMask(3, 3, 3);
-        MaskSkeletonizeParams const params = tightCanvasParams();
+    SECTION("Horizontal bar skeleton preserves absolute middle row") {
+        Mask2D input;
+        uint32_t const x0 = 10;
+        uint32_t const y0 = 20;
+        uint32_t const width = 9;
+        uint32_t const height = 5;
+        for (uint32_t y = y0; y < y0 + height; ++y) {
+            for (uint32_t x = x0; x < x0 + width; ++x) {
+                input.push_back({x, y});
+            }
+        }
+
+        MaskSkeletonizeParams params = tightCanvasParams();
+        params.method = SkeletonizeMethod::ZhangSuen;
 
         auto const result = skeletonizeMask(input, params);
 
-        REQUIRE(result.size() == 1);
-        REQUIRE(maskContainsPoint(result, 4, 4));
-        auto const [min_x, min_y] = minMaskCoordinates(result);
-        REQUIRE(min_x == 4);
-        REQUIRE(min_y == 4);
+        REQUIRE_FALSE(result.empty());
+        uint32_t const expected_row = y0 + height / 2;
+        float const mean_row = meanSkeletonRowInColumnRange(result, x0, x0 + width);
+        REQUIRE(mean_row >= 0.0f);
+        REQUIRE(std::abs(mean_row - static_cast<float>(expected_row)) <= 1.0f);
+        for (auto const & point: result) {
+            REQUIRE(point.x >= x0);
+            REQUIRE(point.x < x0 + width);
+        }
     }
 
     SECTION("Tight canvas matches explicit canvas for offset square") {
@@ -372,7 +401,8 @@ TEST_CASE("V2 Mask Skeletonize - mask_207252.png staggered whisker pattern",
                           << min_point.y << "," << max_point.y << "]");
 
     SECTION("Tight canvas skeleton row bias") {
-        MaskSkeletonizeParams const params = tightCanvasParams();
+        MaskSkeletonizeParams params = tightCanvasParams();
+        params.method = SkeletonizeMethod::ZhangSuen;
         auto const skeleton = skeletonizeMask(input, params);
 
         REQUIRE_FALSE(skeleton.empty());
@@ -389,6 +419,37 @@ TEST_CASE("V2 Mask Skeletonize - mask_207252.png staggered whisker pattern",
         // Document observed behavior: Zhang–Suen skeleton hugs the top row of 2–3 px bars
         REQUIRE(stats.skeleton_on_top_row > stats.skeleton_on_center_row);
         REQUIRE(stats.skeleton_on_top_row > stats.skeleton_on_bottom_row);
+    }
+
+    SECTION("MedialAxis matches scikit-image skeleton count on tight canvas") {
+        MaskSkeletonizeParams medial_params = tightCanvasParams();
+        medial_params.method = SkeletonizeMethod::MedialAxis;
+
+        auto const medial_skeleton = skeletonizeMask(input, medial_params);
+
+        INFO("medial_skeleton_points=" << medial_skeleton.size());
+        // Reference: skimage.medial_axis(tight_canvas, rng=0) on mask_207252.png
+        REQUIRE(medial_skeleton.size() == 497);
+    }
+
+    SECTION("MedialAxis reduces top-row bias versus ZhangSuen on staggered bars") {
+        MaskSkeletonizeParams zhang_params = tightCanvasParams();
+        zhang_params.method = SkeletonizeMethod::ZhangSuen;
+        MaskSkeletonizeParams medial_params = tightCanvasParams();
+        medial_params.method = SkeletonizeMethod::MedialAxis;
+
+        auto const zhang_skeleton = skeletonizeMask(input, zhang_params);
+        auto const medial_skeleton = skeletonizeMask(input, medial_params);
+
+        auto const zhang_stats = analyzeSkeletonRowBias(input, zhang_skeleton);
+        auto const medial_stats = analyzeSkeletonRowBias(input, medial_skeleton);
+
+        INFO("zhang top=" << zhang_stats.skeleton_on_top_row
+                          << " center=" << zhang_stats.skeleton_on_center_row);
+        INFO("medial top=" << medial_stats.skeleton_on_top_row
+                           << " center=" << medial_stats.skeleton_on_center_row);
+
+        REQUIRE(medial_stats.skeleton_on_top_row < zhang_stats.skeleton_on_top_row);
     }
 
     SECTION("Tight canvas matches explicit 640x480 canvas") {
@@ -478,8 +539,8 @@ TEST_CASE("V2 Mask Skeletonize - Staggered horizontal rectangles skeleton topolo
                 }
             }
         };
-        addBar(input, 5, 5, bar_width, bar_height);   // br at (24, 9)
-        addBar(input, 24, 9, bar_width, bar_height);   // tl at (24, 9)
+        addBar(input, 5, 5, bar_width, bar_height); // br at (24, 9)
+        addBar(input, 24, 9, bar_width, bar_height);// tl at (24, 9)
         addBar(input, 43, 13, bar_width, bar_height);
 
         auto const skeleton = analyzeBars(input, "corner", 5, 5, bar_width, bar_height, 3, 19, 4);

@@ -15,6 +15,14 @@ struct ComputeContext;
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
 /**
+ * @brief Skeletonization algorithm selection
+ */
+enum class SkeletonizeMethod {
+    ZhangSuen,///< Morphological thinning (Zhang–Suen), adapted from scikit-image
+    MedialAxis///< Distance-transform medial axis, Felzenszwalb EDT + scikit-image thinning
+};
+
+/**
  * @brief Parameters for mask skeletonization
  *
  * Uses reflect-cpp for automatic JSON serialization/deserialization.
@@ -30,9 +38,18 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  *   "image_width": 640,
  *   "image_height": 480
  * }
+ * ```json
+ * {
+ *   "method": "MedialAxis",
+ *   "image_width": 640,
+ *   "image_height": 480
+ * }
  * ```
  */
 struct MaskSkeletonizeParams {
+    /// Thinning algorithm to apply
+    SkeletonizeMethod method = SkeletonizeMethod::ZhangSuen;
+
     /// Canvas width in pixels; <= 0 derives size from mask point extents
     int image_width = -1;
 
@@ -45,8 +62,8 @@ struct MaskSkeletonizeParams {
  *
  * Element-level transform: Mask2D → Mask2D
  *
- * Converts the mask to a binary image on a canvas, applies morphological
- * thinning via `fast_skeletonize`, and converts the result back to mask points.
+ * Converts the mask to a binary image on a canvas, applies the selected skeletonization
+ * algorithm, and converts the result back to mask points.
  *
  * When canvas dimensions are omitted, the raster is sized to the mask bounding box
  * plus a one-pixel background border so thinning is not biased at the image edge.

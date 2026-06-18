@@ -9,6 +9,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "Masks/utils/mask_utils.hpp"
+#include "Masks/utils/medial_axis_skeletonize.hpp"
 #include "Masks/utils/skeletonize.hpp"
 #include "core/ComputeContext.hpp"
 
@@ -86,7 +87,7 @@ Mask2D binaryImageToMaskWithTightCanvasOffset(Image const & binary_image, TightC
         for (int x = 0; x < binary_image.size.width; ++x) {
             if (binary_image.at(y, x) > 0) {
                 mask_points.emplace_back(static_cast<uint32_t>(x + offset_x),
-                                       static_cast<uint32_t>(y + offset_y));
+                                         static_cast<uint32_t>(y + offset_y));
             }
         }
     }
@@ -95,11 +96,27 @@ Mask2D binaryImageToMaskWithTightCanvasOffset(Image const & binary_image, TightC
 }
 
 /**
+ * @brief Apply the selected skeletonization algorithm to a binary image
+ */
+Image skeletonizeBinaryImage(Image const & binary_image, SkeletonizeMethod method) {
+    switch (method) {
+        case SkeletonizeMethod::MedialAxis:
+            return medial_axis_skeletonize(binary_image);
+        case SkeletonizeMethod::ZhangSuen:
+            return fast_skeletonize(binary_image);
+    }
+    return fast_skeletonize(binary_image);
+}
+
+/**
  * @brief Skeletonize using an explicit full canvas (absolute mask coordinates)
  */
-Mask2D skeletonizeMaskOnExplicitCanvas(Mask2D const & mask, ImageSize const & image_size) {
+Mask2D skeletonizeMaskOnExplicitCanvas(
+        Mask2D const & mask,
+        ImageSize const & image_size,
+        SkeletonizeMethod method) {
     Image const binary_image = mask_to_binary_image(mask, image_size);
-    Image const skeleton_image = fast_skeletonize(binary_image);
+    Image const skeleton_image = skeletonizeBinaryImage(binary_image, method);
     return binary_image_to_mask(skeleton_image);
 }
 
@@ -107,10 +124,10 @@ Mask2D skeletonizeMaskOnExplicitCanvas(Mask2D const & mask, ImageSize const & im
  * @brief Skeletonize using a tight per-mask canvas derived from point extents
  * @pre mask must not be empty
  */
-Mask2D skeletonizeMaskOnTightCanvas(Mask2D const & mask) {
+Mask2D skeletonizeMaskOnTightCanvas(Mask2D const & mask, SkeletonizeMethod method) {
     TightCanvas const canvas = computeTightCanvas(mask);
     Image const binary_image = maskToBinaryImageTight(mask, canvas);
-    Image const skeleton_image = fast_skeletonize(binary_image);
+    Image const skeleton_image = skeletonizeBinaryImage(binary_image, method);
     return binaryImageToMaskWithTightCanvasOffset(skeleton_image, canvas);
 }
 
@@ -127,9 +144,9 @@ Mask2D skeletonizeMask(
     Mask2D result;
     if (hasExplicitCanvas(params)) {
         ImageSize const image_size{params.image_width, params.image_height};
-        result = skeletonizeMaskOnExplicitCanvas(mask, image_size);
+        result = skeletonizeMaskOnExplicitCanvas(mask, image_size, params.method);
     } else {
-        result = skeletonizeMaskOnTightCanvas(mask);
+        result = skeletonizeMaskOnTightCanvas(mask, params.method);
     }
 
     if (result.empty()) {

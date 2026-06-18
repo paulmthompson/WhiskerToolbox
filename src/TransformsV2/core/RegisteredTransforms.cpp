@@ -17,6 +17,7 @@
 #include "algorithms/LineSubsegment/LineSubsegment.hpp"
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
+#include "algorithms/MaskMedianFilter/MaskMedianFilter.hpp"
 #include "algorithms/MaskSkeletonize/MaskSkeletonize.hpp"
 #include "algorithms/MaskToLine/MaskToLine.hpp"
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
@@ -63,6 +64,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<NoParams>();
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<MaskCentroidParams>();
+    registerPipelineStepFactoryFor<MaskMedianFilterParams>();
     registerPipelineStepFactoryFor<MaskSkeletonizeParams>();
     registerPipelineStepFactoryFor<MaskToLineParams>();
     registerPipelineStepFactoryFor<RemoveLineOutliersParams>();
@@ -176,6 +178,44 @@ auto const register_mask_centroid_ctx = RegisterContextTransform<Mask2D, Point2D
                 .output_type_name = "Point2D<float>",
                 .params_type_name = "MaskCentroidParams",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register MaskMedianFilterTransform (Unary - takes Mask2D, returns Mask2D)
+auto const register_mask_median_filter = RegisterTransform<Mask2D, Mask2D, MaskMedianFilterParams>(
+        "MedianFilterMask",
+        applyMedianFilter,
+        TransformMetadata{
+                .name = "MedianFilterMask",
+                .description = "Apply median filtering to smooth mask boundaries and remove noise",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Mask2D),
+                .params_type = typeid(MaskMedianFilterParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Mask2D",
+                .params_type_name = "MaskMedianFilterParams",
+                .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of MaskMedianFilter
+auto const register_mask_median_filter_ctx = RegisterContextTransform<Mask2D, Mask2D, MaskMedianFilterParams>(
+        "MedianFilterMaskWithContext",
+        applyMedianFilterWithContext,
+        TransformMetadata{
+                .name = "MedianFilterMaskWithContext",
+                .description = "Apply median filtering to a mask with progress reporting",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Mask2D),
+                .params_type = typeid(MaskMedianFilterParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Mask2D",
+                .params_type_name = "MaskMedianFilterParams",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
