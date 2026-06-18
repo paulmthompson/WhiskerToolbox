@@ -79,6 +79,10 @@ set(TRANSFORM_V2_SOURCES
         algorithms/MaskCentroid/MaskCentroid.cpp
         algorithms/MaskSkeletonize/MaskSkeletonize.hpp
         algorithms/MaskSkeletonize/MaskSkeletonize.cpp
+        algorithms/MaskToLine/MaskToLine.hpp
+        algorithms/MaskToLine/MaskToLine.cpp
+        algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp
+        algorithms/RemoveLineOutliers/RemoveLineOutliers.cpp
         algorithms/SincInterpolation/SincInterpolation.hpp
         algorithms/SincInterpolation/SincInterpolation.cpp
         algorithms/TensorPCA/TensorPCA.hpp

@@ -18,6 +18,8 @@
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/MaskSkeletonize/MaskSkeletonize.hpp"
+#include "algorithms/MaskToLine/MaskToLine.hpp"
+#include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
@@ -62,6 +64,8 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<MaskCentroidParams>();
     registerPipelineStepFactoryFor<MaskSkeletonizeParams>();
+    registerPipelineStepFactoryFor<MaskToLineParams>();
+    registerPipelineStepFactoryFor<RemoveLineOutliersParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
@@ -210,6 +214,82 @@ auto const register_mask_skeletonize_ctx = RegisterContextTransform<Mask2D, Mask
                 .output_type_name = "Mask2D",
                 .params_type_name = "MaskSkeletonizeParams",
                 .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register MaskToLineTransform (Unary - takes Mask2D, returns Line2D)
+auto const register_mask_to_line = RegisterTransform<Mask2D, Line2D, MaskToLineParams>(
+        "MaskToLine",
+        maskToLine,
+        TransformMetadata{
+                .name = "MaskToLine",
+                .description = "Order mask points into a directed line polyline",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(MaskToLineParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "MaskToLineParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of MaskToLine
+auto const register_mask_to_line_ctx = RegisterContextTransform<Mask2D, Line2D, MaskToLineParams>(
+        "MaskToLineWithContext",
+        maskToLineWithContext,
+        TransformMetadata{
+                .name = "MaskToLineWithContext",
+                .description = "Order mask points into a line with progress reporting",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(MaskToLineParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "MaskToLineParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register RemoveLineOutliersTransform (Unary - takes Line2D, returns Line2D)
+auto const register_remove_line_outliers = RegisterTransform<Line2D, Line2D, RemoveLineOutliersParams>(
+        "RemoveLineOutliers",
+        removeLineOutliers,
+        TransformMetadata{
+                .name = "RemoveLineOutliers",
+                .description = "Remove geometric outlier points from an ordered line via polynomial fitting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(RemoveLineOutliersParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "RemoveLineOutliersParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of RemoveLineOutliers
+auto const register_remove_line_outliers_ctx = RegisterContextTransform<Line2D, Line2D, RemoveLineOutliersParams>(
+        "RemoveLineOutliersWithContext",
+        removeLineOutliersWithContext,
+        TransformMetadata{
+                .name = "RemoveLineOutliersWithContext",
+                .description = "Remove geometric outlier points from a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(RemoveLineOutliersParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "RemoveLineOutliersParams",
+                .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
