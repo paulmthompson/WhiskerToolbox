@@ -1,0 +1,226 @@
+---
+title: "DataManagerPipelineRunner"
+description: "Headless CLI and library API for batch DataManager JSON workflows"
+---
+
+## Overview
+
+`DataManagerPipelineRunner` is a Qt-free executable for running batch neural data workflows from a single JSON file. A typical pipeline loads data into a `DataManager`, runs legacy transformations and/or command-sequence operations, then saves selected outputs to disk.
+
+The executable is a thin composition root around the reusable `JsonPipelineRunner` library in `src/DataManager/JsonPipeline/`. Tests and other headless tools can call `runJsonPipeline()` or `runJsonPipelineFile()` directly without linking the CLI target.
+
+For end-user examples and CLI invocation, see the [JSON Pipeline Runner user guide](../../user_guide/data_manager/json_pipeline_runner.qmd).
+
+## Source Locations
+
+| Component | Path | Role |
+|-----------|------|------|
+| CLI executable | `src/DataManagerPipelineRunner/` | Parses arguments, registers domain commands, runs pipeline |
+| Pipeline library | `src/DataManager/JsonPipeline/` | Qt-free `runJsonPipeline()` / `runJsonPipelineFile()` API |
+| Unit tests | `tests/DataManager/JsonPipelineRunner.test.cpp` | Catch2 coverage of library behavior |
+| CLI smoke tests | `tests/DataManagerPipelineRunner/` | ctest integration against the built executable |
+
+The executable is built outside `ENABLE_UI` and is installed on Windows via `packaging/Install_Windows.cmake`.
+
+## Execution Model
+
+Pipelines run in up to three phases, controlled by `JsonPipelineOptions`:
+
+```
+┌─────────────────────┐     ┌──────────────────┐     ┌─────────────┐
+│ Load & Transform    │ ──► │ commands[]       │ ──► │ saves[]     │
+│ (legacy JSON loader)│     │ (CommandSequence)│     │ (SaveData)  │
+└─────────────────────┘     └──────────────────┘     └─────────────┘
+```
+
+1. **Load and transform** — Normalizes the config and delegates to `load_data_from_json_config()`. This reuses the existing DataManager JSON loader, including legacy transformation steps embedded in the `data` array.
+2. **Commands** — Parses the root-level `commands` array into a `commands::CommandSequenceDescriptor` and executes it through `commands::executeSequence()`.
+3. **Saves** — Executes each root-level `saves[]` entry through `commands::executeSingleCommand("SaveData", ...)`, with variable substitution and path resolution.
+
+Phases can be skipped with CLI flags (`--no-load-transform`, `--no-commands`, `--no-saves`). Command and save phases can continue after individual failures when `--continue-on-command-error` or `--continue-on-save-error` is set.
+
+On failure, `JsonPipelineResult` reports the failing phase (`parse`, `normalize`, `load_and_transform`, `command`, or `save`), a human-readable `m_error_message`, and — for command failures — `m_failed_command_index`.
+
+## JSON Configuration
+
+The runner accepts two root shapes:
+
+### Legacy array root
+
+An array is passed unchanged to `load_data_from_json_config()`:
+
+```json
+[
+  {
+    "data_type": "points",
+    "name": "nose",
+    "format": "csv",
+    "filepath": "nose.csv"
+  }
+]
+```
+
+### Object root (recommended)
+
+An object with optional `variables`, `data`, `transformations`, `commands`, and `saves`:
+
+```json
+{
+  "variables": {
+    "session": "/data/session_001"
+  },
+  "data": [
+    {
+      "data_type": "points",
+      "name": "nose",
+      "format": "csv",
+      "filepath": "${session}/nose.csv"
+    }
+  ],
+  "transformations": {
+    "steps": []
+  },
+  "commands": [],
+  "saves": [
+    {
+      "data_key": "nose",
+      "format": "csv",
+      "path": "${session}/outputs/nose.csv"
+    }
+  ]
+}
+```
+
+**Normalization rules** (`normalizeForLegacyLoad()`):
+
+- A root-level `transformations` object is appended to the legacy `data` array as `{ "transformations": ... }`.
+- Root `variables` are copied into the normalized loader config.
+- An object with only `commands` and/or `saves` (no `data`) is valid — useful for command-only or save-only workflows.
+
+**Path resolution:**
+
+- `data[].filepath` follows existing DataManager JSON loader semantics (relative to the config file directory when loaded from a file).
+- `saves[].path` values are resolved relative to the directory containing the pipeline JSON file, then passed to `SaveData`.
+
+**Variables:**
+
+- Top-level `variables` must be string-valued.
+- `${name}` substitution is applied to command sequences and save descriptors via `commands::substituteVariables()`.
+
+## Library API
+
+Namespace: `WhiskerToolbox::DataManagerPipeline`
+
+```cpp
+#include "JsonPipeline/JsonPipelineRunner.hpp"
+
+DataManager data_manager;
+
+auto result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+        data_manager,
+        "pipeline.json");
+
+if (!result.m_success) {
+    // result.m_failed_phase, result.m_error_message
+}
+```
+
+### Key types
+
+| Type | Purpose |
+|------|---------|
+| `JsonPipelineOptions` | Phase toggles and stop-on-error behavior |
+| `JsonPipelineResult` | `m_success`, `m_failed_phase`, `m_error_message`, `m_loaded_data`, `m_command_affected_keys`, `m_failed_command_index`, `m_saved_paths` |
+| `JsonPipelinePhase` | `Parse`, `Normalize`, `LoadAndTransform`, `Command`, `Save` |
+| `runJsonPipeline()` | Run from an in-memory `nlohmann::json` value and explicit `base_path` |
+| `runJsonPipelineFile()` | Read config from disk; `base_path` is the config file's parent directory |
+| `phaseToString()` | Stable diagnostic string for a phase enum value |
+
+`JsonPipelineRunner` is part of the `DataManager` library and is **not thread-safe** — callers must not invoke it concurrently on the same `DataManager` instance without external synchronization.
+
+## CLI
+
+```bash
+DataManagerPipelineRunner [options] <pipeline.json>
+```
+
+| Option | Effect |
+|--------|--------|
+| `--help`, `-h` | Print usage and exit `0` |
+| `--no-load-transform` | Skip load/transform phase |
+| `--no-commands` | Skip `commands[]` phase |
+| `--continue-on-command-error` | Continue after failed commands |
+| `--no-saves` | Skip `saves[]` phase |
+| `--continue-on-save-error` | Continue after failed saves |
+
+**Exit codes:**
+
+| Code | Meaning |
+|------|---------|
+| `0` | Pipeline succeeded |
+| `1` | Pipeline failed or unhandled exception |
+| `2` | Invalid CLI arguments |
+
+On success, the CLI prints loaded entry count, command-affected key count, and saved output paths. On failure, it prints the failed phase and error message to stderr.
+
+## Command Registration
+
+`JsonPipelineRunner` calls `commands::register_core_commands()` internally before executing command and save phases. Domain commands are **not** registered by the library — callers must register them at the composition root to avoid circular library dependencies.
+
+`DataManagerPipelineRunner/main.cpp` registers:
+
+```cpp
+commands::register_core_commands();
+WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
+dl::register_deeplearning_commands();
+```
+
+Pipelines that use `SynthesizeData`, TransformsV2 commands, or DeepLearning commands require this startup registration. See [SynthesizeData](../Commands/synthesize_data.qmd) and [TransformsV2 Command Registration](../transforms_v2/command_registration.qmd).
+
+## Static Registration and Linking
+
+`MediaData` and `DataSynthesizer` rely on file-scope static registration. The CLI uses whole-archive linking so headless builds see the same factory registrations as the GUI:
+
+```cmake
+# Linux — src/DataManagerPipelineRunner/CMakeLists.txt
+-Wl,--whole-archive MediaData DataSynthesizer -Wl,--no-whole-archive
+```
+
+The executable also links `TransformsV2` and `DeepLearning` for domain command dispatch. Transform algorithm registration (`ElementRegistry`) still requires whole-archive linking of `TransformsV2` when commands delegate to registered transforms at runtime — the same constraint as the GUI executable.
+
+## Relationship to Other Systems
+
+| System | Relationship |
+|--------|--------------|
+| [Command Architecture](../Commands/index.qmd) | `commands[]` and `saves[]` execute through the shared command registry |
+| `load_data_from_json_config()` | Load/transform phase reuses the existing DataManager JSON loader |
+| `DataTransform_Widget` | GUI can load and execute JSON pipeline configs interactively |
+| [TriageSession Widget](../ui/TriageSession_Widget/index.qmd) | Interactive command-sequence authoring; runner is the headless counterpart |
+
+## Testing
+
+**Library tests** (`tests/DataManager/JsonPipelineRunner.test.cpp`):
+
+- Object-root and legacy array config loading
+- Root-level `transformations` normalization
+- `saves[]` execution and relative path resolution
+- Command sequence execution and failure reporting
+- Normalize-phase validation errors
+
+Run targeted tests:
+
+```bash
+ctest --preset linux-clang-release --output-on-failure -R "JsonPipelineRunner"
+```
+
+**CLI smoke tests** (`tests/DataManagerPipelineRunner/`, Linux only):
+
+| Test | Config | Expected |
+|------|--------|----------|
+| `DataManagerPipelineRunner_success_empty_pipeline` | `{ "commands": [] }` | Exit `0` |
+| `DataManagerPipelineRunner_failure_missing_save_key` | Save of nonexistent key | Exit nonzero (`WILL_FAIL`) |
+
+```bash
+ctest --preset linux-clang-release --output-on-failure -R "DataManagerPipelineRunner_"
+```

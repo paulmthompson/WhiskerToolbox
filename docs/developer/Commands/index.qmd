@@ -163,7 +163,7 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 
 The command library lives in `src/Commands/` as a standalone static library above `DataManager`. This keeps it free from Qt, available to unit tests, Python bindings, and headless batch tools (`DataManagerPipelineRunner`), and — crucially — allows commands to wrap libraries that sit *above* `DataManager` (such as `TransformsV2` and `DeepLearning`) without creating circular dependencies.
 
-For headless batch workflows, see [JSON Pipeline Runner](../DataManager/json_pipeline_runner.qmd). For interactive sequence authoring, see [TriageSession Widget](../ui/TriageSession_Widget/index.qmd) and [Command Log Widget](command_log_widget.qmd).
+For headless batch workflows, see [DataManagerPipelineRunner](../DataManagerPipelineRunner/index.qmd). For interactive sequence authoring, see [TriageSession Widget](../ui/TriageSession_Widget/index.qmd) and [Command Log Widget](command_log_widget.qmd).
 
 ## Core Types
 
