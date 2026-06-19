@@ -1,13 +1,13 @@
 ---
 title: "PlotDataExport Library"
-format: html
+description: "Qt-free CSV serialization for raster, PSTH, and heatmap plot data"
 ---
 
 ## Overview
 
-`PlotDataExport` is a lightweight, Qt-free library that serializes plot data to CSV format. It provides free functions that take core data types (`GatherResult`, `HistogramData`, `HeatmapRowData`) and produce CSV strings suitable for analysis in Python (pandas/seaborn/matplotlib) and R (readr/ggplot2).
+`PlotDataExport` is a header-only, Qt-free library in namespace `PlotDataExport` that serializes plot data to CSV strings. Free functions take core data types (`GatherResult`, `HistogramData`, `HeatmapRowData`, `PerTrialHeatmapInput`) and return CSV suitable for analysis in Python (pandas/seaborn/matplotlib) and R (readr/ggplot2).
 
-The library follows a strict separation of concerns: **it handles serialization only**. File dialogs, button placement, and user interaction are the responsibility of each plot widget.
+The library handles **serialization only**. File dialogs, button placement, and user interaction are the responsibility of each plot widget.
 
 ## Location
 
@@ -16,17 +16,23 @@ The library follows a strict separation of concerns: **it handles serialization 
 ## Dependencies
 
 ```
-PlotDataExport
-├── GatherResult (INTERFACE — provides GatherResult<T> template)
-│   ├── TransformsV2
-│   └── DataManager
-├── CorePlotting (for HistogramData, HeatmapRowData)
-└── TimeFrame (for index → time conversion)
+PlotDataExport (INTERFACE)
+├── GatherResult
+├── CorePlotting (HistogramData, HeatmapRowData)
+└── TimeFrame
 ```
 
 No Qt dependency. No IO library dependency.
 
 ## Headers
+
+| Header | Primary export function |
+|--------|-------------------------|
+| `RasterCSVExport.hpp` | `exportRasterToCSV()` |
+| `HistogramCSVExport.hpp` | `exportHistogramToCSV()` |
+| `HeatmapCSVExport.hpp` | `exportHeatmapToCSV()`, `exportHeatmapPerTrialToCSV()` |
+
+All functions accept an optional `std::string_view delimiter` (default `","`).
 
 ### RasterCSVExport.hpp
 
@@ -34,13 +40,25 @@ Exports raster/event plot data to **long-form tidy CSV**.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `trial_index` | int | Trial number (0-based, respects sort order) |
+| `trial_index` | int | Trial number (0-based, respects gather order) |
 | `event_key` | string | Name of the event series |
 | `relative_time` | double | Time relative to alignment event (in time units) |
 
-Input: a vector of `RasterSeriesInput` structs, each containing an event key, a `GatherResult<DigitalEventSeries>`, and a `TimeFrame` pointer for index-to-time conversion.
+**Input struct** — `RasterSeriesInput`:
 
-Data flow per row: `time_frame->getTimeAtIndex(event.time()) - gathered.alignmentTimeAt(trial_idx)`
+| Field | Type | Description |
+|-------|------|-------------|
+| `event_key` | `std::string` | Series name written to the `event_key` column |
+| `gathered` | `GatherResult<DigitalEventSeries> const *` | Trial-aligned views (non-null) |
+| `time_frame` | `TimeFrame const *` | Converts `TimeFrameIndex` to absolute time (non-null) |
+
+Relative time per event:
+
+`time_frame->getTimeAtIndex(event.time()) - gathered->alignmentTimeAt(trial_index)`
+
+**Metadata** — `RasterExportMetadata`: `alignment_key`, `window_size`.
+
+Comment header `export_type`: `raster`.
 
 ### HistogramCSVExport.hpp
 
@@ -52,20 +70,30 @@ Exports PSTH/histogram data to **long-form tidy CSV**.
 | `event_key` | string | Name of the event series |
 | `value` | double | Bin value (count, firing rate, z-score — depends on scaling) |
 
-Input: a vector of `HistogramSeriesInput` structs, each containing an event key and a `CorePlotting::HistogramData` reference.
+**Input struct** — `HistogramSeriesInput`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `event_key` | `std::string` | Series name |
+| `data` | `CorePlotting::HistogramData const *` | Pre-computed histogram (non-null) |
+
+**Metadata** — `HistogramExportMetadata`: `alignment_key`, `window_size`, `scaling_mode`, `estimation_method`.
+
+Comment header `export_type`: `psth`.
 
 ### HeatmapCSVExport.hpp
 
 Two export modes:
 
-**Aggregate** — wide matrix CSV.
+**Aggregate** — `exportHeatmapToCSV()` produces a **wide matrix CSV**.
 
-- Header row: `unit_key, <bin_center_0>, <bin_center_1>, ..., <bin_center_N>`
-- Data rows: one per unit, values are the scaled firing rates.
+- Header row: `unit_key, <bin_center_0>, <bin_center_1>, ...`
+- Data rows: one per unit; bin centers are reconstructed from the first row's `bin_start` and `bin_width`.
+- Input: parallel `std::vector<std::string>` unit keys and `std::vector<CorePlotting::HeatmapRowData>` rows (same length).
 
-Input: unit key strings + `vector<CorePlotting::HeatmapRowData>`.
+Comment header `export_type`: `heatmap_aggregate`.
 
-**Per-trial** — long-form tidy CSV.
+**Per-trial** — `exportHeatmapPerTrialToCSV()` produces **long-form tidy CSV**.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -74,58 +102,80 @@ Input: unit key strings + `vector<CorePlotting::HeatmapRowData>`.
 | `bin_center` | double | Center of the time bin |
 | `value` | double | Per-trial bin value |
 
-Input: unit key strings + `vector<RateEstimateWithTrials>`.
+**Input struct** — `PerTrialHeatmapInput`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `unit_key` | `std::string` | Unit name |
+| `times` | `std::vector<double>` | Bin centers (shared across trials) |
+| `per_trial_values` | `std::vector<std::vector<double>>` | `[trial_idx][time_idx]` |
+
+`PerTrialHeatmapInput` is self-contained so the library does not depend on `EventRateEstimation` (UI layer). Widgets convert `RateEstimateWithTrials` to `PerTrialHeatmapInput` before calling the export API.
+
+Comment header `export_type`: `heatmap_per_trial`.
+
+**Metadata** — `HeatmapExportMetadata`: `alignment_key`, `window_size`, `scaling_mode`, `estimation_method`.
 
 ## Metadata Comment Header
 
-All export functions prepend a comment block (lines starting with `#`) to the CSV output. This block records alignment key, window size, scaling mode, and other parameters needed for reproducibility. Both Python (`pd.read_csv(comment='#')`) and R (`read_csv(comment='#')`) handle this natively.
+All export functions prepend a comment block (lines starting with `#`). Optional metadata fields are omitted when empty; `window_size` is written only when `> 0.0`.
 
-Example:
+Example (raster):
+
 ```
 # export_type: raster
 # alignment_key: stimulus_onset
 # window_size: 1000.0
-# exported_at: 2026-04-08T14:30:00
 trial_index,event_key,relative_time
 0,spikes,-245.3
 0,spikes,-102.1
-0,spikes,55.7
-1,spikes,-312.0
 ...
 ```
 
+Both Python (`pd.read_csv(comment='#')`) and R (`read_csv(comment='#')`) skip these lines natively.
+
 ## Widget Integration Pattern
 
-Each plot widget follows the same pattern to expose CSV export:
+Each plot widget follows the same pattern:
 
 1. **PropertiesWidget** adds an "Export CSV" button and emits an `exportCSVRequested()` signal.
-2. **WidgetRegistration** connects the signal to a `handleExportCSV()` slot on the main widget.
-3. **Main widget** opens a file dialog (`AppFileDialog`), collects data from the rendering widget or re-gathers from `DataManager`, calls the appropriate `PlotDataExport` free function, and writes the result to disk.
+2. **WidgetRegistration** connects the signal to `handleExportCSV()` on the main widget.
+3. **Main widget** opens `AppFileDialog`, collects data from the rendering widget, calls the appropriate `PlotDataExport` function, and writes the CSV string to disk.
 
 ```
 PropertiesWidget  ──signal──▶  MainWidget::handleExportCSV()
                                    │
                                    ├─ AppFileDialog::getSaveFileName()
-                                   ├─ collect data (re-gather or cached)
-                                   ├─ exportRasterToCSV() / exportHistogramToCSV() / ...
+                                   ├─ collect*ExportData() on OpenGL widget
+                                   ├─ PlotDataExport::export*ToCSV()
                                    └─ write string to file
 ```
 
 ## Consuming Widgets
 
-| Widget | Export Function | Data Source |
-|--------|----------------|-------------|
-| EventPlotWidget | `exportRasterToCSV()` | Re-gathered `GatherResult<DigitalEventSeries>` per event series |
-| PSTHWidget | `exportHistogramToCSV()` | Re-computed per-series `HistogramData` from `PSTHPlotOpenGLWidget::collectHistogramExportData()` |
-| HeatmapWidget | `exportHeatmapToCSV()` | Re-run pipeline via `HeatmapOpenGLWidget::collectHeatmapExportData()` |
+| Widget | Export function | Data collection |
+|--------|----------------|-----------------|
+| EventPlotWidget | `exportRasterToCSV()` | `EventPlotOpenGLWidget::collectRasterExportData()` |
+| PSTHWidget | `exportHistogramToCSV()` | `PSTHPlotOpenGLWidget::collectHistogramExportData()` |
+| HeatmapWidget | `exportHeatmapToCSV()` (aggregate only) | `HeatmapOpenGLWidget::collectHeatmapExportData()` |
 
-## Testing Strategy
+`exportHeatmapPerTrialToCSV()` is implemented and tested in the library but **not yet wired** in `HeatmapWidget` — the widget always exports the aggregate wide-matrix format.
 
-Unit tests in `tests/PlotDataExport/` construct small data objects with known values, call export functions, and verify the CSV output string (correct columns, values, row counts). No Qt or OpenGL fixture is needed because the library has no GUI dependencies.
+Widget CMake targets link `PlotDataExport` privately: `EventPlotWidget`, `PSTHWidget`, `HeatmapWidget`.
+
+## Testing
+
+Unit tests live in `tests/PlotDataExport/` (`test_RasterCSVExport.cpp`, `test_HistogramCSVExport.cpp`, `test_HeatmapCSVExport.cpp`). Tests construct small data objects with known values and verify CSV output (columns, values, row counts, delimiters, metadata comments). No Qt or OpenGL fixtures are required.
+
+Because `PlotDataExport` depends on `GatherResult` → `TransformsV2`, the test executable uses `--whole-archive` linking for `TransformsV2` (same pattern as other transform-dependent tests).
+
+```bash
+ctest --preset linux-clang-release --output-on-failure -R "PlotDataExport"
+```
 
 ## See Also
 
 - [User Guide: CSV Plot Export](../../user_guide/export/csv_plot_export.qmd) — end-user documentation with Python and R loading examples
-- [GatherResult](../GatherResult/index.qmd) — the core gather/view collection used by raster export
-- [CorePlotting](../CorePlotting/index.qmd) — provides `HistogramData` and `HeatmapRowData`
-- [EventRateEstimation](../Plots/Common/EventRateEstimation.qmd) — provides `RateEstimate` and `RateEstimateWithTrials`
+- [GatherResult](../GatherResult/index.qmd) — trial-aligned views used by raster export
+- [CorePlotting](../CorePlotting/index.qmd) — `HistogramData` and `HeatmapRowData`
+- [EventRateEstimation](../Plots/Common/EventRateEstimation.qmd) — `RateEstimateWithTrials` (widgets convert this to `PerTrialHeatmapInput` for per-trial export)
