@@ -255,7 +255,7 @@ color control (like EventPlot) is optional and not required for SVG export.
 
 ### Step 8.2: Add `exportToSVG()` to `ScatterPlotOpenGLWidget` — **Complete**
 
-Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md). The scatter plot
+Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/index.qmd). The scatter plot
 caches `_scene` as `std::unique_ptr<RenderableScene>`; live view/projection matrices are copied
 onto the scene before export (the OpenGL path passes matrices into `SceneRenderer::render()`,
 so the CPU scene would otherwise keep identity defaults).

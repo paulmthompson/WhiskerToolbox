@@ -15,4 +15,3 @@ Implementations live in `SVGUtils.cpp` (non-inline) and are linked via the `Plot
 ## See also
 
 - [PlottingSVG index](index.qmd)
-- [Roadmap](roadmap.md) — Steps 1.2–1.3

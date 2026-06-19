@@ -277,7 +277,7 @@ using the `PlottingSVG` library infrastructure. See that phase for the step-by-s
 **Status**: **Complete** (steps 5.1–5.6). Heatmap SVG export uses `PlottingSVG` end-to-end; see also
 [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd),
 [DataViewer_Widget](../../DataViewer_Widget/index.qmd), and the library-wide
-[PlottingSVG roadmap](../../../PlottingSVG/roadmap.md).
+[PlottingSVG library](../../../PlottingSVG/index.qmd).
 
 **Goal**: Export the current heatmap view to SVG for publication-quality figures.
 
@@ -317,7 +317,7 @@ export without rebuilding.
 
 ### Step 5.2: Add `exportToSVG()` to `HeatmapOpenGLWidget` — **Done**
 
-Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md):
+Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/index.qmd):
 
 ```cpp
 [[nodiscard]] QString exportToSVG();

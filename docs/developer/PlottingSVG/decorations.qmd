@@ -25,4 +25,3 @@ Decorations implement `SVGDecoration`: they emit SVG fragments in **canvas pixel
 ## See also
 
 - [PlottingSVG index](index.qmd)
-- [Roadmap](roadmap.md) — Step 1.6

@@ -14,4 +14,3 @@ New widgets should prefer `SVGSceneRenderer` and `SVGDocument` (named layers); t
 ## See also
 
 - [PlottingSVG index](index.qmd)
-- [Roadmap](roadmap.md)

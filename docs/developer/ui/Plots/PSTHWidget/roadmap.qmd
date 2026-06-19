@@ -148,7 +148,7 @@ Add a `RenderableScene` member so the scene persists for SVG export.
 
 ### Step 5.3: Add `exportToSVG()` to `PSTHPlotOpenGLWidget` — **Done**
 
-Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md): empty early-out when both
+Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/index.qmd): empty early-out when both
 `rectangle_batches` and `poly_line_batches` are empty; copies `_view_matrix` / `_projection_matrix`
 onto `_scene`; `PlottingSVG::SVGSceneRenderer` with widget canvas size and
 `_state->getBackgroundColor()` when state is set.
