@@ -1,5 +1,6 @@
 ---
 title: "Observer Thread-Safety Roadmap"
+description: "Task list for hardening ObserverData callbacks against cross-thread Qt violations"
 ---
 
 ## Overview
@@ -9,9 +10,12 @@ callback system against thread-safety violations. It describes the problem,
 the patterns that fix it, and step-by-step instructions for applying each
 pattern to existing code.
 
+For the core `ObserverData` API and integration patterns, see the
+[Observer Library](index.qmd).
+
 For the broader concurrency architecture — ownership model, write
 reservations, and staged design — see
-[Concurrency Architecture](concurrency_architecture.qmd).
+[Concurrency Architecture](../DataManager/concurrency_architecture.qmd).
 
 ## Problem Statement
 
@@ -24,9 +28,20 @@ segfaults.
 
 This was discovered via a crash in `MLCoreWidget`: the `PipelineWorker`
 (QThread) called `writePredictions()` → `dm.setData()` → `notifyObservers()`
-on the background thread. Over 20 widget callbacks directly called
+on the background thread. Many widget callbacks directly called
 `QComboBox::clear()`, `QTreeWidget::clear()`, and similar — all require the
 main thread.
+
+::: {.callout-note}
+## Re-entrancy vs. Thread Safety
+
+`ObserverData::notifyObservers()` copies the observer map to a snapshot
+before invoking callbacks. Adding or removing observers from within a callback
+is therefore safe for a single notification round — additions take effect on
+the next `notifyObservers()` call. This does **not** make the library
+thread-safe: concurrent `addObserver`, `removeObserver`, or `notifyObservers`
+calls from different threads remain undefined behavior.
+:::
 
 ### Why It Surfaces Intermittently
 
@@ -37,9 +52,12 @@ manifest.
 
 ## Current State of Callbacks
 
-An audit of all `addObserver` call sites found two categories:
+An audit of Qt widget `addObserver` call sites (paths relative to
+`src/WhiskerToolbox/`) found two categories. Re-audit after major refactors —
+several widgets moved out of `DataManager_Widget/` into standalone modules or
+`DataInspector_Widget/`.
 
-### Safe Callbacks (6 call sites)
+### Safe Callbacks
 
 These callbacks marshal work to the main thread before touching Qt widgets:
 
@@ -51,8 +69,10 @@ These callbacks marshal work to the main thread before touching Qt widgets:
 | FeatureSelectionPanel | `MLCore_Widget/UI/FeatureSelectionPanel/FeatureSelectionPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
 | LabelConfigPanel | `MLCore_Widget/UI/LabelConfigPanel/LabelConfigPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
 | GroupManager | `GroupManagementWidget/GroupManager.cpp` | `QMetaObject::invokeMethod(this, ...)` |
+| DataViewer_Widget | `DataViewer_Widget/UI/DataViewer_Widget.cpp` | `QMetaObject::invokeMethod(..., Qt::QueuedConnection)` |
+| DataManagerParameter_Widget | `DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.cpp` | `QMetaObject::invokeMethod(self, ...)` |
 
-### Unsafe Callbacks (20+ call sites)
+### Unsafe Callbacks
 
 These callbacks directly manipulate Qt widgets inside the observer callback
 body. They are safe **only** when called from the main thread:
@@ -60,27 +80,28 @@ body. They are safe **only** when called from the main thread:
 | Widget | File |
 |--------|------|
 | Whisker_Widget | `Whisker_Widget/Whisker_Widget.cpp` |
-| ML_Widget | `ML_Widget/ML_Widget.cpp` |
-| Media_Window | `Media_Widget/Media_Window.cpp` |
-| Media_Widget | `Media_Widget/Media_Widget.cpp` |
-| Feature_Tree_Widget | `DataManager_Widget/Feature_Tree_Widget/Feature_Tree_Widget.cpp` |
-| Feature_Table_Widget | `DataManager_Widget/Feature_Table_Widget/Feature_Table_Widget.cpp` |
+| Media_Window | `Media_Widget/Rendering/Media_Window/Media_Window.cpp` |
+| Media_Widget | `Media_Widget/UI/Media_Widget.cpp` |
+| Feature_Tree_Widget | `Feature_Tree_Widget/Feature_Tree_Widget.cpp` |
+| Feature_Table_Widget | `Feature_Table_Widget/Feature_Table_Widget.cpp` |
 | TimeScrollBar | `TimeScrollBar/TimeScrollBar.cpp` |
 | TableDesignerWidget | `TableDesignerWidget/TableDesignerWidget.cpp` |
-| LineInspector | `DataManager_Widget/ObjectInspectors/LineInspector.cpp` |
-| PointInspector | `DataManager_Widget/ObjectInspectors/PointInspector.cpp` |
-| MaskInspector | `DataManager_Widget/ObjectInspectors/MaskInspector.cpp` |
-| TimeFrame_Table_Widget | `TimeFrame/TimeFrame_Table_Widget.cpp` |
-| DeepLearningPropertiesWidget | `Plots/.../DeepLearningPropertiesWidget.cpp` |
-| TemporalProjectionViewPropertiesWidget | `Plots/.../TemporalProjectionViewPropertiesWidget.cpp` |
-| ACFPropertiesWidget | `Plots/.../ACFPropertiesWidget.cpp` |
-| OnionSkinViewPropertiesWidget | `Plots/.../OnionSkinViewPropertiesWidget.cpp` |
-| PlotAlignmentWidget | `Plots/.../PlotAlignmentWidget.cpp` |
-| ScatterPlotPropertiesWidget | `Plots/.../ScatterPlotPropertiesWidget.cpp` |
-| EventPlotPropertiesWidget | `Plots/.../EventPlotPropertiesWidget.cpp` |
-| 3DPlotPropertiesWidget | `Plots/.../3DPlotPropertiesWidget.cpp` |
-| PSTHPropertiesWidget | `Plots/.../PSTHPropertiesWidget.cpp` |
-| LinePlotPropertiesWidget | `Plots/.../LinePlotPropertiesWidget.cpp` |
+| DimReductionPanel | `MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` |
+| LineInspector | `DataInspector_Widget/LineData/LineInspector.cpp` |
+| PointInspector | `DataInspector_Widget/PointData/PointInspector.cpp` |
+| MaskInspector | `DataInspector_Widget/MaskData/MaskInspector.cpp` |
+| DataInspectorPropertiesWidget | `DataInspector_Widget/DataInspectorPropertiesWidget.cpp` |
+| TimeFrame_Table_Widget | `TimeFrame_Table_Widget/TimeFrame_Table_Widget.cpp` |
+| DeepLearningPropertiesWidget | `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` |
+| TemporalProjectionViewPropertiesWidget | `Plots/TemporalProjectionViewWidget/UI/TemporalProjectionViewPropertiesWidget.cpp` |
+| ACFPropertiesWidget | `Plots/ACFWidget/UI/ACFPropertiesWidget.cpp` |
+| OnionSkinViewPropertiesWidget | `Plots/OnionSkinViewWidget/UI/OnionSkinViewPropertiesWidget.cpp` |
+| PlotAlignmentWidget | `Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.cpp` |
+| ScatterPlotPropertiesWidget | `Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.cpp` |
+| EventPlotPropertiesWidget | `Plots/EventPlotWidget/UI/EventPlotPropertiesWidget.cpp` |
+| 3DPlotPropertiesWidget | `Plots/3DPlot/UI/3DPlotPropertiesWidget.cpp` |
+| PSTHPropertiesWidget | `Plots/PSTHWidget/UI/PSTHPropertiesWidget.cpp` |
+| LinePlotPropertiesWidget | `Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.cpp` |
 
 ## Fix Patterns
 
@@ -96,8 +117,10 @@ completion handler writes to DataManager after the worker finishes.
 **When to use:** Any `QThread` worker that produces data to write into
 DataManager (pipelines, inference, batch transforms).
 
-**Already implemented:** `MLCoreWidget` for both ClassificationPipeline and
-ClusteringPipeline.
+**Already implemented:** `MLCoreWidget` sets `defer_dm_writes = true` for
+`ClassificationPipeline`, `ClusteringPipeline`, `DimReductionPipeline`, and
+`SupervisedDimReductionPipeline`. The `defer_dm_writes` flag is also available
+on those pipeline config structs for non-GUI callers.
 
 #### How It Works
 
@@ -253,9 +276,13 @@ violations at the call site rather than waiting for a crash downstream.
 **When to use:** As a global safety net. Once added, every existing and
 future `notifyObservers()` call is automatically guarded.
 
+**Status:** Not yet implemented. The current `notifyObservers()` copies the
+observer map to a snapshot and logs per-callback timing via `spdlog` before
+invoking callbacks.
+
 #### Implementation
 
-Add to `Observer_Data.cpp`:
+Add to `Observer_Data.cpp` (preserving the existing snapshot iteration):
 
 ```cpp
 #include <cassert>
@@ -280,9 +307,8 @@ void ObserverData::notifyObservers() {
     }
 #endif
 
-    for (auto const & [id, callback] : _observers) {
-        callback();
-    }
+    auto const snapshot = _observers;
+    // ... existing spdlog timing and snapshot iteration ...
 }
 ```
 
@@ -337,9 +363,11 @@ void MyWidget::refreshList() {
 
 These tasks use the existing API. Each can be done as an independent PR.
 
-- [x] **Defer MLCore pipeline writes** — `ClassificationPipeline` and
-  `ClusteringPipeline` store output in result; `MLCoreWidget` writes on
-  main thread. *(Done — the fix that prompted this document.)*
+- [x] **Defer MLCore pipeline writes** — `ClassificationPipeline`,
+  `ClusteringPipeline`, `DimReductionPipeline`, and
+  `SupervisedDimReductionPipeline` support `defer_dm_writes`; `MLCoreWidget`
+  writes deferred output on the main thread. *(Done — the fix that prompted
+  this document.)*
 
 - [ ] **Add `ASSERT_MAIN_THREAD` macro** — Define in a shared header
   (e.g., `src/CoreUtilities/ThreadAssert.hpp`). Zero runtime cost in
@@ -349,9 +377,10 @@ These tasks use the existing API. Each can be done as an independent PR.
   opt-in `#ifdef WHISKER_ASSERT_OBSERVER_MAIN_THREAD`. Enable locally,
   run the application, fix any firing assertions.
 
-- [ ] **Harden DataManager_Widget callbacks** — Wrap observer callbacks in
-  `Feature_Tree_Widget`, `Feature_Table_Widget`, `LineInspector`,
-  `PointInspector`, `MaskInspector` with `QTimer::singleShot(0, ...)`.
+- [ ] **Harden feature and inspector callbacks** — Wrap observer callbacks
+  in `Feature_Tree_Widget`, `Feature_Table_Widget`, `LineInspector`,
+  `PointInspector`, `MaskInspector`, and `DataInspectorPropertiesWidget`
+  with `QTimer::singleShot(0, ...)`.
 
 - [ ] **Harden Media_Widget callbacks** — Wrap `Media_Widget` and
   `Media_Window` observer callbacks.
@@ -360,7 +389,7 @@ These tasks use the existing API. Each can be done as an independent PR.
   observer callbacks. These are numerous but follow the same pattern.
 
 - [ ] **Harden remaining widget callbacks** — `Whisker_Widget`,
-  `ML_Widget`, `TimeScrollBar`, `TableDesignerWidget`,
+  `DimReductionPanel`, `TimeScrollBar`, `TableDesignerWidget`,
   `TimeFrame_Table_Widget`.
 
 ### Phase 2: Structural Improvements
@@ -375,6 +404,8 @@ These tasks use the existing API. Each can be done as an independent PR.
   ```
 
   The `NotifyObservers` enum already exists in `Observer_Data.hpp`.
+  Individual data objects (e.g., `LineData::addAtTime`) already accept
+  `NotifyObservers`, but `DataManager::setData()` always notifies today.
 
 - [ ] **Create `QtObserverBridge` utility** — A small Qt helper that wraps
   `ObserverData::addObserver()` with automatic main-thread marshaling:
@@ -443,8 +474,8 @@ These tasks use the existing API. Each can be done as an independent PR.
 
 | Roadmap | Scope | Relationship |
 |---------|-------|-------------|
-| [Concurrency Architecture](concurrency_architecture.qmd) | DataManager ownership, write reservations, borrow tracking | This document addresses the *immediate* observer problem; the concurrency architecture provides the *long-term* structural solution (workers never write to DataManager directly) |
-| [Threaded Loading Roadmap](threaded_loading_roadmap.qmd) | Background data loading via fork-join | Data loading is already safe by design (worker returns data, main thread calls `setData`). No observer hardening needed — but the `ASSERT_MAIN_THREAD` macro will verify this. |
+| [Concurrency Architecture](../DataManager/concurrency_architecture.qmd) | DataManager ownership, write reservations, borrow tracking | This document addresses the *immediate* observer problem; the concurrency architecture provides the *long-term* structural solution (workers never write to DataManager directly) |
+| [Threaded Loading Roadmap](../DataManager/threaded_loading_roadmap.qmd) | Background data loading via fork-join | Data loading is already safe by design (worker returns data, main thread calls `setData`). No observer hardening needed — but the `ASSERT_MAIN_THREAD` macro will verify this. |
 
 The deferred-writes pattern in this document is the low-cost precursor to
 Stage 2 (Write Reservations) of the concurrency architecture. It achieves

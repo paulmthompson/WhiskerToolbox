@@ -11,19 +11,19 @@ The Observer library provides a lightweight implementation of the [observer patt
 
 ### ObserverData
 
-The `ObserverData` class manages a collection of callback functions that are invoked when data changes occur.
+The `ObserverData` class manages a collection of callback functions that are invoked when data changes occur. Each instance can carry an optional domain name (used in `spdlog` debug output), and each registered callback can carry an optional observer name for per-callback timing logs.
 
 ```cpp
 #include "Observer/Observer_Data.hpp"
 
-ObserverData observable;
+ObserverData observable("MyDomain");
 
 // Register an observer - store the ID for later removal
 auto id = observable.addObserver([]() {
     std::cout << "Data changed!" << std::endl;
-});
+}, "MyWidget");
 
-// Trigger all registered callbacks
+// Trigger all registered callbacks (snapshot iteration; order unspecified)
 observable.notifyObservers();
 
 // Remove the observer when no longer needed
@@ -122,12 +122,14 @@ The Observer library is fundamental to WhiskerToolbox's reactive architecture:
 ## Not Thread-Safe
 
 The Observer library is **not thread-safe**. All operations (`addObserver`, `removeObserver`, `notifyObservers`) must be called from the same thread, or external synchronization must be provided.
+
+Qt widgets that register observer callbacks must ensure those callbacks run on the main thread when data can be modified from background workers. See the [Observer Thread-Safety Roadmap](observer_thread_safety_roadmap.qmd) for audit status, fix patterns, and the task checklist.
 :::
 
-::: {.callout-warning}
-## No Modification During Notification
+::: {.callout-note}
+## Re-entrant Modification During Notification
 
-Adding or removing observers from within an observer callback during `notifyObservers()` results in **undefined behavior**. If you need to modify observers in response to a notification, defer the modification until after the notification completes.
+`notifyObservers()` copies the observer map to a snapshot before invoking callbacks. Adding or removing observers from within a callback is therefore safe for the current round — new registrations take effect on the next `notifyObservers()` call. This re-entrancy support does **not** provide thread safety across threads.
 :::
 
 ::: {.callout-note}
@@ -192,9 +194,10 @@ private:
 
 | Method | Description |
 |--------|-------------|
-| `[[nodiscard]] CallbackID addObserver(ObserverCallback)` | Register a callback, returns unique ID |
-| `void notifyObservers()` | Invoke all registered callbacks |
-| `void removeObserver(CallbackID)` | Unregister a callback by ID |
+| `explicit ObserverData(std::string name = "UnnamedObservable")` | Construct with optional domain name for debug logging |
+| `[[nodiscard]] CallbackID addObserver(ObserverCallback, std::string name = "Anonymous")` | Register a callback, returns unique ID |
+| `void notifyObservers()` | Snapshot registered callbacks and invoke each (order unspecified; logs timing at debug level) |
+| `void removeObserver(CallbackID)` | Unregister a callback by ID (no-op if ID is invalid) |
 
 ### ModificationHandle\<T\>
 

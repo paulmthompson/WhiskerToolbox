@@ -295,7 +295,7 @@ private:
 
 - [Observer Library](../Observer/index.qmd) — API for `ObserverData`, `CallbackID`, `ModificationHandle`
 - [Data Manager](../DataManager/data_manager.qmd) — DataManager API
-- [Observer Thread-Safety Roadmap](../DataManager/observer_thread_safety_roadmap.qmd) — Thread-safe callback patterns
+- [Observer Thread-Safety Roadmap](../Observer/observer_thread_safety_roadmap.qmd) — Thread-safe callback patterns
 
 ### Registering an Observer
 
@@ -340,7 +340,7 @@ _observer_id = _data_manager->addObserver([this]() {
 });
 ```
 
-This pattern is already used by MLCoreWidget's panels. See the [Observer Thread-Safety Roadmap](../DataManager/observer_thread_safety_roadmap.qmd) for the full list of safe vs. unsafe callbacks.
+This pattern is already used by MLCoreWidget's panels. See the [Observer Thread-Safety Roadmap](../Observer/observer_thread_safety_roadmap.qmd) for the full list of safe vs. unsafe callbacks.
 
 ### Reading and Writing Data
 
@@ -436,10 +436,10 @@ The Command Architecture represents DataManager operations as `ICommand` objects
 
 **Detailed references:**
 
-- [Command Architecture Overview](../DataManager/Commands/index.qmd) — Design, ICommand interface, scope boundaries
-- [Command Registry](../DataManager/Commands/command_registry.qmd) — Factory and dispatch
-- [Sequence Execution](../DataManager/Commands/sequence_execution.qmd) — Running multi-step workflows
-- [Available Commands](../DataManager/Commands/commands.qmd) — List of implemented commands
+- [Command Architecture Overview](../Commands/index.qmd) — Design, ICommand interface, scope boundaries
+- [Command Registry](../Commands/command_registry.qmd) — Factory and dispatch
+- [Sequence Execution](../Commands/sequence_execution.qmd) — Running multi-step workflows
+- [Available Commands](../Commands/commands.qmd) — List of implemented commands
 
 ### When to Use Commands vs. Direct DataManager Calls
 
@@ -486,6 +486,9 @@ When your widget has a settings struct (thresholds, modes, algorithm parameters)
 
 **Detailed references:**
 
+- [Schema-Driven Forms](../ui/schema_driven_forms.qmd) — End-to-end narrative:
+  reflect-cpp structs, simple vs complex consumers (PostEncoderWidget vs
+  TransformsV2_Widget), and improvement patterns
 - [ParameterSchema Library](../ParameterSchema/index.qmd) — Schema extraction, field descriptors, constraints
 - [AutoParam System](../ui/autoparam.qmd) — The Qt widget that renders the form
 

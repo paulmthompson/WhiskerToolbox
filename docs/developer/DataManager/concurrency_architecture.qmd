@@ -10,6 +10,8 @@ This document describes the concurrency architecture for WhiskerToolbox: what pr
 
 WhiskerToolbox runs entirely on the Qt main thread. A shared `DataManager` instance holds all data objects (`MaskData`, `LineData`, `PointData`, `AnalogTimeSeries`, `VideoData`, etc.) in a `std::map<std::string, DataTypeVariant>` map. Consumers call `getData<T>(key)` to get a `shared_ptr<T>` — always mutable, always unsynchronized. The `ObserverData` callback system is synchronous and explicitly not thread-safe.
 
+For immediate fixes when background workers trigger observer callbacks (deferred writes, main-thread marshaling, and the widget audit checklist), see the [Observer Thread-Safety Roadmap](../Observer/observer_thread_safety_roadmap.qmd).
+
 This is simple and correct for a single-threaded program. The concurrency challenge is to keep this core model intact while moving expensive work off the main thread.
 
 ## Where Concurrency Is Needed
