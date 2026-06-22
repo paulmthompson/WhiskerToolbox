@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -385,7 +385,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dltensortofeaturevector" class="level1">
 <h1>dl::TensorToFeatureVector</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Decodes a <code>[B, C]</code> (or <code>[C]</code>) feature tensor into a flat <code>std::vector&lt;float&gt;</code>. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;TensorToFeatureVector.hpp&gt;</code></p>
 <p>Inherits from <a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">dl::ChannelDecoder</a></p>
 <section id="public-functions" class="level2">
@@ -408,7 +408,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::vector&lt; float &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToFeatureVector.html#function-decode">decode</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.html">FeatureVectorDecoderParams</a> const &amp; params)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToFeatureVector.html#function-decode">decode</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.html">FeatureVectorDecoderParams</a> const &amp; params)<br>Extract a flat feature vector from the tensor.</td>
 </tr>
 </tbody>
 </table>
@@ -434,19 +434,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>TensorToFeatureVector<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Decodes a <code>[B, C]</code> (or <code>[C]</code>) feature tensor into a flat <code>std::vector&lt;float&gt;</code> for storage in <code>[TensorData](/api_generated/Classes/classTensorData.md)</code> (one feature vector per frame).</p>
-<p>This decoder is intended for use after a post-encoder module (e.g.&nbsp;<code>[GlobalAvgPoolModule](/api_generated/Classes/classdl_1_1GlobalAvgPoolModule.md)</code>) has reduced a spatial feature map to a global descriptor. It extracts the feature vector for a single batch element.</p>
+<p>Decodes a <code>[B, C]</code> (or <code>[C]</code>) feature tensor into a flat <code>std::vector&lt;float&gt;</code>.</p>
+<p>Intended for use after a post-encoder module (e.g.&nbsp;<code>[GlobalAvgPoolModule](/api_generated/Classes/classdl_1_1GlobalAvgPoolModule.md)</code>) has reduced a spatial feature map to a global descriptor. Extracts the feature vector for a single batch element.</p>
 <p>Supported input shapes:</p>
 <ul>
 <li><code>[C]</code> — single unbatched vector; returns all C values.</li>
-<li><code>[B, C]</code> — batched; returns the vector at <code>params.batch_index</code>.</li>
+<li><code>[B, C]</code> — batched; returns the vector at <code>ctx.batch_index</code>.</li>
 </ul>
-<p>Example:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>TensorToFeatureVector dec<span class="op">;</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>DecoderContext ctx<span class="op">;</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">.</span>batch_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>FeatureVectorDecoderParams params<span class="op">;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> vec <span class="op">=</span> dec<span class="op">.</span>decode<span class="op">(</span>features<span class="op">,</span> ctx<span class="op">,</span> params<span class="op">);</span>  <span class="co">// std::vector&lt;float&gt; of size C</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> vec <span class="op">=</span> dec<span class="op">.</span>decode<span class="op">(</span>features<span class="op">,</span> ctx<span class="op">,</span> params<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
@@ -467,17 +466,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    DecoderContext <span class="at">const</span> <span class="op">&amp;</span> ctx<span class="op">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    FeatureVectorDecoderParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract a flat feature vector from the tensor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>tensor</strong> Input tensor, shape <code>[C]</code> or <code>[B, C]</code>.</li>
-<li><strong>ctx</strong> <code>ctx.batch_index</code> selects the batch element for <code>[B, C]</code>.</li>
+<li><strong>ctx</strong> <code>ctx.batch_index</code> selects the batch element for <code>[B, C]</code> inputs.</li>
 <li><strong>params</strong> Feature vector decoder params (currently empty).</li>
 </ul>
 <p><strong>Return</strong>: Feature values as a flat <code>std::vector&lt;float&gt;</code>.</p>
-<p><strong>Precondition</strong>: tensor must not be undefined.</p>
-<p>Extract a flat feature vector from the tensor.</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>tensor is defined</li>
+<li>tensor.dim() == 1 (layout <code>[C]</code>) or tensor.dim() == 2 (layout <code>[B, C]</code>)</li>
+<li>for 2D inputs: 0 &lt;= ctx.batch_index &lt; tensor.size(0)</li>
+</ul>
+<p><strong>Postcondition</strong>: Returned vector length equals tensor.size(-1).</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

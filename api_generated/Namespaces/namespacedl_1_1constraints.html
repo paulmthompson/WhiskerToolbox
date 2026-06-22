@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -352,7 +352,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-computebatchsizeconstraint" id="toc-function-computebatchsizeconstraint" class="nav-link" data-scroll-target="#function-computebatchsizeconstraint">function computeBatchSizeConstraint</a></li>
-  <li><a href="#function-validdecodersformodule" id="toc-function-validdecodersformodule" class="nav-link" data-scroll-target="#function-validdecodersformodule">function validDecodersForModule</a></li>
+  <li><a href="#function-validdecodersforpostencoder" id="toc-function-validdecodersforpostencoder" class="nav-link" data-scroll-target="#function-validdecodersforpostencoder">function validDecodersForPostEncoder</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -412,11 +412,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structdl_1_1constraints_1_1BatchSizeConstraint.html">BatchSizeConstraint</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1constraints.html#function-computebatchsizeconstraint">computeBatchSizeConstraint</a></strong>(<a href="../../api_generated/Classes/structModelDisplayInfo.html">ModelDisplayInfo</a> const &amp; info, std::vector&lt; <a href="../../api_generated/Classes/structRecurrentBindingData.html">RecurrentBindingData</a> &gt; const &amp; active_recurrent_bindings)<br>Compute the batch-size constraint for a given model and current recurrent bindings.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1constraints.html#function-computebatchsizeconstraint">computeBatchSizeConstraint</a></strong>(<a href="../../api_generated/Classes/structdl_1_1ModelInfo.html">dl::ModelInfo</a> const &amp; info, std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">MemoryFrameBinding</a> &gt; const &amp; memory_frames)<br>Compute the batch-size constraint for a given model and memory frames.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1constraints.html#function-validdecodersformodule">validDecodersForModule</a></strong>(std::string const &amp; module_type)<br>Return the valid decoder alternative names allowed for a given post-encoder module type.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1constraints.html#function-validdecodersforpostencoder">validDecodersForPostEncoder</a></strong>(<a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a> const &amp; params)<br>Return valid decoder alternatives for the current post-encoder params.</td>
 </tr>
 </tbody>
 </table>
@@ -426,46 +426,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-computebatchsizeconstraint" class="level3">
 <h3 class="anchored" data-anchor-id="function-computebatchsizeconstraint">function computeBatchSizeConstraint</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>BatchSizeConstraint computeBatchSizeConstraint<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    ModelDisplayInfo <span class="at">const</span> <span class="op">&amp;</span> info<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> RecurrentBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> active_recurrent_bindings</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>ModelInfo <span class="at">const</span> <span class="op">&amp;</span> info<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> MemoryFrameBinding <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> memory_frames</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Compute the batch-size constraint for a given model and current recurrent bindings.</p>
+<p>Compute the batch-size constraint for a given model and memory frames.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>info</strong> Model display info (contains <code>batch_mode</code>).</li>
-<li><strong>active_recurrent_bindings</strong> Recurrent bindings from state; activity is determined by checking <code>output_slot_name</code>.</li>
+<li><strong>memory_frames</strong> Session memory frame bindings.</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structdl_1_1constraints_1_1BatchSizeConstraint.html">BatchSizeConstraint</a> that the widget can apply to the spinbox.</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structdl_1_1constraints_1_1BatchSizeConstraint.html">BatchSizeConstraint</a> describing the allowed batch-size range.</p>
 <p>Priority (most restrictive wins):</p>
 <ul>
-<li>Active recurrent bindings → min=1, max=1, forced_by_recurrent=true</li>
-<li>Model <a href="../../api_generated/Classes/structdl_1_1RecurrentOnlyBatch.html">RecurrentOnlyBatch</a> or <a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">FixedBatch</a>{1} → min=1, max=1, forced_by_recurrent=false</li>
-<li>Model <a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">FixedBatch</a>{N&gt;1} → min=N, max=N, forced_by_recurrent=false</li>
-<li>Model <a href="../../api_generated/Classes/structdl_1_1DynamicBatch.html">DynamicBatch</a> → min/max from batch mode, forced_by_recurrent=false</li>
-</ul>
-<p>A recurrent binding is considered active when its <code>output_slot_name</code> is non-empty, i.e.&nbsp;the user has chosen an output slot to feed back.</p>
-<p>Priority (most restrictive wins):</p>
-<ul>
-<li>Active recurrent bindings → min=1, max=1, forced_by_recurrent=true</li>
+<li>Active recurrent memory frames → min=1, max=1, forced_by_recurrent=true</li>
 <li>Model <a href="../../api_generated/Classes/structdl_1_1RecurrentOnlyBatch.html">RecurrentOnlyBatch</a> or <a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">FixedBatch</a>{1} → min=1, max=1, forced_by_recurrent=false</li>
 <li>Model <a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">FixedBatch</a>{N&gt;1} → min=N, max=N, forced_by_recurrent=false</li>
 <li>Model <a href="../../api_generated/Classes/structdl_1_1DynamicBatch.html">DynamicBatch</a> → min/max from batch mode, forced_by_recurrent=false</li>
 </ul>
 </section>
-<section id="function-validdecodersformodule" class="level3">
-<h3 class="anchored" data-anchor-id="function-validdecodersformodule">function validDecodersForModule</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> validDecodersForModule<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">module_type</span></span>
+<section id="function-validdecodersforpostencoder" class="level3">
+<h3 class="anchored" data-anchor-id="function-validdecodersforpostencoder">function validDecodersForPostEncoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> validDecodersForPostEncoder<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>PostEncoderStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Return the valid decoder alternative names allowed for a given post-encoder module type.</p>
+<p>Return valid decoder alternatives for the current post-encoder params.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>module_type</strong> Post-encoder modu le type string as returned by PostEncoderWidget::moduleTypeForState(), e.g.&nbsp;<code>"none"</code>, <code>"global_avg_pool"</code>, <code>"spatial_point"</code>.</li>
+<li><strong>params</strong> Post-encoder slot configuration from state or session.</li>
 </ul>
-<p><strong>Return</strong>: Names of the DecoderVariant alternatives that are compatible with the selected post-encoder module.</p>
-<p>Modules that collapse spatial dimensions (<code>global_avg_pool</code> and <code>spatial_point</code> reduce <code>[B,C,H,W] →</code>[B,C]) restrict output decoders to <code>[FeatureVectorDecoderParams](/api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.md)</code> only. All other module types (i.e.&nbsp;<code>"none"</code>) permit every decoder variant.</p>
+<p>Modules that collapse spatial dimensions (per <code>[PostEncoderModuleRegistry](/api_generated/Classes/classdl_1_1PostEncoderModuleRegistry.md)</code> metadata, i.e.&nbsp;<code>[B,C,H,W] →</code>[B,C]) restrict output decoders to <code>[FeatureVectorDecoderParams](/api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.md)</code> only. <code>module_key``"none"</code> permits every decoder variant.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

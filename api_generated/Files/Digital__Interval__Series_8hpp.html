@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -412,6 +412,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a></strong> <br>A sorted collection of time intervals with entity tracking.</td>
 </tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structDigitalIntervalSeries_1_1DataTraits.html">DigitalIntervalSeries::DataTraits</a></strong></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -538,391 +542,398 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span><span class="pp">                   </span><span class="co">// EntityId</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Observer/Observer_Data.hpp"</span><span class="pp">               </span><span class="co">// ObserverData base class</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span><span class="pp">                  </span><span class="co">// TimeFrame and TimeFrameIndex</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/interval_data.hpp"</span><span class="pp">              </span><span class="co">// Interval struct</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"storage/DigitalIntervalStorage.hpp"</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstdint&gt;</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span><span class="pp">           </span><span class="co">// std::shared_ptr</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span><span class="pp">         </span><span class="co">// std::optional</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ranges&gt;</span><span class="pp">           </span><span class="co">// std::ranges::views</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_set&gt;</span><span class="pp">    </span><span class="co">// std::unordered_set</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;utility&gt;</span><span class="pp">          </span><span class="co">// std::pair</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span><span class="pp">           </span><span class="co">// std::vector</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TypeTraits/DataTypeTraits.hpp"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/interval_data.hpp"</span><span class="pp">              </span><span class="co">// Interval struct</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"storage/DigitalIntervalStorage.hpp"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstdint&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span><span class="pp">           </span><span class="co">// std::shared_ptr</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span><span class="pp">         </span><span class="co">// std::optional</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ranges&gt;</span><span class="pp">           </span><span class="co">// std::ranges::views</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_set&gt;</span><span class="pp">    </span><span class="co">// std::unordered_set</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;utility&gt;</span><span class="pp">          </span><span class="co">// std::pair</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span><span class="pp">           </span><span class="co">// std::vector</span></span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EntityRegistry<span class="op">;</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">bool</span> always_false_v <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EntityRegistry<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">bool</span> always_false_v <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DigitalIntervalSeries <span class="op">:</span> <span class="kw">public</span> ObserverData <span class="op">{</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Constructors ==========</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> DigitalIntervalSeries<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> digital_vector<span class="op">);</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> DigitalIntervalSeries<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dt">float</span><span class="op">&gt;&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> digital_vector<span class="op">);</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DigitalIntervalSeries <span class="op">:</span> <span class="kw">public</span> ObserverData <span class="op">{</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> DataTraits <span class="op">:</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span>DataTypeTraitsBase<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">,</span> IntervalWithId<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_ragged <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_temporal <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> has_entity_ids <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
 <span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =============================================================</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ==================== RANGES INTERFACE =======================</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =============================================================</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> view<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Fast path: use cached pointers if valid</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">if</span> <span class="op">(</span>_cached_storage<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> IntervalWithId<span class="op">(</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>                               _cached_storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>                               _cached_storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>                   <span class="op">}</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Slow path: virtual dispatch through wrapper</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> IntervalWithId<span class="op">(</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>                           _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>                           _storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> viewInRange<span class="op">(</span>TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>                                   TimeFrameIndex stop_index<span class="op">,</span></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>                                   TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_range <span class="op">=</span> _getConvertedTimeRange<span class="op">(</span>start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">);</span></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_start <span class="op">=</span> time_range<span class="op">.</span>first<span class="op">;</span></span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_stop <span class="op">=</span> time_range<span class="op">.</span>second<span class="op">;</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> range_start<span class="op">,</span> range_stop<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>                   Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Overlapping: interval.start &lt;= stop_time &amp;&amp; interval.end &gt;= start_time</span></span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> range_stop <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> range_start<span class="op">;</span></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>               <span class="op">})</span> <span class="op">|</span></span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>               <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> IntervalWithId<span class="op">(</span>_storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span> _storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> viewIntervalsInRange<span class="op">(</span>TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>                                            TimeFrameIndex stop_index<span class="op">,</span></span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>                                            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_range <span class="op">=</span> _getConvertedTimeRange<span class="op">(</span>start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">);</span></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_start <span class="op">=</span> time_range<span class="op">.</span>first<span class="op">;</span></span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_stop <span class="op">=</span> time_range<span class="op">.</span>second<span class="op">;</span></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> range_start<span class="op">,</span> range_stop<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>                   Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> range_stop <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> range_start<span class="op">;</span></span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>               <span class="op">})</span> <span class="op">|</span></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>               <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> hasIntervalAtTime<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> converted_time <span class="op">=</span> _getConvertedTime<span class="op">(</span>time<span class="op">,</span> source_time_frame<span class="op">);</span></span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _hasIntervalAtTime<span class="op">(</span>converted_time<span class="op">);</span></span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Setters ==========</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Constructors ==========</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> DigitalIntervalSeries<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> digital_vector<span class="op">);</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> DigitalIntervalSeries<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dt">float</span><span class="op">&gt;&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> digital_vector<span class="op">);</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =============================================================</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ==================== RANGES INTERFACE =======================</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =============================================================</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> view<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Fast path: use cached pointers if valid</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">if</span> <span class="op">(</span>_cached_storage<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> IntervalWithId<span class="op">(</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>                               _cached_storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>                               _cached_storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>                   <span class="op">}</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Slow path: virtual dispatch through wrapper</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> IntervalWithId<span class="op">(</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>                           _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>                           _storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> viewInRange<span class="op">(</span>TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                                   TimeFrameIndex stop_index<span class="op">,</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                                   TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_range <span class="op">=</span> _getConvertedTimeRange<span class="op">(</span>start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">);</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_start <span class="op">=</span> time_range<span class="op">.</span>first<span class="op">;</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_stop <span class="op">=</span> time_range<span class="op">.</span>second<span class="op">;</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> range_start<span class="op">,</span> range_stop<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>                   Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>                   <span class="co">// Overlapping: interval.start &lt;= stop_time &amp;&amp; interval.end &gt;= start_time</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> range_stop <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> range_start<span class="op">;</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>               <span class="op">})</span> <span class="op">|</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>               <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> IntervalWithId<span class="op">(</span>_storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">),</span> _storage<span class="op">.</span>getEntityId<span class="op">(</span>idx<span class="op">));</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">auto</span> viewIntervalsInRange<span class="op">(</span>TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>                                            TimeFrameIndex stop_index<span class="op">,</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>                                            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_range <span class="op">=</span> _getConvertedTimeRange<span class="op">(</span>start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">);</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_start <span class="op">=</span> time_range<span class="op">.</span>first<span class="op">;</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> range_stop <span class="op">=</span> time_range<span class="op">.</span>second<span class="op">;</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> range_start<span class="op">,</span> range_stop<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>                   Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> range_stop <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> range_start<span class="op">;</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>               <span class="op">})</span> <span class="op">|</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>               <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>               <span class="op">});</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEvent<span class="op">(</span>Interval new_interval<span class="op">);</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEvent<span class="op">(</span>TimeFrameIndex start<span class="op">,</span> TimeFrameIndex end<span class="op">);</span></span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEventAtTime<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> <span class="dt">bool</span> event<span class="op">);</span></span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> removeInterval<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">);</span></span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> removeIntervals<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">);</span></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> B<span class="op">&gt;</span></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEventsAtTimes<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">&gt;</span> times<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>B<span class="op">&gt;</span> events<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> times<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>            _setEventAtTimeInternal<span class="op">(</span>TimeFrameIndex<span class="op">(</span>times<span class="op">[</span>i<span class="op">]),</span> events<span class="op">[</span>i<span class="op">]);</span></span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>        _cacheOptimizationPointers<span class="op">();</span></span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>        notifyObservers<span class="op">();</span></span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*</span></span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="co">    template&lt;typename T&gt;</span></span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a><span class="co">    void createIntervalsFromBool(std::vector&lt;T&gt; const &amp; bool_vector) {</span></span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="co">        // Clear existing storage and rebuild</span></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="co">        auto * owning = _storage.tryGetMutableOwning();</span></span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="co">        if (owning) {</span></span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="co">            owning-&gt;clear();</span></span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a><span class="co">        bool in_interval = false;</span></span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="co">        int start = 0;</span></span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a><span class="co">        for (size_t i = 0; i &lt; bool_vector.size(); ++i) {</span></span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="co">            if (bool_vector[i] &amp;&amp; !in_interval) {</span></span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="co">                start = static_cast&lt;int&gt;(i);</span></span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="co">                in_interval = true;</span></span>
-<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a><span class="co">            } else if (!bool_vector[i] &amp;&amp; in_interval) {</span></span>
-<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="co">                if (owning) {</span></span>
-<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a><span class="co">                    owning-&gt;addInterval(Interval{start, static_cast&lt;int64_t&gt;(i - 1)}, EntityId{0});</span></span>
-<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a><span class="co">                }</span></span>
-<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a><span class="co">                in_interval = false;</span></span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="co">            }</span></span>
-<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
-<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a><span class="co">        if (in_interval &amp;&amp; owning) {</span></span>
-<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="co">            owning-&gt;addInterval(Interval{start, static_cast&lt;int64_t&gt;(bool_vector.size() - 1)}, EntityId{0});</span></span>
-<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
-<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="co">        _cacheOptimizationPointers();</span></span>
-<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="co">        notifyObservers();</span></span>
-<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="co">    }</span></span>
-<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a><span class="co">    */</span></span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Entity-Based Bulk Operations ==========</span></span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t copyByEntityIds<span class="op">(</span>DigitalIntervalSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>                                <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>                                NotifyObservers notify<span class="op">);</span></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">NOTE</span><span class="co">: moveByEntityIds is intentionally NOT implemented for DigitalIntervalSeries.</span></span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">//</span></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Moving intervals between series has unresolved edge cases due to interval merging:</span></span>
-<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - DigitalIntervalSeries guarantees non-overlapping intervals by merging on insert.</span></span>
-<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - If a moved interval overlaps with an existing interval in the target, the two</span></span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     will be merged into a single new interval.</span></span>
-<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - The original EntityId of the moved interval is lost during merging, but any</span></span>
-<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     group memberships tied to that EntityId are NOT automatically cleaned up.</span></span>
-<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - The merged interval in the target gets a new EntityId that is not associated</span></span>
-<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     with any group, leaving group state inconsistent.</span></span>
-<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - Similarly, removing the source interval may orphan group references.</span></span>
-<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">//</span></span>
-<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>    <span class="co">// A proper implementation would need to define merging semantics for EntityIds and</span></span>
-<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>    <span class="co">// group memberships. Until those semantics are decided, move operations should be</span></span>
-<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>    <span class="co">// done manually at the UI level where the user can handle conflicts.</span></span>
-<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Getters ==========</span></span>
-<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">};</span></span>
-<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Range-Mode Interval Queries ==========</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> hasIntervalAtTime<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> converted_time <span class="op">=</span> _getConvertedTime<span class="op">(</span>time<span class="op">,</span> source_time_frame<span class="op">);</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _hasIntervalAtTime<span class="op">(</span>converted_time<span class="op">);</span></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Setters ==========</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEvent<span class="op">(</span>Interval new_interval<span class="op">);</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addEvent<span class="op">(</span>TimeFrameIndex start<span class="op">,</span> TimeFrameIndex end<span class="op">);</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEventAtTime<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> <span class="dt">bool</span> event<span class="op">);</span></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> removeInterval<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">);</span></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> removeIntervals<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">);</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span> B<span class="op">&gt;</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEventsAtTimes<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">&gt;</span> times<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>B<span class="op">&gt;</span> events<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> times<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>            _setEventAtTimeInternal<span class="op">(</span>TimeFrameIndex<span class="op">(</span>times<span class="op">[</span>i<span class="op">]),</span> events<span class="op">[</span>i<span class="op">]);</span></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>        _cacheOptimizationPointers<span class="op">();</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>        notifyObservers<span class="op">();</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*</span></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a><span class="co">    template&lt;typename T&gt;</span></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a><span class="co">    void createIntervalsFromBool(std::vector&lt;T&gt; const &amp; bool_vector) {</span></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="co">        // Clear existing storage and rebuild</span></span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a><span class="co">        auto * owning = _storage.tryGetMutableOwning();</span></span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="co">        if (owning) {</span></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="co">            owning-&gt;clear();</span></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="co">        bool in_interval = false;</span></span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a><span class="co">        int start = 0;</span></span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a><span class="co">        for (size_t i = 0; i &lt; bool_vector.size(); ++i) {</span></span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a><span class="co">            if (bool_vector[i] &amp;&amp; !in_interval) {</span></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="co">                start = static_cast&lt;int&gt;(i);</span></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a><span class="co">                in_interval = true;</span></span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a><span class="co">            } else if (!bool_vector[i] &amp;&amp; in_interval) {</span></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="co">                if (owning) {</span></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="co">                    owning-&gt;addInterval(Interval{start, static_cast&lt;int64_t&gt;(i - 1)}, EntityId{0});</span></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="co">                }</span></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="co">                in_interval = false;</span></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="co">            }</span></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a><span class="co">        if (in_interval &amp;&amp; owning) {</span></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a><span class="co">            owning-&gt;addInterval(Interval{start, static_cast&lt;int64_t&gt;(bool_vector.size() - 1)}, EntityId{0});</span></span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a><span class="co">        }</span></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a><span class="co">        _cacheOptimizationPointers();</span></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="co">        notifyObservers();</span></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="co">    }</span></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a><span class="co">    */</span></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Entity-Based Bulk Operations ==========</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t copyByEntityIds<span class="op">(</span>DigitalIntervalSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>                                <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>                                NotifyObservers notify<span class="op">);</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">NOTE</span><span class="co">: moveByEntityIds is intentionally NOT implemented for DigitalIntervalSeries.</span></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>    <span class="co">//</span></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Moving intervals between series has unresolved edge cases due to interval merging:</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - DigitalIntervalSeries guarantees non-overlapping intervals by merging on insert.</span></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - If a moved interval overlaps with an existing interval in the target, the two</span></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     will be merged into a single new interval.</span></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - The original EntityId of the moved interval is lost during merging, but any</span></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     group memberships tied to that EntityId are NOT automatically cleaned up.</span></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - The merged interval in the target gets a new EntityId that is not associated</span></span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     with any group, leaving group state inconsistent.</span></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   - Similarly, removing the source interval may orphan group references.</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>    <span class="co">//</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>    <span class="co">// A proper implementation would need to define merging semantics for EntityIds and</span></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>    <span class="co">// group memberships. Until those semantics are decided, move operations should be</span></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">// done manually at the UI level where the user can handle conflicts.</span></span>
 <span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>    <span class="kw">enum</span> <span class="kw">class</span> RangeMode <span class="op">{</span></span>
-<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>        CONTAINED<span class="op">,</span>  </span>
-<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>        OVERLAPPING<span class="op">,</span></span>
-<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>        CLIP        </span>
-<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span>RangeMode mode <span class="op">=</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">&gt;</span></span>
-<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> getIntervalsInRange<span class="op">(</span></span>
-<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_time<span class="op">,</span></span>
-<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_time<span class="op">,</span></span>
-<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeframe<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_timeframe <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>start_time<span class="op">.</span>getValue<span class="op">(),</span> stop_time<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If either timeframe is null, fall back to original behavior</span></span>
-<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>start_time<span class="op">.</span>getValue<span class="op">(),</span> stop_time<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use helper function for time frame conversion</span></span>
-<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target_start_index<span class="op">,</span> target_stop_index<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span>start_time<span class="op">,</span></span>
-<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>                                                                             stop_time<span class="op">,</span></span>
-<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>                                                                             source_timeframe<span class="op">,</span></span>
-<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>                                                                             <span class="op">*</span>_time_frame<span class="op">);</span></span>
-<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>target_start_index<span class="op">.</span>getValue<span class="op">(),</span> target_stop_index<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Time Frame ==========</span></span>
-<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setTimeFrame<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame<span class="op">)</span> <span class="op">{</span> _time_frame <span class="op">=</span> time_frame<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _time_frame<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ===== Identity =====</span></span>
-<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setIdentityContext<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> EntityRegistry <span class="op">*</span> registry<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a>        _identity_data_key <span class="op">=</span> data_key<span class="op">;</span></span>
-<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a>        _identity_registry <span class="op">=</span> registry<span class="op">;</span></span>
-<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Getters ==========</span></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">};</span></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Range-Mode Interval Queries ==========</span></span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">enum</span> <span class="kw">class</span> RangeMode <span class="op">{</span></span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>        CONTAINED<span class="op">,</span>  </span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>        OVERLAPPING<span class="op">,</span></span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a>        CLIP        </span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span>RangeMode mode <span class="op">=</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">&gt;</span></span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> getIntervalsInRange<span class="op">(</span></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_time<span class="op">,</span></span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_time<span class="op">,</span></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_timeframe<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_timeframe <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>start_time<span class="op">.</span>getValue<span class="op">(),</span> stop_time<span class="op">.</span>getValue<span class="op">());</span></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If either timeframe is null, fall back to original behavior</span></span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>start_time<span class="op">.</span>getValue<span class="op">(),</span> stop_time<span class="op">.</span>getValue<span class="op">());</span></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use helper function for time frame conversion</span></span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target_start_index<span class="op">,</span> target_stop_index<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span>start_time<span class="op">,</span></span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>                                                                             stop_time<span class="op">,</span></span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a>                                                                             source_timeframe<span class="op">,</span></span>
+<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a>                                                                             <span class="op">*</span>_time_frame<span class="op">);</span></span>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _getIntervalsInRange<span class="op">&lt;</span>mode<span class="op">&gt;(</span>target_start_index<span class="op">.</span>getValue<span class="op">(),</span> target_stop_index<span class="op">.</span>getValue<span class="op">());</span></span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Time Frame ==========</span></span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setTimeFrame<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame<span class="op">)</span> <span class="op">{</span> _time_frame <span class="op">=</span> time_frame<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _time_frame<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Entity Lookup Methods ==========</span></span>
-<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>Interval<span class="op">&gt;</span> getIntervalByEntityId<span class="op">(</span>EntityId entity_id<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>EntityId<span class="op">,</span> Interval<span class="op">&gt;&gt;</span> getIntervalsByEntityIds<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Storage Type Queries ==========</span></span>
-<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isView<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>isView<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isLazy<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>isLazy<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DigitalIntervalStorageType getStorageType<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>getStorageType<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Factory Methods ==========</span></span>
-<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createView<span class="op">(</span></span>
-<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a>            <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;&amp;</span> source<span class="op">,</span></span>
-<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> end<span class="op">);</span></span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ===== Identity =====</span></span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setIdentityContext<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> EntityRegistry <span class="op">*</span> registry<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>        _identity_data_key <span class="op">=</span> data_key<span class="op">;</span></span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a>        _identity_registry <span class="op">=</span> registry<span class="op">;</span></span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Entity Lookup Methods ==========</span></span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>Interval<span class="op">&gt;</span> getIntervalByEntityId<span class="op">(</span>EntityId entity_id<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>EntityId<span class="op">,</span> Interval<span class="op">&gt;&gt;</span> getIntervalsByEntityIds<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Storage Type Queries ==========</span></span>
+<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isView<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>isView<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isLazy<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>isLazy<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DigitalIntervalStorageType getStorageType<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>getStorageType<span class="op">();</span> <span class="op">}</span></span>
 <span id="cb3-230"><a href="#cb3-230" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createView<span class="op">(</span></span>
-<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a>            <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;&amp;</span> source<span class="op">,</span></span>
-<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">);</span></span>
-<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> ViewType<span class="op">&gt;</span></span>
-<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createFromView<span class="op">(</span></span>
-<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a>            ViewType view<span class="op">,</span></span>
-<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a>            <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
-<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DigitalIntervalStorageCache getStorageCache<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>tryGetCache<span class="op">();</span> <span class="op">}</span></span>
-<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalStorageWrapper _storage<span class="op">;</span></span>
-<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalStorageCache _cached_storage<span class="op">;</span><span class="co">// Fast-path cache</span></span>
-<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> _time_frame<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Factory Methods ==========</span></span>
+<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a>            <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;&amp;</span> source<span class="op">,</span></span>
+<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start<span class="op">,</span></span>
+<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> end<span class="op">);</span></span>
+<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a>            <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;&amp;</span> source<span class="op">,</span></span>
+<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">);</span></span>
+<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> ViewType<span class="op">&gt;</span></span>
+<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> createFromView<span class="op">(</span></span>
+<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>            ViewType view<span class="op">,</span></span>
+<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a>            <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
+<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
 <span id="cb3-249"><a href="#cb3-249" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache management</span></span>
-<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _cacheOptimizationPointers<span class="op">();</span></span>
-<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _addEventInternal<span class="op">(</span>Interval new_interval<span class="op">);</span><span class="co">// Core mutation logic</span></span>
-<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setEventAtTimeInternal<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> <span class="dt">bool</span> event<span class="op">);</span></span>
-<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _removeEventAtTimeInternal<span class="op">(</span>TimeFrameIndex time<span class="op">);</span></span>
+<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> DigitalIntervalStorageCache getStorageCache<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _storage<span class="op">.</span>tryGetCache<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalStorageWrapper _storage<span class="op">;</span></span>
+<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalStorageCache _cached_storage<span class="op">;</span><span class="co">// Fast-path cache</span></span>
+<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> _time_frame<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
 <span id="cb3-256"><a href="#cb3-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span>RangeMode mode <span class="op">=</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">&gt;</span></span>
-<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> _getIntervalsInRange<span class="op">(</span></span>
-<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start_time<span class="op">,</span></span>
-<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> stop_time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Direct storage access like DigitalEventSeries - returns by value</span></span>
-<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> _storage<span class="op">.</span>size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> start_time<span class="op">,</span> stop_time<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a>                       Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&gt;=</span> start_time <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&lt;=</span> stop_time<span class="op">;</span></span>
-<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a>                   <span class="op">})</span> <span class="op">|</span></span>
-<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a>                   <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a>                   <span class="op">});</span></span>
-<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>OVERLAPPING<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> _storage<span class="op">.</span>size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> start_time<span class="op">,</span> stop_time<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>                       Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> stop_time <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> start_time<span class="op">;</span></span>
-<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a>                   <span class="op">})</span> <span class="op">|</span></span>
-<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>                   <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
-<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>                   <span class="op">});</span></span>
-<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>CLIP<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>            <span class="co">// For CLIP mode, we return a vector since we need to modify intervals</span></span>
-<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsAsVectorClipped<span class="op">(</span>start_time<span class="op">,</span> stop_time<span class="op">);</span></span>
-<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::empty<span class="op">&lt;</span>Interval<span class="op">&gt;;</span></span>
-<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper method to handle clipping intervals at range boundaries</span></span>
-<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> _getIntervalsAsVectorClipped<span class="op">(</span></span>
-<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start_time<span class="op">,</span></span>
-<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> stop_time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache management</span></span>
+<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _cacheOptimizationPointers<span class="op">();</span></span>
+<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _addEventInternal<span class="op">(</span>Interval new_interval<span class="op">);</span><span class="co">// Core mutation logic</span></span>
+<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setEventAtTimeInternal<span class="op">(</span>TimeFrameIndex time<span class="op">,</span> <span class="dt">bool</span> event<span class="op">);</span></span>
+<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _removeEventAtTimeInternal<span class="op">(</span>TimeFrameIndex time<span class="op">);</span></span>
+<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span>RangeMode mode <span class="op">=</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">&gt;</span></span>
+<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> _getIntervalsInRange<span class="op">(</span></span>
+<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start_time<span class="op">,</span></span>
+<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> stop_time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>CONTAINED<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Direct storage access like DigitalEventSeries - returns by value</span></span>
+<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> _storage<span class="op">.</span>size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> start_time<span class="op">,</span> stop_time<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>                       Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&gt;=</span> start_time <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&lt;=</span> stop_time<span class="op">;</span></span>
+<span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a>                   <span class="op">})</span> <span class="op">|</span></span>
+<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a>                   <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>                   <span class="op">});</span></span>
+<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>OVERLAPPING<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dt">size_t</span><span class="op">{</span><span class="dv">0</span><span class="op">},</span> _storage<span class="op">.</span>size<span class="op">())</span> <span class="op">|</span> <span class="bu">std::</span>views::filter<span class="op">([</span><span class="kw">this</span><span class="op">,</span> start_time<span class="op">,</span> stop_time<span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>                       Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> interval<span class="op">.</span>start <span class="op">&lt;=</span> stop_time <span class="op">&amp;&amp;</span> interval<span class="op">.</span>end <span class="op">&gt;=</span> start_time<span class="op">;</span></span>
+<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>                   <span class="op">})</span> <span class="op">|</span></span>
+<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a>                   <span class="bu">std::</span>views::transform<span class="op">([</span><span class="kw">this</span><span class="op">](</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">return</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>idx<span class="op">);</span></span>
+<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a>                   <span class="op">});</span></span>
+<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span>mode <span class="op">==</span> RangeMode<span class="op">::</span>CLIP<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a>            <span class="co">// For CLIP mode, we return a vector since we need to modify intervals</span></span>
+<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> _getIntervalsAsVectorClipped<span class="op">(</span>start_time<span class="op">,</span> stop_time<span class="op">);</span></span>
+<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>views::empty<span class="op">&lt;</span>Interval<span class="op">&gt;;</span></span>
+<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>            Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>i<span class="op">);</span></span>
-<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Skip if not overlapping</span></span>
-<span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>end <span class="op">&lt;</span> start_time <span class="op">||</span> interval<span class="op">.</span>start <span class="op">&gt;</span> stop_time<span class="op">)</span></span>
-<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper method to handle clipping intervals at range boundaries</span></span>
+<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> _getIntervalsAsVectorClipped<span class="op">(</span></span>
+<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> start_time<span class="op">,</span></span>
+<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> stop_time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> result<span class="op">;</span></span>
 <span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Create a new clipped interval based on original interval values</span></span>
-<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>            <span class="co">// but clipped at the transformed boundaries</span></span>
-<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> clipped_start <span class="op">=</span> interval<span class="op">.</span>start<span class="op">;</span></span>
-<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_start <span class="op">&lt;</span> start_time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Binary search or interpolation to find the original value</span></span>
-<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>                <span class="co">// that transforms to start_time would be ideal here</span></span>
-<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a>                <span class="co">// For now, use a simple approach:</span></span>
-<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>                <span class="cf">while</span> <span class="op">(</span>clipped_start <span class="op">&lt;</span> start_time <span class="op">&amp;&amp;</span> clipped_start <span class="op">&lt;</span> interval<span class="op">.</span>end<span class="op">)</span></span>
-<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a>                    clipped_start<span class="op">++;</span></span>
-<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> clipped_end <span class="op">=</span> interval<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_end <span class="op">&gt;</span> stop_time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>                <span class="cf">while</span> <span class="op">(</span>clipped_end <span class="op">&gt;</span> interval<span class="op">.</span>start <span class="op">&amp;&amp;</span> clipped_end <span class="op">&gt;</span> stop_time<span class="op">)</span></span>
-<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>                    clipped_end<span class="op">--;</span></span>
-<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span>clipped_start<span class="op">,</span> clipped_end<span class="op">});</span></span>
-<span id="cb3-319"><a href="#cb3-319" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-321"><a href="#cb3-321" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb3-322"><a href="#cb3-322" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Identity</span></span>
-<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _identity_data_key<span class="op">;</span></span>
-<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> _identity_registry<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
-<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">,</span> <span class="dt">int64_t</span><span class="op">&gt;</span> _getTimeRangeFromIndices<span class="op">(</span></span>
-<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_index<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Private Range Query Helpers ==========</span></span>
-<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">,</span> <span class="dt">int64_t</span><span class="op">&gt;</span> _getConvertedTimeRange<span class="op">(</span></span>
-<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_index<span class="op">,</span></span>
-<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fast path: same time frame or no conversion needed</span></span>
-<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_time_frame <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">{</span>start_index<span class="op">.</span>getValue<span class="op">(),</span> stop_index<span class="op">.</span>getValue<span class="op">()};</span></span>
-<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to our time frame</span></span>
-<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target_start<span class="op">,</span> target_stop<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span></span>
-<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a>                start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">,</span> <span class="op">*</span>_time_frame<span class="op">);</span></span>
-<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{</span>target_start<span class="op">.</span>getValue<span class="op">(),</span> target_stop<span class="op">.</span>getValue<span class="op">()};</span></span>
-<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int64_t</span> _getConvertedTime<span class="op">(</span></span>
-<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex time_index<span class="op">,</span></span>
-<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_time_frame <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> time_index<span class="op">.</span>getValue<span class="op">();</span></span>
-<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert using the same logic as range conversion</span></span>
-<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target<span class="op">,</span> _<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span></span>
-<span id="cb3-355"><a href="#cb3-355" aria-hidden="true" tabindex="-1"></a>                time_index<span class="op">,</span> time_index<span class="op">,</span> source_time_frame<span class="op">,</span> <span class="op">*</span>_time_frame<span class="op">);</span></span>
-<span id="cb3-356"><a href="#cb3-356" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> target<span class="op">.</span>getValue<span class="op">();</span></span>
-<span id="cb3-357"><a href="#cb3-357" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-358"><a href="#cb3-358" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-359"><a href="#cb3-359" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> _hasIntervalAtTime<span class="op">(</span><span class="dt">int64_t</span> time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-360"><a href="#cb3-360" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-361"><a href="#cb3-361" aria-hidden="true" tabindex="-1"></a>            Interval <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>i<span class="op">);</span></span>
-<span id="cb3-362"><a href="#cb3-362" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span> time <span class="op">&lt;=</span> interval<span class="op">.</span>end<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-363"><a href="#cb3-363" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb3-364"><a href="#cb3-364" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-365"><a href="#cb3-365" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-366"><a href="#cb3-366" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb3-367"><a href="#cb3-367" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-368"><a href="#cb3-368" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-369"><a href="#cb3-369" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-370"><a href="#cb3-370" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb3-371"><a href="#cb3-371" aria-hidden="true" tabindex="-1"></a><span class="co">// Template Implementation</span></span>
-<span id="cb3-372"><a href="#cb3-372" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-374"><a href="#cb3-374" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> ViewType<span class="op">&gt;</span></span>
-<span id="cb3-375"><a href="#cb3-375" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> DigitalIntervalSeries<span class="op">::</span>createFromView<span class="op">(</span></span>
-<span id="cb3-376"><a href="#cb3-376" aria-hidden="true" tabindex="-1"></a>        ViewType view<span class="op">,</span></span>
-<span id="cb3-377"><a href="#cb3-377" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
-<span id="cb3-378"><a href="#cb3-378" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-379"><a href="#cb3-379" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;();</span></span>
-<span id="cb3-380"><a href="#cb3-380" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_storage <span class="op">=</span> DigitalIntervalStorageWrapper<span class="op">{</span></span>
-<span id="cb3-381"><a href="#cb3-381" aria-hidden="true" tabindex="-1"></a>            LazyDigitalIntervalStorage<span class="op">&lt;</span>ViewType<span class="op">&gt;{</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">),</span> num_elements<span class="op">}};</span></span>
-<span id="cb3-382"><a href="#cb3-382" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_time_frame <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>time_frame<span class="op">);</span></span>
-<span id="cb3-383"><a href="#cb3-383" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_cacheOptimizationPointers<span class="op">();</span></span>
-<span id="cb3-384"><a href="#cb3-384" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Note: _data vector left empty - storage wrapper handles all access</span></span>
-<span id="cb3-385"><a href="#cb3-385" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb3-386"><a href="#cb3-386" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-387"><a href="#cb3-387" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-388"><a href="#cb3-388" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> find_closest_preceding_event<span class="op">(</span>DigitalIntervalSeries <span class="op">*</span> digital_series<span class="op">,</span> TimeFrameIndex time<span class="op">);</span></span>
-<span id="cb3-389"><a href="#cb3-389" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-390"><a href="#cb3-390" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DIGITAL_INTERVAL_SERIES_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>            Interval <span class="at">const</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Skip if not overlapping</span></span>
+<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>end <span class="op">&lt;</span> start_time <span class="op">||</span> interval<span class="op">.</span>start <span class="op">&gt;</span> stop_time<span class="op">)</span></span>
+<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Create a new clipped interval based on original interval values</span></span>
+<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a>            <span class="co">// but clipped at the transformed boundaries</span></span>
+<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> clipped_start <span class="op">=</span> interval<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_start <span class="op">&lt;</span> start_time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Binary search or interpolation to find the original value</span></span>
+<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>                <span class="co">// that transforms to start_time would be ideal here</span></span>
+<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>                <span class="co">// For now, use a simple approach:</span></span>
+<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>                <span class="cf">while</span> <span class="op">(</span>clipped_start <span class="op">&lt;</span> start_time <span class="op">&amp;&amp;</span> clipped_start <span class="op">&lt;</span> interval<span class="op">.</span>end<span class="op">)</span></span>
+<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a>                    clipped_start<span class="op">++;</span></span>
+<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-319"><a href="#cb3-319" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> clipped_end <span class="op">=</span> interval<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_end <span class="op">&gt;</span> stop_time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-321"><a href="#cb3-321" aria-hidden="true" tabindex="-1"></a>                <span class="cf">while</span> <span class="op">(</span>clipped_end <span class="op">&gt;</span> interval<span class="op">.</span>start <span class="op">&amp;&amp;</span> clipped_end <span class="op">&gt;</span> stop_time<span class="op">)</span></span>
+<span id="cb3-322"><a href="#cb3-322" aria-hidden="true" tabindex="-1"></a>                    clipped_end<span class="op">--;</span></span>
+<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span>clipped_start<span class="op">,</span> clipped_end<span class="op">});</span></span>
+<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Identity</span></span>
+<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _identity_data_key<span class="op">;</span></span>
+<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> _identity_registry<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">,</span> <span class="dt">int64_t</span><span class="op">&gt;</span> _getTimeRangeFromIndices<span class="op">(</span></span>
+<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_index<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ========== Private Range Query Helpers ==========</span></span>
+<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">,</span> <span class="dt">int64_t</span><span class="op">&gt;</span> _getConvertedTimeRange<span class="op">(</span></span>
+<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex stop_index<span class="op">,</span></span>
+<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fast path: same time frame or no conversion needed</span></span>
+<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_time_frame <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">{</span>start_index<span class="op">.</span>getValue<span class="op">(),</span> stop_index<span class="op">.</span>getValue<span class="op">()};</span></span>
+<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to our time frame</span></span>
+<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target_start<span class="op">,</span> target_stop<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span></span>
+<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a>                start_index<span class="op">,</span> stop_index<span class="op">,</span> source_time_frame<span class="op">,</span> <span class="op">*</span>_time_frame<span class="op">);</span></span>
+<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{</span>target_start<span class="op">.</span>getValue<span class="op">(),</span> target_stop<span class="op">.</span>getValue<span class="op">()};</span></span>
+<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int64_t</span> _getConvertedTime<span class="op">(</span></span>
+<span id="cb3-355"><a href="#cb3-355" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex time_index<span class="op">,</span></span>
+<span id="cb3-356"><a href="#cb3-356" aria-hidden="true" tabindex="-1"></a>            TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-357"><a href="#cb3-357" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(&amp;</span>source_time_frame <span class="op">==</span> _time_frame<span class="op">.</span>get<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_time_frame<span class="op">.</span>get<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-358"><a href="#cb3-358" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> time_index<span class="op">.</span>getValue<span class="op">();</span></span>
+<span id="cb3-359"><a href="#cb3-359" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-360"><a href="#cb3-360" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert using the same logic as range conversion</span></span>
+<span id="cb3-361"><a href="#cb3-361" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">[</span>target<span class="op">,</span> _<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span></span>
+<span id="cb3-362"><a href="#cb3-362" aria-hidden="true" tabindex="-1"></a>                time_index<span class="op">,</span> time_index<span class="op">,</span> source_time_frame<span class="op">,</span> <span class="op">*</span>_time_frame<span class="op">);</span></span>
+<span id="cb3-363"><a href="#cb3-363" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> target<span class="op">.</span>getValue<span class="op">();</span></span>
+<span id="cb3-364"><a href="#cb3-364" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-365"><a href="#cb3-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-366"><a href="#cb3-366" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> _hasIntervalAtTime<span class="op">(</span><span class="dt">int64_t</span> time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-367"><a href="#cb3-367" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> _storage<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-368"><a href="#cb3-368" aria-hidden="true" tabindex="-1"></a>            Interval <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">=</span> _storage<span class="op">.</span>getInterval<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb3-369"><a href="#cb3-369" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span> time <span class="op">&lt;=</span> interval<span class="op">.</span>end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-370"><a href="#cb3-370" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-371"><a href="#cb3-371" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-372"><a href="#cb3-372" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-374"><a href="#cb3-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-375"><a href="#cb3-375" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-376"><a href="#cb3-376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-377"><a href="#cb3-377" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb3-378"><a href="#cb3-378" aria-hidden="true" tabindex="-1"></a><span class="co">// Template Implementation</span></span>
+<span id="cb3-379"><a href="#cb3-379" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb3-380"><a href="#cb3-380" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-381"><a href="#cb3-381" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> ViewType<span class="op">&gt;</span></span>
+<span id="cb3-382"><a href="#cb3-382" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> DigitalIntervalSeries<span class="op">::</span>createFromView<span class="op">(</span></span>
+<span id="cb3-383"><a href="#cb3-383" aria-hidden="true" tabindex="-1"></a>        ViewType view<span class="op">,</span></span>
+<span id="cb3-384"><a href="#cb3-384" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
+<span id="cb3-385"><a href="#cb3-385" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> time_frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-386"><a href="#cb3-386" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;();</span></span>
+<span id="cb3-387"><a href="#cb3-387" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_storage <span class="op">=</span> DigitalIntervalStorageWrapper<span class="op">{</span></span>
+<span id="cb3-388"><a href="#cb3-388" aria-hidden="true" tabindex="-1"></a>            LazyDigitalIntervalStorage<span class="op">&lt;</span>ViewType<span class="op">&gt;{</span><span class="bu">std::</span>move<span class="op">(</span>view<span class="op">),</span> num_elements<span class="op">}};</span></span>
+<span id="cb3-389"><a href="#cb3-389" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_time_frame <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>time_frame<span class="op">);</span></span>
+<span id="cb3-390"><a href="#cb3-390" aria-hidden="true" tabindex="-1"></a>    result<span class="op">-&gt;</span>_cacheOptimizationPointers<span class="op">();</span></span>
+<span id="cb3-391"><a href="#cb3-391" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Note: _data vector left empty - storage wrapper handles all access</span></span>
+<span id="cb3-392"><a href="#cb3-392" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb3-393"><a href="#cb3-393" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-394"><a href="#cb3-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-395"><a href="#cb3-395" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> find_closest_preceding_event<span class="op">(</span>DigitalIntervalSeries <span class="op">*</span> digital_series<span class="op">,</span> TimeFrameIndex time<span class="op">);</span></span>
+<span id="cb3-396"><a href="#cb3-396" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-397"><a href="#cb3-397" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DIGITAL_INTERVAL_SERIES_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:54 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:24 +0000</p>
 
 
 </section>

@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>src/TransformsV2/extension/ViewAdaptorTypes.hpp – Neuralyzer</title>
+<title>src/GatherResult/ViewAdaptorTypes.hpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -345,15 +345,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#srctransformsv2extensionviewadaptortypes.hpp" id="toc-srctransformsv2extensionviewadaptortypes.hpp" class="nav-link active" data-scroll-target="#srctransformsv2extensionviewadaptortypes.hpp">src/TransformsV2/extension/ViewAdaptorTypes.hpp</a>
+  <li><a href="#srcgatherresultviewadaptortypes.hpp" id="toc-srcgatherresultviewadaptortypes.hpp" class="nav-link active" data-scroll-target="#srcgatherresultviewadaptortypes.hpp">src/GatherResult/ViewAdaptorTypes.hpp</a>
   <ul class="collapse">
   <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
-  <li><a href="#view-adaptor" id="toc-view-adaptor" class="nav-link" data-scroll-target="#view-adaptor">View Adaptor</a></li>
-  <li><a href="#context-aware-view-adaptor-factory" id="toc-context-aware-view-adaptor-factory" class="nav-link" data-scroll-target="#context-aware-view-adaptor-factory">Context-Aware View Adaptor Factory</a></li>
-  <li><a href="#reducer" id="toc-reducer" class="nav-link" data-scroll-target="#reducer">Reducer</a></li>
-  <li><a href="#context-aware-reducer-factory" id="toc-context-aware-reducer-factory" class="nav-link" data-scroll-target="#context-aware-reducer-factory">Context-Aware Reducer Factory</a></li>
+  <li><a href="#production-patterns" id="toc-production-patterns" class="nav-link" data-scroll-target="#production-patterns">Production patterns</a></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
   </ul>
@@ -365,7 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">src/TransformsV2/extension/ViewAdaptorTypes.hpp</h1>
+<h1 class="title">src/GatherResult/ViewAdaptorTypes.hpp</h1>
 </div>
 
 
@@ -382,9 +379,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="srctransformsv2extensionviewadaptortypes.hpp" class="level1">
-<h1>src/TransformsV2/extension/ViewAdaptorTypes.hpp</h1>
-<p>Types for view adaptors and reducers produced by <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a>. <a href="#detailed-description">More…</a></p>
+<section id="srcgatherresultviewadaptortypes.hpp" class="level1">
+<h1>src/GatherResult/ViewAdaptorTypes.hpp</h1>
+<p>Function-object types for gather-slice transforms and reductions. <a href="#detailed-description">More…</a></p>
 <section id="namespaces" class="level2">
 <h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
 <table class="caption-top table">
@@ -403,6 +400,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">WhiskerToolbox::Transforms::V2</a></strong></td>
 </tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">WhiskerToolbox::Gather</a></strong></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -418,247 +418,140 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TrialContext.html">WhiskerToolbox::Transforms::V2::TrialContext</a></strong> <br>Context for trial-aligned analysis (legacy - use <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineValueStore.html">PipelineValueStore</a> for <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">V2</a>)</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1BoundViewAdaptor.html">WhiskerToolbox::Gather::BoundViewAdaptor</a></strong> <br>Result of binding a pipeline to produce a view adaptor.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionStep.html">WhiskerToolbox::Transforms::V2::RangeReductionStep</a></strong> <br>Descriptor for a terminal range reduction in a pipeline.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1BoundViewAdaptor.html">WhiskerToolbox::Transforms::V2::BoundViewAdaptor</a></strong> <br>Result of binding a pipeline to produce a view adaptor.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1BoundReducer.html">WhiskerToolbox::Transforms::V2::BoundReducer</a></strong> <br>Result of binding a pipeline to produce a reducer.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1BoundContextAwareViewAdaptor.html">WhiskerToolbox::Transforms::V2::BoundContextAwareViewAdaptor</a></strong> <br>Result of binding a context-aware pipeline.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1BoundContextAwareReducer.html">WhiskerToolbox::Transforms::V2::BoundContextAwareReducer</a></strong> <br>Result of binding a context-aware pipeline with reduction.</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1BoundReducer.html">WhiskerToolbox::Gather::BoundReducer</a></strong> <br>Result of binding a pipeline to produce a reducer.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
-<p>Types for view adaptors and reducers produced by <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a>.</p>
-<p>This file provides the type definitions and interfaces for view adaptors and reducers that enable lazy, composable transformations on <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> views without intermediate materialization.</p>
+<p>Function-object types for gather-slice transforms and reductions.</p>
+<p>Defines <code>ViewAdaptorFn</code>, <code>ReducerFn</code>, and factory aliases used with <code>[GatherResult](/api_generated/Classes/classGatherResult.md)</code> and interval/tensor builders. Callers supply these callables directly (often wrapping <code>RangeReductionRegistry::executeErased()</code>).</p>
 </section>
-<section id="view-adaptor" class="level2">
-<h2 class="anchored" data-anchor-id="view-adaptor">View Adaptor</h2>
-<p>A view adaptor transforms a range of input elements into a lazy range of output elements. No intermediate storage is created - each element is transformed on-demand as the output range is consumed.</p>
+<section id="production-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="production-patterns">Production patterns</h2>
+<p><strong>Per-trial scalar features (interval rows):</strong><code>gatherAndExecutePipeline()</code> and <code>TensorColumnBuilders</code> run <code>executePipeline()</code> on each gathered slice, then apply the pipeline’s terminal range reduction via <code>RangeReductionRegistry::executeErased()</code>.</p>
+<p><strong>Per-element projection (raster plots):</strong><code>bindValueProjectionV2()</code> + <code>[GatherResult::project()](/api_generated/Classes/classGatherResult.md#function-project)</code> with <code>PipelineValueStore</code> from <code>buildTrialStore()</code>.</p>
+<p><strong>Trial sorting / batch reduce:</strong> Build a <code>ReducerFactoryV2</code> lambda and pass it to <code>[GatherResult::reduce()](/api_generated/Classes/classGatherResult.md#function-reduce)</code>.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// ViewAdaptor: transforms range&lt;In&gt; → lazy range&lt;Out&gt;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> adaptor <span class="op">=</span> pipeline<span class="op">.</span>bindToView<span class="op">&lt;</span>EventWithId<span class="op">,</span> NormalizedEvent<span class="op">&gt;();</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> lazy_view <span class="op">=</span> adaptor<span class="op">(</span>trial_events_view<span class="op">);</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> normalized <span class="op">:</span> lazy_view<span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="context-aware-view-adaptor-factory" class="level2">
-<h2 class="anchored" data-anchor-id="context-aware-view-adaptor-factory">Context-Aware View Adaptor Factory</h2>
-<p>For transforms that need per-trial context (e.g., NormalizeTime), a factory pattern is used. The factory accepts TrialContext and returns a view adaptor with context injected into the parameters.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Factory: TrialContext → ViewAdaptor</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> pipeline<span class="op">.</span>bindToViewWithContext<span class="op">&lt;</span>EventWithId<span class="op">,</span> NormalizedEvent<span class="op">&gt;();</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gather_result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    TrialContext ctx<span class="op">{.</span>alignment_time <span class="op">=</span> interval<span class="op">.</span>start<span class="op">};</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> adaptor <span class="op">=</span> factory<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> lazy_view <span class="op">=</span> adaptor<span class="op">(</span>gather_result<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">());</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="reducer" class="level2">
-<h2 class="anchored" data-anchor-id="reducer">Reducer</h2>
-<p>A reducer combines a view adaptor with a terminal range reduction to produce a scalar from a range of input elements.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Reducer: range&lt;In&gt; → Scalar</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> reducer <span class="op">=</span> pipeline<span class="op">.</span>bindReducer<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;();</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> latency <span class="op">=</span> reducer<span class="op">(</span>trial_events_view<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="context-aware-reducer-factory" class="level2">
-<h2 class="anchored" data-anchor-id="context-aware-reducer-factory">Context-Aware Reducer Factory</h2>
-<p>Similar to view adaptor factories, reducer factories accept context.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> pipeline<span class="op">.</span>bindReducerWithContext<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;();</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> latencies <span class="op">=</span> gather_result<span class="op">.</span>transform<span class="op">([&amp;](</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> trial<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    TrialContext ctx<span class="op">{...};</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> factory<span class="op">(</span>ctx<span class="op">)(</span>trial<span class="op">-&gt;</span>view<span class="op">());</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> for methods that create these types</p>
-<p><a href="../../api_generated/Files/RangeReductionRegistry_8hpp.html#file-rangereductionregistry.hpp">RangeReductionRegistry.hpp</a> for range reductions</p>
-<p><a href="../../api_generated/Files/GatherResult_8hpp.html#file-gatherresult.hpp">GatherResult.hpp</a> for trial-aligned analysis</p>
-<p>PipelineValueStore for the V2 pattern replacing TrialContext</p>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ReducerFactoryV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> factory <span class="op">=</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">[&amp;](</span>PipelineValueStore <span class="at">const</span><span class="op">&amp;)</span> <span class="op">-&gt;</span> ReducerFn<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">[](</span><span class="bu">std::</span>span<span class="op">&lt;</span>EventWithId <span class="at">const</span><span class="op">&gt;</span> events<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">float</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span><span class="op">&amp;</span> reg <span class="op">=</span> RangeReductionRegistry<span class="op">::</span>instance<span class="op">();</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>any input_any<span class="op">{</span>events<span class="op">};</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>reg<span class="op">.</span>executeErased<span class="op">(</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">"FirstPositiveLatency"</span><span class="op">,</span> <span class="kw">typeid</span><span class="op">(</span>EventWithId<span class="op">),</span> input_any<span class="op">,</span> <span class="op">{}));</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> latencies <span class="op">=</span> gather<span class="op">.</span>reduce<span class="op">(</span>factory<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>TransformPipeline::bindValueProjectionV2()</p>
+<p><a href="../../api_generated/Files/GatherPipelineExecutor_8hpp.html#file-gatherpipelineexecutor.hpp">GatherPipelineExecutor.hpp</a> gatherAndExecutePipeline()</p>
+<p><a href="../../api_generated/Files/TensorColumnBuilders_8hpp.html#file-tensorcolumnbuilders.hpp">TensorColumnBuilders.hpp</a> buildIntervalReductionProvider()</p>
+<p><a href="../../api_generated/Files/RangeReductionRegistry_8hpp.html#file-rangereductionregistry.hpp">RangeReductionRegistry.hpp</a></p>
+<p><a href="../../api_generated/Files/GatherResult_8hpp.html#file-gatherresult.hpp">GatherResult.hpp</a></p>
+<p>PipelineValueStore</p>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformTypes.hpp"</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrameIndex.hpp"</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;any&gt;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;concepts&gt;</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;functional&gt;</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ranges&gt;</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;span&gt;</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;typeindex&gt;</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Legacy Context Types (for backward compatibility)</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TrialContext <span class="op">{</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex alignment_time<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>size_t<span class="op">&gt;</span> trial_index<span class="op">{</span><span class="bu">std::</span>nullopt<span class="op">};</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span> trial_duration<span class="op">{</span><span class="bu">std::</span>nullopt<span class="op">};</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> end_time<span class="op">{</span><span class="bu">std::</span>nullopt<span class="op">};</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  <span class="co">// namespace WhiskerToolbox::Transforms::V2</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="co">// View Adaptor Types</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ViewAdaptorFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span>OutElement<span class="op">&gt;(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedViewAdaptorFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ViewAdaptorFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ViewAdaptorFn<span class="op">&lt;</span>InElement<span class="op">,</span> OutElement<span class="op">&gt;(</span>TrialContext <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedViewAdaptorFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ErasedViewAdaptorFn<span class="op">(</span>TrialContext <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">// Reducer Types</span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ReducerFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>Scalar<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedReducerFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ReducerFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;(</span>TrialContext <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedReducerFactory <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ErasedReducerFn<span class="op">(</span>TrialContext <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a><span class="co">// Forward declaration for V2 types</span></span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PipelineValueStore<span class="op">;</span></span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ReducerFactoryV2 <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;(</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedReducerFactoryV2 <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ErasedReducerFn<span class="op">(</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a><span class="co">// Concepts for View Adaptors</span></span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">,</span> <span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
-<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> ViewAdaptor <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>F f<span class="op">,</span> <span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;</span> input<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> f<span class="op">(</span>input<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>ranges::input_range<span class="op">;</span></span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Output range must yield OutElement</span></span>
-<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>    <span class="kw">requires</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span></span>
-<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>ranges::range_value_t<span class="op">&lt;</span><span class="kw">decltype</span><span class="op">(</span>f<span class="op">(</span>input<span class="op">))&gt;,</span></span>
-<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>        OutElement<span class="op">&gt;;</span></span>
-<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">,</span> <span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> Reducer <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>F f<span class="op">,</span> <span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;</span> input<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> f<span class="op">(</span>input<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span>Scalar<span class="op">&gt;;</span></span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a><span class="co">// Terminal Reduction Step Descriptor</span></span>
-<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RangeReductionStep <span class="op">{</span></span>
-<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string reduction_name<span class="op">;</span></span>
-<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any params<span class="op">;</span></span>
-<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
-<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
-<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
-<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>    RangeReductionStep<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
-<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Params<span class="op">&gt;</span></span>
-<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>    RangeReductionStep<span class="op">(</span><span class="bu">std::</span>string name<span class="op">,</span> Params p<span class="op">)</span></span>
-<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> reduction_name<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>name<span class="op">)),</span></span>
-<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>          params<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>p<span class="op">)),</span></span>
-<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>          <span class="dt">params_type</span><span class="op">(</span><span class="kw">typeid</span><span class="op">(</span>Params<span class="op">))</span> <span class="op">{}</span></span>
-<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a><span class="co">// Result Types for Pipeline Binding</span></span>
-<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
-<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundViewAdaptor <span class="op">{</span></span>
-<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>    ViewAdaptorFn<span class="op">&lt;</span>InElement<span class="op">,</span> OutElement<span class="op">&gt;</span> adaptor<span class="op">;</span></span>
-<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> requires_context<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
-<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>OutElement<span class="op">);</span></span>
-<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundReducer <span class="op">{</span></span>
-<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>    ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;</span> reducer<span class="op">;</span></span>
-<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> requires_context<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
-<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>Scalar<span class="op">);</span></span>
-<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">intermediate_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
-<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
-<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundContextAwareViewAdaptor <span class="op">{</span></span>
-<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>    ViewAdaptorFactory<span class="op">&lt;</span>InElement<span class="op">,</span> OutElement<span class="op">&gt;</span> factory<span class="op">;</span></span>
-<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
-<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>OutElement<span class="op">);</span></span>
-<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
-<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundContextAwareReducer <span class="op">{</span></span>
-<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>    ReducerFactory<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;</span> factory<span class="op">;</span></span>
-<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
-<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>Scalar<span class="op">);</span></span>
-<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  <span class="co">// namespace WhiskerToolbox::Transforms::V2</span></span>
-<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif  </span><span class="co">// WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformTypes/TransformTypes.hpp"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;any&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;concepts&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;functional&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ranges&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;span&gt;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;typeindex&gt;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PipelineValueStore<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Transforms::V2</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Gather <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">// View Adaptor Types</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ViewAdaptorFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span>OutElement<span class="op">&gt;(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedViewAdaptorFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">// Reducer Types</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ReducerFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>Scalar<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedReducerFn <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ReducerFactoryV2 <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;(</span>WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ErasedReducerFactoryV2 <span class="op">=</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ErasedReducerFn<span class="op">(</span>WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">// Concepts for View Adaptors</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">,</span> <span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> ViewAdaptor <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>F f<span class="op">,</span> <span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;</span> input<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> f<span class="op">(</span>input<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>ranges::input_range<span class="op">;</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Output range must yield OutElement</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">requires</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>ranges::range_value_t<span class="op">&lt;</span><span class="kw">decltype</span><span class="op">(</span>f<span class="op">(</span>input<span class="op">))&gt;,</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>            OutElement<span class="op">&gt;;</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">,</span> <span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> Reducer <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>F f<span class="op">,</span> <span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;</span> input<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> f<span class="op">(</span>input<span class="op">)</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span>Scalar<span class="op">&gt;;</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co">// Result Types for Pipeline Binding</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> OutElement<span class="op">&gt;</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundViewAdaptor <span class="op">{</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    ViewAdaptorFn<span class="op">&lt;</span>InElement<span class="op">,</span> OutElement<span class="op">&gt;</span> adaptor<span class="op">;</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> requires_context<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>OutElement<span class="op">);</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> InElement<span class="op">,</span> <span class="kw">typename</span> Scalar<span class="op">&gt;</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BoundReducer <span class="op">{</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;</span> reducer<span class="op">;</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> requires_context<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>InElement<span class="op">);</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">output_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span>Scalar<span class="op">);</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">intermediate_type</span> <span class="op">=</span> <span class="kw">typeid</span><span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Gather</span></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKERTOOLBOX_V2_VIEW_ADAPTOR_TYPES_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:25 +0000</p>
 
 
 </section>

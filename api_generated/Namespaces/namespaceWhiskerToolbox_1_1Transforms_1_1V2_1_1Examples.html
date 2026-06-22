@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -357,6 +357,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#enum-linepointextractionmethod" id="toc-enum-linepointextractionmethod" class="nav-link" data-scroll-target="#enum-linepointextractionmethod">enum LinePointExtractionMethod</a></li>
   <li><a href="#enum-lineresamplemethod" id="toc-enum-lineresamplemethod" class="nav-link" data-scroll-target="#enum-lineresamplemethod">enum LineResampleMethod</a></li>
   <li><a href="#enum-linesubsegmentmethod" id="toc-enum-linesubsegmentmethod" class="nav-link" data-scroll-target="#enum-linesubsegmentmethod">enum LineSubsegmentMethod</a></li>
+  <li><a href="#enum-skeletonizemethod" id="toc-enum-skeletonizemethod" class="nav-link" data-scroll-target="#enum-skeletonizemethod">enum SkeletonizeMethod</a></li>
   <li><a href="#enum-sincwindowtype" id="toc-enum-sincwindowtype" class="nav-link" data-scroll-target="#enum-sincwindowtype">enum SincWindowType</a></li>
   <li><a href="#enum-boundarymode" id="toc-enum-boundarymode" class="nav-link" data-scroll-target="#enum-boundarymode">enum BoundaryMode</a></li>
   <li><a href="#enum-carmethod" id="toc-enum-carmethod" class="nav-link" data-scroll-target="#enum-carmethod">enum CARMethod</a></li>
@@ -392,6 +393,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-calculatemaskareawithcontext" id="toc-function-calculatemaskareawithcontext" class="nav-link" data-scroll-target="#function-calculatemaskareawithcontext">function calculateMaskAreaWithContext</a></li>
   <li><a href="#function-calculatemaskcentroid" id="toc-function-calculatemaskcentroid" class="nav-link" data-scroll-target="#function-calculatemaskcentroid">function calculateMaskCentroid</a></li>
   <li><a href="#function-calculatemaskcentroidwithcontext" id="toc-function-calculatemaskcentroidwithcontext" class="nav-link" data-scroll-target="#function-calculatemaskcentroidwithcontext">function calculateMaskCentroidWithContext</a></li>
+  <li><a href="#function-applymedianfilter" id="toc-function-applymedianfilter" class="nav-link" data-scroll-target="#function-applymedianfilter">function applyMedianFilter</a></li>
+  <li><a href="#function-applymedianfilterwithcontext" id="toc-function-applymedianfilterwithcontext" class="nav-link" data-scroll-target="#function-applymedianfilterwithcontext">function applyMedianFilterWithContext</a></li>
+  <li><a href="#function-skeletonizemask" id="toc-function-skeletonizemask" class="nav-link" data-scroll-target="#function-skeletonizemask">function skeletonizeMask</a></li>
+  <li><a href="#function-skeletonizemaskwithcontext" id="toc-function-skeletonizemaskwithcontext" class="nav-link" data-scroll-target="#function-skeletonizemaskwithcontext">function skeletonizeMaskWithContext</a></li>
+  <li><a href="#function-masktoline" id="toc-function-masktoline" class="nav-link" data-scroll-target="#function-masktoline">function maskToLine</a></li>
+  <li><a href="#function-masktolinewithcontext" id="toc-function-masktolinewithcontext" class="nav-link" data-scroll-target="#function-masktolinewithcontext">function maskToLineWithContext</a></li>
+  <li><a href="#function-removelineoutliers" id="toc-function-removelineoutliers" class="nav-link" data-scroll-target="#function-removelineoutliers">function removeLineOutliers</a></li>
+  <li><a href="#function-removelineoutlierswithcontext" id="toc-function-removelineoutlierswithcontext" class="nav-link" data-scroll-target="#function-removelineoutlierswithcontext">function removeLineOutliersWithContext</a></li>
   <li><a href="#function-sincinterpolation" id="toc-function-sincinterpolation" class="nav-link" data-scroll-target="#function-sincinterpolation">function sincInterpolation</a></li>
   <li><a href="#function-sumreduction" id="toc-function-sumreduction" class="nav-link" data-scroll-target="#function-sumreduction">function sumReduction</a></li>
   <li><a href="#function-sumreductionwithcontext" id="toc-function-sumreductionwithcontext" class="nav-link" data-scroll-target="#function-sumreductionwithcontext">function sumReductionWithContext</a></li>
@@ -409,12 +418,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-loadparametersfromfile" id="toc-function-loadparametersfromfile" class="nav-link" data-scroll-target="#function-loadparametersfromfile">function loadParametersFromFile</a></li>
   <li><a href="#function-saveparameterstojson" id="toc-function-saveparameterstojson" class="nav-link" data-scroll-target="#function-saveparameterstojson">function saveParametersToJson</a></li>
   <li><a href="#function-saveparameterstofile" id="toc-function-saveparameterstofile" class="nav-link" data-scroll-target="#function-saveparameterstofile">function saveParametersToFile</a></li>
+  <li><a href="#function-defaultuserpipelinedirectory" id="toc-function-defaultuserpipelinedirectory" class="nav-link" data-scroll-target="#function-defaultuserpipelinedirectory">function defaultUserPipelineDirectory</a></li>
+  <li><a href="#function-ensureuserpipelinedirectory" id="toc-function-ensureuserpipelinedirectory" class="nav-link" data-scroll-target="#function-ensureuserpipelinedirectory">function ensureUserPipelineDirectory</a></li>
+  <li><a href="#function-sanitizepipelinefilename" id="toc-function-sanitizepipelinefilename" class="nav-link" data-scroll-target="#function-sanitizepipelinefilename">function sanitizePipelineFilename</a></li>
+  <li><a href="#function-listpipelinefiles" id="toc-function-listpipelinefiles" class="nav-link" data-scroll-target="#function-listpipelinefiles">function listPipelineFiles</a></li>
+  <li><a href="#function-loadpipelinedescriptorfromfile" id="toc-function-loadpipelinedescriptorfromfile" class="nav-link" data-scroll-target="#function-loadpipelinedescriptorfromfile">function loadPipelineDescriptorFromFile</a></li>
+  <li><a href="#function-savepipelinedescriptortofile" id="toc-function-savepipelinedescriptortofile" class="nav-link" data-scroll-target="#function-savepipelinedescriptortofile">function savePipelineDescriptorToFile</a></li>
+  <li><a href="#function-deletepipelinefile" id="toc-function-deletepipelinefile" class="nav-link" data-scroll-target="#function-deletepipelinefile">function deletePipelineFile</a></li>
   <li><a href="#function-createpipelinestepfromregistry" id="toc-function-createpipelinestepfromregistry" class="nav-link" data-scroll-target="#function-createpipelinestepfromregistry">function createPipelineStepFromRegistry</a></li>
   <li><a href="#function-loadstepfromdescriptor" id="toc-function-loadstepfromdescriptor" class="nav-link" data-scroll-target="#function-loadstepfromdescriptor">function loadStepFromDescriptor</a></li>
   <li><a href="#function-loadprereductionfromdescriptor" id="toc-function-loadprereductionfromdescriptor" class="nav-link" data-scroll-target="#function-loadprereductionfromdescriptor">function loadPreReductionFromDescriptor</a></li>
   <li><a href="#function-loadrangereductionfromdescriptor" id="toc-function-loadrangereductionfromdescriptor" class="nav-link" data-scroll-target="#function-loadrangereductionfromdescriptor">function loadRangeReductionFromDescriptor</a></li>
   <li><a href="#function-loadpipelinefromjson" id="toc-function-loadpipelinefromjson" class="nav-link" data-scroll-target="#function-loadpipelinefromjson">function loadPipelineFromJson</a></li>
   <li><a href="#function-savepipelinetojson" id="toc-function-savepipelinetojson" class="nav-link" data-scroll-target="#function-savepipelinetojson">function savePipelineToJson</a></li>
+  <li><a href="#function-savepipelinetofile" id="toc-function-savepipelinetofile" class="nav-link" data-scroll-target="#function-savepipelinetofile">function savePipelineToFile</a></li>
+  <li><a href="#function-loadpipelinedescriptorfromjsonfile" id="toc-function-loadpipelinedescriptorfromjsonfile" class="nav-link" data-scroll-target="#function-loadpipelinedescriptorfromjsonfile">function loadPipelineDescriptorFromJsonFile</a></li>
   <li><a href="#function-getpipelinestepfactoryregistry" id="toc-function-getpipelinestepfactoryregistry" class="nav-link" data-scroll-target="#function-getpipelinestepfactoryregistry">function getPipelineStepFactoryRegistry</a></li>
   <li><a href="#function-registerpipelinestepfactoryfor" id="toc-function-registerpipelinestepfactoryfor" class="nav-link" data-scroll-target="#function-registerpipelinestepfactoryfor">function registerPipelineStepFactoryFor</a></li>
   </ul></li>
@@ -515,27 +533,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskMedianFilterParams.html">WhiskerToolbox::Transforms::V2::Examples::MaskMedianFilterParams</a></strong> <br>Parameters for mask median filtering.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskToLineParams.html">WhiskerToolbox::Transforms::V2::Examples::MaskToLineParams</a></strong> <br>Parameters for ordering mask points into a line.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor</a></strong> <br>Complete pipeline descriptor.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineMetadata.html">WhiskerToolbox::Transforms::V2::Examples::PipelineMetadata</a></strong> <br>Metadata for a pipeline.</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineLibraryEntry.html">WhiskerToolbox::Transforms::V2::Examples::PipelineLibraryEntry</a></strong> <br>Catalog entry for a saved pipeline JSON file.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineMetadata.html">WhiskerToolbox::Transforms::V2::Examples::PipelineMetadata</a></strong> <br>Metadata for a pipeline.</td>
+</tr>
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor</a></strong> <br>Descriptor for a single pipeline step.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PreReductionStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor</a></strong> <br>Descriptor for a pre-execution reduction step.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RangeReductionStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::RangeReductionStepDescriptor</a></strong> <br>Descriptor for a terminal range reduction step.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RegisterPipelineStepFactory.html">WhiskerToolbox::Transforms::V2::Examples::RegisterPipelineStepFactory</a></strong> <br>Auto-register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RemoveLineOutliersParams.html">WhiskerToolbox::Transforms::V2::Examples::RemoveLineOutliersParams</a></strong> <br>Parameters for geometric outlier removal on a line.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
@@ -608,7 +642,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-lineresamplemethod">LineResampleMethod</a></strong> { FixedSpacing, DouglasPeucker}<br><a href="../../api_generated/Classes/structLine.html">Line</a> simplification algorithm selection.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-lineresamplemethod">LineResampleMethod</a></strong> { FixedSpacing, DouglasPeucker, PolynomialSmooth}<br><a href="../../api_generated/Classes/structLine.html">Line</a> simplification algorithm selection.</td>
 </tr>
 <tr class="odd">
 <td>enum class</td>
@@ -616,21 +650,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-sincwindowtype">SincWindowType</a></strong> { Lanczos, Hann, Blackman}<br>Window function type for the sinc kernel.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-skeletonizemethod">SkeletonizeMethod</a></strong> { ZhangSuen, MedialAxis}<br>Skeletonization algorithm selection.</td>
 </tr>
 <tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-sincwindowtype">SincWindowType</a></strong> { Lanczos, Hann, Blackman}<br>Window function type for the sinc kernel.</td>
+</tr>
+<tr class="even">
 <td>enum class</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-boundarymode">BoundaryMode</a></strong> { SymmetricExtension, ZeroPad}<br>Boundary handling mode for edge samples.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>enum class</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-carmethod">CARMethod</a></strong> { Mean, Median}<br>Method used to compute the cross-channel reference signal.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>enum class</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-deltaboundarypolicy">DeltaBoundaryPolicy</a></strong> { NaN, Drop, Clamp, Zero}<br>Policy for handling boundary rows where t-1 or t+1 is out-of-range.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>enum class</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#enum-boundarypolicy">BoundaryPolicy</a></strong> { NaN, Drop, Clamp, Zero}<br>Policy for handling boundary rows where a neighbor offset is out-of-range.</td>
 </tr>
@@ -756,6 +794,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-calculatemaskcentroidwithcontext">calculateMaskCentroidWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskCentroidParams.html">MaskCentroidParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Calculate the centroid with context support for progress/cancellation.</td>
 </tr>
 <tr class="even">
+<td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-applymedianfilter">applyMedianFilter</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskMedianFilterParams.html">MaskMedianFilterParams</a> const &amp; params)<br>Apply median filtering to a single mask element.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-applymedianfilterwithcontext">applyMedianFilterWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskMedianFilterParams.html">MaskMedianFilterParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply median filtering with progress reporting and cancellation support.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-skeletonizemask">skeletonizeMask</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, MaskSkeletonizeParams const &amp; params)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-skeletonizemaskwithcontext">skeletonizeMaskWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, MaskSkeletonizeParams const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-masktoline">maskToLine</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskToLineParams.html">MaskToLineParams</a> const &amp; params)<br>Order mask points into a directed line polyline.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-masktolinewithcontext">maskToLineWithContext</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1MaskToLineParams.html">MaskToLineParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Order mask points into a line with progress reporting and cancellation support.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-removelineoutliers">removeLineOutliers</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RemoveLineOutliersParams.html">RemoveLineOutliersParams</a> const &amp; params)<br>Remove geometric outlier points from an ordered line.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classLine2D.html">Line2D</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-removelineoutlierswithcontext">removeLineOutliersWithContext</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RemoveLineOutliersParams.html">RemoveLineOutliersParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Remove line outliers with progress reporting and cancellation support.</td>
+</tr>
+<tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-sincinterpolation">sincInterpolation</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; input, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1SincInterpolationParams.html">SincInterpolationParams</a> const &amp; params, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Apply band-limited sinc interpolation to upsample an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</td>
 </tr>
@@ -824,38 +894,74 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-saveparameterstofile">saveParametersToFile</a></strong>(ParamsT const &amp; params, std::string const &amp; file_path, bool pretty_print =true)<br>Save parameters to JSON file.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-createpipelinestepfromregistry">createPipelineStepFromRegistry</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> const &amp; registry, std::string const &amp; transform_name, std::any const &amp; params_any)<br>Create <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry.</td>
+<td>std::filesystem::path</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-defaultuserpipelinedirectory">defaultUserPipelineDirectory</a></strong>(std::filesystem::path const &amp; config_dir)<br>Default subdirectory for user TransformsV2 pipelines under a config root.</td>
 </tr>
 <tr class="even">
-<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadstepfromdescriptor">loadStepFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">PipelineStepDescriptor</a> const &amp; descriptor)<br>Load a single pipeline step from JSON descriptor.</td>
-</tr>
-<tr class="odd">
-<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">ReductionStep</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadprereductionfromdescriptor">loadPreReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PreReductionStepDescriptor.html">PreReductionStepDescriptor</a> const &amp; descriptor)<br>Load a pre-reduction from JSON descriptor.</td>
-</tr>
-<tr class="even">
-<td>rfl::Result&lt; std::pair&lt; std::string, std::any &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadrangereductionfromdescriptor">loadRangeReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RangeReductionStepDescriptor.html">RangeReductionStepDescriptor</a> const &amp; descriptor)<br>Load a range reduction from JSON descriptor.</td>
-</tr>
-<tr class="odd">
-<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromjson">loadPipelineFromJson</a></strong>(std::string const &amp; json_str)<br>Load a complete pipeline from JSON string.</td>
-</tr>
-<tr class="even">
-<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromfile">loadPipelineFromFile</a></strong>(std::string const &amp; filepath)<br>Load pipeline from JSON file.</td>
+<td>rfl::Result&lt; std::filesystem::path &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-ensureuserpipelinedirectory">ensureUserPipelineDirectory</a></strong>(std::filesystem::path const &amp; config_dir)<br>Create the user pipeline directory if it does not exist.</td>
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-savepipelinetojson">savePipelineToJson</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> const &amp; descriptor)<br>Save pipeline descriptor to JSON string.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-sanitizepipelinefilename">sanitizePipelineFilename</a></strong>(std::string_view name)<br>Convert a human-readable name into a safe filename stem.</td>
 </tr>
 <tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineLibraryEntry.html">PipelineLibraryEntry</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-listpipelinefiles">listPipelineFiles</a></strong>(std::filesystem::path const &amp; directory)<br>List .json pipeline files in a directory.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinedescriptorfromfile">loadPipelineDescriptorFromFile</a></strong>(std::filesystem::path const &amp; filepath)<br>Read and parse a <a href="">PipelineDescriptor</a> from disk.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; rfl::Nothing &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-savepipelinedescriptortofile">savePipelineDescriptorToFile</a></strong>(std::filesystem::path const &amp; filepath, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> const &amp; descriptor)<br>Write a <a href="">PipelineDescriptor</a> to disk as JSON.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; rfl::Nothing &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-deletepipelinefile">deletePipelineFile</a></strong>(std::filesystem::path const &amp; filepath)<br>Remove a pipeline file from the library.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-createpipelinestepfromregistry">createPipelineStepFromRegistry</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1ElementRegistry.html">ElementRegistry</a> const &amp; registry, std::string const &amp; transform_name, std::any const &amp; params_any)<br>Create <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadstepfromdescriptor">loadStepFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">PipelineStepDescriptor</a> const &amp; descriptor)<br>Load a single pipeline step from JSON descriptor.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">ReductionStep</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadprereductionfromdescriptor">loadPreReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PreReductionStepDescriptor.html">PreReductionStepDescriptor</a> const &amp; descriptor)<br>Load a pre-reduction from JSON descriptor.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; std::pair&lt; std::string, std::any &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadrangereductionfromdescriptor">loadRangeReductionFromDescriptor</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1RangeReductionStepDescriptor.html">RangeReductionStepDescriptor</a> const &amp; descriptor)<br>Load a range reduction from JSON descriptor.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromjson">loadPipelineFromJson</a></strong>(std::string const &amp; json_str)<br>Load a complete pipeline from JSON string.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinefromfile">loadPipelineFromFile</a></strong>(std::string const &amp; filepath)<br>Load pipeline from JSON file.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-savepipelinetojson">savePipelineToJson</a></strong>(<a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> const &amp; descriptor)<br>Save pipeline descriptor to JSON string.</td>
+</tr>
+<tr class="odd">
+<td>rfl::Result&lt; rfl::Nothing &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-savepipelinetofile">savePipelineToFile</a></strong>(std::string const &amp; filepath, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> const &amp; descriptor)<br>Save a pipeline descriptor to a JSON file.</td>
+</tr>
+<tr class="even">
+<td>rfl::Result&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineDescriptor.html">PipelineDescriptor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-loadpipelinedescriptorfromjsonfile">loadPipelineDescriptorFromJsonFile</a></strong>(std::string const &amp; filepath)<br>Load a pipeline descriptor from a JSON file (parse only; does not build <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a>)</td>
+</tr>
+<tr class="odd">
 <td>std::unordered_map&lt; std::type_index, std::function&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a>(std::string const &amp;, std::any const &amp;)&gt; &gt; &amp;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-getpipelinestepfactoryregistry">getPipelineStepFactoryRegistry</a></strong>()<br>Registry of <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory functions.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;typename Params &gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples.html#function-registerpipelinestepfactoryfor">registerPipelineStepFactoryFor</a></strong>()<br>Helper to register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</td>
 </tr>
@@ -937,6 +1043,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="enum-lineresamplemethod" class="level3">
 <h3 class="anchored" data-anchor-id="enum-lineresamplemethod">enum LineResampleMethod</h3>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Enumerator</th>
@@ -948,12 +1059,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>FixedSpacing</td>
 <td></td>
-<td></td>
+<td>Resample to target spacing between points.</td>
 </tr>
 <tr class="even">
 <td>DouglasPeucker</td>
 <td></td>
+<td>Simplify using Douglas-Peucker algorithm.</td>
+</tr>
+<tr class="odd">
+<td>PolynomialSmooth</td>
 <td></td>
+<td>Smooth via parametric polynomial fit and resample.</td>
 </tr>
 </tbody>
 </table>
@@ -983,6 +1099,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p>Subsegment extraction method.</p>
+</section>
+<section id="enum-skeletonizemethod" class="level3">
+<h3 class="anchored" data-anchor-id="enum-skeletonizemethod">enum SkeletonizeMethod</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ZhangSuen</td>
+<td></td>
+<td>Morphological thinning (Zhang–Suen), adapted from scikit-image.</td>
+</tr>
+<tr class="even">
+<td>MedialAxis</td>
+<td></td>
+<td>Distance-transform medial axis, Felzenszwalb EDT + scikit-image thinning.</td>
+</tr>
+</tbody>
+</table>
+<p>Skeletonization algorithm selection.</p>
 </section>
 <section id="enum-sincwindowtype" class="level3">
 <h3 class="anchored" data-anchor-id="enum-sincwindowtype">enum SincWindowType</h3>
@@ -1232,20 +1378,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>line</strong> The line to calculate angle from</li>
 <li><strong>params</strong> Parameters controlling the calculation (call validate() first for batch)</li>
 </ul>
-<p><strong>Return</strong>: float Angle in degrees (-180 to 180)</p>
-<p><strong>Precondition</strong>: When method is PolynomialFit, params.getPolynomialOrder() &gt;= 0 (enforcement: none)</p>
-<p>This is a <strong>unary</strong> element-level transform that takes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> as input and returns the angle in degrees at the specified position along the line.</p>
-<p>The angle is measured relative to the reference vector (default: positive x-axis). Positive angles are counter-clockwise from the reference.</p>
-<p>Two calculation methods are supported:</p>
-<ul>
-<li>DirectPoints: Calculate angle from tangent vector between adjacent points</li>
-<li>PolynomialFit: Fit a polynomial to the line and calculate angle from derivative</li>
-</ul>
-<p>When applied to containers:</p>
-<ul>
-<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> (one angle per timestamp)</li>
-</ul>
-<p>For batch processing, call params.validate() once before processing to pre-compute normalized reference vectors and clamped positions.</p>
+<p><strong>Return</strong>: float Angle in degrees (-180 to 180), or NaN if line has fewer than 2 points</p>
+<p><strong>Precondition</strong>: When method is PolynomialFit, polynomial_order &gt;= 0 (enforcement: none)</p>
 </section>
 <section id="function-calculatelineanglewithcontext" class="level3">
 <h3 class="anchored" data-anchor-id="function-calculatelineanglewithcontext">function calculateLineAngleWithContext</h3>
@@ -1480,6 +1614,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Algorithm descriptions:</p>
 <p><strong>FixedSpacing</strong>: Iterates through the polyline, placing new points at target_spacing intervals. Interpolates between original points as needed. Preserves first and last points.</p>
 <p><strong>DouglasPeucker</strong>: Recursively simplifies a polyline by removing points that are within epsilon distance of the line segment between two endpoints. Preserves overall shape while reducing point count.</p>
+<p><strong>PolynomialSmooth</strong>: Fits parametric polynomials x(t), y(t) with arc-length parameterization, then generates evenly-spaced points along the fitted curve. Falls back to FixedSpacing resampling if fitting fails.</p>
 <p>When applied to containers:</p>
 <ul>
 <li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one resampled line per input line)</li>
@@ -1609,13 +1744,137 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: Centroid as <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a></p>
 <p>Demonstrates progress reporting and cancellation checking for long-running operations on large masks.</p>
 </section>
+<section id="function-applymedianfilter" class="level3">
+<h3 class="anchored" data-anchor-id="function-applymedianfilter">function applyMedianFilter</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>Mask2D applyMedianFilter<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    MaskMedianFilterParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply median filtering to a single mask element.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask points</li>
+<li><strong>params</strong> Window size and optional full-canvas dimensions</li>
+</ul>
+<p><strong>Return</strong>: Filtered mask, or empty mask if input is empty or filtering removes all pixels</p>
+<p>Element-level transform: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> → <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></p>
+<p>Rasterizes the mask to a binary image, applies median filtering to remove salt-and-pepper noise and smooth jagged boundaries, then converts back to mask points.</p>
+<p>When canvas dimensions are omitted, the raster is sized to the mask bounding box plus background border padding derived from <code>window_size</code>.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classMaskData.html">MaskData</a> → <a href="../../api_generated/Classes/classMaskData.html">MaskData</a> (one filtered mask per input mask)</li>
+</ul>
+</section>
+<section id="function-applymedianfilterwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-applymedianfilterwithcontext">function applyMedianFilterWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>Mask2D applyMedianFilterWithContext<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    MaskMedianFilterParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply median filtering with progress reporting and cancellation support.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask points</li>
+<li><strong>params</strong> Window size and optional full-canvas dimensions</li>
+<li><strong>ctx</strong> Compute context for progress and cancellation</li>
+</ul>
+<p><strong>Return</strong>: Filtered mask, or empty mask on cancellation or empty input</p>
+</section>
+<section id="function-skeletonizemask" class="level3">
+<h3 class="anchored" data-anchor-id="function-skeletonizemask">function skeletonizeMask</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>Mask2D skeletonizeMask<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    MaskSkeletonizeParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-skeletonizemaskwithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-skeletonizemaskwithcontext">function skeletonizeMaskWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>Mask2D skeletonizeMaskWithContext<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    MaskSkeletonizeParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-masktoline" class="level3">
+<h3 class="anchored" data-anchor-id="function-masktoline">function maskToLine</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>Line2D maskToLine<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    MaskToLineParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Order mask points into a directed line polyline.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask points</li>
+<li><strong>params</strong> Reference point and subsampling settings</li>
+</ul>
+<p><strong>Return</strong>: Ordered line, or empty line if input is empty</p>
+<p>Element-level transform: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> → <a href="../../api_generated/Classes/classLine2D.html">Line2D</a></p>
+<p>Converts unordered mask pixels into an ordered <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> using <code>order_line</code>. For thick masks, chain with <code>SkeletonizeMask</code> first. For post-processing, chain with <code>RemoveLineOutliers</code> and/or <code>ResampleLine</code>.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classMaskData.html">MaskData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one line per input mask)</li>
+</ul>
+</section>
+<section id="function-masktolinewithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-masktolinewithcontext">function maskToLineWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>Line2D maskToLineWithContext<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    MaskToLineParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Order mask points into a line with progress reporting and cancellation support.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mask</strong> Input mask points</li>
+<li><strong>params</strong> Reference point and subsampling settings</li>
+<li><strong>ctx</strong> Compute context for progress and cancellation</li>
+</ul>
+<p><strong>Return</strong>: Ordered line, or empty line on cancellation or empty input</p>
+</section>
+<section id="function-removelineoutliers" class="level3">
+<h3 class="anchored" data-anchor-id="function-removelineoutliers">function removeLineOutliers</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>Line2D removeLineOutliers<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    RemoveLineOutliersParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove geometric outlier points from an ordered line.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> Input ordered line</li>
+<li><strong>params</strong> Error threshold and polynomial order</li>
+</ul>
+<p><strong>Return</strong>: Filtered line, or input unchanged if too few points or line is empty</p>
+<p>Element-level transform: <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> → <a href="../../api_generated/Classes/classLine2D.html">Line2D</a></p>
+<p>Iteratively fits a parametric polynomial and removes points that deviate more than <code>error_threshold</code> pixels from the fitted curve. Requires at least (polynomial_order + 2) points; otherwise returns the input unchanged.</p>
+<p>When applied to containers:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classLineData.html">LineData</a> → <a href="../../api_generated/Classes/classLineData.html">LineData</a> (one filtered line per input line)</li>
+</ul>
+</section>
+<section id="function-removelineoutlierswithcontext" class="level3">
+<h3 class="anchored" data-anchor-id="function-removelineoutlierswithcontext">function removeLineOutliersWithContext</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>Line2D removeLineOutliersWithContext<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    RemoveLineOutliersParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove line outliers with progress reporting and cancellation support.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line</strong> Input ordered line</li>
+<li><strong>params</strong> Error threshold and polynomial order</li>
+<li><strong>ctx</strong> Compute context for progress and cancellation</li>
+</ul>
+<p><strong>Return</strong>: Filtered line, or input unchanged on cancellation</p>
+</section>
 <section id="function-sincinterpolation" class="level3">
 <h3 class="anchored" data-anchor-id="function-sincinterpolation">function sincInterpolation</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> sincInterpolation<span class="op">(</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    SincInterpolationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> sincInterpolation<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    SincInterpolationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply band-limited sinc interpolation to upsample an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1635,10 +1894,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-sumreduction" class="level3">
 <h3 class="anchored" data-anchor-id="function-sumreduction">function sumReduction</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReduction<span class="op">(</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReduction<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Sum all floats at a given time point into a single float.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1656,20 +1915,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-sumreductionwithcontext" class="level3">
 <h3 class="anchored" data-anchor-id="function-sumreductionwithcontext">function sumReductionWithContext</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReductionWithContext<span class="op">(</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> sumReductionWithContext<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&gt;</span> values<span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    SumReductionParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Context-aware version with progress reporting.</p>
 </section>
 <section id="function-tensorcar" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorcar">function tensorCAR</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCAR<span class="op">(</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    TensorCARParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCAR<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    TensorCARParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply Common Average Reference to a multi-channel <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1691,11 +1950,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensorcentraldifference" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorcentraldifference">function tensorCentralDifference</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCentralDifference<span class="op">(</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    TensorCentralDifferenceParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorCentralDifference<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    TensorCentralDifferenceParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Append central-difference columns to a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1716,11 +1975,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensorica" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorica">function tensorICA</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorICA<span class="op">(</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TensorICAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorICA<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    TensorICAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply ICA (RADICAL) to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1739,11 +1998,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensorpca" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorpca">function tensorPCA</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorPCA<span class="op">(</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    TensorPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorPCA<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    TensorPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1757,11 +2016,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensorrobustpca" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorrobustpca">function tensorRobustPCA</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorRobustPCA<span class="op">(</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    TensorRobustPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorRobustPCA<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    TensorRobustPCAParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply Robust PCA dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1775,11 +2034,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensortemporalneighbors" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensortemporalneighbors">function tensorTemporalNeighbors</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTemporalNeighbors<span class="op">(</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    TensorTemporalNeighborParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTemporalNeighbors<span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    TensorTemporalNeighborParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Augment a time-indexed <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> with neighbor feature columns.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1799,11 +2058,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensortoanalog" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensortoanalog">function tensorToAnalog</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorToAnalog<span class="op">(</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    TensorToAnalogParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorToAnalog<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    TensorToAnalogParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract columns from a 2D <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> as independent <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1821,11 +2080,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensortsne" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensortsne">function tensorTSNE</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTSNE<span class="op">(</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    TensorTSNEParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorTSNE<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    TensorTSNEParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply t-SNE dimensionality reduction to a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1839,11 +2098,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tensorwhitening" class="level3">
 <h3 class="anchored" data-anchor-id="function-tensorwhitening">function tensorWhitening</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorWhitening<span class="op">(</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    TensorWhiteningParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensorWhitening<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    TensorWhiteningParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    ComputeContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply robust ZCA whitening to the included channels of a 2D tensor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1865,24 +2124,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadparametersfortransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadparametersfortransform">function loadParametersForTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any loadParametersForTransform<span class="op">(</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any loadParametersForTransform<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-loadparametersfromjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadparametersfromjson">function loadParametersFromJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromJson<span class="op">(</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromJson<span class="op">(</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-loadparametersfromfile" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadparametersfromfile">function loadParametersFromFile</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromFile<span class="op">(</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ParamsT <span class="op">&gt;</span> loadParametersFromFile<span class="op">(</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load parameters from JSON file.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1896,10 +2155,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-saveparameterstojson" class="level3">
 <h3 class="anchored" data-anchor-id="function-saveparameterstojson">function saveParametersToJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string saveParametersToJson<span class="op">(</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string saveParametersToJson<span class="op">(</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Save parameters to JSON string.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1913,12 +2172,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-saveparameterstofile" class="level3">
 <h3 class="anchored" data-anchor-id="function-saveparameterstofile">function saveParametersToFile</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> saveParametersToFile<span class="op">(</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path<span class="op">,</span></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pretty_print <span class="op">=</span><span class="kw">true</span></span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParamsT <span class="op">&gt;</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> saveParametersToFile<span class="op">(</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ParamsT <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> file_path<span class="op">,</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pretty_print <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Save parameters to JSON file.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1932,13 +2191,99 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: true if saved successfully</p>
 </section>
+<section id="function-defaultuserpipelinedirectory" class="level3">
+<h3 class="anchored" data-anchor-id="function-defaultuserpipelinedirectory">function defaultUserPipelineDirectory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>filesystem::path defaultUserPipelineDirectory<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> config_dir</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Default subdirectory for user TransformsV2 pipelines under a config root.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>config_dir</strong> Application config directory (e.g.&nbsp;StateManager::configDir())</li>
+</ul>
+<p><strong>Return</strong>: config_dir / “pipelines” / “transforms_v2”</p>
+</section>
+<section id="function-ensureuserpipelinedirectory" class="level3">
+<h3 class="anchored" data-anchor-id="function-ensureuserpipelinedirectory">function ensureUserPipelineDirectory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> <span class="bu">std::</span>filesystem::path <span class="op">&gt;</span> ensureUserPipelineDirectory<span class="op">(</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> config_dir</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create the user pipeline directory if it does not exist.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>config_dir</strong> Application config directory</li>
+</ul>
+<p><strong>Return</strong>: Success, or error message if creation failed</p>
+</section>
+<section id="function-sanitizepipelinefilename" class="level3">
+<h3 class="anchored" data-anchor-id="function-sanitizepipelinefilename">function sanitizePipelineFilename</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string sanitizePipelineFilename<span class="op">(</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view name</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert a human-readable name into a safe filename stem.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Proposed pipeline name (may contain spaces or punctuation)</li>
+</ul>
+<p><strong>Return</strong>: Non-empty filesystem-safe stem; falls back to “pipeline” if empty after sanitization</p>
+</section>
+<section id="function-listpipelinefiles" class="level3">
+<h3 class="anchored" data-anchor-id="function-listpipelinefiles">function listPipelineFiles</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> PipelineLibraryEntry <span class="op">&gt;</span> listPipelineFiles<span class="op">(</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> directory</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>List .json pipeline files in a directory.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>directory</strong> Directory to scan (need not exist; returns empty vector)</li>
+</ul>
+<p><strong>Return</strong>: Entries sorted by display_name then id</p>
+</section>
+<section id="function-loadpipelinedescriptorfromfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadpipelinedescriptorfromfile">function loadPipelineDescriptorFromFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> PipelineDescriptor <span class="op">&gt;</span> loadPipelineDescriptorFromFile<span class="op">(</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> filepath</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Read and parse a <a href="">PipelineDescriptor</a> from disk.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Path to a JSON file</li>
+</ul>
+<p><strong>Return</strong>: Parsed descriptor or error</p>
+</section>
+<section id="function-savepipelinedescriptortofile" class="level3">
+<h3 class="anchored" data-anchor-id="function-savepipelinedescriptortofile">function savePipelineDescriptorToFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> rfl<span class="op">::</span>Nothing <span class="op">&gt;</span> savePipelineDescriptorToFile<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> filepath<span class="op">,</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    PipelineDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Write a <a href="">PipelineDescriptor</a> to disk as JSON.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Destination path (parent directories are not created)</li>
+<li><strong>descriptor</strong> Descriptor to serialize</li>
+</ul>
+<p><strong>Return</strong>: Success or error</p>
+</section>
+<section id="function-deletepipelinefile" class="level3">
+<h3 class="anchored" data-anchor-id="function-deletepipelinefile">function deletePipelineFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> rfl<span class="op">::</span>Nothing <span class="op">&gt;</span> deletePipelineFile<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> filepath</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove a pipeline file from the library.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Path to delete</li>
+</ul>
+<p><strong>Return</strong>: Success or error</p>
+</section>
 <section id="function-createpipelinestepfromregistry" class="level3">
 <h3 class="anchored" data-anchor-id="function-createpipelinestepfromregistry">function createPipelineStepFromRegistry</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>PipelineStep createPipelineStepFromRegistry<span class="op">(</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="at">const</span> <span class="op">&amp;</span> registry<span class="op">,</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any</span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>PipelineStep createPipelineStepFromRegistry<span class="op">(</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    ElementRegistry <span class="at">const</span> <span class="op">&amp;</span> registry<span class="op">,</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> params_any</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> using the factory registry.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1951,9 +2296,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadstepfromdescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadstepfromdescriptor">function loadStepFromDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> PipelineStep <span class="op">&gt;</span> loadStepFromDescriptor<span class="op">(</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    PipelineStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> PipelineStep <span class="op">&gt;</span> loadStepFromDescriptor<span class="op">(</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    PipelineStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load a single pipeline step from JSON descriptor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1969,9 +2314,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadprereductionfromdescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadprereductionfromdescriptor">function loadPreReductionFromDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ReductionStep <span class="op">&gt;</span> loadPreReductionFromDescriptor<span class="op">(</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    PreReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> ReductionStep <span class="op">&gt;</span> loadPreReductionFromDescriptor<span class="op">(</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    PreReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load a pre-reduction from JSON descriptor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1987,9 +2332,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadrangereductionfromdescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadrangereductionfromdescriptor">function loadRangeReductionFromDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>any <span class="op">&gt;</span> <span class="op">&gt;</span> loadRangeReductionFromDescriptor<span class="op">(</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    RangeReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>any <span class="op">&gt;</span> <span class="op">&gt;</span> loadRangeReductionFromDescriptor<span class="op">(</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    RangeReductionStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load a range reduction from JSON descriptor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2005,9 +2350,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadpipelinefromjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadpipelinefromjson">function loadPipelineFromJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> TransformPipeline <span class="op">&gt;</span> loadPipelineFromJson<span class="op">(</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> TransformPipeline <span class="op">&gt;</span> loadPipelineFromJson<span class="op">(</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_str</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load a complete pipeline from JSON string.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2034,9 +2379,9 @@ rfl::Result&lt; TransformPipeline &gt; loadPipelineFromFile(
 </section>
 <section id="function-savepipelinetojson" class="level3">
 <h3 class="anchored" data-anchor-id="function-savepipelinetojson">function savePipelineToJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string savePipelineToJson<span class="op">(</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    PipelineDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string savePipelineToJson<span class="op">(</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    PipelineDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Save pipeline descriptor to JSON string.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2045,20 +2390,46 @@ rfl::Result&lt; TransformPipeline &gt; loadPipelineFromFile(
 <p><strong>Return</strong>: std::string JSON representation</p>
 <p>Note: This saves the descriptor, not the executable pipeline. Parameter values are preserved but executor functions are not serialized.</p>
 </section>
+<section id="function-savepipelinetofile" class="level3">
+<h3 class="anchored" data-anchor-id="function-savepipelinetofile">function savePipelineToFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> rfl<span class="op">::</span>Nothing <span class="op">&gt;</span> savePipelineToFile<span class="op">(</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filepath<span class="op">,</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    PipelineDescriptor <span class="at">const</span> <span class="op">&amp;</span> descriptor</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Save a pipeline descriptor to a JSON file.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Destination file path (parent directories are not created)</li>
+<li><strong>descriptor</strong> Pipeline descriptor to write</li>
+</ul>
+<p><strong>Return</strong>: Success or error message</p>
+</section>
+<section id="function-loadpipelinedescriptorfromjsonfile" class="level3">
+<h3 class="anchored" data-anchor-id="function-loadpipelinedescriptorfromjsonfile">function loadPipelineDescriptorFromJsonFile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Result<span class="op">&lt;</span> PipelineDescriptor <span class="op">&gt;</span> loadPipelineDescriptorFromJsonFile<span class="op">(</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filepath</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a pipeline descriptor from a JSON file (parse only; does not build <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">TransformPipeline</a>)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>filepath</strong> Path to JSON file</li>
+</ul>
+<p><strong>Return</strong>: Parsed descriptor or error</p>
+</section>
 <section id="function-getpipelinestepfactoryregistry" class="level3">
 <h3 class="anchored" data-anchor-id="function-getpipelinestepfactoryregistry">function getPipelineStepFactoryRegistry</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>type_index<span class="op">,</span> <span class="bu">std::</span>function<span class="op">&lt;</span> PipelineStep<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;,</span> <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="op">&gt;</span> <span class="op">&amp;</span> getPipelineStepFactoryRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>type_index<span class="op">,</span> <span class="bu">std::</span>function<span class="op">&lt;</span> PipelineStep<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;,</span> <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="op">&gt;</span> <span class="op">&amp;</span> getPipelineStepFactoryRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Registry of <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory functions.</p>
 <p>Maps type_index -&gt; factory function that creates <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> from std::any. Factories are registered automatically via static initialization when parameter types are used with <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterTransform.html">RegisterTransform</a>.</p>
 </section>
 <section id="function-registerpipelinestepfactoryfor" class="level3">
 <h3 class="anchored" data-anchor-id="function-registerpipelinestepfactoryfor">function registerPipelineStepFactoryFor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerPipelineStepFactoryFor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> registerPipelineStepFactoryFor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Helper to register a <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</p>
 <p>Call this once for each parameter type to register its factory. Template automatically deduces the parameter type.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

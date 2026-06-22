@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -433,19 +433,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runsingleframe">runSingleFrame</a></strong>(int frame)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runsingleframe">runSingleFrame</a></strong>(int frame)<br>Run single-frame inference at the given frame index.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runbatch">runBatch</a></strong>(int start, int end, int batch_size)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runbatch">runBatch</a></strong>(int start, int end, int batch_size)<br>Run independent (non-recurrent) batch inference over [start, end].</td>
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runbatchintervals">runBatchIntervals</a></strong>(std::vector&lt; std::pair&lt; int64_t, int64_t &gt; &gt; intervals, int batch_size)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runbatchintervals">runBatchIntervals</a></strong>(std::vector&lt; std::pair&lt; int64_t, int64_t &gt; &gt; intervals, int batch_size)<br>Run independent batch inference over multiple intervals.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runrecurrentsequence">runRecurrentSequence</a></strong>(int start, int frame_count)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#slot-runrecurrentsequence">runRecurrentSequence</a></strong>(int start, int frame_count)<br>Run sequential recurrent inference over a frame range.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -474,7 +474,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#signal-batchfinished">batchFinished</a></strong>(bool success, QString const &amp; error_message)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#signal-batchfinished">batchFinished</a></strong>(bool success, QString const &amp; error_message)<br>Emitted when batch inference completes (success or failure).</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -495,7 +495,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classInferenceController.html#function-inferencecontroller">InferenceController</a></strong>(<a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> * assembler, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; dm, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a> &gt; state, QObject * parent =nullptr)</td>
+<td><strong><a href="../../api_generated/Classes/classInferenceController.html#function-inferencecontroller">InferenceController</a></strong>(<a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> * assembler, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; dm, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a> &gt; state, QObject * parent =nullptr)<br>Constructor for <a href="../../api_generated/Classes/classInferenceController.html">InferenceController</a>.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -515,12 +515,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runSingleFrame<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run single-frame inference at the given frame index.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame</strong> Frame index to process.</li>
 </ul>
 <p><strong>Precondition</strong>: frame &gt;= 0; a negative value is silently clamped to 0 by <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame()</a> during input assembly, causing the wrong frame to be encoded without any error signal (enforcement: none) [IMPORTANT]</p>
-<p>Run single-frame inference at the given frame index.</p>
 </section>
 <section id="slot-runbatch" class="level3">
 <h3 class="anchored" data-anchor-id="slot-runbatch">slot runBatch</h3>
@@ -529,6 +529,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end<span class="op">,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run independent (non-recurrent) batch inference over [start, end].</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>start</strong> First frame (inclusive).</li>
@@ -536,7 +537,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>batch_size</strong> Number of frames per forward pass (&gt;= 1).</li>
 </ul>
 <p><strong>Precondition</strong>: start &gt;= 0; a negative start frame is silently clamped to 0 by <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame()</a> during input assembly, causing the wrong frames to be encoded without any error signal (enforcement: none) [IMPORTANT]</p>
-<p>Run independent (non-recurrent) batch inference over [start, end].</p>
 </section>
 <section id="slot-runbatchintervals" class="level3">
 <h3 class="anchored" data-anchor-id="slot-runbatchintervals">slot runBatchIntervals</h3>
@@ -544,13 +544,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">int64_t</span><span class="op">,</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run independent batch inference over multiple intervals.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>intervals</strong> Vector of (start, end) frame ranges (inclusive).</li>
 <li><strong>batch_size</strong> Number of frames per forward pass (&gt;= 1).</li>
 </ul>
 <p><strong>Precondition</strong>: Each interval’s start value must be &gt;= 0; a negative start is silently clamped to 0 by <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame()</a> during input assembly, causing the wrong frames to be encoded without any error signal (enforcement: none) [IMPORTANT]</p>
-<p>Run independent batch inference over multiple intervals. Progress reports the cumulative frame count across all intervals.</p>
+<p>Progress reports the cumulative frame count across all intervals.</p>
 </section>
 <section id="slot-runrecurrentsequence" class="level3">
 <h3 class="anchored" data-anchor-id="slot-runrecurrentsequence">slot runRecurrentSequence</h3>
@@ -558,6 +559,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start<span class="op">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_count</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run sequential recurrent inference over a frame range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>start</strong> First frame index.</li>
@@ -568,7 +570,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>start &gt;= 0; a negative start frame is silently clamped to 0 by <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame()</a> during input assembly, causing the wrong frames to be encoded without any error signal (enforcement: none) [IMPORTANT]</li>
 <li>frame_count &gt;= 1; a value of 0 or negative causes the frame loop to silently produce no output and emit batchFinished(true) (enforcement: none) [LOW]</li>
 </ul>
-<p>Run sequential recurrent inference over a frame range.</p>
 </section>
 <section id="slot-cancel" class="level3">
 <h3 class="anchored" data-anchor-id="slot-cancel">slot cancel</h3>
@@ -600,12 +601,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> success<span class="op">,</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> error_message</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when batch inference completes (success or failure).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>success</strong> Whether inference completed without error.</li>
 <li><strong>error_message</strong> Non-empty when success is false.</li>
 </ul>
-<p>Emitted when batch inference completes (success or failure).</p>
 </section>
 <section id="signal-runningchanged" class="level3">
 <h3 class="anchored" data-anchor-id="signal-runningchanged">signal runningChanged</h3>
@@ -625,6 +626,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DeepLearningState <span class="op">&gt;</span> state<span class="op">,</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Constructor for <a href="../../api_generated/Classes/classInferenceController.html">InferenceController</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>assembler</strong> Non-owning pointer; caller retains ownership.</li>
@@ -642,7 +644,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isRunning<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether a batch inference is currently running.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:51 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:21 +0000</p>
 
 
 </section>

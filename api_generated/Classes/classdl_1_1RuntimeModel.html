@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -353,11 +353,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-runtimemodel" id="toc-function-runtimemodel" class="nav-link" data-scroll-target="#function-runtimemodel">function RuntimeModel</a></li>
+  <li><a href="#function-runtimemodel-1" id="toc-function-runtimemodel-1" class="nav-link" data-scroll-target="#function-runtimemodel-1">function ~RuntimeModel</a></li>
   <li><a href="#function-modelid" id="toc-function-modelid" class="nav-link" data-scroll-target="#function-modelid">function modelId</a></li>
   <li><a href="#function-displayname" id="toc-function-displayname" class="nav-link" data-scroll-target="#function-displayname">function displayName</a></li>
   <li><a href="#function-description" id="toc-function-description" class="nav-link" data-scroll-target="#function-description">function description</a></li>
   <li><a href="#function-inputslots" id="toc-function-inputslots" class="nav-link" data-scroll-target="#function-inputslots">function inputSlots</a></li>
   <li><a href="#function-outputslots" id="toc-function-outputslots" class="nav-link" data-scroll-target="#function-outputslots">function outputSlots</a></li>
+  <li><a href="#function-recommendedpostencodermodule" id="toc-function-recommendedpostencodermodule" class="nav-link" data-scroll-target="#function-recommendedpostencodermodule">function recommendedPostEncoderModule</a></li>
   <li><a href="#function-loadweights" id="toc-function-loadweights" class="nav-link" data-scroll-target="#function-loadweights">function loadWeights</a></li>
   <li><a href="#function-isready" id="toc-function-isready" class="nav-link" data-scroll-target="#function-isready">function isReady</a></li>
   <li><a href="#function-preferredbatchsize" id="toc-function-preferredbatchsize" class="nav-link" data-scroll-target="#function-preferredbatchsize">function preferredBatchSize</a></li>
@@ -397,7 +399,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlruntimemodel" class="level1">
 <h1>dl::RuntimeModel</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>A <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> implementation driven entirely by a <a href="">RuntimeModelSpec</a> (JSON). <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;RuntimeModel.hpp&gt;</code></p>
 <p>Inherits from <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">dl::ModelBase</a></p>
 <section id="public-functions" class="level2">
@@ -412,27 +414,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-runtimemodel">RuntimeModel</a></strong>(<a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> spec)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-runtimemodel">RuntimeModel</a></strong>(<a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> spec)<br>Construct from a parsed spec.</td>
 </tr>
 <tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-~runtimemodel">~RuntimeModel</a></strong>() override</td>
+</tr>
+<tr class="odd">
 <td>virtual std::string</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-modelid">modelId</a></strong>() const override<br>Unique string identifier for this model class (e.g.&nbsp;“neurosam”).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>virtual std::string</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-displayname">displayName</a></strong>() const override<br>Human-readable display name (e.g.&nbsp;“NeuroSAM”).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>virtual std::string</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-description">description</a></strong>() const override<br>Description for UI tooltip.</td>
 </tr>
-<tr class="odd">
-<td>virtual std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">TensorSlotDescriptor</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-inputslots">inputSlots</a></strong>() const override</td>
-</tr>
 <tr class="even">
 <td>virtual std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">TensorSlotDescriptor</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-outputslots">outputSlots</a></strong>() const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-inputslots">inputSlots</a></strong>() const override<br>Input slot descriptors (ordered).</td>
+</tr>
+<tr class="odd">
+<td>virtual std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">TensorSlotDescriptor</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-outputslots">outputSlots</a></strong>() const override<br>Output slot descriptors (ordered).</td>
+</tr>
+<tr class="even">
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-recommendedpostencodermodule">recommendedPostEncoderModule</a></strong>() const override<br>Recommended post-encoder module key for the UI (e.g.&nbsp;“global_avg_pool”).</td>
 </tr>
 <tr class="odd">
 <td>virtual void</td>
@@ -444,27 +454,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>virtual int</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-preferredbatchsize">preferredBatchSize</a></strong>() const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-preferredbatchsize">preferredBatchSize</a></strong>() const override<br>Preferred batch size.</td>
 </tr>
 <tr class="even">
 <td>virtual int</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-maxbatchsize">maxBatchSize</a></strong>() const override<br>Maximum batch size the model supports. 0 = unlimited.</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-maxbatchsize">maxBatchSize</a></strong>() const override<br>Maximum batch size the model supports.</td>
 </tr>
 <tr class="odd">
 <td>virtual <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">dl::BatchMode</a></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-batchmode">batchMode</a></strong>() const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-batchmode">batchMode</a></strong>() const override<br>Batch mode describing the model’s batch-size constraints.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-loadweightsforbatchsize">loadWeightsForBatchSize</a></strong>(int batch_size)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-loadweightsforbatchsize">loadWeightsForBatchSize</a></strong>(int batch_size)<br>Select and load the best weights variant for the given batch size.</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1WeightsVariant.html">WeightsVariant</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-weightsvariants">weightsVariants</a></strong>() const<br>Get the list of available weights variants (if any).</td>
 </tr>
 <tr class="even">
-<td>virtual std::unordered_map&lt; std::string, torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-forward">forward</a></strong>(std::unordered_map&lt; std::string, torch::Tensor &gt; const &amp; inputs) override</td>
+<td>virtual std::unordered_map&lt; std::string, at::Tensor &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-forward">forward</a></strong>(std::unordered_map&lt; std::string, at::Tensor &gt; const &amp; inputs) override<br>Run inference.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> const &amp;</td>
@@ -494,7 +504,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>RuntimeModel<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> implementation driven entirely by a <a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> (JSON).</p>
+<p>A <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> implementation driven entirely by a <a href="">RuntimeModelSpec</a> (JSON).</p>
 <p><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html">RuntimeModel</a> allows users to define model inputs, outputs, and metadata via a JSON specification file, without recompiling. It uses <a href="../../api_generated/Classes/classdl_1_1ModelExecution.html">ModelExecution</a> to load and run ExecuTorch <code>.pte</code> programs.</p>
 <p>Usage:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> spec_result <span class="op">=</span> RuntimeModelSpec<span class="op">::</span>fromJsonFile<span class="op">(</span><span class="st">"model.json"</span><span class="op">);</span></span>
@@ -514,104 +524,119 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Construct from a parsed spec.</p>
 <p>If the spec contains a <code>weights_path</code>, the model will attempt to load weights from that path during construction.</p>
 </section>
+<section id="function-runtimemodel-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-runtimemodel-1">function ~RuntimeModel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>RuntimeModel<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-modelid" class="level3">
 <h3 class="anchored" data-anchor-id="function-modelid">function modelId</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string modelId<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string modelId<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Unique string identifier for this model class (e.g.&nbsp;“neurosam”).</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-modelid">dl::ModelBase::modelId</a></p>
 </section>
 <section id="function-displayname" class="level3">
 <h3 class="anchored" data-anchor-id="function-displayname">function displayName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string displayName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string displayName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Human-readable display name (e.g.&nbsp;“NeuroSAM”).</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-displayname">dl::ModelBase::displayName</a></p>
 </section>
 <section id="function-description" class="level3">
 <h3 class="anchored" data-anchor-id="function-description">function description</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string description<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string description<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Description for UI tooltip.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-description">dl::ModelBase::description</a></p>
 </section>
 <section id="function-inputslots" class="level3">
 <h3 class="anchored" data-anchor-id="function-inputslots">function inputSlots</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> inputSlots<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> inputSlots<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Input slot descriptors (ordered).</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-inputslots">dl::ModelBase::inputSlots</a></p>
-<p>Input slot descriptors (ordered). Each describes one named tensor the model expects. Does not include the batch dimension.</p>
+<p>Each describes one named tensor the model expects. Does not include the batch dimension.</p>
 </section>
 <section id="function-outputslots" class="level3">
 <h3 class="anchored" data-anchor-id="function-outputslots">function outputSlots</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> outputSlots<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> outputSlots<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output slot descriptors (ordered).</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-outputslots">dl::ModelBase::outputSlots</a></p>
-<p>Output slot descriptors (ordered). Each describes one named tensor the model produces. Does not include the batch dimension.</p>
+<p>Each describes one named tensor the model produces. Does not include the batch dimension.</p>
+</section>
+<section id="function-recommendedpostencodermodule" class="level3">
+<h3 class="anchored" data-anchor-id="function-recommendedpostencodermodule">function recommendedPostEncoderModule</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string recommendedPostEncoderModule<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Recommended post-encoder module key for the UI (e.g.&nbsp;“global_avg_pool”).</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-recommendedpostencodermodule">dl::ModelBase::recommendedPostEncoderModule</a></p>
+<p>Empty string means no post-encoder module is recommended. The UI pre-selects this but the user can override it.</p>
 </section>
 <section id="function-loadweights" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadweights">function loadWeights</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">void</span> loadWeights<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">void</span> loadWeights<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load weights from a file (e.g.&nbsp;a <code>.pte</code> ExecuTorch program or a TorchScript model).</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-loadweights">dl::ModelBase::loadWeights</a></p>
 </section>
 <section id="function-isready" class="level3">
 <h3 class="anchored" data-anchor-id="function-isready">function isReady</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> isReady<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> isReady<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether weights are loaded and model is ready for inference.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-isready">dl::ModelBase::isReady</a></p>
 </section>
 <section id="function-preferredbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-preferredbatchsize">function preferredBatchSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">int</span> preferredBatchSize<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">int</span> preferredBatchSize<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Preferred batch size.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-preferredbatchsize">dl::ModelBase::preferredBatchSize</a></p>
-<p>Preferred batch size. 0 = model decides; 1 = single-frame (e.g.&nbsp;NeuroSAM with output→input feedback); N = process N frames at once. UI uses this as the default for the “Batch Size” spinbox.</p>
+<p>0 = model decides; 1 = single-frame (e.g.&nbsp;NeuroSAM with output→input feedback); N = process N frames at once. UI uses this as the default for the “Batch Size” spinbox.</p>
 </section>
 <section id="function-maxbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-maxbatchsize">function maxBatchSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">int</span> maxBatchSize<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Maximum batch size the model supports. 0 = unlimited.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">int</span> maxBatchSize<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum batch size the model supports.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-maxbatchsize">dl::ModelBase::maxBatchSize</a></p>
+<p>0 = unlimited.</p>
 </section>
 <section id="function-batchmode" class="level3">
 <h3 class="anchored" data-anchor-id="function-batchmode">function batchMode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> dl<span class="op">::</span>BatchMode batchMode<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-batchmode">dl::ModelBase::batchMode</a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> dl<span class="op">::</span>BatchMode batchMode<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Batch mode describing the model’s batch-size constraints.</p>
+<p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-batchmode">dl::ModelBase::batchMode</a></p>
 <p>The default returns <code>[DynamicBatch](/api_generated/Classes/structdl_1_1DynamicBatch.md){1, 0}</code> (any batch size). Override in subclasses to report <code>[FixedBatch](/api_generated/Classes/structdl_1_1FixedBatch.md)</code>, <code>[RecurrentOnlyBatch](/api_generated/Classes/structdl_1_1RecurrentOnlyBatch.md)</code>, or a <code>[DynamicBatch](/api_generated/Classes/structdl_1_1DynamicBatch.md)</code> with specific limits.</p>
 <p>The widget uses this to configure the batch-size spinbox and to auto-select the correct weights variant for multi-variant models.</p>
 </section>
 <section id="function-loadweightsforbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadweightsforbatchsize">function loadWeightsForBatchSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadWeightsForBatchSize<span class="op">(</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Return</strong>: true if a variant was found and loaded successfully</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadWeightsForBatchSize<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Select and load the best weights variant for the given batch size.</p>
+<p><strong>Return</strong>: true if a variant was found and loaded successfully</p>
 <p>Searches <code>weights_variants</code> for an exact batch_size match. If none is found, falls back to the default <code>weights_path</code>.</p>
 </section>
 <section id="function-weightsvariants" class="level3">
 <h3 class="anchored" data-anchor-id="function-weightsvariants">function weightsVariants</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> WeightsVariant <span class="op">&gt;</span> weightsVariants<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> WeightsVariant <span class="op">&gt;</span> weightsVariants<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the list of available weights variants (if any).</p>
 </section>
 <section id="function-forward" class="level3">
 <h3 class="anchored" data-anchor-id="function-forward">function forward</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> forward<span class="op">(</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> forward<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run inference.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>inputs</strong> Map of slot_name → Tensor, each with a leading batch dimension.</li>
 </ul>
 <p><strong>Return</strong>: Map of slot_name → Tensor for each output slot.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-forward">dl::ModelBase::forward</a></p>
-<p>Run inference.</p>
 <p>Tensors have a leading batch dimension whose size is controlled by the caller (and bounded by <code>[maxBatchSize()](/api_generated/Classes/classdl_1_1RuntimeModel.md#function-maxbatchsize)</code>).</p>
 </section>
 <section id="function-spec" class="level3">
 <h3 class="anchored" data-anchor-id="function-spec">function spec</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>RuntimeModelSpec <span class="at">const</span> <span class="op">&amp;</span> spec<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>RuntimeModelSpec <span class="at">const</span> <span class="op">&amp;</span> spec<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Access the underlying spec.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -23,6 +23,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -38,14 +73,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -438,6 +473,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Core Geometry</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/angle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Planar angles and line tangents</span></a>
+  </div>
+</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
@@ -503,11 +544,8 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlottingSVG/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -520,11 +558,8 @@ ul.task-list li input[type="checkbox"] {
       </div>
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlotDataExport/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -557,7 +592,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+ <span class="menu-text">Static Input Capture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -569,7 +604,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+ <span class="menu-text">Hybrid Sequence Inputs</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -579,23 +614,14 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Batch Range Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/batch_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
@@ -605,21 +631,39 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+ <span class="menu-text">Post-Encoder Modules</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToMask2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToMask2D</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToFeatureVector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToFeatureVector</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToPoint2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToPoint2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToLine2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToLine2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/param_schemas.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/widget_param_schemas.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
@@ -627,11 +671,8 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deep Learning Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -691,6 +732,21 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">TensorWhitening</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/pipeline_library.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipeline Library (TransformsV2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/pipeline_library_roadmap.md</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/command_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registration</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -703,11 +759,8 @@ ul.task-list li input[type="checkbox"] {
       </div>
       <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/ParameterSchema/enum_variant_roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -956,6 +1009,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/transforms/data_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Legacy transform progress (<code>data_transforms.hpp</code>)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
@@ -1010,6 +1069,18 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/merge_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Object Merge</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/utils/ContainerTypeIndex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Container Type Index Utilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Storage Backend Architecture</span></a>
   </div>
@@ -1033,11 +1104,8 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/observer_thread_safety_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
@@ -1081,7 +1149,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+            <a href="../../developer/DataManager/Commands/index.qmd" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Command Architecture</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -1089,95 +1157,56 @@ ul.task-list li input[type="checkbox"] {
       </div>
       <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/roadmap.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/core_types.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/sequence_execution.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/get_entity_ids_in_range.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/commands.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/save_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/load_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Architecture Roadmap</span></a>
+  <a href="../../developer/Commands/IO/SavePathResolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Save Path Resolver</span></a>
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Core Types &amp; Factory</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/synthesize_data.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/validation.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">getEntityIdsInRange Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_introspection.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Concrete Commands</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_registry.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SaveData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/gui_verb_audit.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">LoadData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/widget_save_refactoring_guide.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SynthesizeData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/data_manager_snapshot.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Validation</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Introspection</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Registry</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DataManagerSnapshot</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Log Widget</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_log_widget.qmd</span>
+  </li>
       </ul>
   </li>
       </ul>
@@ -1198,11 +1227,8 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/TriageSession/optimized_contact_triage_plan.md</span>
+  </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1355,17 +1381,11 @@ ul.task-list li input[type="checkbox"] {
       </div>
       <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DeepLearning Widget Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/helpers.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">InferenceController</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/inference_controller.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1511,21 +1531,25 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
+  <li><a href="#data-model" id="toc-data-model" class="nav-link" data-scroll-target="#data-model">Data model</a>
   <ul class="collapse">
-  <li><a href="#recurrentbindingdata" id="toc-recurrentbindingdata" class="nav-link" data-scroll-target="#recurrentbindingdata">RecurrentBindingData</a></li>
-  <li><a href="#initialization-modes" id="toc-initialization-modes" class="nav-link" data-scroll-target="#initialization-modes">Initialization Modes</a></li>
-  <li><a href="#sequential-inference-loop" id="toc-sequential-inference-loop" class="nav-link" data-scroll-target="#sequential-inference-loop">Sequential Inference Loop</a></li>
-  <li><a href="#recurrent-cache" id="toc-recurrent-cache" class="nav-link" data-scroll-target="#recurrent-cache">Recurrent Cache</a></li>
+  <li><a href="#recurrentframesource" id="toc-recurrentframesource" class="nav-link" data-scroll-target="#recurrentframesource">RecurrentFrameSource</a></li>
+  <li><a href="#initialization-modes" id="toc-initialization-modes" class="nav-link" data-scroll-target="#initialization-modes">Initialization modes</a></li>
   </ul></li>
-  <li><a href="#ui-integration" id="toc-ui-integration" class="nav-link" data-scroll-target="#ui-integration">UI Integration</a>
+  <li><a href="#sequential-inference-loop" id="toc-sequential-inference-loop" class="nav-link" data-scroll-target="#sequential-inference-loop">Sequential inference loop</a>
   <ul class="collapse">
-  <li><a href="#properties-widget" id="toc-properties-widget" class="nav-link" data-scroll-target="#properties-widget">Properties Widget</a></li>
-  <li><a href="#view-widget" id="toc-view-widget" class="nav-link" data-scroll-target="#view-widget">View Widget</a></li>
-  <li><a href="#run-action" id="toc-run-action" class="nav-link" data-scroll-target="#run-action">Run Action</a></li>
+  <li><a href="#recurrent-cache" id="toc-recurrent-cache" class="nav-link" data-scroll-target="#recurrent-cache">Recurrent cache</a></li>
+  <li><a href="#firstoutput-frame-0-behavior" id="toc-firstoutput-frame-0-behavior" class="nav-link" data-scroll-target="#firstoutput-frame-0-behavior">FirstOutput frame-0 behavior</a></li>
   </ul></li>
-  <li><a href="#state-persistence" id="toc-state-persistence" class="nav-link" data-scroll-target="#state-persistence">State Persistence</a></li>
-  <li><a href="#batch-size-constraints" id="toc-batch-size-constraints" class="nav-link" data-scroll-target="#batch-size-constraints">Batch Size Constraints</a></li>
+  <li><a href="#ui-integration" id="toc-ui-integration" class="nav-link" data-scroll-target="#ui-integration">UI integration</a>
+  <ul class="collapse">
+  <li><a href="#memoryslotwidget" id="toc-memoryslotwidget" class="nav-link" data-scroll-target="#memoryslotwidget">MemorySlotWidget</a></li>
+  <li><a href="#view-widget" id="toc-view-widget" class="nav-link" data-scroll-target="#view-widget">View widget</a></li>
+  <li><a href="#run-action" id="toc-run-action" class="nav-link" data-scroll-target="#run-action">Run action</a></li>
+  </ul></li>
+  <li><a href="#state-persistence" id="toc-state-persistence" class="nav-link" data-scroll-target="#state-persistence">State persistence</a></li>
+  <li><a href="#batch-size-constraints" id="toc-batch-size-constraints" class="nav-link" data-scroll-target="#batch-size-constraints">Batch size constraints</a></li>
+  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related documentation</a></li>
   </ul>
 </nav>
     </div>
@@ -1554,18 +1578,21 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Recurrent inputs enable sequential frame-by-frame inference where the model’s output at frame <em>t</em> feeds back into an input slot at frame <em>t+1</em>. This is essential for architectures like NeuroSAM that track objects across video frames by conditioning each prediction on the previous one.</p>
+<p>Recurrent inputs enable sequential frame-by-frame inference where the model’s output at frame <em>t</em> feeds back into a memory input slot at frame <em>t+1</em>. This is essential for architectures like NeuroSAM that track objects across video frames by conditioning each prediction on the previous one.</p>
+<p>Recurrent positions are configured as <code>MemoryFrameBinding</code> entries whose <code>frame</code> variant is <code>RecurrentFrameSource</code>. They live in the same <code>memory_frames</code> vector as static positions — see <a href="../../developer/DeepLearning/bindings/memory_frames.html">Memory Frame Bindings</a> and <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html">Hybrid Sequence Inputs</a>.</p>
+<p><strong>Core types:</strong> <code>src/DeepLearning/bindings/DeepLearningBindingData.hpp</code><br>
+<strong>Engine:</strong> <code>src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp</code><br>
+<strong>Orchestration:</strong> <code>src/WhiskerToolbox/DeepLearning_Widget/Inference/InferenceController.cpp</code></p>
 </section>
-<section id="architecture" class="level2">
-<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
-<section id="recurrentbindingdata" class="level3">
-<h3 class="anchored" data-anchor-id="recurrentbindingdata">RecurrentBindingData</h3>
-<p>The <code>RecurrentBindingData</code> struct (in <code>DeepLearningBindingData.hpp</code>) maps a model output slot to an input slot:</p>
+<section id="data-model" class="level2">
+<h2 class="anchored" data-anchor-id="data-model">Data model</h2>
+<section id="recurrentframesource" class="level3">
+<h3 class="anchored" data-anchor-id="recurrentframesource">RecurrentFrameSource</h3>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 26%">
-<col style="width: 23%">
-<col style="width: 50%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -1576,94 +1603,154 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>input_slot_name</code></td>
+<td><code>slot_name</code></td>
 <td><code>string</code></td>
-<td>Model input slot to feed the tensor into</td>
+<td>Memory input slot name (on <code>MemoryFrameBinding</code>)</td>
 </tr>
 <tr class="even">
-<td><code>output_slot_name</code></td>
+<td><code>memory_index</code></td>
+<td><code>int</code></td>
+<td>Position along <code>sequence_dim</code> (0 for single-frame slots)</td>
+</tr>
+<tr class="odd">
+<td><code>frame.output_slot_name</code></td>
 <td><code>string</code></td>
 <td>Model output slot to read the tensor from</td>
 </tr>
-<tr class="odd">
-<td><code>init_mode_str</code></td>
-<td><code>string</code></td>
-<td>How to initialize at t=0: <code>"Zeros"</code>, <code>"StaticCapture"</code>, or <code>"FirstOutput"</code></td>
-</tr>
 <tr class="even">
-<td><code>init_data_key</code></td>
-<td><code>string</code></td>
-<td>DataManager key for <code>StaticCapture</code> init mode</td>
-</tr>
-<tr class="odd">
-<td><code>init_frame</code></td>
-<td><code>int</code></td>
-<td>Frame number for <code>StaticCapture</code> init mode</td>
+<td><code>frame.init</code></td>
+<td><code>RecurrentInitVariant</code></td>
+<td>How to seed the cache at t=0</td>
 </tr>
 </tbody>
 </table>
+<p>A recurrent binding is <strong>active</strong> when <code>hasActiveRecurrentBinding()</code> is true: <code>output_slot_name</code> is non-empty and not <code>"(None)"</code>.</p>
 </section>
 <section id="initialization-modes" class="level3">
-<h3 class="anchored" data-anchor-id="initialization-modes">Initialization Modes</h3>
-<p>At t=0, the recurrent input slot needs an initial tensor since no previous output exists. Three strategies are supported:</p>
+<h3 class="anchored" data-anchor-id="initialization-modes">Initialization modes</h3>
+<p>At t=0, the recurrent cache needs an initial tensor because no previous output exists. Three strategies are supported via <code>RecurrentInitVariant</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mode</th>
+<th>Struct</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Zeros</strong></td>
+<td><code>ZerosInit</code></td>
+<td>All-zeros tensor matching the per-element input shape</td>
+</tr>
+<tr class="even">
+<td><strong>StaticCapture</strong></td>
+<td><code>StaticCaptureInit</code></td>
+<td>Use a DataBank tensor or capture from DataManager at <code>data_key</code> / <code>frame</code>; falls back to zeros</td>
+</tr>
+<tr class="odd">
+<td><strong>FirstOutput</strong></td>
+<td><code>FirstOutputInit</code></td>
+<td>Run forward once with zeros at frame 0, skip decoding, use raw output as initial state; real sequence starts at frame 1</td>
+</tr>
+</tbody>
+</table>
+<p><code>StaticCaptureInit</code> resolution (see <code>runRecurrentSequence()</code> t=0 block):</p>
 <ol type="1">
-<li><strong>Zeros</strong> — All-zeros tensor matching the input slot shape. Simple default.</li>
-<li><strong>StaticCapture</strong> — Use a previously captured tensor (e.g., a ground-truth mask at a reference frame). Falls back to zeros if no capture exists.</li>
-<li><strong>FirstOutput</strong> — Run the model once with zeros, use the raw output tensor as the initial state, then start the real sequence from frame 1. The t=0 output is <em>not</em> decoded into DataManager.</li>
+<li>Static <code>MemoryFrameBinding</code> at the same <code>memory_index</code> with DataBank source.</li>
+<li><code>defaultBankEntryId(slot_name, memory_index)</code> in the session DataBank.</li>
+<li>On-the-fly <code>captureStaticInput()</code> from <code>StaticCaptureInit.data_key</code> at <code>StaticCaptureInit.frame</code>.</li>
+<li>Zeros fallback with warning.</li>
 </ol>
 </section>
-<section id="sequential-inference-loop" class="level3">
-<h3 class="anchored" data-anchor-id="sequential-inference-loop">Sequential Inference Loop</h3>
+</section>
+<section id="sequential-inference-loop" class="level2">
+<h2 class="anchored" data-anchor-id="sequential-inference-loop">Sequential inference loop</h2>
 <p><code>SlotAssembler::runRecurrentSequence()</code> implements the frame loop:</p>
 <pre><code>for each frame in [start_frame, start_frame + frame_count):
-    1. Assemble dynamic + static inputs (batch_size = 1)
-    2. Inject recurrent tensors from cache into input map
-    3. Call model.forward()
-    4. Decode outputs into DataManager
-    5. Cache output tensors for next frame's recurrent inputs</code></pre>
-<p>Batch size is forced to 1 during recurrent inference because each frame depends on the previous frame’s output — parallel batching is impossible.</p>
-</section>
+    1. assembleInputs() — static positions + dynamic inputs (batch_size = 1)
+    2. Inject recurrent cache tensors at each active recurrent memory_index
+    3. runModelAndPostEncoder()
+    4. On frame 0 with FirstOutputInit: update cache, skip decode, continue
+    5. decodeOutputs() into DataManager
+    6. Cache output tensors for next frame's recurrent inputs</code></pre>
+<p>Batch size is always 1 during recurrent inference — each frame depends on the previous frame’s output.</p>
 <section id="recurrent-cache" class="level3">
-<h3 class="anchored" data-anchor-id="recurrent-cache">Recurrent Cache</h3>
-<p>The recurrent tensor cache lives in <code>SlotAssembler::Impl::recurrent_cache</code> alongside the existing static tensor cache. Keys use the format <code>"recurrent:input_slot_name"</code> (via <code>recurrentCacheKey()</code>).</p>
-<p>The cache is cleared: - When the model is reset (<code>resetModel()</code>) - At the start of each <code>runRecurrentSequence()</code> call - Explicitly via <code>clearRecurrentCache()</code></p>
+<h3 class="anchored" data-anchor-id="recurrent-cache">Recurrent cache</h3>
+<p>The cache lives in <code>SlotAssembler::Impl::recurrent_cache</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor<span class="op">&gt;</span> recurrent_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Keys use <code>recurrentCacheKey(input_slot_name)</code> → <code>"recurrent:{input_slot_name}"</code>.</p>
+<p>The cache is cleared:</p>
+<ul>
+<li>When the model is reset (<code>resetModel()</code>)</li>
+<li>At the start of each <code>InferenceController::runRecurrentSequence()</code> call (<code>clearRecurrentCache()</code>)</li>
+<li>Explicitly via <code>clearRecurrentCache()</code></li>
+</ul>
+<p><code>resetModel()</code> does <strong>not</strong> clear the session <code>DataBank</code>.</p>
+</section>
+<section id="firstoutput-frame-0-behavior" class="level3">
+<h3 class="anchored" data-anchor-id="firstoutput-frame-0-behavior">FirstOutput frame-0 behavior</h3>
+<p>When any active recurrent binding uses <code>FirstOutputInit</code>, frame 0:</p>
+<ul>
+<li>Runs forward and decodes are <strong>skipped</strong> (<code>continue</code> before <code>decodeOutputs</code>).</li>
+<li>All active recurrent bindings update their cache from the corresponding output slots (including non-<code>FirstOutput</code> bindings on the same frame).</li>
+<li>The real decoded sequence begins at frame 1.</li>
+</ul>
 </section>
 </section>
 <section id="ui-integration" class="level2">
-<h2 class="anchored" data-anchor-id="ui-integration">UI Integration</h2>
-<section id="properties-widget" class="level3">
-<h3 class="anchored" data-anchor-id="properties-widget">Properties Widget</h3>
-<p>Each static (non-boolean-mask) input slot gets a “Recurrent” panel with:</p>
+<h2 class="anchored" data-anchor-id="ui-integration">UI integration</h2>
+<section id="memoryslotwidget" class="level3">
+<h3 class="anchored" data-anchor-id="memoryslotwidget">MemorySlotWidget</h3>
+<p>Each memory input slot gets a <code>MemorySlotWidget</code>. Recurrent positions expose output-slot and init-mode controls via <code>RecurrentFrameSourceForm</code> (schema-driven <code>AutoParamWidget</code>).</p>
+<p>When any recurrent binding is active:</p>
 <ul>
-<li><strong>Output slot combo</strong> — Select which output slot feeds into this input</li>
-<li><strong>Init mode combo</strong> — Select initialization strategy (Zeros / Static Capture / First Output)</li>
-<li><strong>Status label</strong> — Shows the configured feedback mapping</li>
+<li><code>dl::constraints::computeBatchSizeConstraint()</code> forces min=max=1</li>
+<li><code>DeepLearningPropertiesWidget::_updateBatchSizeConstraint()</code> disables the batch spinbox with an explanatory tooltip</li>
 </ul>
-<p>When any recurrent binding is active: - Batch size spinbox is locked to 1 and disabled - An explanatory tooltip explains why</p>
 </section>
 <section id="view-widget" class="level3">
-<h3 class="anchored" data-anchor-id="view-widget">View Widget</h3>
-<p>The progress bar (normally hidden) shows frame-by-frame progress during recurrent inference: “Frame N / M”.</p>
+<h3 class="anchored" data-anchor-id="view-widget">View widget</h3>
+<p><code>recurrentProgressChanged(current, total)</code> drives the progress display during recurrent inference (“Frame N / M”).</p>
 </section>
 <section id="run-action" class="level3">
-<h3 class="anchored" data-anchor-id="run-action">Run Action</h3>
-<p>The “↻ Recurrent” button in the bottom bar triggers <code>_onRunRecurrentSequence()</code>, which:</p>
+<h3 class="anchored" data-anchor-id="run-action">Run action</h3>
+<p>The <strong>↻ Recurrent</strong> button calls <code>DeepLearningPropertiesWidget::_onRunRecurrentSequence()</code>:</p>
 <ol type="1">
-<li>Prompts the user for how many frames to process</li>
-<li>Clears the recurrent cache</li>
-<li>Calls <code>runRecurrentSequence()</code> with progress reporting</li>
-<li>Updates the status label on completion</li>
+<li>Validates model readiness and active recurrent bindings</li>
+<li>Prompts for frame count (default from batch spinbox or 100)</li>
+<li>Syncs bindings from UI to <code>DeepLearningState</code></li>
+<li>Delegates to <code>InferenceController::runRecurrentSequence()</code></li>
 </ol>
+<p>Unlike batch inference, recurrent sequences run <strong>synchronously on the main thread</strong> inside <code>InferenceController</code> (no <code>QThread</code> worker). Progress is reported via <code>recurrentProgressChanged</code>, not <code>batchProgressChanged</code>.</p>
 </section>
 </section>
 <section id="state-persistence" class="level2">
-<h2 class="anchored" data-anchor-id="state-persistence">State Persistence</h2>
-<p><code>RecurrentBindingData</code> entries are stored in <code>DeepLearningStateData::recurrent_bindings</code> and serialized via reflect-cpp. They are cleared when the model changes (model-specific bindings).</p>
+<h2 class="anchored" data-anchor-id="state-persistence">State persistence</h2>
+<p><code>MemoryFrameBinding</code> entries (static and recurrent) are stored in <code>DeepLearningStateData::memory_frames</code> and serialized via reflect-cpp. Bindings are cleared when the model changes (model-specific configuration).</p>
+<p>Encoded tensors in the session <code>DataBank</code> are <strong>not</strong> serialized — re-capture after workspace restore. See <a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture</a>.</p>
 </section>
 <section id="batch-size-constraints" class="level2">
-<h2 class="anchored" data-anchor-id="batch-size-constraints">Batch Size Constraints</h2>
-<p>Recurrent bindings force <code>batch_size = 1</code>. This is enforced both: - <strong>In the UI</strong>: spinbox disabled with tooltip explanation - <strong>In the engine</strong>: <code>runRecurrentSequence()</code> always passes <code>batch_size=1</code> to <code>assembleInputs()</code></p>
-<p>This constraint exists because the output at frame <em>t</em> must be computed before it can feed into frame <em>t+1</em> — the frames are inherently sequential.</p>
+<h2 class="anchored" data-anchor-id="batch-size-constraints">Batch size constraints</h2>
+<p>Recurrent bindings force <code>batch_size = 1</code>. Enforced in:</p>
+<ul>
+<li><strong>UI</strong> — spinbox disabled when <code>constraint.forced_by_recurrent</code> is true</li>
+<li><strong>Engine</strong> — <code>runRecurrentSequence()</code> always passes <code>batch_size=1</code> to <code>assembleInputs()</code></li>
+</ul>
+<p>See <a href="../../developer/DeepLearning/constraints.html">Session Constraints</a>.</p>
+</section>
+<section id="related-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="related-documentation">Related documentation</h2>
+<ul>
+<li><a href="../../developer/DeepLearning/hybrid_sequence_inputs.html">Hybrid Sequence Inputs</a> — mixing static and recurrent positions</li>
+<li><a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture</a> — DataBank capture for static and <code>StaticCaptureInit</code></li>
+<li><a href="../../ui/DeepLearning_Widget/Inference/inference_controller.qmd">InferenceController</a> — run orchestration and signals</li>
+</ul>
 
 
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -395,7 +395,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlmodelexecution" class="level1">
 <h1>dl::ModelExecution</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Multi-backend model execution layer. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;ModelExecution.hpp&gt;</code></p>
 <section id="public-functions" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
@@ -409,7 +409,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-modelexecution">ModelExecution</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> backend =<a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a>)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-modelexecution">ModelExecution</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> backend =<a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a>)<br>Create with auto-detection (default) or explicit backend selection.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -433,7 +433,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-load">load</a></strong>(std::filesystem::path const &amp; path)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-load">load</a></strong>(std::filesystem::path const &amp; path)<br>Load a model file.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
@@ -452,16 +452,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-activebackendname">activeBackendName</a></strong>() const<br>Get the active backend’s human-readable name.</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-execute">execute</a></strong>(std::vector&lt; torch::Tensor &gt; const &amp; inputs)</td>
+<td>std::vector&lt; at::Tensor &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-execute">execute</a></strong>(std::vector&lt; at::Tensor &gt; const &amp; inputs)<br>Execute the default “forward” method with ordered input tensors.</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-execute">execute</a></strong>(std::string const &amp; method_name, std::vector&lt; torch::Tensor &gt; const &amp; inputs)</td>
+<td>std::vector&lt; at::Tensor &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-execute">execute</a></strong>(std::string const &amp; method_name, std::vector&lt; at::Tensor &gt; const &amp; inputs)<br>Execute a named method with ordered input tensors.</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-executenamed">executeNamed</a></strong>(std::unordered_map&lt; std::string, torch::Tensor &gt; const &amp; named_inputs, std::vector&lt; std::string &gt; const &amp; input_order)</td>
+<td>std::vector&lt; at::Tensor &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-executenamed">executeNamed</a></strong>(std::unordered_map&lt; std::string, at::Tensor &gt; const &amp; named_inputs, std::vector&lt; std::string &gt; const &amp; input_order)<br>Execute the “forward” method with named input tensors.</td>
 </tr>
 </tbody>
 </table>
@@ -497,11 +497,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> ModelExecution<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    BackendType backend <span class="op">=</span>BackendType<span class="op">::</span>Auto</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create with auto-detection (default) or explicit backend selection.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>backend</strong> <a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a> selects backend from file extension at <a href="../../api_generated/Classes/classdl_1_1ModelExecution.html#function-load">load()</a> time. Other values force a specific backend.</li>
 </ul>
-<p>Create with auto-detection (default) or explicit backend selection.</p>
 </section>
 <section id="function-modelexecution-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-modelexecution-1">function ~ModelExecution</h3>
@@ -536,12 +536,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> load<span class="op">(</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a model file.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>path</strong> Path to the model file.</li>
 </ul>
 <p><strong>Return</strong>: true if loading succeeded.</p>
-<p>Load a model file. If BackendType is Auto, selects backend from extension: .pt → TorchScript .pt2 → AOTInductor .pte → ExecuTorch (requires ENABLE_EXECUTORCH build)</p>
+<p>If BackendType is Auto, selects backend from extension: .pt → TorchScript .pt2 → AOTInductor .pte → ExecuTorch (requires ENABLE_EXECUTORCH build)</p>
 </section>
 <section id="function-isloaded" class="level3">
 <h3 class="anchored" data-anchor-id="function-isloaded">function isLoaded</h3>
@@ -565,9 +566,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-execute" class="level3">
 <h3 class="anchored" data-anchor-id="function-execute">function execute</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> execute<span class="op">(</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> execute<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute the default “forward” method with ordered input tensors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>inputs</strong> Ordered vector of input tensors.</li>
@@ -577,14 +579,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>std::runtime_error</strong> if the model is not loaded or execution fails.</li>
 </ul>
 <p><strong>Return</strong>: Ordered vector of output tensors.</p>
-<p>Execute the default “forward” method with ordered input tensors.</p>
 </section>
 <section id="function-execute-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-execute-1">function execute</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> execute<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> execute<span class="op">(</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> method_name<span class="op">,</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute a named method with ordered input tensors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>method_name</strong> Name of the method to execute (e.g.&nbsp;“forward”, “encode”).</li>
@@ -595,24 +597,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>std::runtime_error</strong> if the model is not loaded or execution fails.</li>
 </ul>
 <p><strong>Return</strong>: Ordered vector of output tensors.</p>
-<p>Execute a named method with ordered input tensors.</p>
 </section>
 <section id="function-executenamed" class="level3">
 <h3 class="anchored" data-anchor-id="function-executenamed">function executeNamed</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> executeNamed<span class="op">(</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> named_inputs<span class="op">,</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> executeNamed<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> named_inputs<span class="op">,</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_order</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute the “forward” method with named input tensors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>named_inputs</strong> Map of slot_name → Tensor.</li>
 <li><strong>input_order</strong> Ordered slot names matching the model’s forward() signature.</li>
 </ul>
 <p><strong>Return</strong>: Ordered vector of output tensors.</p>
-<p>Execute the “forward” method with named input tensors.</p>
 <p>Reorders named inputs according to <code>input_order</code>, then delegates to <code>[execute()](/api_generated/Classes/classdl_1_1ModelExecution.md#function-execute)</code>.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

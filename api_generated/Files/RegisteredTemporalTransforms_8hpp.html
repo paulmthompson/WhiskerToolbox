@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -350,7 +350,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#included-transforms" id="toc-included-transforms" class="nav-link" data-scroll-target="#included-transforms">Included Transforms</a></li>
-  <li><a href="#context-aware-registration" id="toc-context-aware-registration" class="nav-link" data-scroll-target="#context-aware-registration">Context-Aware Registration</a></li>
+  <li><a href="#trial-aligned-usage" id="toc-trial-aligned-usage" class="nav-link" data-scroll-target="#trial-aligned-usage">Trial-aligned usage</a></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
   </ul>
@@ -418,11 +418,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>NormalizeValueTime: TimeValuePoint → NormalizedValue</li>
 </ul>
 </section>
-<section id="context-aware-registration" class="level2">
-<h2 class="anchored" data-anchor-id="context-aware-registration">Context-Aware Registration</h2>
-<p>These transforms use NormalizeTimeParams which is context-aware. The <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> will automatically inject TrialContext when executing these transforms on trial-aligned data.</p>
+<section id="trial-aligned-usage" class="level2">
+<h2 class="anchored" data-anchor-id="trial-aligned-usage">Trial-aligned usage</h2>
+<p>For per-trial alignment, use <code>NormalizeTimeParamsV2</code> with <code>param_bindings</code> and <code>PipelineValueStore</code> from <code>[GatherResult::buildTrialStore()](/api_generated/Classes/classGatherResult.md#function-buildtrialstore)</code>, or <code>bindValueProjectionV2()</code> for value projections.</p>
 <p><a href="../../api_generated/Files/NormalizeTime_8hpp.html#file-normalizetime.hpp">NormalizeTime.hpp</a> for transform implementation</p>
-<p>ContextAwareParams.hpp for context injection infrastructure</p>
+<p><a href="../../api_generated/Files/PipelineValueStore_8hpp.html#file-pipelinevaluestore.hpp">PipelineValueStore.hpp</a></p>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
@@ -433,11 +433,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerTemporalTransforms<span class="op">();</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  <span class="co">// namespace WhiskerToolbox::Transforms::V2::Temporal</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Transforms::V2::Temporal</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif  </span><span class="co">// WHISKERTOOLBOX_V2_REGISTERED_TEMPORAL_TRANSFORMS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKERTOOLBOX_V2_REGISTERED_TEMPORAL_TRANSFORMS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:26 +0000</p>
 
 
 </section>

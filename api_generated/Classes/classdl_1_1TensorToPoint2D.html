@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -386,7 +386,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dltensortopoint2d" class="level1">
 <h1>dl::TensorToPoint2D</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Decodes a tensor channel into <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> by finding peak activations. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;TensorToPoint2D.hpp&gt;</code></p>
 <p>Inherits from <a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">dl::ChannelDecoder</a></p>
 <section id="public-functions" class="level2">
@@ -409,11 +409,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-decode">decode</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">PointDecoderParams</a> const &amp; params)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-decode">decode</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">PointDecoderParams</a> const &amp; params)<br>Decode the channel with the highest activation into a single point.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-decodemultiple">decodeMultiple</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">PointDecoderParams</a> const &amp; params)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-decodemultiple">decodeMultiple</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">PointDecoderParams</a> const &amp; params)<br>Decode all local maxima above threshold into multiple points.</td>
 </tr>
 </tbody>
 </table>
@@ -439,13 +439,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>TensorToPoint2D<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Decodes a tensor channel into <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> by finding the maximum activation.</p>
+<p>Decodes a tensor channel into <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> by finding peak activations.</p>
 <p>Strategies:</p>
 <ul>
 <li>Argmax: finds the pixel with highest value</li>
 <li>Subpixel: refines argmax with parabolic fit around the maximum</li>
 </ul>
 <p>Output coordinates are scaled from tensor (H, W) back to target_image_size. If target_image_size is {0, 0}, coordinates are returned in tensor space.</p>
+<p>Expects a 4D input tensor laid out as [B, C, H, W].</p>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
@@ -466,7 +467,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    DecoderContext <span class="at">const</span> <span class="op">&amp;</span> ctx<span class="op">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    PointDecoderParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Decode the channel with the highest activation into a single point. Returns {0, 0} if the tensor channel is entirely zero.</p>
+<p>Decode the channel with the highest activation into a single point.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>tensor</strong> 4D activation tensor [B, C, H, W].</li>
+<li><strong>ctx</strong> Decoder indexing context; height and width must match tensor dims 2 and 3.</li>
+<li><strong>params</strong> Subpixel refinement and threshold settings.</li>
+</ul>
+<p><strong>Return</strong>: Peak location, or {0, 0} if the channel is entirely non-positive.</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>tensor is defined</li>
+<li>tensor.dim() == 4 (layout [B, C, H, W])</li>
+<li>0 &lt;= ctx.batch_index &lt; tensor.size(0)</li>
+<li>0 &lt;= ctx.source_channel &lt; tensor.size(1)</li>
+<li>ctx.height &gt; 0 and ctx.width &gt; 0</li>
+<li>tensor.size(2) == ctx.height and tensor.size(3) == ctx.width</li>
+</ul>
 </section>
 <section id="function-decodemultiple" class="level3">
 <h3 class="anchored" data-anchor-id="function-decodemultiple">function decodeMultiple</h3>
@@ -475,9 +492,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    DecoderContext <span class="at">const</span> <span class="op">&amp;</span> ctx<span class="op">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    PointDecoderParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Decode all local maxima above threshold into multiple points. A local maximum is a pixel whose value is greater than all 8 neighbors.</p>
+<p>Decode all local maxima above threshold into multiple points.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>tensor</strong> 4D activation tensor [B, C, H, W].</li>
+<li><strong>ctx</strong> Decoder indexing context; height and width must match tensor dims 2 and 3.</li>
+<li><strong>params</strong> Subpixel refinement and minimum activation threshold.</li>
+</ul>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>tensor is defined</li>
+<li>tensor.dim() == 4 (layout [B, C, H, W])</li>
+<li>0 &lt;= ctx.batch_index &lt; tensor.size(0)</li>
+<li>0 &lt;= ctx.source_channel &lt; tensor.size(1)</li>
+<li>ctx.height &gt; 0 and ctx.width &gt; 0</li>
+<li>tensor.size(2) == ctx.height and tensor.size(3) == ctx.width</li>
+</ul>
+<p>A local maximum is a pixel whose value is greater than all 8 neighbors.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

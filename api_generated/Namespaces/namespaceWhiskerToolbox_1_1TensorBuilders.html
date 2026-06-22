@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -457,7 +457,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TensorBuilders.html#function-buildproviderfromrecipe">buildProviderFromRecipe</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TensorBuilders_1_1ColumnRecipe.html">ColumnRecipe</a> const &amp; recipe, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; const &amp; row_times, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals)<br>Build a ColumnProviderFn from a <a href="">ColumnRecipe</a>.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Files/TensorData_8hpp.html#using-invalidationwiringfn">InvalidationWiringFn</a></td>
+<td><a href="../../api_generated/Files/InvalidationWiringFn_8hpp.html#using-invalidationwiringfn">InvalidationWiringFn</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TensorBuilders.html#function-buildinvalidationwiringfn">buildInvalidationWiringFn</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; std::string &gt; const &amp; source_keys)<br>Build an InvalidationWiringFn that registers <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> observers to invalidate tensor columns when source data changes.</td>
 </tr>
 </tbody>
@@ -633,7 +633,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: InvalidationWiringFn suitable for <a href="../../api_generated/Classes/classTensorData.html#function-createfromlazycolumns">TensorData::createFromLazyColumns()</a></p>
 <p>For each (column_index, source_key) pair, the wiring function registers an observer on the source data. When the source notifies, the wiring callback invalidates the corresponding column and notifies the tensor’s own observers.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

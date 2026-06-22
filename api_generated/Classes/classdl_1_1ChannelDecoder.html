@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -348,6 +348,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#dlchanneldecoder" id="toc-dlchanneldecoder" class="nav-link active" data-scroll-target="#dlchanneldecoder">dl::ChannelDecoder</a>
   <ul class="collapse">
   <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-channeldecoder" id="toc-function-channeldecoder" class="nav-link" data-scroll-target="#function-channeldecoder">function ~ChannelDecoder</a></li>
@@ -383,6 +384,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlchanneldecoder" class="level1">
 <h1>dl::ChannelDecoder</h1>
+<p>Registry-facing interface for tensor-to-DataManager channel decoders. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;ChannelDecoder.hpp&gt;</code></p>
 <p>Inherited by <a href="../../api_generated/Classes/classdl_1_1TensorToFeatureVector.html">dl::TensorToFeatureVector</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToLine2D.html">dl::TensorToLine2D</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToMask2D.html">dl::TensorToMask2D</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html">dl::TensorToPoint2D</a></p>
 <section id="public-functions" class="level2">
@@ -410,23 +412,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>ChannelDecoder<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Registry-facing interface for tensor-to-DataManager channel decoders.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">PostEncoderModule</a> for the complementary torch-to-torch processing stage</p>
+<p>Subclasses identify themselves via <code>[name()](/api_generated/Classes/classdl_1_1ChannelDecoder.md#function-name)</code> and <code>[outputTypeName()](/api_generated/Classes/classdl_1_1ChannelDecoder.md#function-outputtypename)</code>. The actual decode logic lives on static <code>decode()</code> methods of each concrete decoder class.</p>
+</section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-channeldecoder" class="level3">
 <h3 class="anchored" data-anchor-id="function-channeldecoder">function ~ChannelDecoder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="op">~</span>ChannelDecoder<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="op">~</span>ChannelDecoder<span class="op">()</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-name" class="level3">
 <h3 class="anchored" data-anchor-id="function-name">function name</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string name<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string name<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1TensorToFeatureVector.html#function-name">dl::TensorToFeatureVector::name</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToLine2D.html#function-name">dl::TensorToLine2D::name</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToMask2D.html#function-name">dl::TensorToMask2D::name</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-name">dl::TensorToPoint2D::name</a></p>
 </section>
 <section id="function-outputtypename" class="level3">
 <h3 class="anchored" data-anchor-id="function-outputtypename">function outputTypeName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string outputTypeName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string outputTypeName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1TensorToFeatureVector.html#function-outputtypename">dl::TensorToFeatureVector::outputTypeName</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToLine2D.html#function-outputtypename">dl::TensorToLine2D::outputTypeName</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToMask2D.html#function-outputtypename">dl::TensorToMask2D::outputTypeName</a>, <a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html#function-outputtypename">dl::TensorToPoint2D::outputTypeName</a></p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

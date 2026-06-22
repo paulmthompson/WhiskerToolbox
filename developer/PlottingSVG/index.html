@@ -2,10 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Qt-free SVG rendering for CorePlotting RenderableScene objects">
 
 <title>PlottingSVG Library – Neuralyzer</title>
 <style>
@@ -73,14 +74,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -473,6 +474,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Core Geometry</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/angle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Planar angles and line tangents</span></a>
+  </div>
+</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
@@ -538,11 +545,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlottingSVG/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -555,11 +559,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlotDataExport/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -592,7 +593,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+ <span class="menu-text">Static Input Capture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -604,7 +605,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+ <span class="menu-text">Hybrid Sequence Inputs</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -614,23 +615,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Batch Range Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/batch_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
@@ -640,21 +632,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+ <span class="menu-text">Post-Encoder Modules</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToMask2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToMask2D</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToFeatureVector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToFeatureVector</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToPoint2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToPoint2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToLine2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToLine2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/param_schemas.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/widget_param_schemas.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
@@ -662,11 +672,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deep Learning Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -726,6 +733,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">TensorWhitening</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/pipeline_library.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipeline Library (TransformsV2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/pipeline_library_roadmap.md</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/command_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registration</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -738,11 +760,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/ParameterSchema/enum_variant_roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -991,6 +1010,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/transforms/data_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Legacy transform progress (<code>data_transforms.hpp</code>)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
@@ -1045,6 +1070,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/merge_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Object Merge</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/utils/ContainerTypeIndex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Container Type Index Utilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Storage Backend Architecture</span></a>
   </div>
@@ -1068,11 +1105,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/observer_thread_safety_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
@@ -1116,7 +1150,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+            <a href="../../developer/DataManager/Commands/index.qmd" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Command Architecture</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -1124,95 +1158,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/roadmap.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/core_types.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/sequence_execution.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/get_entity_ids_in_range.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/commands.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/save_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/load_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Architecture Roadmap</span></a>
+  <a href="../../developer/Commands/IO/SavePathResolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Save Path Resolver</span></a>
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Core Types &amp; Factory</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/synthesize_data.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/validation.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">getEntityIdsInRange Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_introspection.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Concrete Commands</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_registry.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SaveData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/gui_verb_audit.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">LoadData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/widget_save_refactoring_guide.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SynthesizeData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/data_manager_snapshot.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Validation</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Introspection</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Registry</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DataManagerSnapshot</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Log Widget</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_log_widget.qmd</span>
+  </li>
       </ul>
   </li>
       </ul>
@@ -1233,11 +1228,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/TriageSession/optimized_contact_triage_plan.md</span>
+  </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1390,17 +1382,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DeepLearning Widget Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/helpers.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">InferenceController</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/inference_controller.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1545,37 +1531,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#a-qt-free-svg-rendering-backend-for-coreplotting-scenes." id="toc-a-qt-free-svg-rendering-backend-for-coreplotting-scenes." class="nav-link active" data-scroll-target="#a-qt-free-svg-rendering-backend-for-coreplotting-scenes.">A Qt-free SVG rendering backend for CorePlotting scenes.</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
   <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation">Motivation</a></li>
   <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
   <ul class="collapse">
   <li><a href="#position-in-the-stack" id="toc-position-in-the-stack" class="nav-link" data-scroll-target="#position-in-the-stack">Position in the Stack</a></li>
   <li><a href="#directory-structure" id="toc-directory-structure" class="nav-link" data-scroll-target="#directory-structure">Directory Structure</a></li>
-  <li><a href="#component-overview" id="toc-component-overview" class="nav-link" data-scroll-target="#component-overview">Component Overview</a></li>
   <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
   </ul></li>
-  <li><a href="#public-api" id="toc-public-api" class="nav-link" data-scroll-target="#public-api">Public API</a>
+  <li><a href="#export-apis" id="toc-export-apis" class="nav-link" data-scroll-target="#export-apis">Export APIs</a>
   <ul class="collapse">
-  <li><a href="#svgscenerenderer" id="toc-svgscenerenderer" class="nav-link" data-scroll-target="#svgscenerenderer">SVGSceneRenderer</a></li>
-  <li><a href="#comparison-with-plottingopenglscenerenderer" id="toc-comparison-with-plottingopenglscenerenderer" class="nav-link" data-scroll-target="#comparison-with-plottingopenglscenerenderer">Comparison with PlottingOpenGL::SceneRenderer</a></li>
+  <li><a href="#svgscenerenderer-preferred" id="toc-svgscenerenderer-preferred" class="nav-link" data-scroll-target="#svgscenerenderer-preferred">SVGSceneRenderer (preferred)</a></li>
+  <li><a href="#svgexport-legacy-dataviewer" id="toc-svgexport-legacy-dataviewer" class="nav-link" data-scroll-target="#svgexport-legacy-dataviewer">SVGExport (legacy DataViewer)</a></li>
   <li><a href="#svgdocument" id="toc-svgdocument" class="nav-link" data-scroll-target="#svgdocument">SVGDocument</a></li>
+  <li><a href="#per-batch-renderers" id="toc-per-batch-renderers" class="nav-link" data-scroll-target="#per-batch-renderers">Per-batch renderers</a></li>
+  <li><a href="#decorations" id="toc-decorations" class="nav-link" data-scroll-target="#decorations">Decorations</a></li>
   </ul></li>
-  <li><a href="#usage-pattern" id="toc-usage-pattern" class="nav-link" data-scroll-target="#usage-pattern">Usage Pattern</a>
-  <ul class="collapse">
-  <li><a href="#widget-svg-export" id="toc-widget-svg-export" class="nav-link" data-scroll-target="#widget-svg-export">Widget SVG Export</a></li>
-  <li><a href="#standalone-batch-export" id="toc-standalone-batch-export" class="nav-link" data-scroll-target="#standalone-batch-export">Standalone / Batch Export</a></li>
-  </ul></li>
-  <li><a href="#rendering-pipeline" id="toc-rendering-pipeline" class="nav-link" data-scroll-target="#rendering-pipeline">Rendering Pipeline</a>
-  <ul class="collapse">
   <li><a href="#coordinate-transform" id="toc-coordinate-transform" class="nav-link" data-scroll-target="#coordinate-transform">Coordinate Transform</a></li>
-  </ul></li>
-  <li><a href="#decoration-system" id="toc-decoration-system" class="nav-link" data-scroll-target="#decoration-system">Decoration System</a>
-  <ul class="collapse">
-  <li><a href="#built-in-decorations" id="toc-built-in-decorations" class="nav-link" data-scroll-target="#built-in-decorations">Built-in Decorations</a></li>
-  </ul></li>
-  <li><a href="#testing-strategy" id="toc-testing-strategy" class="nav-link" data-scroll-target="#testing-strategy">Testing Strategy</a></li>
-  <li><a href="#relationship-to-other-libraries" id="toc-relationship-to-other-libraries" class="nav-link" data-scroll-target="#relationship-to-other-libraries">Relationship to Other Libraries</a></li>
+  <li><a href="#widget-integration-pattern" id="toc-widget-integration-pattern" class="nav-link" data-scroll-target="#widget-integration-pattern">Widget Integration Pattern</a></li>
+  <li><a href="#consuming-widgets" id="toc-consuming-widgets" class="nav-link" data-scroll-target="#consuming-widgets">Consuming Widgets</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
   <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
   </ul>
 </nav>
@@ -1589,6 +1565,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1 class="title">PlottingSVG Library</h1>
 </div>
 
+<div>
+  <div class="description">
+    Qt-free SVG rendering for CorePlotting RenderableScene objects
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
@@ -1603,28 +1584,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="a-qt-free-svg-rendering-backend-for-coreplotting-scenes." class="level2">
-<h2 class="anchored" data-anchor-id="a-qt-free-svg-rendering-backend-for-coreplotting-scenes.">A Qt-free SVG rendering backend for CorePlotting scenes.</h2>
-<p><strong>PlottingSVG</strong> is a static library that converts <code>CorePlotting::RenderableScene</code> objects into publication-quality SVG documents. It is the SVG counterpart to <code>PlottingOpenGL</code> — both consume the same CorePlotting scene graph but produce different output: OpenGL draw calls vs.&nbsp;SVG strings.</p>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p><strong>PlottingSVG</strong> is a static, Qt-free library that converts <code>CorePlotting::RenderableScene</code> objects into publication-quality SVG documents. It is the SVG counterpart to <code>PlottingOpenGL</code> — both consume the same CorePlotting scene graph but produce different output: OpenGL draw calls vs.&nbsp;SVG strings.</p>
 </section>
 <section id="key-features" class="level2">
 <h2 class="anchored" data-anchor-id="key-features">Key Features</h2>
 <ul>
-<li><strong>Symmetric with PlottingOpenGL:</strong> Same input (<code>RenderableScene</code>), different output. Any widget that builds a <code>RenderableScene</code> can export to SVG with no additional scene-building code.</li>
-<li><strong>No Qt Dependency:</strong> Pure C++ string output using <code>&lt;sstream&gt;</code> and <code>&lt;fstream&gt;</code>. Can be used in headless/batch workflows without a GUI.</li>
-<li><strong>Decoration System:</strong> Extensible overlay mechanism for axes, scalebars, center lines, and other SVG-specific annotations that have no OpenGL equivalent.</li>
-<li><strong>Per-Batch Renderers:</strong> Dedicated renderer classes for each primitive type (polylines, glyphs, rectangles), matching the PlottingOpenGL renderer organization.</li>
+<li><strong>Symmetric with PlottingOpenGL:</strong> Same input (<code>RenderableScene</code>), different output. Widgets that build a scene for OpenGL can export to SVG without a second scene-building path.</li>
+<li><strong>No Qt dependency:</strong> Pure C++ string output via <code>&lt;sstream&gt;</code> and <code>&lt;fstream&gt;</code>. Usable in headless or batch workflows.</li>
+<li><strong>Layered documents:</strong> <code>SVGSceneRenderer</code> groups geometry into named <code>&lt;g&gt;</code> layers (<code>rectangles</code>, <code>polylines</code>, <code>glyphs</code>, <code>decorations</code>).</li>
+<li><strong>Decoration system:</strong> Canvas-space overlays (scalebar, axes) via the <code>SVGDecoration</code> interface.</li>
+<li><strong>Legacy flat export:</strong> <code>SVGExport.hpp</code> preserves the DataViewer document layout (single element list, no named layers).</li>
 </ul>
 </section>
 <section id="motivation" class="level2">
 <h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<p>Prior to this library, SVG export logic lived inside <code>CorePlotting/Export/SVGPrimitives</code> (now removed). <code>DataViewer_Widget/Rendering/SVGExporter</code> still builds a <code>RenderableScene</code> from DataViewer-specific state, but links <strong><code>PlottingSVG</code></strong> and calls <code>PlottingSVG::buildSVGDocument()</code> / <code>createScalebarSVG()</code>.</p>
-<p>This arrangement had two problems:</p>
-<ul>
-<li><strong>Architectural asymmetry:</strong> OpenGL rendering lives in its own library (<code>PlottingOpenGL</code>), but SVG rendering was embedded in <code>CorePlotting</code>. CorePlotting should contain no rendering backend code.</li>
-<li><strong>No reuse path:</strong> Each new widget that wanted SVG export would need its own bespoke exporter class, duplicating the scene-to-SVG conversion and document assembly logic.</li>
-</ul>
-<p>PlottingSVG fixes both issues by extracting SVG rendering into a proper library that any widget can consume.</p>
+<p>SVG export previously lived in <code>CorePlotting/Export/SVGPrimitives</code> (removed). OpenGL rendering already had its own library (<code>PlottingOpenGL</code>); embedding SVG in <code>CorePlotting</code> created architectural asymmetry and forced each widget to duplicate document assembly.</p>
+<p>PlottingSVG extracts SVG rendering into a dedicated library that any consumer can link.</p>
 </section>
 <section id="architecture" class="level2">
 <h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
@@ -1633,416 +1610,308 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>CorePlotting (data types, layout, scene building)
     ├── PlottingOpenGL  (RenderableScene → OpenGL draw calls)
     └── PlottingSVG     (RenderableScene → SVG strings)</code></pre>
-<p>Both rendering backends depend on <code>CorePlotting</code> but not on each other. Widget code depends on <code>PlottingOpenGL</code> for live rendering and optionally on <code>PlottingSVG</code> for export.</p>
+<p>Both backends depend on <code>CorePlotting</code> but not on each other. Widgets link <code>PlottingOpenGL</code> for live rendering and optionally <code>PlottingSVG</code> for export.</p>
 </section>
 <section id="directory-structure" class="level3">
 <h3 class="anchored" data-anchor-id="directory-structure">Directory Structure</h3>
 <pre><code>src/PlottingSVG/
 ├── CMakeLists.txt
-├── SVGDocument.hpp              # SVG XML document assembly
-├── SVGDocument.cpp
-├── SVGSceneRenderer.hpp         # Main public API
-├── SVGSceneRenderer.cpp
-├── SVGUtils.hpp                 # Shared utilities (coordinate transform, color conversion)
-├── SVGUtils.cpp
+├── SVGDocument.hpp / .cpp
+├── SVGSceneRenderer.hpp / .cpp
+├── SVGExport.hpp / .cpp          # Legacy DataViewer flat document API
+├── SVGUtils.hpp / .cpp
 ├── Renderers/
-│   ├── SVGPolyLineRenderer.hpp  # RenderablePolyLineBatch → &lt;polyline&gt;
-│   ├── SVGPolyLineRenderer.cpp
-│   ├── SVGGlyphRenderer.hpp     # RenderableGlyphBatch → &lt;circle&gt;/&lt;line&gt;/&lt;rect&gt;
-│   ├── SVGGlyphRenderer.cpp
-│   ├── SVGRectangleRenderer.hpp # RenderableRectangleBatch → &lt;rect&gt;
-│   └── SVGRectangleRenderer.cpp
+│   ├── SVGPolyLineRenderer.hpp / .cpp
+│   ├── SVGGlyphRenderer.hpp / .cpp
+│   └── SVGRectangleRenderer.hpp / .cpp
 └── Decorations/
-    ├── SVGDecoration.hpp        # Base concept/interface for decorations
-    ├── SVGAxisRenderer.hpp      # Axis labels + tick marks
-    ├── SVGAxisRenderer.cpp
-    ├── SVGScalebar.hpp          # Scalebar with tick marks and label
-    └── SVGScalebar.cpp</code></pre>
-</section>
-<section id="component-overview" class="level3">
-<h3 class="anchored" data-anchor-id="component-overview">Component Overview</h3>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 42%">
-<col style="width: 57%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Component</th>
-<th>Responsibility</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>SVGSceneRenderer</code></td>
-<td>Main entry point — accepts a <code>RenderableScene</code>, coordinates batch rendering, assembles final SVG</td>
-</tr>
-<tr class="even">
-<td><code>SVGDocument</code></td>
-<td>SVG XML structure — manages header, viewBox, background, <code>&lt;g&gt;</code> layer groups, footer</td>
-</tr>
-<tr class="odd">
-<td><code>SVGUtils</code></td>
-<td>Shared math — MVP vertex transform to SVG coordinates, RGBA → hex color conversion</td>
-</tr>
-<tr class="even">
-<td><code>SVGPolyLineRenderer</code></td>
-<td>Converts <code>RenderablePolyLineBatch</code> → <code>&lt;polyline&gt;</code> elements with stroke styling</td>
-</tr>
-<tr class="odd">
-<td><code>SVGGlyphRenderer</code></td>
-<td>Converts <code>RenderableGlyphBatch</code> → <code>&lt;circle&gt;</code>, <code>&lt;line&gt;</code>, <code>&lt;rect&gt;</code> per glyph type</td>
-</tr>
-<tr class="even">
-<td><code>SVGRectangleRenderer</code></td>
-<td>Converts <code>RenderableRectangleBatch</code> → <code>&lt;rect&gt;</code> elements with fill/opacity</td>
-</tr>
-<tr class="odd">
-<td><code>SVGDecoration</code></td>
-<td>Interface for SVG-only overlays (axes, scalebar, center lines)</td>
-</tr>
-<tr class="even">
-<td><code>SVGAxisRenderer</code></td>
-<td>Renders axis tick marks and labels as <code>&lt;line&gt;</code> + <code>&lt;text&gt;</code></td>
-</tr>
-<tr class="odd">
-<td><code>SVGScalebar</code></td>
-<td>Renders a scalebar with tick marks and unit label</td>
-</tr>
-</tbody>
-</table>
+    ├── SVGDecoration.hpp
+    ├── SVGAxisRenderer.hpp / .cpp
+    └── SVGScalebar.hpp / .cpp</code></pre>
 </section>
 <section id="dependencies" class="level3">
 <h3 class="anchored" data-anchor-id="dependencies">Dependencies</h3>
-<pre><code>PlottingSVG
-├── CorePlotting   (RenderableScene, RenderableBatch types)
-└── glm::glm       (matrix math for MVP transforms)</code></pre>
-<p>No Qt, no OpenGL, no other project libraries. This is intentional — the library is pure computation producing strings.</p>
+<pre><code>PlottingSVG (STATIC)
+├── CorePlotting   (RenderableScene, batch types)
+└── glm::glm       (MVP matrix math)</code></pre>
+<p>Registered in <code>src/CMakeLists.txt</code> outside <code>ENABLE_UI</code>.</p>
 </section>
 </section>
-<section id="public-api" class="level2">
-<h2 class="anchored" data-anchor-id="public-api">Public API</h2>
-<section id="svgscenerenderer" class="level3">
-<h3 class="anchored" data-anchor-id="svgscenerenderer">SVGSceneRenderer</h3>
-<p>The main class mirrors <code>PlottingOpenGL::SceneRenderer</code> in spirit:</p>
+<section id="export-apis" class="level2">
+<h2 class="anchored" data-anchor-id="export-apis">Export APIs</h2>
+<p>PlottingSVG exposes two paths. <strong>New widget integrations should use <code>SVGSceneRenderer</code>.</strong></p>
+<section id="svgscenerenderer-preferred" class="level3">
+<h3 class="anchored" data-anchor-id="svgscenerenderer-preferred">SVGSceneRenderer (preferred)</h3>
+<p>Main entry point for layered SVG export. Stores a <strong>non-owning pointer</strong> to the scene; the scene must remain alive through <code>render()</code>. At <code>render()</code> time the renderer reads <code>scene.view_matrix</code> and <code>scene.projection_matrix</code> and computes <code>MVP = projection * view * batch.model_matrix</code> per batch.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> PlottingSVG <span class="op">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SVGSceneRenderer <span class="op">{</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    SVGSceneRenderer<span class="op">();</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    SVGSceneRenderer<span class="op">();</span>  <span class="co">// default 1920×1080 canvas, white background</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set the scene to render (stores const reference)</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setScene<span class="op">(</span>CorePlotting<span class="op">::</span>RenderableScene <span class="at">const</span> <span class="op">&amp;</span> scene<span class="op">);</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set SVG canvas dimensions (default: 1920×1080)</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setCanvasSize<span class="op">(</span><span class="dt">int</span> width<span class="op">,</span> <span class="dt">int</span> height<span class="op">);</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setScene<span class="op">(</span>CorePlotting<span class="op">::</span>RenderableScene <span class="at">const</span> <span class="op">&amp;</span> scene<span class="op">);</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setCanvasSize<span class="op">(</span><span class="dt">int</span> width<span class="op">,</span> <span class="dt">int</span> height<span class="op">);</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setBackgroundColor<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">);</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addDecoration<span class="op">(</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>SVGDecoration<span class="op">&gt;</span> decoration<span class="op">);</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> clearDecorations<span class="op">();</span></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Set background color as hex string (default: "#FFFFFF")</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setBackgroundColor<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">);</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Add a decoration overlay (axes, scalebar, center line, etc.)</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addDecoration<span class="op">(</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>SVGDecoration<span class="op">&gt;</span> decoration<span class="op">);</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Clear all decorations</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> clearDecorations<span class="op">();</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Render scene to complete SVG document string</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string render<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Convenience: render and write to file</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> renderToFile<span class="op">(</span><span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace PlottingSVG</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string render<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> renderToFile<span class="op">(</span><span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Layer order:</strong> <code>rectangles</code> → <code>polylines</code> → <code>glyphs</code> → <code>decorations</code> (only when decoration output is non-empty). If no scene is set, the document still contains XML header, viewBox, and background.</p>
+<p>Plot widgets typically copy live OpenGL view/projection matrices onto the cached scene before calling <code>render()</code>, and use the widget’s current pixel dimensions as canvas size.</p>
 </section>
-<section id="comparison-with-plottingopenglscenerenderer" class="level3">
-<h3 class="anchored" data-anchor-id="comparison-with-plottingopenglscenerenderer">Comparison with PlottingOpenGL::SceneRenderer</h3>
+<section id="svgexport-legacy-dataviewer" class="level3">
+<h3 class="anchored" data-anchor-id="svgexport-legacy-dataviewer">SVGExport (legacy DataViewer)</h3>
+<p>Flat document assembly used by <code>DataViewer_Widget/Rendering/SVGExporter</code>:</p>
 <table class="caption-top table">
 <colgroup>
+<col style="width: 57%">
 <col style="width: 42%">
-<col style="width: 37%">
-<col style="width: 20%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>PlottingOpenGL</th>
-<th>PlottingSVG</th>
+<th>Symbol</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SVGExportParams</code></td>
+<td><code>canvas_width</code>, <code>canvas_height</code>, <code>background_color</code></td>
+</tr>
+<tr class="even">
+<td><code>ScalebarTimeRange</code></td>
+<td>Visible time window for scalebar pixel mapping</td>
+</tr>
+<tr class="odd">
+<td><code>renderSceneToSVG()</code></td>
+<td>Flatten batches to element strings (rectangles → polylines → glyphs)</td>
+</tr>
+<tr class="even">
+<td><code>buildSVGDocument()</code></td>
+<td>Full SVG 1.1 document with fixed DataViewer <code>&lt;desc&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>createScalebarSVG()</code></td>
+<td>Bottom-right scalebar via default <code>SVGScalebar</code></td>
+</tr>
+</tbody>
+</table>
+<p>This path does <strong>not</strong> use <code>SVGDocument</code> layer groups. See <a href="../../developer/PlottingSVG/SVGExport.html">SVGExport</a>.</p>
+</section>
+<section id="svgdocument" class="level3">
+<h3 class="anchored" data-anchor-id="svgdocument">SVGDocument</h3>
+<p>Lower-level XML assembler used by <code>SVGSceneRenderer</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>SVGDocument doc<span class="op">(</span>width<span class="op">,</span> height<span class="op">);</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>doc<span class="op">.</span>setBackground<span class="op">(</span><span class="st">"#FFFFFF"</span><span class="op">);</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>doc<span class="op">.</span>setDescription<span class="op">(</span><span class="st">"…"</span><span class="op">);</span>  <span class="co">// default: "WhiskerToolbox Export"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>doc<span class="op">.</span>addElements<span class="op">(</span><span class="st">"glyphs"</span><span class="op">,</span> elements<span class="op">);</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> doc<span class="op">.</span>build<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Layers are emitted as <code>&lt;g id="layer_name"&gt;</code> groups in insertion order. Fragment strings are written verbatim — callers must supply XML-safe content.</p>
+</section>
+<section id="per-batch-renderers" class="level3">
+<h3 class="anchored" data-anchor-id="per-batch-renderers">Per-batch renderers</h3>
+<p>Stateless <code>render()</code> methods on each batch type:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 28%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Renderer</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SVGRectangleRenderer</code></td>
+<td><code>RenderableRectangleBatch</code></td>
+<td><code>&lt;rect&gt;</code> with fill/opacity</td>
+</tr>
+<tr class="even">
+<td><code>SVGPolyLineRenderer</code></td>
+<td><code>RenderablePolyLineBatch</code></td>
+<td><code>&lt;polyline&gt;</code> with per-segment stroke</td>
+</tr>
+<tr class="odd">
+<td><code>SVGGlyphRenderer</code></td>
+<td><code>RenderableGlyphBatch</code></td>
+<td><code>&lt;circle&gt;</code>, <code>&lt;line&gt;</code>, <code>&lt;rect&gt;</code> per glyph type</td>
+</tr>
+</tbody>
+</table>
+<p>All use <code>PlottingSVG::transformVertexToSVG()</code> and <code>colorToSVGHex()</code>. Details: <a href="../../developer/PlottingSVG/SVGUtils.html">SVGUtils</a>.</p>
+</section>
+<section id="decorations" class="level3">
+<h3 class="anchored" data-anchor-id="decorations">Decorations</h3>
+<p>Canvas-pixel-space overlays implementing <code>SVGDecoration::render(width, height)</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 43%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Class</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SVGScalebar</code></td>
+<td>Horizontal bar, end ticks, numeric label; corner/padding/style options</td>
+</tr>
+<tr class="even">
+<td><code>SVGAxisRenderer</code></td>
+<td>Spine, uniform ticks, title; <code>AxisPosition::Bottom</code> or <code>Left</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>createScalebarSVG()</code> delegates to <code>SVGScalebar</code>. Built-in decorations are available to any caller via <code>SVGSceneRenderer::addDecoration()</code>; plot widgets today export scene geometry only (no decoration overlays). See <a href="../../developer/PlottingSVG/decorations.html">Decorations</a>.</p>
+</section>
+</section>
+<section id="coordinate-transform" class="level2">
+<h2 class="anchored" data-anchor-id="coordinate-transform">Coordinate Transform</h2>
+<p><code>transformVertexToSVG(vertex, mvp, canvas_width, canvas_height)</code>:</p>
+<ol type="1">
+<li><code>ndc = mvp * vertex</code></li>
+<li>Perspective divide when <code>|ndc.w| &gt; 1e-6</code></li>
+<li>Map to SVG pixels: <code>svg_x = width * (ndc.x + 1) / 2</code>, <code>svg_y = height * (1 - ndc.y) / 2</code></li>
+</ol>
+<p><code>colorToSVGHex()</code> clamps RGB to <code>#RRGGBB</code> (alpha not embedded — use SVG opacity attributes separately).</p>
+</section>
+<section id="widget-integration-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="widget-integration-pattern">Widget Integration Pattern</h2>
+<ol type="1">
+<li>Cache a <code>RenderableScene</code> during OpenGL <code>rebuildScene()</code> (not only as a local variable).</li>
+<li>Implement <code>exportToSVG()</code> on the OpenGL widget: sync matrices onto the scene, configure <code>SVGSceneRenderer</code>, return the SVG string.</li>
+<li>Add <strong>Export SVG</strong> button on the properties widget (<code>exportSVGRequested()</code> signal).</li>
+<li>Implement <code>handleExportSVG()</code> on the top-level widget: <code>AppFileDialog</code> → write file.</li>
+<li>Connect signal → slot in the widget registration file.</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>PlottingSVG<span class="op">::</span>SVGSceneRenderer renderer<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>_scene<span class="op">.</span>view_matrix <span class="op">=</span> _view_matrix<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>_scene<span class="op">.</span>projection_matrix <span class="op">=</span> _projection_matrix<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>renderer<span class="op">.</span>setScene<span class="op">(</span>_scene<span class="op">);</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>renderer<span class="op">.</span>setCanvasSize<span class="op">(</span>_widget_width<span class="op">,</span> _widget_height<span class="op">);</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>renderer<span class="op">.</span>setBackgroundColor<span class="op">(</span>background_hex<span class="op">);</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>renderer<span class="op">.</span>render<span class="op">());</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="consuming-widgets" class="level2">
+<h2 class="anchored" data-anchor-id="consuming-widgets">Consuming Widgets</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 25%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>API</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>uploadScene(scene)</code></td>
-<td><code>setScene(scene)</code></td>
-<td>OpenGL uploads to GPU; SVG stores reference</td>
+<td>EventPlotWidget</td>
+<td><code>SVGSceneRenderer</code></td>
+<td>Cached <code>_scene</code>; widget pixel canvas size</td>
 </tr>
 <tr class="even">
-<td><code>render()</code></td>
-<td><code>render() → string</code></td>
-<td>OpenGL draws to framebuffer; SVG returns document</td>
+<td>PSTHWidget</td>
+<td><code>SVGSceneRenderer</code></td>
+<td>Bar and line render modes</td>
 </tr>
 <tr class="odd">
-<td><code>initialize()</code> / <code>cleanup()</code></td>
-<td><em>(none)</em></td>
-<td>No GPU resources to manage</td>
+<td>HeatmapWidget</td>
+<td><code>SVGSceneRenderer</code></td>
+<td>Cached heatmap scene</td>
 </tr>
 <tr class="even">
-<td><code>setRenderOrder(order)</code></td>
-<td><em>(same default)</em></td>
-<td>Rectangles → PolyLines → Glyphs</td>
+<td>ScatterPlotWidget</td>
+<td><code>SVGSceneRenderer</code></td>
+<td>Cached scatter scene</td>
 </tr>
 <tr class="odd">
-<td><em>(none)</em></td>
-<td><code>addDecoration(...)</code></td>
-<td>SVG-specific overlays (axes, scalebar)</td>
-</tr>
-<tr class="even">
-<td><em>(none)</em></td>
-<td><code>setCanvasSize(w, h)</code></td>
-<td>SVG needs explicit canvas dimensions</td>
-</tr>
-<tr class="odd">
-<td><em>(none)</em></td>
-<td><code>renderToFile(path)</code></td>
-<td>Convenience for file output</td>
+<td>DataViewer_Widget</td>
+<td><code>buildSVGDocument()</code> + <code>createScalebarSVG()</code></td>
+<td>Legacy flat path via <code>SVGExporter</code></td>
 </tr>
 </tbody>
 </table>
+<p><strong>Not yet integrated:</strong> <code>LinePlotWidget</code>, <code>OnionSkinViewWidget</code>, <code>TemporalProjectionViewWidget</code>, and <code>SpectrogramWidget</code> still lack SVG export. <code>LinePlotWidget</code> uses <code>BatchLineRenderer</code> rather than <code>RenderableScene</code> directly and needs a <code>LineBatchData</code> → <code>RenderablePolyLineBatch</code> conversion helper first.</p>
 </section>
-<section id="svgdocument" class="level3">
-<h3 class="anchored" data-anchor-id="svgdocument">SVGDocument</h3>
-<p>Handles SVG XML structure:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> PlottingSVG <span class="op">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SVGDocument <span class="op">{</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    SVGDocument<span class="op">(</span><span class="dt">int</span> width<span class="op">,</span> <span class="dt">int</span> height<span class="op">);</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setBackground<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">);</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setDescription<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> desc<span class="op">);</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Add elements to a named layer group (</span><span class="kw">&lt;g&gt;</span><span class="co"> element)</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> addElements<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> layer_name<span class="op">,</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                     <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> elements<span class="op">);</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Build complete SVG document string</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string build<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace PlottingSVG</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Layers are emitted in insertion order as <code>&lt;g id="layer_name"&gt;</code> groups, providing logical structure in the SVG output (useful when editing in Inkscape or Illustrator).</p>
-</section>
-</section>
-<section id="usage-pattern" class="level2">
-<h2 class="anchored" data-anchor-id="usage-pattern">Usage Pattern</h2>
-<section id="widget-svg-export" class="level3">
-<h3 class="anchored" data-anchor-id="widget-svg-export">Widget SVG Export</h3>
-<p>Any widget that already builds a <code>RenderableScene</code> for OpenGL rendering can export to SVG with minimal additional code:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"PlottingSVG/SVGSceneRenderer.hpp"</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"PlottingSVG/Decorations/SVGScalebar.hpp"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string MyPlotWidget<span class="op">::</span>exportToSVG<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    PlottingSVG<span class="op">::</span>SVGSceneRenderer renderer<span class="op">;</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setScene<span class="op">(</span>_cached_scene<span class="op">);</span>           <span class="co">// Same scene used for OpenGL</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setCanvasSize<span class="op">(</span><span class="dv">1920</span><span class="op">,</span> <span class="dv">1080</span><span class="op">);</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>setBackgroundColor<span class="op">(</span><span class="st">"#FFFFFF"</span><span class="op">);</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add optional decorations</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span>addDecoration<span class="op">(</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>make_unique<span class="op">&lt;</span>PlottingSVG<span class="op">::</span>SVGScalebar<span class="op">&gt;(</span><span class="dv">100</span><span class="op">,</span> time_start<span class="op">,</span> time_end<span class="op">));</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> renderer<span class="op">.</span>render<span class="op">();</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The widget only needs to expose its cached <code>RenderableScene</code> — all SVG rendering logic is handled by <code>PlottingSVG</code>.</p>
-</section>
-<section id="standalone-batch-export" class="level3">
-<h3 class="anchored" data-anchor-id="standalone-batch-export">Standalone / Batch Export</h3>
-<p>Because PlottingSVG has no Qt dependency, it can be used for headless export:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Build scene programmatically</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> scene <span class="op">=</span> CorePlotting<span class="op">::</span>SceneBuilder<span class="op">()</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>setBounds<span class="op">(</span>bounds<span class="op">)</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>addGlyphs<span class="op">(</span><span class="st">"events"</span><span class="op">,</span> mapped_events<span class="op">,</span> glyph_style<span class="op">)</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build<span class="op">();</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Export to file</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>PlottingSVG<span class="op">::</span>SVGSceneRenderer renderer<span class="op">;</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>renderer<span class="op">.</span>setScene<span class="op">(</span>scene<span class="op">);</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>renderer<span class="op">.</span>renderToFile<span class="op">(</span><span class="st">"output.svg"</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</section>
-<section id="rendering-pipeline" class="level2">
-<h2 class="anchored" data-anchor-id="rendering-pipeline">Rendering Pipeline</h2>
-<p>The internal rendering flow mirrors PlottingOpenGL’s approach:</p>
-<pre><code>SVGSceneRenderer::render()
-    │
-    ├── SVGDocument::setBackground()
-    │
-    ├── For each batch type (in render order):
-    │   ├── SVGRectangleRenderer::render(batch, V, P, canvas) → elements
-    │   ├── SVGPolyLineRenderer::render(batch, V, P, canvas) → elements
-    │   └── SVGGlyphRenderer::render(batch, V, P, canvas) → elements
-    │
-    ├── For each decoration:
-    │   └── decoration-&gt;render(canvas_width, canvas_height) → elements
-    │
-    └── SVGDocument::build() → complete SVG string</code></pre>
-<section id="coordinate-transform" class="level3">
-<h3 class="anchored" data-anchor-id="coordinate-transform">Coordinate Transform</h3>
-<p>Each per-batch renderer computes <code>MVP = Projection × View × Model</code> and transforms world-space vertices to SVG pixel coordinates:</p>
-<ol type="1">
-<li>Apply MVP: <code>ndc = MVP * vertex</code></li>
-<li>Perspective divide: <code>ndc /= ndc.w</code></li>
-<li>Map NDC → SVG: <code>svg_x = width * (ndc.x + 1) / 2</code>, <code>svg_y = height * (1 - ndc.y) / 2</code></li>
-</ol>
-<p>This is identical to the transform in <code>PlottingSVG::transformVertexToSVG()</code> (re-exported as <code>CorePlotting::transformVertexToSVG()</code> for legacy callers), ensuring pixel-perfect correspondence between OpenGL and SVG output.</p>
-</section>
-</section>
-<section id="decoration-system" class="level2">
-<h2 class="anchored" data-anchor-id="decoration-system">Decoration System</h2>
-<p>Decorations are SVG-specific overlays that have no OpenGL equivalent. They render directly in SVG canvas coordinates (not world coordinates), making them resolution-independent.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> PlottingSVG <span class="op">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// Interface for SVG-specific decorations</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SVGDecoration <span class="op">{</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>SVGDecoration<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Render decoration to SVG elements</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    render<span class="op">(</span><span class="dt">int</span> canvas_width<span class="op">,</span> <span class="dt">int</span> canvas_height<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace PlottingSVG</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<section id="built-in-decorations" class="level3">
-<h3 class="anchored" data-anchor-id="built-in-decorations">Built-in Decorations</h3>
+<section id="testing" class="level2">
+<h2 class="anchored" data-anchor-id="testing">Testing</h2>
+<p>Tests live in <code>tests/PlottingSVG/</code>:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 32%">
-<col style="width: 23%">
-<col style="width: 44%">
+<col style="width: 37%">
+<col style="width: 62%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Decoration</th>
-<th>Output</th>
-<th>Configuration</th>
+<th>File</th>
+<th>Coverage</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>SVGScalebar</code></td>
-<td>Horizontal bar + tick marks + label</td>
-<td>Length (time units), position, color</td>
+<td><code>SVGUtils.test.cpp</code></td>
+<td>Coordinate transform, color conversion</td>
 </tr>
 <tr class="even">
-<td><code>SVGAxisRenderer</code></td>
-<td>Axis lines + tick marks + labels</td>
-<td>Range, tick interval, label text, position (left/bottom)</td>
+<td><code>SVGDocument.test.cpp</code></td>
+<td>XML structure, layers, background</td>
+</tr>
+<tr class="odd">
+<td><code>SVGPolyLineRenderer.test.cpp</code></td>
+<td>Polyline styling and geometry</td>
+</tr>
+<tr class="even">
+<td><code>SVGGlyphRenderer.test.cpp</code></td>
+<td>Glyph types (tick, circle, square, cross)</td>
+</tr>
+<tr class="odd">
+<td><code>SVGRectangleRenderer.test.cpp</code></td>
+<td>Rectangle fill and opacity</td>
+</tr>
+<tr class="even">
+<td><code>SVGSceneRenderer.test.cpp</code></td>
+<td>Full scene layer ordering</td>
+</tr>
+<tr class="odd">
+<td><code>SVGScalebar.test.cpp</code></td>
+<td>Scalebar positioning and label</td>
+</tr>
+<tr class="even">
+<td><code>SVGAxisRenderer.test.cpp</code></td>
+<td>Axis spine, ticks, title</td>
+</tr>
+<tr class="odd">
+<td><code>EventPlotExportIntegration.test.cpp</code></td>
+<td>End-to-end scene export smoke test</td>
 </tr>
 </tbody>
 </table>
-<p>Widgets can create custom decorations (e.g., a vertical center line at t=0 for raster plots) by implementing the <code>SVGDecoration</code> interface.</p>
-</section>
-</section>
-<section id="testing-strategy" class="level2">
-<h2 class="anchored" data-anchor-id="testing-strategy">Testing Strategy</h2>
-<p>Tests reside in <code>tests/PlottingSVG/</code> and verify:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 45%">
-<col style="width: 54%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Test Category</th>
-<th>What It Verifies</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Coordinate transform</td>
-<td><code>transformVertexToSVG()</code> produces correct SVG pixel positions for known MVP inputs</td>
-</tr>
-<tr class="even">
-<td>Color conversion</td>
-<td><code>colorToSVGHex()</code> handles edge cases (0, 1, out-of-range clamping)</td>
-</tr>
-<tr class="odd">
-<td>Glyph rendering</td>
-<td>Each glyph type (Tick, Circle, Square, Cross) produces correct SVG elements</td>
-</tr>
-<tr class="even">
-<td>PolyLine rendering</td>
-<td>Multi-segment lines with per-line colors produce correct <code>&lt;polyline&gt;</code> elements</td>
-</tr>
-<tr class="odd">
-<td>Rectangle rendering</td>
-<td>Rectangles with alpha produce correct <code>&lt;rect&gt;</code> elements with <code>fill-opacity</code></td>
-</tr>
-<tr class="even">
-<td>Scene rendering</td>
-<td>Full scene with mixed batch types produces elements in correct layer order</td>
-</tr>
-<tr class="odd">
-<td>Document structure</td>
-<td>Output contains valid XML header, viewBox, background rect, closing tag</td>
-</tr>
-<tr class="even">
-<td>Decoration rendering</td>
-<td>Scalebar and axis decorations produce positioned elements in canvas coordinates</td>
-</tr>
-<tr class="odd">
-<td>Round-trip consistency</td>
-<td>Same <code>RenderableScene</code> produces same SVG output across multiple <code>render()</code> calls</td>
-</tr>
-</tbody>
-</table>
-<p>Tests use Catch2 and do not require an OpenGL context or Qt event loop.</p>
-</section>
-<section id="relationship-to-other-libraries" class="level2">
-<h2 class="anchored" data-anchor-id="relationship-to-other-libraries">Relationship to Other Libraries</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 40%">
-<col style="width: 59%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Library</th>
-<th>Relationship</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>CorePlotting</code></td>
-<td>Upstream — provides <code>RenderableScene</code> and all batch types</td>
-</tr>
-<tr class="even">
-<td><code>PlottingOpenGL</code></td>
-<td>Sibling — consumes same input, produces OpenGL output</td>
-</tr>
-<tr class="odd">
-<td><code>DataViewer_Widget/SVGExporter</code></td>
-<td>Consumer — will be refactored to use <code>PlottingSVG::SVGSceneRenderer</code></td>
-</tr>
-<tr class="even">
-<td><code>EventPlotWidget</code></td>
-<td>Consumer — first new widget to add SVG export via PlottingSVG</td>
-</tr>
-<tr class="odd">
-<td><code>PSTHWidget</code>, <code>LinePlotWidget</code>, etc.</td>
-<td>Future consumers — any widget producing <code>RenderableScene</code></td>
-</tr>
-</tbody>
-</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">--output-on-failure</span> <span class="at">-R</span> <span class="st">"PlottingSVG"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Tests use Catch2 and require no OpenGL context or Qt event loop.</p>
 </section>
 <section id="see-also" class="level2">
 <h2 class="anchored" data-anchor-id="see-also">See Also</h2>
 <ul>
-<li><a href="../../developer/coreplotting/index.html">CorePlotting Library</a> — The upstream scene graph and layout engine</li>
-<li><a href="../../developer/coreplotting/implementation_guide.html">Building Custom Plot Widgets</a> — How widgets build <code>RenderableScene</code> objects</li>
-<li><a href="../../developer/PlottingSVG/roadmap.html">PlottingSVG Roadmap</a> — Step-by-step implementation plan</li>
-<li><a href="../../developer/ui/Plots/EventPlotWidget/index.html">EventPlot Widget</a> — First widget to use PlottingSVG for export</li>
+<li><a href="../../developer/PlottingSVG/SVGExport.html">SVGExport</a> — legacy DataViewer flat document API</li>
+<li><a href="../../developer/PlottingSVG/SVGUtils.html">SVGUtils</a> — coordinate and color helpers</li>
+<li><a href="../../developer/PlottingSVG/decorations.html">Decorations</a> — scalebar and axis overlays</li>
+<li><a href="../../developer/coreplotting/index.html">CorePlotting Library</a> — upstream scene graph</li>
+<li><a href="../../developer/coreplotting/implementation_guide.html">Building Custom Plot Widgets</a> — how widgets build <code>RenderableScene</code></li>
 </ul>
 
 

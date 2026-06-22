@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -74,14 +74,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -407,17 +407,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="core-components">Core Components</h2>
 <section id="observerdata" class="level3">
 <h3 class="anchored" data-anchor-id="observerdata">ObserverData</h3>
-<p>The <code>ObserverData</code> class manages a collection of callback functions that are invoked when data changes occur.</p>
+<p>The <code>ObserverData</code> class manages a collection of callback functions that are invoked when data changes occur. Each instance can carry an optional domain name (used in <code>spdlog</code> debug output), and each registered callback can carry an optional observer name for per-callback timing logs.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Observer/Observer_Data.hpp"</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>ObserverData observable<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>ObserverData observable<span class="op">(</span><span class="st">"MyDomain"</span><span class="op">);</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Register an observer - store the ID for later removal</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> id <span class="op">=</span> observable<span class="op">.</span>addObserver<span class="op">([]()</span> <span class="op">{</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Data changed!"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> <span class="st">"MyWidget"</span><span class="op">);</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Trigger all registered callbacks</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Trigger all registered callbacks (snapshot iteration; order unspecified)</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>observable<span class="op">.</span>notifyObservers<span class="op">();</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Remove the observer when no longer needed</span></span>
@@ -512,19 +512,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="callout-body-container callout-body">
 <p>The Observer library is <strong>not thread-safe</strong>. All operations (<code>addObserver</code>, <code>removeObserver</code>, <code>notifyObservers</code>) must be called from the same thread, or external synchronization must be provided.</p>
+<p>Qt widgets that register observer callbacks must ensure those callbacks run on the main thread when data can be modified from background workers. See the <a href="../../developer/Observer/observer_thread_safety_roadmap.html">Observer Thread-Safety Roadmap</a> for audit status, fix patterns, and the task checklist.</p>
 </div>
 </div>
-<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>No Modification During Notification
+<span class="screen-reader-only">Note</span>Re-entrant Modification During Notification
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Adding or removing observers from within an observer callback during <code>notifyObservers()</code> results in <strong>undefined behavior</strong>. If you need to modify observers in response to a notification, defer the modification until after the notification completes.</p>
+<p><code>notifyObservers()</code> copies the observer map to a snapshot before invoking callbacks. Adding or removing observers from within a callback is therefore safe for the current round — new registrations take effect on the next <code>notifyObservers()</code> call. This re-entrancy support does <strong>not</strong> provide thread safety across threads.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -600,16 +601,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>[[nodiscard]] CallbackID addObserver(ObserverCallback)</code></td>
-<td>Register a callback, returns unique ID</td>
+<td><code>explicit ObserverData(std::string name = "UnnamedObservable")</code></td>
+<td>Construct with optional domain name for debug logging</td>
 </tr>
 <tr class="even">
-<td><code>void notifyObservers()</code></td>
-<td>Invoke all registered callbacks</td>
+<td><code>[[nodiscard]] CallbackID addObserver(ObserverCallback, std::string name = "Anonymous")</code></td>
+<td>Register a callback, returns unique ID</td>
 </tr>
 <tr class="odd">
+<td><code>void notifyObservers()</code></td>
+<td>Snapshot registered callbacks and invoke each (order unspecified; logs timing at debug level)</td>
+</tr>
+<tr class="even">
 <td><code>void removeObserver(CallbackID)</code></td>
-<td>Unregister a callback by ID</td>
+<td>Unregister a callback by ID (no-op if ID is invalid)</td>
 </tr>
 </tbody>
 </table>

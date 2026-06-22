@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -352,9 +352,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#variable-model" id="toc-variable-model" class="nav-link" data-scroll-target="#variable-model">variable model</a></li>
   <li><a href="#variable-model_id" id="toc-variable-model_id" class="nav-link" data-scroll-target="#variable-model_id">variable model_id</a></li>
-  <li><a href="#variable-static_cache" id="toc-variable-static_cache" class="nav-link" data-scroll-target="#variable-static_cache">variable static_cache</a></li>
+  <li><a href="#variable-post_encoder_module" id="toc-variable-post_encoder_module" class="nav-link" data-scroll-target="#variable-post_encoder_module">variable post_encoder_module</a></li>
   <li><a href="#variable-recurrent_cache" id="toc-variable-recurrent_cache" class="nav-link" data-scroll-target="#variable-recurrent_cache">variable recurrent_cache</a></li>
-  <li><a href="#variable-spatial_point_key" id="toc-variable-spatial_point_key" class="nav-link" data-scroll-target="#variable-spatial_point_key">variable spatial_point_key</a></li>
+  <li><a href="#variable-data_bank" id="toc-variable-data_bank" class="nav-link" data-scroll-target="#variable-data_bank">variable data_bank</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -404,16 +404,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-model-id">model_id</a></strong></td>
 </tr>
 <tr class="odd">
-<td>std::unordered_map&lt; std::string, torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-static-cache">static_cache</a></strong></td>
+<td>std::unique_ptr&lt; <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">dl::PostEncoderModule</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-post-encoder-module">post_encoder_module</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::unordered_map&lt; std::string, torch::Tensor &gt;</td>
+<td>std::unordered_map&lt; std::string, at::Tensor &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-recurrent-cache">recurrent_cache</a></strong></td>
 </tr>
 <tr class="odd">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-spatial-point-key">spatial_point_key</a></strong></td>
+<td>std::unique_ptr&lt; <a href="../../api_generated/Classes/classdl_1_1DataBank.html">dl::DataBank</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structSlotAssembler_1_1Impl.html#variable-data-bank">data_bank</a></strong> <br>Named library of geometry sources and channel-encoded tensors.</td>
 </tr>
 </tbody>
 </table>
@@ -428,22 +428,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-model_id">variable model_id</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string model_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-static_cache" class="level3">
-<h3 class="anchored" data-anchor-id="variable-static_cache">variable static_cache</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> static_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Cached tensors for Absolute-mode static inputs. Key: “slot_name:memory_index” (from <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-staticcachekey">staticCacheKey()</a>).</p>
+<section id="variable-post_encoder_module" class="level3">
+<h3 class="anchored" data-anchor-id="variable-post_encoder_module">variable post_encoder_module</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> dl<span class="op">::</span>PostEncoderModule <span class="op">&gt;</span> post_encoder_module<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-recurrent_cache" class="level3">
 <h3 class="anchored" data-anchor-id="variable-recurrent_cache">variable recurrent_cache</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> recurrent_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> recurrent_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Cached tensors for recurrent (feedback) inputs. Key: “recurrent:input_slot_name” (from <a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-recurrentcachekey">recurrentCacheKey()</a>). Stores the output tensor from the previous frame that will be injected into the input slot on the next frame.</p>
 </section>
-<section id="variable-spatial_point_key" class="level3">
-<h3 class="anchored" data-anchor-id="variable-spatial_point_key">variable spatial_point_key</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string spatial_point_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key for the <a href="../../api_generated/Classes/classPointData.html">PointData</a> source of the spatial_point module. Empty if no spatial_point module is active.</p>
+<section id="variable-data_bank" class="level3">
+<h3 class="anchored" data-anchor-id="variable-data_bank">variable data_bank</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> dl<span class="op">::</span>DataBank <span class="op">&gt;</span> data_bank<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Named library of geometry sources and channel-encoded tensors.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:51 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:21 +0000</p>
 
 
 </section>

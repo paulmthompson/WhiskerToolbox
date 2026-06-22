@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -347,25 +347,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#whiskertoolboxtransformsv2examplesanaloghilbertphaseparams" id="toc-whiskertoolboxtransformsv2examplesanaloghilbertphaseparams" class="nav-link active" data-scroll-target="#whiskertoolboxtransformsv2examplesanaloghilbertphaseparams">WhiskerToolbox::Transforms::V2::Examples::AnalogHilbertPhaseParams</a>
   <ul class="collapse">
-  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#public-types" id="toc-public-types" class="nav-link" data-scroll-target="#public-types">Public Types</a></li>
   <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a>
   <ul class="collapse">
-  <li><a href="#function-isphaseoutput" id="toc-function-isphaseoutput" class="nav-link" data-scroll-target="#function-isphaseoutput">function isPhaseOutput</a></li>
-  <li><a href="#function-isamplitudeoutput" id="toc-function-isamplitudeoutput" class="nav-link" data-scroll-target="#function-isamplitudeoutput">function isAmplitudeOutput</a></li>
-  <li><a href="#function-getdiscontinuitythreshold" id="toc-function-getdiscontinuitythreshold" class="nav-link" data-scroll-target="#function-getdiscontinuitythreshold">function getDiscontinuityThreshold</a></li>
-  <li><a href="#function-getmaxchunksize" id="toc-function-getmaxchunksize" class="nav-link" data-scroll-target="#function-getmaxchunksize">function getMaxChunkSize</a></li>
-  <li><a href="#function-getoverlapfraction" id="toc-function-getoverlapfraction" class="nav-link" data-scroll-target="#function-getoverlapfraction">function getOverlapFraction</a></li>
-  <li><a href="#function-getusewindowing" id="toc-function-getusewindowing" class="nav-link" data-scroll-target="#function-getusewindowing">function getUseWindowing</a></li>
-  <li><a href="#function-getapplybandpassfilter" id="toc-function-getapplybandpassfilter" class="nav-link" data-scroll-target="#function-getapplybandpassfilter">function getApplyBandpassFilter</a></li>
-  <li><a href="#function-getfilterlowfreq" id="toc-function-getfilterlowfreq" class="nav-link" data-scroll-target="#function-getfilterlowfreq">function getFilterLowFreq</a></li>
-  <li><a href="#function-getfilterhighfreq" id="toc-function-getfilterhighfreq" class="nav-link" data-scroll-target="#function-getfilterhighfreq">function getFilterHighFreq</a></li>
-  <li><a href="#function-getfilterorder" id="toc-function-getfilterorder" class="nav-link" data-scroll-target="#function-getfilterorder">function getFilterOrder</a></li>
-  <li><a href="#function-getsamplingrate" id="toc-function-getsamplingrate" class="nav-link" data-scroll-target="#function-getsamplingrate">function getSamplingRate</a></li>
-  </ul></li>
-  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
-  <ul class="collapse">
-  <li><a href="#variable-output_type" id="toc-variable-output_type" class="nav-link" data-scroll-target="#variable-output_type">variable output_type</a></li>
   <li><a href="#variable-discontinuity_threshold" id="toc-variable-discontinuity_threshold" class="nav-link" data-scroll-target="#variable-discontinuity_threshold">variable discontinuity_threshold</a></li>
   <li><a href="#variable-max_chunk_size" id="toc-variable-max_chunk_size" class="nav-link" data-scroll-target="#variable-max_chunk_size">variable max_chunk_size</a></li>
   <li><a href="#variable-overlap_fraction" id="toc-variable-overlap_fraction" class="nav-link" data-scroll-target="#variable-overlap_fraction">variable overlap_fraction</a></li>
@@ -407,8 +392,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>WhiskerToolbox::Transforms::V2::Examples::AnalogHilbertPhaseParams</h1>
 <p>Parameters for Hilbert phase/amplitude extraction. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;AnalogHilbertPhase.hpp&gt;</code></p>
-<section id="public-functions" class="level2">
-<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<section id="public-types" class="level2">
+<h2 class="anchored" data-anchor-id="public-types">Public Types</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -418,52 +403,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getoutputtype">getOutputType</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-isphaseoutput">isPhaseOutput</a></strong>() const</td>
-</tr>
-<tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-isamplitudeoutput">isAmplitudeOutput</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>size_t</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getdiscontinuitythreshold">getDiscontinuityThreshold</a></strong>() const</td>
-</tr>
-<tr class="odd">
-<td>size_t</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getmaxchunksize">getMaxChunkSize</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>double</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getoverlapfraction">getOverlapFraction</a></strong>() const</td>
-</tr>
-<tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getusewindowing">getUseWindowing</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getapplybandpassfilter">getApplyBandpassFilter</a></strong>() const</td>
-</tr>
-<tr class="odd">
-<td>double</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getfilterlowfreq">getFilterLowFreq</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>double</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getfilterhighfreq">getFilterHighFreq</a></strong>() const</td>
-</tr>
-<tr class="odd">
-<td>int</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getfilterorder">getFilterOrder</a></strong>() const</td>
-</tr>
-<tr class="even">
-<td>double</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#function-getsamplingrate">getSamplingRate</a></strong>() const</td>
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#enum-outputtype">OutputType</a></strong> { phase, amplitude}</td>
 </tr>
 </tbody>
 </table>
@@ -479,44 +420,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>std::optional&lt; std::string &gt;</td>
+<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#enum-outputtype">OutputType</a></td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-output-type">output_type</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::optional&lt; rfl::Validator&lt; size_t, rfl::Minimum&lt; 1 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-discontinuity-threshold">discontinuity_threshold</a></strong></td>
+<td>rfl::Validator&lt; size_t, rfl::Minimum&lt; 1 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-discontinuity-threshold">discontinuity_threshold</a></strong> <br>Gap size (in samples) above which to split processing into chunks.</td>
 </tr>
 <tr class="odd">
-<td>std::optional&lt; size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-max-chunk-size">max_chunk_size</a></strong></td>
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-max-chunk-size">max_chunk_size</a></strong> <br>Maximum samples per chunk (0 = no limit, process entire signal)</td>
 </tr>
 <tr class="even">
-<td>std::optional&lt; rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-overlap-fraction">overlap_fraction</a></strong></td>
+<td>rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-overlap-fraction">overlap_fraction</a></strong> <br>Fraction of overlap between chunks (0.0 to 0.5)</td>
 </tr>
 <tr class="odd">
-<td>std::optional&lt; bool &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-use-windowing">use_windowing</a></strong></td>
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-use-windowing">use_windowing</a></strong> <br>Apply Hann window to reduce edge artifacts.</td>
 </tr>
 <tr class="even">
-<td>std::optional&lt; bool &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-apply-bandpass-filter">apply_bandpass_filter</a></strong></td>
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-apply-bandpass-filter">apply_bandpass_filter</a></strong> <br>Whether to apply bandpass filtering before Hilbert transform.</td>
 </tr>
 <tr class="odd">
-<td>std::optional&lt; rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-low-freq">filter_low_freq</a></strong></td>
+<td>rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-low-freq">filter_low_freq</a></strong> <br>Bandpass filter low cutoff (Hz)</td>
 </tr>
 <tr class="even">
-<td>std::optional&lt; rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-high-freq">filter_high_freq</a></strong></td>
+<td>rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-high-freq">filter_high_freq</a></strong> <br>Bandpass filter high cutoff (Hz)</td>
 </tr>
 <tr class="odd">
-<td>std::optional&lt; rfl::Validator&lt; int, rfl::Minimum&lt; 1 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-order">filter_order</a></strong></td>
+<td>rfl::Validator&lt; int, rfl::Minimum&lt; 1 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-filter-order">filter_order</a></strong> <br>Butterworth filter order (1-8)</td>
 </tr>
 <tr class="even">
-<td>std::optional&lt; rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-sampling-rate">sampling_rate</a></strong></td>
+<td>rfl::Validator&lt; double, rfl::Minimum&lt; 0.0 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1AnalogHilbertPhaseParams.html#variable-sampling-rate">sampling_rate</a></strong> <br>Sampling rate in Hz (0 = auto-detect from data)</td>
 </tr>
 </tbody>
 </table>
@@ -529,100 +470,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Example JSON: ```json</p>
 <p>{ “output_type”: “phase”, “discontinuity_threshold”: 1000, “max_chunk_size”: 100000, “overlap_fraction”: 0.25, “use_windowing”: true, “apply_bandpass_filter”: false, “filter_low_freq”: 5.0, “filter_high_freq”: 15.0, “filter_order”: 4, “sampling_rate”: 1000.0 }</p>
 <pre><code>
-## Public Functions Documentation
+## Public Types Documentation
 
-### function getOutputType
+### enum OutputType
+
+| Enumerator | Value | Description |
+| ---------- | ----- | ----------- |
+| phase | |   |
+| amplitude | |   |
+
+
+
+
+## Public Attributes Documentation
+
+### variable output_type
 
 ```cpp
-inline std::string getOutputType() const</code></pre>
-<section id="function-isphaseoutput" class="level3">
-<h3 class="anchored" data-anchor-id="function-isphaseoutput">function isPhaseOutput</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isPhaseOutput<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-isamplitudeoutput" class="level3">
-<h3 class="anchored" data-anchor-id="function-isamplitudeoutput">function isAmplitudeOutput</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isAmplitudeOutput<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getdiscontinuitythreshold" class="level3">
-<h3 class="anchored" data-anchor-id="function-getdiscontinuitythreshold">function getDiscontinuityThreshold</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> getDiscontinuityThreshold<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getmaxchunksize" class="level3">
-<h3 class="anchored" data-anchor-id="function-getmaxchunksize">function getMaxChunkSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> getMaxChunkSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getoverlapfraction" class="level3">
-<h3 class="anchored" data-anchor-id="function-getoverlapfraction">function getOverlapFraction</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> getOverlapFraction<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getusewindowing" class="level3">
-<h3 class="anchored" data-anchor-id="function-getusewindowing">function getUseWindowing</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> getUseWindowing<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getapplybandpassfilter" class="level3">
-<h3 class="anchored" data-anchor-id="function-getapplybandpassfilter">function getApplyBandpassFilter</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> getApplyBandpassFilter<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getfilterlowfreq" class="level3">
-<h3 class="anchored" data-anchor-id="function-getfilterlowfreq">function getFilterLowFreq</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> getFilterLowFreq<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getfilterhighfreq" class="level3">
-<h3 class="anchored" data-anchor-id="function-getfilterhighfreq">function getFilterHighFreq</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> getFilterHighFreq<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getfilterorder" class="level3">
-<h3 class="anchored" data-anchor-id="function-getfilterorder">function getFilterOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> getFilterOrder<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-getsamplingrate" class="level3">
-<h3 class="anchored" data-anchor-id="function-getsamplingrate">function getSamplingRate</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> getSamplingRate<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</section>
-<section id="public-attributes-documentation" class="level2">
-<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
-<section id="variable-output_type" class="level3">
-<h3 class="anchored" data-anchor-id="variable-output_type">variable output_type</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="dt">output_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
+OutputType output_type = OutputType::phase;</code></pre>
 <section id="variable-discontinuity_threshold" class="level3">
 <h3 class="anchored" data-anchor-id="variable-discontinuity_threshold">variable discontinuity_threshold</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> discontinuity_threshold<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;</span> <span class="op">&gt;</span> discontinuity_threshold <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Gap size (in samples) above which to split processing into chunks.</p>
 </section>
 <section id="variable-max_chunk_size" class="level3">
 <h3 class="anchored" data-anchor-id="variable-max_chunk_size">variable max_chunk_size</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> max_chunk_size<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> max_chunk_size <span class="op">=</span> <span class="dv">100000</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum samples per chunk (0 = no limit, process entire signal)</p>
 </section>
 <section id="variable-overlap_fraction" class="level3">
 <h3 class="anchored" data-anchor-id="variable-overlap_fraction">variable overlap_fraction</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> overlap_fraction<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> overlap_fraction <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fraction of overlap between chunks (0.0 to 0.5)</p>
 </section>
 <section id="variable-use_windowing" class="level3">
 <h3 class="anchored" data-anchor-id="variable-use_windowing">variable use_windowing</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">bool</span> <span class="op">&gt;</span> use_windowing<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> use_windowing <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply Hann window to reduce edge artifacts.</p>
 </section>
 <section id="variable-apply_bandpass_filter" class="level3">
 <h3 class="anchored" data-anchor-id="variable-apply_bandpass_filter">variable apply_bandpass_filter</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">bool</span> <span class="op">&gt;</span> apply_bandpass_filter<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> apply_bandpass_filter <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether to apply bandpass filtering before Hilbert transform.</p>
 </section>
 <section id="variable-filter_low_freq" class="level3">
 <h3 class="anchored" data-anchor-id="variable-filter_low_freq">variable filter_low_freq</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_low_freq<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_low_freq <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Bandpass filter low cutoff (Hz)</p>
 </section>
 <section id="variable-filter_high_freq" class="level3">
 <h3 class="anchored" data-anchor-id="variable-filter_high_freq">variable filter_high_freq</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_high_freq<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_high_freq <span class="op">=</span> <span class="fl">15.0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Bandpass filter high cutoff (Hz)</p>
 </section>
 <section id="variable-filter_order" class="level3">
 <h3 class="anchored" data-anchor-id="variable-filter_order">variable filter_order</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_order<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;</span> <span class="op">&gt;</span> filter_order <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Butterworth filter order (1-8)</p>
 </section>
 <section id="variable-sampling_rate" class="level3">
 <h3 class="anchored" data-anchor-id="variable-sampling_rate">variable sampling_rate</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sampling_rate<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.0</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sampling_rate <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sampling rate in Hz (0 = auto-detect from data)</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

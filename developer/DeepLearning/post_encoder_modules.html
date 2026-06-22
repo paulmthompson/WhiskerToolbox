@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Post-Encoder Feature Extraction Modules – Neuralyzer</title>
+<title>Post-Encoder Modules – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -340,7 +340,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/post_encoder_modules.html">Post-Encoder Feature Extraction Modules</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/post_encoder_modules.html">Post-Encoder Modules</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -473,6 +473,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Core Geometry</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/angle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Planar angles and line tangents</span></a>
+  </div>
+</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
@@ -538,11 +544,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlottingSVG/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -555,11 +558,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlotDataExport/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -592,7 +592,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+ <span class="menu-text">Static Input Capture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -604,7 +604,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+ <span class="menu-text">Hybrid Sequence Inputs</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -614,23 +614,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Batch Range Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/batch_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
@@ -640,21 +631,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+ <span class="menu-text">Post-Encoder Modules</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToMask2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToMask2D</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToFeatureVector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToFeatureVector</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToPoint2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToPoint2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToLine2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToLine2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/param_schemas.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/widget_param_schemas.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
@@ -662,11 +671,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deep Learning Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -726,6 +732,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">TensorWhitening</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/pipeline_library.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipeline Library (TransformsV2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/pipeline_library_roadmap.md</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/command_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registration</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -738,11 +759,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/ParameterSchema/enum_variant_roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -991,6 +1009,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/transforms/data_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Legacy transform progress (<code>data_transforms.hpp</code>)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
@@ -1045,6 +1069,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/merge_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Object Merge</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/utils/ContainerTypeIndex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Container Type Index Utilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Storage Backend Architecture</span></a>
   </div>
@@ -1068,11 +1104,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/observer_thread_safety_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
@@ -1116,7 +1149,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+            <a href="../../developer/DataManager/Commands/index.qmd" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Command Architecture</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -1124,95 +1157,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/roadmap.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/core_types.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/sequence_execution.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/get_entity_ids_in_range.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/commands.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/save_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/load_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Architecture Roadmap</span></a>
+  <a href="../../developer/Commands/IO/SavePathResolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Save Path Resolver</span></a>
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Core Types &amp; Factory</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/synthesize_data.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/validation.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">getEntityIdsInRange Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_introspection.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Concrete Commands</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_registry.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SaveData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/gui_verb_audit.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">LoadData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/widget_save_refactoring_guide.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SynthesizeData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/data_manager_snapshot.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Validation</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Introspection</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Registry</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DataManagerSnapshot</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Log Widget</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_log_widget.qmd</span>
+  </li>
       </ul>
   </li>
       </ul>
@@ -1233,11 +1227,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/TriageSession/optimized_contact_triage_plan.md</span>
+  </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1390,17 +1381,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DeepLearning Widget Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/helpers.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">InferenceController</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/inference_controller.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1546,19 +1531,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#abstract-interface" id="toc-abstract-interface" class="nav-link" data-scroll-target="#abstract-interface">Abstract Interface</a></li>
+  <li><a href="#abstract-interface" id="toc-abstract-interface" class="nav-link" data-scroll-target="#abstract-interface">Abstract interface</a></li>
   <li><a href="#implementations" id="toc-implementations" class="nav-link" data-scroll-target="#implementations">Implementations</a>
   <ul class="collapse">
   <li><a href="#globalavgpoolmodule" id="toc-globalavgpoolmodule" class="nav-link" data-scroll-target="#globalavgpoolmodule">GlobalAvgPoolModule</a></li>
   <li><a href="#spatialpointextractmodule" id="toc-spatialpointextractmodule" class="nav-link" data-scroll-target="#spatialpointextractmodule">SpatialPointExtractModule</a></li>
   <li><a href="#postencoderpipeline" id="toc-postencoderpipeline" class="nav-link" data-scroll-target="#postencoderpipeline">PostEncoderPipeline</a></li>
   </ul></li>
-  <li><a href="#factory" id="toc-factory" class="nav-link" data-scroll-target="#factory">Factory</a></li>
-  <li><a href="#integration-with-generalencodermodel" id="toc-integration-with-generalencodermodel" class="nav-link" data-scroll-target="#integration-with-generalencodermodel">Integration with GeneralEncoderModel</a></li>
-  <li><a href="#integration-with-slotassembler" id="toc-integration-with-slotassembler" class="nav-link" data-scroll-target="#integration-with-slotassembler">Integration with SlotAssembler</a></li>
-  <li><a href="#widget-ui" id="toc-widget-ui" class="nav-link" data-scroll-target="#widget-ui">Widget UI</a></li>
-  <li><a href="#batch-inference-and-tensordata-output" id="toc-batch-inference-and-tensordata-output" class="nav-link" data-scroll-target="#batch-inference-and-tensordata-output">Batch Inference and TensorData Output</a></li>
+  <li><a href="#registry" id="toc-registry" class="nav-link" data-scroll-target="#registry">Registry</a></li>
+  <li><a href="#model-recommendations" id="toc-model-recommendations" class="nav-link" data-scroll-target="#model-recommendations">Model recommendations</a></li>
+  <li><a href="#integration-with-slotassembler" id="toc-integration-with-slotassembler" class="nav-link" data-scroll-target="#integration-with-slotassembler">Integration with SlotAssembler</a>
+  <ul class="collapse">
+  <li><a href="#per-frame-pipeline" id="toc-per-frame-pipeline" class="nav-link" data-scroll-target="#per-frame-pipeline">Per-frame pipeline</a></li>
+  <li><a href="#lifecycle" id="toc-lifecycle" class="nav-link" data-scroll-target="#lifecycle">Lifecycle</a></li>
+  <li><a href="#decoder-consistency" id="toc-decoder-consistency" class="nav-link" data-scroll-target="#decoder-consistency">Decoder consistency</a></li>
+  </ul></li>
+  <li><a href="#widget-ui" id="toc-widget-ui" class="nav-link" data-scroll-target="#widget-ui">Widget UI</a>
+  <ul class="collapse">
+  <li><a href="#data-flow" id="toc-data-flow" class="nav-link" data-scroll-target="#data-flow">Data flow</a></li>
+  </ul></li>
+  <li><a href="#batch-inference-and-tensordata-output" id="toc-batch-inference-and-tensordata-output" class="nav-link" data-scroll-target="#batch-inference-and-tensordata-output">Batch inference and TensorData output</a></li>
+  <li><a href="#future-work" id="toc-future-work" class="nav-link" data-scroll-target="#future-work">Future work</a></li>
   <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
+  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related documentation</a></li>
   </ul>
 </nav>
     </div>
@@ -1566,9 +1561,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/post_encoder_modules.html">Post-Encoder Feature Extraction Modules</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/post_encoder_modules.html">Post-Encoder Modules</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Post-Encoder Feature Extraction Modules</h1>
+<h1 class="title">Post-Encoder Modules</h1>
 </div>
 
 
@@ -1587,55 +1582,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Post-encoder modules are optional processing stages applied between the encoder backbone and the channel decoder. They transform the raw 4-D feature map <code>[B, C, H, W]</code> produced by the encoder into a form suitable for further decoding — most commonly collapsing the spatial dimensions.</p>
-<p>All post-encoder modules implement the <code>dl::PostEncoderModule</code> abstract interface, live in <code>src/DeepLearning/post_encoder/</code>, and are instantiated via <code>PostEncoderModuleFactory</code>.</p>
-<pre><code>[B,C,H,W] encoder output
+<p>Post-encoder modules are optional <strong>torch-to-torch</strong> processing stages applied <strong>after</strong> <code>ModelBase::forward()</code> and <strong>before</strong> channel decoders. They transform a model’s raw output tensor (typically <code>[B, C, H, W]</code>) into a form suitable for decoding — most commonly collapsing spatial dimensions to <code>[B, C]</code>.</p>
+<p>Post-encoder modules are <strong>model-agnostic</strong>. They are not owned by <code>GeneralEncoderModel</code> or any other model subclass. <code>SlotAssembler</code> holds the active module as session configuration and applies it to the <strong>first output slot</strong> of whatever model is loaded — encoders, segmentation models, or JSON-defined <code>RuntimeModel</code> instances.</p>
+<pre><code>ModelBase::forward()  →  raw output [B, C, H, W]
         │
         ▼
- PostEncoderModule::apply()
+PostEncoderModule::apply()   (optional — SlotAssembler session config)
         │
         ▼
- [B,C] or [B,C,H',W'] reduced tensor
+ChannelDecoder::decode()     (e.g. TensorToFeatureVector, TensorToMask2D)
         │
         ▼
- Channel Decoder (e.g. TensorToFeatureVector)</code></pre>
+DataManager</code></pre>
+<p><strong>Source:</strong> <code>src/DeepLearning/post_encoder/</code></p>
 </section>
 <section id="abstract-interface" class="level2">
-<h2 class="anchored" data-anchor-id="abstract-interface">Abstract Interface</h2>
+<h2 class="anchored" data-anchor-id="abstract-interface">Abstract interface</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/DeepLearning/post_encoder/PostEncoderModule.hpp</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PostEncoderModule <span class="op">{</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>PostEncoderModule<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Apply the module to the encoder output.</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> at<span class="op">::</span>Tensor apply<span class="op">(</span>at<span class="op">::</span>Tensor <span class="at">const</span> <span class="op">&amp;)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Given raw encoder output shape (C, H, W), return the output shape.</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span> outputShape<span class="op">(</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> encoder_shape<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="bu">std::</span>string name<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>string name<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@pre</span><span class="co"> features must be defined</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> at<span class="op">::</span>Tensor apply<span class="op">(</span>at<span class="op">::</span>Tensor <span class="at">const</span> <span class="op">&amp;</span> features<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">input_shape</span><span class="co"> Feature shape excluding batch dim, e.g. {384, 7, 7}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    outputShape<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_shape<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The header forward-declares <code>at::Tensor</code> to remain torch-free at inclusion time. All concrete <code>.cpp</code> implementations include <code>&lt;torch/torch.h&gt;</code> directly.</p>
+<p>The header forward-declares <code>at::Tensor</code> to remain torch-free at inclusion time. Concrete <code>.cpp</code> files include libtorch directly.</p>
+<p>Modules chain via <code>PostEncoderPipeline</code> (itself a <code>PostEncoderModule</code>). An empty pipeline is a pass-through.</p>
 </section>
 <section id="implementations" class="level2">
 <h2 class="anchored" data-anchor-id="implementations">Implementations</h2>
 <section id="globalavgpoolmodule" class="level3">
 <h3 class="anchored" data-anchor-id="globalavgpoolmodule">GlobalAvgPoolModule</h3>
-<p><code>[B,C,H,W] → [B,C]</code> via <code>torch::adaptive_avg_pool2d({1,1}).squeeze(-1).squeeze(-1)</code>.</p>
-<p>Use when you want a single feature vector summarising the entire spatial map.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> mod <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>dl<span class="op">::</span>GlobalAvgPoolModule<span class="op">&gt;();</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> out <span class="op">=</span> mod<span class="op">-&gt;</span>apply<span class="op">(</span>features<span class="op">);</span> <span class="co">// [B,C]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>[B, C, H, W] → [B, C]</code> via <code>at::adaptive_avg_pool2d({1, 1})</code> with spatial squeeze.</p>
+<p>Registry key: <code>"global_avg_pool"</code>. Sets <code>collapses_spatial_dims = true</code>.</p>
+<p><code>apply()</code> validates 4D input with <code>B, C, H, W &gt;= 1</code>. Invalid input throws <code>std::invalid_argument</code> after <code>spdlog::debug</code> logging.</p>
 </section>
 <section id="spatialpointextractmodule" class="level3">
 <h3 class="anchored" data-anchor-id="spatialpointextractmodule">SpatialPointExtractModule</h3>
-<p>Extracts the C-dimensional feature vector at a specific 2-D point in source-image coordinates. Supports two backends controlled by <code>dl::InterpolationMode</code>:</p>
+<p>Extracts the C-dimensional feature vector at a 2-D point in source-image coordinates. Registry key: <code>"spatial_point"</code>. Also collapses spatial dims.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 35%">
-<col style="width: 64%">
+<col style="width: 50%">
+<col style="width: 50%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -1646,126 +1641,288 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><code>Nearest</code></td>
-<td>Scales point to feature-map pixel, clamps, slices <code>[B, C, iy, ix]</code></td>
+<td>Scale point to feature-map pixel, clamp, slice <code>[B, C, iy, ix]</code></td>
 </tr>
 <tr class="even">
 <td><code>Bilinear</code></td>
-<td>Normalises point to <code>[-1, 1]</code>, creates <code>[B,1,1,2]</code> grid, calls <code>torch::nn::functional::grid_sample</code> with <code>align_corners=true</code> and border padding</td>
+<td>Normalise to <code>[-1, 1]</code>, <code>grid_sample</code> with <code>align_corners=true</code>, border padding</td>
 </tr>
 </tbody>
 </table>
-<p>The module is <strong>stateful</strong>: call <code>setPoint(Point2D&lt;float&gt;)</code> before every forward pass. When used with <code>SlotAssembler</code>, the widget calls <code>updateSpatialPoint()</code> per frame, which reads the first point from the configured <code>PointData</code> key and forwards it to the module.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ImageSize <span class="at">const</span> src_size<span class="op">{</span><span class="dv">640</span><span class="op">,</span> <span class="dv">480</span><span class="op">};</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> mod <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>dl<span class="op">::</span>SpatialPointExtractModule<span class="op">&gt;(</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        src_size<span class="op">,</span> dl<span class="op">::</span>InterpolationMode<span class="op">::</span>Bilinear<span class="op">);</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>mod<span class="op">-&gt;</span>setPoint<span class="op">({</span><span class="fl">320.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">240.0</span><span class="bu">f</span><span class="op">});</span> <span class="co">// centre of frame</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> out <span class="op">=</span> mod<span class="op">-&gt;</span>apply<span class="op">(</span>features<span class="op">);</span> <span class="co">// [B,C]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The module is <strong>stateful</strong>: call <code>setPoint(Point2D&lt;float&gt;)</code> before each <code>apply()</code>. <code>SlotAssembler::_updateSpatialPoint()</code> reads the first point from <code>SpatialPointModuleParams::point_key</code> at the current frame.</p>
+<p>Bilinear mode requires <code>H &gt;= 2</code> and <code>W &gt;= 2</code> (normalisation divides by <code>H - 1</code>, <code>W - 1</code>). Constructor requires positive <code>source_image_size</code>.</p>
+<p><code>SpatialPointExtractModule</code> forces single-frame batch inference (<code>requiresSingleFrameBatch()</code> returns true) because the query point is frame-specific.</p>
 </section>
 <section id="postencoderpipeline" class="level3">
 <h3 class="anchored" data-anchor-id="postencoderpipeline">PostEncoderPipeline</h3>
-<p>An ordered chain of <code>PostEncoderModule</code> instances that is itself a <code>PostEncoderModule</code>. <code>apply()</code> threads the tensor through each stage in sequence. <code>outputShape()</code> propagates the shape transformation through all stages.</p>
-<p>An empty pipeline is a pass-through (no allocation, no copy).</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>PostEncoderPipeline pipeline<span class="op">;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>pipeline<span class="op">.</span>add<span class="op">(</span><span class="bu">std::</span>make_unique<span class="op">&lt;</span>dl<span class="op">::</span>GlobalAvgPoolModule<span class="op">&gt;());</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// more modules can be added...</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> out <span class="op">=</span> pipeline<span class="op">.</span>apply<span class="op">(</span>features<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ordered chain of modules. <code>apply()</code> threads the tensor through each stage. <code>outputShape()</code> propagates shape through all stages.</p>
 </section>
 </section>
-<section id="factory" class="level2">
-<h2 class="anchored" data-anchor-id="factory">Factory</h2>
-<p><code>PostEncoderModuleFactory::create(name, source_image_size, params)</code> maps string keys to concrete modules:</p>
+<section id="registry" class="level2">
+<h2 class="anchored" data-anchor-id="registry">Registry</h2>
+<p><code>PostEncoderModuleRegistry</code> is a singleton mapping keys to metadata, parameter schemas, and factories.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 38%">
-<col style="width: 61%">
+<col style="width: 50%">
+<col style="width: 50%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Key</th>
-<th>Result</th>
+<th>Method</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>"none"</code> / <code>""</code></td>
-<td><code>nullptr</code> (no post-processing)</td>
+<td><code>moduleKeys()</code></td>
+<td>Sorted registered keys</td>
 </tr>
 <tr class="even">
-<td><code>"global_avg_pool"</code></td>
-<td><code>GlobalAvgPoolModule</code></td>
+<td><code>getMetadata(key)</code></td>
+<td>Display name, description, <code>collapses_spatial_dims</code></td>
 </tr>
 <tr class="odd">
-<td><code>"spatial_point"</code></td>
-<td><code>SpatialPointExtractModule</code> using <code>source_image_size</code> and <code>params.interpolation</code></td>
+<td><code>getSchema(key)</code></td>
+<td><code>ParameterSchema</code> for <code>AutoParamWidget</code></td>
 </tr>
 <tr class="even">
-<td>anything else</td>
-<td><code>nullptr</code> (unknown key)</td>
+<td><code>create(key, params_json, source_image_size)</code></td>
+<td>Instantiate module</td>
+</tr>
+<tr class="odd">
+<td><code>collapsesSpatialDims(key)</code></td>
+<td>Whether module maps <code>[B,C,H,W]</code> → <code>[B,C]</code></td>
+</tr>
+<tr class="even">
+<td><code>outputShape(key, input_shape, ...)</code></td>
+<td>Shape propagation without inference</td>
 </tr>
 </tbody>
 </table>
-<p>The factory takes two parameter structs:</p>
+<p><code>create()</code> returns <code>nullptr</code> for <code>"none"</code>, empty key, or unknown keys.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Module</th>
+<th><code>collapses_spatial_dims</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"global_avg_pool"</code></td>
+<td><code>GlobalAvgPoolModule</code></td>
+<td>true</td>
+</tr>
+<tr class="even">
+<td><code>"spatial_point"</code></td>
+<td><code>SpatialPointExtractModule</code></td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<p>Modules self-register at static init via <code>RegisterPostEncoderModule&lt;Params&gt;</code> in their <code>.cpp</code> file. Parameter structs live in <code>PostEncoderModuleParams.hpp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> GlobalAvgPoolModuleParams <span class="op">{};</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SpatialPointModuleParams <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    InterpolationMode interpolation <span class="op">=</span> InterpolationMode<span class="op">::</span>Nearest<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string point_key<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>To add a new module:</p>
 <ol type="1">
-<li><strong><code>ImageSize source_image_size</code></strong> — Runtime context for coordinate scaling (not user-configurable).</li>
-<li><strong>Per-module params</strong> — User-configurable parameters specific to each module type (<code>GlobalAvgPoolModuleParams</code>, <code>SpatialPointModuleParams</code>).</li>
+<li>Implement <code>PostEncoderModule</code> with <code>outputShape()</code>.</li>
+<li>Define an <code>rfl</code> params struct (+ <code>ParameterUIHints</code> in <code>PostEncoderParamSchemas.hpp</code>).</li>
+<li>Add <code>RegisterPostEncoderModule&lt;Params&gt;(...)</code> in the module <code>.cpp</code>.</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// No user-configurable params.</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> GlobalAvgPoolModuleParams <span class="op">{};</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// User-configurable params for SpatialPointExtractModule.</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SpatialPointModuleParams <span class="op">{</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    InterpolationMode interpolation <span class="op">=</span> InterpolationMode<span class="op">::</span>Nearest<span class="op">;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="integration-with-generalencodermodel" class="level2">
-<h2 class="anchored" data-anchor-id="integration-with-generalencodermodel">Integration with GeneralEncoderModel</h2>
-<p><code>GeneralEncoderModel</code> holds an optional <code>unique_ptr&lt;PostEncoderModule&gt;</code> set via <code>setPostEncoderModule(...)</code>.</p>
-<ul>
-<li><strong><code>forward()</code></strong> applies the module (if set) to the raw encoder output before returning.</li>
-<li><strong><code>effectiveOutputShape()</code></strong> returns the shape after the module’s transformation; <code>outputSlots()</code> uses this to advertise the correct slot dimensions to the widget.</li>
-<li><strong><code>outputShape()</code></strong> still returns the raw encoder shape.</li>
-</ul>
+<section id="model-recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="model-recommendations">Model recommendations</h2>
+<p>Models may suggest a default post-encoder via <code>ModelBase::recommendedPostEncoderModule()</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Recommended key</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>GeneralEncoderModel</code></td>
+<td><code>"global_avg_pool"</code></td>
+</tr>
+<tr class="even">
+<td><code>RuntimeModel</code></td>
+<td><code>RuntimeModelSpec::recommended_post_encoder</code> (optional JSON field)</td>
+</tr>
+<tr class="odd">
+<td>Other models</td>
+<td><code>""</code> (none)</td>
+</tr>
+</tbody>
+</table>
+<p><code>ModelInfo::recommended_post_encoder</code> aggregates this for the widget. On model selection, <code>DeepLearningPropertiesWidget</code> pre-selects the recommended module in <code>DeepLearningState::post_encoder_params</code>. The user can override via <code>PostEncoderWidget</code> for any loaded model.</p>
 </section>
 <section id="integration-with-slotassembler" class="level2">
 <h2 class="anchored" data-anchor-id="integration-with-slotassembler">Integration with SlotAssembler</h2>
-<p><code>SlotAssembler</code> exposes two public methods:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configurePostEncoderModule<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">module_type</span><span class="op">,</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> interpolation<span class="op">);</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateSpatialPoint<span class="op">(</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key<span class="op">,</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>configurePostEncoderModule</code> performs a <code>dynamic_cast&lt;GeneralEncoderModel*&gt;</code> and calls <code>setPostEncoderModule</code> on success. If the current model is not a <code>GeneralEncoderModel</code>, the call is silently ignored.</p>
-<p><code>updateSpatialPoint</code> reads <code>PointData[point_key]</code> at <code>frame</code>, takes the first point, and calls <code>SpatialPointExtractModule::setPoint()</code>. It is called automatically before every forward pass (both single-frame and batch) when a non-empty <code>spatial_point_key</code> is stored in the assembler’s <code>Impl</code>.</p>
+<p>Post-encoder is owned by <code>SlotAssembler::Impl::post_encoder_module</code>, configured through:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configurePostEncoderModule<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>PostEncoderStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size <span class="op">=</span> <span class="op">{});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>PostEncoderStepDescriptor</code> (<code>SlotBindingTypes.hpp</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PostEncoderStepDescriptor <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string module_key <span class="op">=</span> <span class="st">"none"</span><span class="op">;</span>   <span class="co">// "none" or empty → no module</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string parameters_json <span class="op">=</span> <span class="st">"</span><span class="sc">{}</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="per-frame-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="per-frame-pipeline">Per-frame pipeline</h3>
+<p>Every inference mode follows the same pattern:</p>
+<pre><code>_updateSpatialPoint()          // spatial_point only
+    → ModelBase::forward()
+    → applyPostEncoderToFirstOutputSlot()   // first output slot only
+    → decodeOutputs()</code></pre>
+<p>Free functions in <code>PostEncoderOutputTransform.hpp</code>:</p>
+<ul>
+<li><code>applyPostEncoderToFirstOutputSlot()</code> — transform first output tensor</li>
+<li><code>effectiveOutputSlots()</code> — propagate shapes for decoder UI and validation</li>
+</ul>
+<p><code>ModelBase::outputSlots()</code> always reports raw model shapes. <code>SlotAssembler::currentModelInfo()</code> uses <code>effectiveOutputSlots()</code> so output binding widgets reflect post-encoder shape changes.</p>
+</section>
+<section id="lifecycle" class="level3">
+<h3 class="anchored" data-anchor-id="lifecycle">Lifecycle</h3>
+<ul>
+<li><code>loadModel()</code> and <code>resetModel()</code> clear <code>post_encoder_module</code></li>
+<li><code>PostEncoderWidget::syncToAssembler()</code> re-applies saved params after weights load (<code>_loadModelIfReady()</code>)</li>
+<li>Parameter changes call <code>configurePostEncoderModule()</code> immediately when a model is loaded (weights not required for configuration)</li>
+</ul>
+<p><strong>Targeting:</strong> post-encoder applies to the <strong>first</strong> model output slot only. Per-slot targeting is planned.</p>
+<p><strong>Recurrent inference:</strong> recurrent tensor bindings cache the <strong>post-encoder output</strong> tensor (the same tensor passed to decoders) for the next frame’s input injection.</p>
+</section>
+<section id="decoder-consistency" class="level3">
+<h3 class="anchored" data-anchor-id="decoder-consistency">Decoder consistency</h3>
+<p><code>dl::constraints::validDecodersForPostEncoder()</code> queries <code>collapsesSpatialDims()</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Post-encoder</th>
+<th>Allowed decoders</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"none"</code> or spatial-preserving</td>
+<td>Mask, Point, Line, FeatureVector</td>
+</tr>
+<tr class="even">
+<td>Spatial-collapsing (<code>global_avg_pool</code>, <code>spatial_point</code>)</td>
+<td><code>FeatureVectorDecoderParams</code> only</td>
+</tr>
+</tbody>
+</table>
+<p><code>DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency()</code> updates output slot decoder combos when the post-encoder module changes.</p>
+<p>See <a href="../../developer/DeepLearning/constraints.html">Session Constraints</a>.</p>
+</section>
 </section>
 <section id="widget-ui" class="level2">
 <h2 class="anchored" data-anchor-id="widget-ui">Widget UI</h2>
-<p>The <strong>Post-Encoder Module</strong> section appears at the bottom of the Dynamic Slot panels in <code>DeepLearningPropertiesWidget</code>. It contains:</p>
+<p>The <strong>Post-Encoder Module</strong> section is rendered by <code>PostEncoderWidget</code> in the dynamic slot panels — placed after memory inputs and <strong>before</strong> outputs (matching the inference pipeline order).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Module combo</td>
+<td><code>PostEncoderModuleRegistry::moduleKeys()</code> + <code>(None)</code></td>
+</tr>
+<tr class="even">
+<td>Description label</td>
+<td><code>getMetadata(key).description</code></td>
+</tr>
+<tr class="odd">
+<td>Parameter panel</td>
+<td><code>AutoParamWidget</code> from <code>getSchema(key)</code></td>
+</tr>
+<tr class="even">
+<td><code>point_key</code> combo</td>
+<td>Dynamic DataManager combo (<code>ParameterUIHints</code>)</td>
+</tr>
+</tbody>
+</table>
+<section id="data-flow" class="level3">
+<h3 class="anchored" data-anchor-id="data-flow">Data flow</h3>
+<p>On construction:</p>
 <ol type="1">
-<li><strong>Module</strong> combo: <code>None</code>, <code>Global Average Pooling</code>, <code>Spatial Point Extraction</code></li>
-<li><strong>Interpolation</strong> combo (spatial only): <code>Bilinear</code>, <code>Nearest</code></li>
-<li><strong>Point Key</strong> combo (spatial only): populated from all <code>PointData</code> keys in DataManager</li>
+<li>Populate module combo from registry</li>
+<li>Restore from <code>DeepLearningState::postEncoderParams()</code></li>
+<li>Rebuild parameter panel for selected key</li>
 </ol>
-<p>On any change the widget immediately calls <code>_assembler-&gt;configurePostEncoderModule(...)</code> and persists the selection to <code>DeepLearningState</code> (fields <code>post_encoder_module_type</code> and <code>post_encoder_point_key</code>).</p>
+<p>On parameter change:</p>
+<ol type="1">
+<li>Read <code>{module_key, parameters_json}</code> from combo + <code>AutoParamWidget::toJson()</code></li>
+<li>Update <code>DeepLearningState::setPostEncoderParams()</code> (workspace JSON)</li>
+<li>Call <code>configurePostEncoderModule()</code> when model is loaded</li>
+<li>Enforce decoder consistency on output slot widgets</li>
+</ol>
+<p>See <a href="../../developer/ui/DeepLearning_Widget/UI/Helpers/helpers.html#postencoderwidget">PostEncoderWidget</a> and <a href="../../developer/ui/schema_driven_forms.html">Schema-Driven Forms</a>.</p>
+</section>
 </section>
 <section id="batch-inference-and-tensordata-output" class="level2">
-<h2 class="anchored" data-anchor-id="batch-inference-and-tensordata-output">Batch Inference and TensorData Output</h2>
-<p>For batch runs with <code>TensorToFeatureVector</code> as the decoder, <code>_mergeResults()</code> collects <code>(frame_index, std::vector&lt;float&gt;)</code> pairs in <code>_pending_feature_rows</code> (keyed by <code>data_key</code>). At <code>_onBatchFinished()</code>, the rows are sorted by frame, flattened, and written as a single <code>TensorData::createOrdinal2D</code> matrix to the DataManager. Each row corresponds to one frame and each column to one feature channel.</p>
+<h2 class="anchored" data-anchor-id="batch-inference-and-tensordata-output">Batch inference and TensorData output</h2>
+<p>For batch runs with <code>TensorToFeatureVector</code>, <code>ResultProcessor</code> collects <code>(frame_index, std::vector&lt;float&gt;)</code> pairs and merges them into a single <code>TensorData::createOrdinal2D</code> matrix at batch completion. Each row is one frame; each column is one feature channel.</p>
+</section>
+<section id="future-work" class="level2">
+<h2 class="anchored" data-anchor-id="future-work">Future work</h2>
+<ul>
+<li><strong>Per-output-slot targeting</strong> — bind post-encoder to a named output slot on multi-output models</li>
+<li><strong><code>prepareFrame(DataManager&amp;, int)</code> on modules</strong> — move spatial-point lookup into the module interface</li>
+<li><strong>Decoder-roundtrip recurrent feedback</strong> — decode → re-encode for models that feed decoded results back as inputs</li>
+</ul>
 </section>
 <section id="testing" class="level2">
 <h2 class="anchored" data-anchor-id="testing">Testing</h2>
-<p>Unit tests live in <code>tests/DeepLearning/post_encoder/PostEncoderModules.test.cpp</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test file</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tests/DeepLearning/post_encoder/PostEncoderModules.test.cpp</code></td>
+<td>Modules, pipeline, registry</td>
+</tr>
+<tr class="even">
+<td><code>tests/DeepLearning/post_encoder/PostEncoderOutputTransform.test.cpp</code></td>
+<td><code>applyPostEncoderToFirstOutputSlot</code>, <code>effectiveOutputSlots</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-R</span> <span class="st">"post_encoder"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="related-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="related-documentation">Related documentation</h2>
 <ul>
-<li><code>GlobalAvgPoolModule</code>: output shape, value averaging, single-pixel passthrough</li>
-<li><code>SpatialPointExtractModule</code>: name/shape, nearest/bilinear extraction, clamping</li>
-<li><code>PostEncoderPipeline</code>: empty passthrough, single-module delegation, shape chaining</li>
-<li><code>PostEncoderModuleFactory</code>: <code>none</code>, <code>global_avg_pool</code>, <code>spatial_point</code>, unknown key</li>
+<li><a href="../../developer/DeepLearning/general_encoder.html">General Encoder Model</a> — backbone that recommends <code>global_avg_pool</code></li>
+<li><a href="../../developer/DeepLearning/models_v2/ModelInfo.html">ModelInfo</a> — <code>recommended_post_encoder</code> and effective outputs</li>
+<li><a href="../../developer/DeepLearning/constraints.html">Session Constraints</a> — decoder alternatives per module</li>
+<li><a href="../../developer/DeepLearning/channel_decoding/TensorToFeatureVector.html">TensorToFeatureVector</a> — typical decoder after spatial collapse</li>
 </ul>
-<p>Run with:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-R</span> <span class="st">"post_encoder"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>

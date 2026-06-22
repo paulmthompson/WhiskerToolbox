@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -354,6 +354,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-types-documentation" id="toc-public-types-documentation" class="nav-link" data-scroll-target="#public-types-documentation">Public Types Documentation</a>
   <ul class="collapse">
   <li><a href="#using-postedithook" id="toc-using-postedithook" class="nav-link" data-scroll-target="#using-postedithook">using PostEditHook</a></li>
+  <li><a href="#using-filedialogopener" id="toc-using-filedialogopener" class="nav-link" data-scroll-target="#using-filedialogopener">using FileDialogOpener</a></li>
   </ul></li>
   <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
   <ul class="collapse">
@@ -370,6 +371,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-setpostedithook" id="toc-function-setpostedithook" class="nav-link" data-scroll-target="#function-setpostedithook">function setPostEditHook</a></li>
   <li><a href="#function-updateallowedvalues" id="toc-function-updateallowedvalues" class="nav-link" data-scroll-target="#function-updateallowedvalues">function updateAllowedValues</a></li>
   <li><a href="#function-updatevariantalternatives" id="toc-function-updatevariantalternatives" class="nav-link" data-scroll-target="#function-updatevariantalternatives">function updateVariantAlternatives</a></li>
+  <li><a href="#function-setfiledialogopener" id="toc-function-setfiledialogopener" class="nav-link" data-scroll-target="#function-setfiledialogopener">function setFileDialogOpener</a></li>
+  <li><a href="#function-registerdialogfallback" id="toc-function-registerdialogfallback" class="nav-link" data-scroll-target="#function-registerdialogfallback">function registerDialogFallback</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -416,6 +419,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>using std::function&lt; std::string(std::string const &amp;json)&gt;</td>
 <td><strong><a href="../../api_generated/Classes/classAutoParamWidget.html#using-postedithook">PostEditHook</a></strong> <br>Callback type for post-edit hooks.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; QString(QWidget *parent, QString dialog_id, QString caption, QString filter, QString fallback_dir, bool pick_directory)&gt;</td>
+<td><strong><a href="../../api_generated/Classes/classAutoParamWidget.html#using-filedialogopener">FileDialogOpener</a></strong> <br>Callback invoked when the user clicks Browse on a path field.</td>
 </tr>
 </tbody>
 </table>
@@ -483,6 +490,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classAutoParamWidget.html#function-updatevariantalternatives">updateVariantAlternatives</a></strong>(std::string const &amp; field_name, std::vector&lt; std::string &gt; const &amp; allowed_tags)<br>Show or hide variant alternatives by tag name.</td>
 </tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classAutoParamWidget.html#function-setfiledialogopener">setFileDialogOpener</a></strong>(<a href="../../api_generated/Classes/classAutoParamWidget.html#using-filedialogopener">FileDialogOpener</a> opener)<br>Install the global file/directory dialog opener (defaults to QFileDialog)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classAutoParamWidget.html#function-registerdialogfallback">registerDialogFallback</a></strong>(QString const &amp; dialog_id, std::function&lt; QString()&gt; resolver)<br>Register a fallback directory resolver for a dialog id.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -505,12 +520,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Clamping or snapping values (e.g., forcing odd kernel sizes)</li>
 </ul>
 </section>
+<section id="using-filedialogopener" class="level3">
+<h3 class="anchored" data-anchor-id="using-filedialogopener">using FileDialogOpener</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> AutoParamWidget<span class="op">::</span>FileDialogOpener <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="ex">QString</span><span class="op">(</span> <span class="ex">QWidget</span> <span class="op">*</span> parent<span class="op">,</span> <span class="ex">QString</span> dialog_id<span class="op">,</span> <span class="ex">QString</span> caption<span class="op">,</span> <span class="ex">QString</span> filter<span class="op">,</span> <span class="ex">QString</span> fallback_dir<span class="op">,</span> <span class="dt">bool</span> pick_directory<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Callback invoked when the user clicks Browse on a path field.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>parent</strong> Parent widget for the dialog</li>
+<li><strong>dialog_id</strong> Session id for path memory (<a href="../../api_generated/Namespaces/namespaceAppFileDialog.html">AppFileDialog</a>)</li>
+<li><strong>caption</strong> Dialog window title</li>
+<li><strong>filter</strong> File filter when picking files; ignored for directories</li>
+<li><strong>fallback_dir</strong> Initial directory when no session memory exists</li>
+<li><strong>pick_directory</strong> True for directory picker, false for file open</li>
+</ul>
+<p><strong>Return</strong>: Selected path, or empty if cancelled</p>
+</section>
 </section>
 <section id="public-signals-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
 <section id="signal-parameterschanged" class="level3">
 <h3 class="anchored" data-anchor-id="signal-parameterschanged">signal parametersChanged</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> parametersChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> parametersChanged<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Emitted whenever any parameter value changes.</p>
 </section>
 </section>
@@ -518,19 +548,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-autoparamwidget" class="level3">
 <h3 class="anchored" data-anchor-id="function-autoparamwidget">function AutoParamWidget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> AutoParamWidget<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> AutoParamWidget<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-autoparamwidget-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-autoparamwidget-1">function ~AutoParamWidget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>AutoParamWidget<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>AutoParamWidget<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-setschema" class="level3">
 <h3 class="anchored" data-anchor-id="function-setschema">function setSchema</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setSchema<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ParameterSchema <span class="at">const</span> <span class="op">&amp;</span> schema</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setSchema<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    ParameterSchema <span class="at">const</span> <span class="op">&amp;</span> schema</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the schema and rebuild the form.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -539,15 +569,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-tojson" class="level3">
 <h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize current widget values to a JSON string.</p>
 <p><strong>Return</strong>: JSON string representing current parameter values</p>
 </section>
 <section id="function-fromjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-fromjson">function fromJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> fromJson<span class="op">(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> fromJson<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Populate widget values from a JSON string.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -557,14 +587,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-clear" class="level3">
 <h3 class="anchored" data-anchor-id="function-clear">function clear</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear all fields and remove the schema.</p>
 </section>
 <section id="function-setpostedithook" class="level3">
 <h3 class="anchored" data-anchor-id="function-setpostedithook">function setPostEditHook</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPostEditHook<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    PostEditHook hook</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPostEditHook<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    PostEditHook hook</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Install a post-edit hook that can transform parameter values after each edit.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -573,25 +603,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-updateallowedvalues" class="level3">
 <h3 class="anchored" data-anchor-id="function-updateallowedvalues">function updateAllowedValues</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateAllowedValues<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> field_name<span class="op">,</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> values</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateAllowedValues<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> field_name<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> values</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Dynamically update the combo items for a string/enum field.</p>
 <p>Finds the FieldRow(s) matching field_name. If the field has a combo_box, repopulates it with values while preserving the current selection. If include_none_sentinel was set, “(None)” is prepended. If the field is a QLineEdit (non-dynamic), this is a no-op.</p>
 <p>Does not emit parametersChanged unless the selection actually changes.</p>
 </section>
 <section id="function-updatevariantalternatives" class="level3">
 <h3 class="anchored" data-anchor-id="function-updatevariantalternatives">function updateVariantAlternatives</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateVariantAlternatives<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> field_name<span class="op">,</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> allowed_tags</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateVariantAlternatives<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> field_name<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> allowed_tags</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Show or hide variant alternatives by tag name.</p>
 <p>Finds the variant FieldRow matching field_name. Hides alternatives whose tags are not in allowed_tags. If the currently selected alternative is hidden, switches to the first visible one.</p>
 <p>Does not emit parametersChanged unless the active alternative changes.</p>
+</section>
+<section id="function-setfiledialogopener" class="level3">
+<h3 class="anchored" data-anchor-id="function-setfiledialogopener">function setFileDialogOpener</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> setFileDialogOpener<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    FileDialogOpener opener</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Install the global file/directory dialog opener (defaults to QFileDialog)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>opener</strong> Callback; pass empty function to restore the built-in default</li>
+</ul>
+</section>
+<section id="function-registerdialogfallback" class="level3">
+<h3 class="anchored" data-anchor-id="function-registerdialogfallback">function registerDialogFallback</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> registerDialogFallback<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> dialog_id<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="ex">QString</span><span class="op">()&gt;</span> resolver</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register a fallback directory resolver for a dialog id.</p>
+<p>Used when no session path memory exists yet. Typically registered once at app startup.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

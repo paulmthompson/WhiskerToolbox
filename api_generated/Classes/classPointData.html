@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -551,150 +551,154 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-movebyentityids">moveByEntityIds</a></strong>(DerivedTarget &amp; target, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Move entries with specific EntityIds to another <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</td>
 </tr>
 <tr class="even">
+<td>template &lt;typename DerivedTarget &gt; <br>std::optional&lt; std::size_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-mergeoverwriteto">mergeOverwriteTo</a></strong>(DerivedTarget &amp; target, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify) const<br>Merge all entries from this series into the target with per-time overwrite.</td>
+</tr>
+<tr class="odd">
 <td>std::optional&lt; std::reference_wrapper&lt; TData const &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityid">getDataByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id) const<br>Find the data associated with a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::optional&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimebyentityid">getTimeByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id) const<br>Find the time frame index for a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds</a></strong>(std::span&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> const &gt; entity_ids) const<br>Get all data that match the given EntityIds as a lazy view.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getdatabyentityids">getDataByEntityIds</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids) const<br>Get all data that match the given EntityIds (vector overload).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::optional&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html#using-datamodifier">DataModifier</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getmutabledata">getMutableData</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Get a mutable handle to data by <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearbyentityid">clearByEntityId</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear data by its <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>size_t</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearbyentityids">clearByEntityIds</a></strong>(std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear multiple data entries by their EntityIds in a single pass.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearattime">clearAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear all data at a specific time with timeframe conversion.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by copying).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by copying).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by moving).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by moving).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;typename… TDataArgs&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-emplaceattime">emplaceAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TDataArgs &amp;&amp;… args)<br>Construct a data entry in-place at a specific time.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, std::vector&lt; TData &gt; const &amp; data_to_add, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a batch of data at a specific time by copying them.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, std::vector&lt; TData &gt; &amp;&amp; data_to_add, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a batch of data at a specific time by moving them.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::size_t</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimecount">getTimeCount</a></strong>() const<br>Get the number of distinct time frames with data.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::size_t</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getmaxentriesatanytime">getMaxEntriesAtAnyTime</a></strong>() const<br>Get the maximum number of entries at any single time frame.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::size_t</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettotalentrycount">getTotalEntryCount</a></strong>() const<br>Get the total number of entries across all time frames.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-gettimeswithdata">getTimesWithData</a></strong>() const<br>Get all times with data.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getattime">getAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame) const</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentityidsattime">getEntityIdsAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentityidsattime">getEntityIdsAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getelementsinrange">getElementsInRange</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval) const<br>Get data entries with their associated times as a zero-copy range within a TimeFrameInterval.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getelementsinrange">getElementsInRange</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_timeframe) const<br>Get a filtered view of elements within a TimeFrameInterval with timeframe conversion.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elements">elements</a></strong>() const<br>A flattened view of (Time, <a href="../../api_generated/Classes/structDataEntry.html">DataEntry</a>) pairs.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-elementsview">elementsView</a></strong>() const<br>A flattened view of <a href="">RaggedElement</a> objects (concept-compliant).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data</a></strong>() const<br>A flattened view of (Time, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>, TData) tuples.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>auto</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-view">view</a></strong>() const<br>Create a view of this time series. This works for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> and any derived class (like <a href="">PointData</a>).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structRaggedStorageCache.html">RaggedStorageCache</a>&lt; TData &gt; const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getstoragecache">getStorageCache</a></strong>() const<br>Get the storage cache for fast-path iteration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-isstoragecontiguous">isStorageContiguous</a></strong>() const<br>Check if storage is currently using the owning backend.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Files/RaggedStorage_8hpp.html#enum-raggedstoragetype">RaggedStorageType</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getstoragetype">getStorageType</a></strong>() const<br>Get the underlying storage type.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-islazy">isLazy</a></strong>() const<br>Check if storage uses lazy evaluation.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize</a></strong>() const</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::random_access_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromview">createFromView</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> image_size =<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a>)<br>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromviewwithnewids">createFromViewWithNewIds</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, std::string const &amp; data_key, <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> * registry, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> image_size =<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a>)<br>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view with new EntityIds.</td>
 </tr>
@@ -712,6 +716,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>constexpr <a href="../../api_generated/Files/EntityTypes_8hpp.html#enum-entitykind">EntityKind</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-getentitykind">getEntityKind</a></strong>()<br>Get the EntityKind for this data type.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function--ensureowningstorage">_ensureOwningStorage</a></strong>()<br>Materialize View/Lazy storage to owning storage in-place.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function--appendpreservedentries">_appendPreservedEntries</a></strong>(std::vector&lt; std::tuple&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, TData, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; &gt; const &amp; entries, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Append multiple entries preserving EntityIds with a single cache update.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
@@ -884,7 +896,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>This will scale all points in the data structure by the ratio of the new size to the old size.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:51 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:21 +0000</p>
 
 
 </section>

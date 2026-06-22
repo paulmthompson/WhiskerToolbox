@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -389,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlpostencoderpipeline" class="level1">
 <h1>dl::PostEncoderPipeline</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>A composable, ordered sequence of <code>[PostEncoderModule](/api_generated/Classes/classdl_1_1PostEncoderModule.md)</code> operations. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;PostEncoderPipeline.hpp&gt;</code></p>
 <p>Inherits from <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">dl::PostEncoderModule</a></p>
 <section id="public-functions" class="level2">
@@ -408,7 +408,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-add">add</a></strong>(std::unique_ptr&lt; <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">PostEncoderModule</a> &gt; module)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-add">add</a></strong>(std::unique_ptr&lt; <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">PostEncoderModule</a> &gt; module)<br>Append a module to the end of the pipeline.</td>
 </tr>
 <tr class="odd">
 <td>std::size_t</td>
@@ -424,11 +424,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>virtual at::Tensor</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-apply">apply</a></strong>(at::Tensor const &amp; features) const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-apply">apply</a></strong>(at::Tensor const &amp; features) const override<br>Apply each module sequentially, passing the output of each as the input to the next.</td>
 </tr>
 <tr class="odd">
 <td>virtual std::vector&lt; int64_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-outputshape">outputShape</a></strong>(std::vector&lt; int64_t &gt; const &amp; input_shape) const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html#function-outputshape">outputShape</a></strong>(std::vector&lt; int64_t &gt; const &amp; input_shape) const override<br>Compute the output shape by propagating through each module’s <code>[outputShape()]()</code> in order.</td>
 </tr>
 </tbody>
 </table>
@@ -473,8 +473,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> add<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> PostEncoderModule <span class="op">&gt;</span> <span class="kw">module</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Precondition</strong>: module must not be nullptr</p>
 <p>Append a module to the end of the pipeline.</p>
+<p><strong>Precondition</strong>: module must not be nullptr</p>
 </section>
 <section id="function-size" class="level3">
 <h3 class="anchored" data-anchor-id="function-size">function size</h3>
@@ -497,19 +497,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> at<span class="op">::</span>Tensor apply<span class="op">(</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    at<span class="op">::</span>Tensor <span class="at">const</span> <span class="op">&amp;</span> features</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply each module sequentially, passing the output of each as the input to the next.</p>
 <p><strong>Precondition</strong>: features must not be undefined.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html#function-apply">dl::PostEncoderModule::apply</a></p>
-<p>Apply each module sequentially, passing the output of each as the input to the next.</p>
 </section>
 <section id="function-outputshape" class="level3">
 <h3 class="anchored" data-anchor-id="function-outputshape">function outputShape</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> outputShape<span class="op">(</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_shape</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the output shape by propagating through each module’s <code>[outputShape()]()</code> in order.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html#function-outputshape">dl::PostEncoderModule::outputShape</a></p>
-<p>Compute the output shape by propagating through each module’s <code>[outputShape()](/api_generated/Classes/classdl_1_1PostEncoderPipeline.md#function-outputshape)</code> in order.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

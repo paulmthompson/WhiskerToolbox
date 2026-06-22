@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -385,33 +385,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/CommandContext.hpp"</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/SequenceExecution.hpp"</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SaveData.hpp"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataInspector_Widget/DataInspectorState.hpp"</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager_Widget/utils/DataManager_Widget_utils.hpp"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalIntervalSeriesDataView.hpp"</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeyAction.hpp"</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeyActionAdapter.hpp"</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeymapManager.hpp"</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QAction&gt;</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QComboBox&gt;</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QEvent&gt;</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QItemDelegate&gt;</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QKeyEvent&gt;</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QLineEdit&gt;</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QMenu&gt;</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QMessageBox&gt;</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QPoint&gt;</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QPushButton&gt;</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QStackedWidget&gt;</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;filesystem&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SavePathResolver.hpp"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataInspector_Widget/DataInspectorState.hpp"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager_Widget/utils/DataManager_Widget_utils.hpp"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalIntervalSeriesDataView.hpp"</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeyAction.hpp"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeyActionAdapter.hpp"</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"KeymapSystem/KeymapManager.hpp"</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QAction&gt;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QComboBox&gt;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QEvent&gt;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QItemDelegate&gt;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QKeyEvent&gt;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QLineEdit&gt;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QMenu&gt;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QMessageBox&gt;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QPoint&gt;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QPushButton&gt;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QStackedWidget&gt;</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_set&gt;</span></span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
@@ -549,26 +549,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DigitalIntervalSeriesInspector<span class="op">::</span>_onExportTypeChanged<span class="op">);</span></span>
 <span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>ui<span class="op">-&gt;</span>csv_interval_saver_widget<span class="op">,</span> <span class="op">&amp;</span>CSVIntervalSaver_Widget<span class="op">::</span>saveIntervalCSVRequested<span class="op">,</span></span>
 <span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span>CSVIntervalSaverOptions options<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> output_path <span class="op">=</span> dataManager<span class="op">()-&gt;</span>getOutputPath<span class="op">();</span></span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>output_path<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>                    <span class="ex">QMessageBox::warning</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="st">"Warning"</span><span class="op">,</span></span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Please set an output directory in the Data Manager settings"</span><span class="op">);</span></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> filename <span class="op">=</span> ui<span class="op">-&gt;</span>filename_edit<span class="op">-&gt;</span>text<span class="op">().</span>toStdString<span class="op">();</span></span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span><span class="bu">std::</span>filesystem::path<span class="op">(</span>output_path<span class="op">)</span> <span class="op">/</span> filename<span class="op">).</span>string<span class="op">();</span></span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>                options<span class="op">.</span>parent_dir <span class="op">=</span> output_path<span class="op">;</span></span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>                options<span class="op">.</span>filename <span class="op">=</span> filename<span class="op">;</span></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> opts_json <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>options<span class="op">);</span></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> format_opts <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>opts_json<span class="op">);</span></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                commands<span class="op">::</span>SaveDataParams params<span class="op">{</span></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>data_key <span class="op">=</span> _active_key<span class="op">,</span></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">,</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> filename <span class="op">=</span> ui<span class="op">-&gt;</span>filename_edit<span class="op">-&gt;</span>text<span class="op">().</span>toStdString<span class="op">();</span></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> resolution <span class="op">=</span> commands<span class="op">::</span>resolveDefaultSavePath<span class="op">(</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>                        <span class="op">*</span>dataManager<span class="op">(),</span> _active_key<span class="op">,</span> <span class="st">"csv"</span><span class="op">,</span> filename<span class="op">);</span></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>resolution<span class="op">.</span><span class="va">m_using_file_origin</span> <span class="op">&amp;&amp;</span> dataManager<span class="op">()-&gt;</span>getOutputPath<span class="op">().</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>                    <span class="ex">QMessageBox::warning</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="st">"Warning"</span><span class="op">,</span></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Please set an output directory in the Data Manager settings"</span><span class="op">);</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>                options<span class="op">.</span>parent_dir <span class="op">=</span> resolution<span class="op">.</span><span class="va">m_parent_dir</span><span class="op">;</span></span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>                options<span class="op">.</span>filename <span class="op">=</span> resolution<span class="op">.</span><span class="va">m_filename</span><span class="op">;</span></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> opts_json <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>options<span class="op">);</span></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> format_opts <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>opts_json<span class="op">);</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>                commands<span class="op">::</span>SaveDataParams params<span class="op">{</span></span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>data_key <span class="op">=</span> _active_key<span class="op">,</span></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>path <span class="op">=</span> resolution<span class="op">.</span><span class="va">m_path</span><span class="op">,</span></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>backup_existing <span class="op">=</span> resolution<span class="op">.</span><span class="va">m_using_file_origin</span><span class="op">,</span></span>
 <span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>                <span class="op">};</span></span>
 <span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>format_opts<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>                    params<span class="op">.</span>format_options <span class="op">=</span> format_opts<span class="op">.</span>value<span class="op">();</span></span>
@@ -1154,7 +1154,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-773"><a href="#cb1-773" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">" selected intervals from their groups."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
 <span id="cb1-774"><a href="#cb1-774" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:26 +0000</p>
 
 
 </section>

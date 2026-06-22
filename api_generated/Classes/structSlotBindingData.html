@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -348,14 +348,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#slotbindingdata" id="toc-slotbindingdata" class="nav-link active" data-scroll-target="#slotbindingdata">SlotBindingData</a>
   <ul class="collapse">
   <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-slot_name" id="toc-variable-slot_name" class="nav-link" data-scroll-target="#variable-slot_name">variable slot_name</a></li>
   <li><a href="#variable-data_key" id="toc-variable-data_key" class="nav-link" data-scroll-target="#variable-data_key">variable data_key</a></li>
-  <li><a href="#variable-encoder_id" id="toc-variable-encoder_id" class="nav-link" data-scroll-target="#variable-encoder_id">variable encoder_id</a></li>
-  <li><a href="#variable-mode" id="toc-variable-mode" class="nav-link" data-scroll-target="#variable-mode">variable mode</a></li>
-  <li><a href="#variable-gaussian_sigma" id="toc-variable-gaussian_sigma" class="nav-link" data-scroll-target="#variable-gaussian_sigma">variable gaussian_sigma</a></li>
-  <li><a href="#variable-normalize" id="toc-variable-normalize" class="nav-link" data-scroll-target="#variable-normalize">variable normalize</a></li>
+  <li><a href="#variable-encoder" id="toc-variable-encoder" class="nav-link" data-scroll-target="#variable-encoder">variable encoder</a></li>
   <li><a href="#variable-time_offset" id="toc-variable-time_offset" class="nav-link" data-scroll-target="#variable-time_offset">variable time_offset</a></li>
   </ul></li>
   </ul></li>
@@ -387,8 +385,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="slotbindingdata" class="level1">
 <h1>SlotBindingData</h1>
-<p>Serializable binding for a dynamic (per-frame) model input slot.</p>
-<p><code>#include &lt;DeepLearningBindingData.hpp&gt;</code></p>
+<p>Serializable binding for a dynamic (per-frame) model input slot. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;SlotBindingTypes.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
 <table class="caption-top table">
@@ -401,73 +399,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-slot-name">slot_name</a></strong> <br>Model input slot name (e.g.&nbsp;“encoder_image”)</td>
+<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-slot-name">slot_name</a></strong></td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-data-key">data_key</a></strong> <br><a href="">DataManager</a> key (e.g.&nbsp;“media/video_1”)</td>
+<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-data-key">data_key</a></strong></td>
 </tr>
 <tr class="odd">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-encoder-id">encoder_id</a></strong> <br>Encoder factory key (e.g.&nbsp;“ImageEncoder”)</td>
+<td><a href="../../api_generated/Namespaces/namespacedl.html#using-encodervariant">dl::EncoderVariant</a></td>
+<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-encoder">encoder</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-mode">mode</a></strong> <br>“Raw”, “Binary”, “Heatmap”</td>
-</tr>
-<tr class="odd">
-<td>float</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-gaussian-sigma">gaussian_sigma</a></strong> <br>Gaussian sigma (Heatmap mode only)</td>
-</tr>
-<tr class="even">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-normalize">normalize</a></strong> <br>Normalize encoder output to [0, 1].</td>
-</tr>
-<tr class="odd">
 <td>int</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-time-offset">time_offset</a></strong> <br>Temporal offset applied per frame (e.g.&nbsp;-1 for previous frame)</td>
+<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html#variable-time-offset">time_offset</a></strong></td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SlotBindingData<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Serializable binding for a dynamic (per-frame) model input slot.</p>
+<p>Persisted in workspace JSON with a nested tagged <code>encoder</code> field (reflect-cpp).</p>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-slot_name" class="level3">
 <h3 class="anchored" data-anchor-id="variable-slot_name">variable slot_name</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string slot_name<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string slot_name<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Model input slot name (e.g.&nbsp;“encoder_image”)</p>
 </section>
 <section id="variable-data_key" class="level3">
 <h3 class="anchored" data-anchor-id="variable-data_key">variable data_key</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string data_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><a href="">DataManager</a> key (e.g.&nbsp;“media/video_1”)</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string data_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key (e.g.&nbsp;“media/video_1”)</p>
 </section>
-<section id="variable-encoder_id" class="level3">
-<h3 class="anchored" data-anchor-id="variable-encoder_id">variable encoder_id</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string encoder_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Encoder factory key (e.g.&nbsp;“ImageEncoder”)</p>
-</section>
-<section id="variable-mode" class="level3">
-<h3 class="anchored" data-anchor-id="variable-mode">variable mode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string mode <span class="op">=</span> <span class="st">"Raw"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>“Raw”, “Binary”, “Heatmap”</p>
-</section>
-<section id="variable-gaussian_sigma" class="level3">
-<h3 class="anchored" data-anchor-id="variable-gaussian_sigma">variable gaussian_sigma</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> gaussian_sigma <span class="op">=</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Gaussian sigma (Heatmap mode only)</p>
-</section>
-<section id="variable-normalize" class="level3">
-<h3 class="anchored" data-anchor-id="variable-normalize">variable normalize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> normalize <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Normalize encoder output to [0, 1].</p>
+<section id="variable-encoder" class="level3">
+<h3 class="anchored" data-anchor-id="variable-encoder">variable encoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>EncoderVariant encoder <span class="op">=</span> dl<span class="op">::</span>ImageEncoderParams<span class="op">{};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Encoder type and user-configurable parameters</p>
 </section>
 <section id="variable-time_offset" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_offset">variable time_offset</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Temporal offset applied per frame (e.g.&nbsp;-1 for previous frame)</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:50 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:20 +0000</p>
 
 
 </section>

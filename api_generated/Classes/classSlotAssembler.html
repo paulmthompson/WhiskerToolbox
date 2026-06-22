@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -355,7 +355,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#using-progresscallback" id="toc-using-progresscallback" class="nav-link" data-scroll-target="#using-progresscallback">using ProgressCallback</a></li>
   <li><a href="#using-resultcallback" id="toc-using-resultcallback" class="nav-link" data-scroll-target="#using-resultcallback">using ResultCallback</a></li>
-  <li><a href="#using-mediaoverrides" id="toc-using-mediaoverrides" class="nav-link" data-scroll-target="#using-mediaoverrides">using MediaOverrides</a></li>
   </ul></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
@@ -373,28 +372,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-runbatchrange" id="toc-function-runbatchrange" class="nav-link" data-scroll-target="#function-runbatchrange">function runBatchRange</a></li>
   <li><a href="#function-runbatchrangeoffline" id="toc-function-runbatchrangeoffline" class="nav-link" data-scroll-target="#function-runbatchrangeoffline">function runBatchRangeOffline</a></li>
   <li><a href="#function-runrecurrentsequence" id="toc-function-runrecurrentsequence" class="nav-link" data-scroll-target="#function-runrecurrentsequence">function runRecurrentSequence</a></li>
+  <li><a href="#function-databank" id="toc-function-databank" class="nav-link" data-scroll-target="#function-databank">function dataBank</a></li>
+  <li><a href="#function-databank-1" id="toc-function-databank-1" class="nav-link" data-scroll-target="#function-databank-1">function dataBank</a></li>
+  <li><a href="#function-cleardatabank" id="toc-function-cleardatabank" class="nav-link" data-scroll-target="#function-cleardatabank">function clearDataBank</a></li>
+  <li><a href="#function-capturetobank" id="toc-function-capturetobank" class="nav-link" data-scroll-target="#function-capturetobank">function captureToBank</a></li>
   <li><a href="#function-capturestaticinput" id="toc-function-capturestaticinput" class="nav-link" data-scroll-target="#function-capturestaticinput">function captureStaticInput</a></li>
-  <li><a href="#function-clearstaticcacheentry" id="toc-function-clearstaticcacheentry" class="nav-link" data-scroll-target="#function-clearstaticcacheentry">function clearStaticCacheEntry</a></li>
-  <li><a href="#function-clearstaticcache" id="toc-function-clearstaticcache" class="nav-link" data-scroll-target="#function-clearstaticcache">function clearStaticCache</a></li>
   <li><a href="#function-clearrecurrentcache" id="toc-function-clearrecurrentcache" class="nav-link" data-scroll-target="#function-clearrecurrentcache">function clearRecurrentCache</a></li>
-  <li><a href="#function-hasstaticcacheentry" id="toc-function-hasstaticcacheentry" class="nav-link" data-scroll-target="#function-hasstaticcacheentry">function hasStaticCacheEntry</a></li>
-  <li><a href="#function-staticcachekeys" id="toc-function-staticcachekeys" class="nav-link" data-scroll-target="#function-staticcachekeys">function staticCacheKeys</a></li>
-  <li><a href="#function-staticcachetensorshape" id="toc-function-staticcachetensorshape" class="nav-link" data-scroll-target="#function-staticcachetensorshape">function staticCacheTensorShape</a></li>
-  <li><a href="#function-staticcachetensorrange" id="toc-function-staticcachetensorrange" class="nav-link" data-scroll-target="#function-staticcachetensorrange">function staticCacheTensorRange</a></li>
-  <li><a href="#function-currentmodeldisplayinfo" id="toc-function-currentmodeldisplayinfo" class="nav-link" data-scroll-target="#function-currentmodeldisplayinfo">function currentModelDisplayInfo</a></li>
+  <li><a href="#function-currentmodelinfo" id="toc-function-currentmodelinfo" class="nav-link" data-scroll-target="#function-currentmodelinfo">function currentModelInfo</a></li>
   <li><a href="#function-configurepostencodermodule" id="toc-function-configurepostencodermodule" class="nav-link" data-scroll-target="#function-configurepostencodermodule">function configurePostEncoderModule</a></li>
-  <li><a href="#function-updatespatialpoint" id="toc-function-updatespatialpoint" class="nav-link" data-scroll-target="#function-updatespatialpoint">function updateSpatialPoint</a></li>
-  <li><a href="#function-configuremodelshape" id="toc-function-configuremodelshape" class="nav-link" data-scroll-target="#function-configuremodelshape">function configureModelShape</a></li>
+  <li><a href="#function-applymodelconfiguration" id="toc-function-applymodelconfiguration" class="nav-link" data-scroll-target="#function-applymodelconfiguration">function applyModelConfiguration</a></li>
   <li><a href="#function-iscudaavailable" id="toc-function-iscudaavailable" class="nav-link" data-scroll-target="#function-iscudaavailable">function isCudaAvailable</a></li>
   <li><a href="#function-currentdevicename" id="toc-function-currentdevicename" class="nav-link" data-scroll-target="#function-currentdevicename">function currentDeviceName</a></li>
   <li><a href="#function-setdevicebyname" id="toc-function-setdevicebyname" class="nav-link" data-scroll-target="#function-setdevicebyname">function setDeviceByName</a></li>
   <li><a href="#function-initdeviceforcurrentthread" id="toc-function-initdeviceforcurrentthread" class="nav-link" data-scroll-target="#function-initdeviceforcurrentthread">function initDeviceForCurrentThread</a></li>
   <li><a href="#function-availablemodelids" id="toc-function-availablemodelids" class="nav-link" data-scroll-target="#function-availablemodelids">function availableModelIds</a></li>
-  <li><a href="#function-getmodeldisplayinfo" id="toc-function-getmodeldisplayinfo" class="nav-link" data-scroll-target="#function-getmodeldisplayinfo">function getModelDisplayInfo</a></li>
+  <li><a href="#function-getmodelinfo" id="toc-function-getmodelinfo" class="nav-link" data-scroll-target="#function-getmodelinfo">function getModelInfo</a></li>
   <li><a href="#function-availableencoders" id="toc-function-availableencoders" class="nav-link" data-scroll-target="#function-availableencoders">function availableEncoders</a></li>
   <li><a href="#function-availabledecoders" id="toc-function-availabledecoders" class="nav-link" data-scroll-target="#function-availabledecoders">function availableDecoders</a></li>
   <li><a href="#function-datatypeforencoder" id="toc-function-datatypeforencoder" class="nav-link" data-scroll-target="#function-datatypeforencoder">function dataTypeForEncoder</a></li>
+  <li><a href="#function-datatypeforencoder-1" id="toc-function-datatypeforencoder-1" class="nav-link" data-scroll-target="#function-datatypeforencoder-1">function dataTypeForEncoder</a></li>
   <li><a href="#function-datatypefordecoder" id="toc-function-datatypefordecoder" class="nav-link" data-scroll-target="#function-datatypefordecoder">function dataTypeForDecoder</a></li>
+  <li><a href="#function-datatypefordecoder-1" id="toc-function-datatypefordecoder-1" class="nav-link" data-scroll-target="#function-datatypefordecoder-1">function dataTypeForDecoder</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -462,10 +460,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>using std::function&lt; void(std::vector&lt; <a href="../../api_generated/Classes/structFrameResult.html">FrameResult</a> &gt;)&gt;</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#using-resultcallback">ResultCallback</a></strong> <br>Callback invoked per-frame with decoded results for progressive delivery. When provided to <a href="">runBatchRangeOffline()</a>, results are pushed via this callback instead of accumulating in <a href="../../api_generated/Classes/structBatchInferenceResult.html#variable-results">BatchInferenceResult::results</a>.</td>
 </tr>
-<tr class="odd">
-<td>using std::unordered_map&lt; std::string, std::shared_ptr&lt; <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#using-mediaoverrides">MediaOverrides</a></strong> <br>Map from <a href="">DataManager</a> data_key to a cloned <a href="">MediaData</a> instance.</td>
-</tr>
 </tbody>
 </table>
 </section>
@@ -521,107 +515,103 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runsingleframe">runSingleFrame</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int current_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Run a single-frame inference pipeline: assemble inputs → forward → decode outputs.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runsingleframe">runSingleFrame</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> &gt; const &amp; memory_frames, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int current_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Run a single-frame inference pipeline: assemble inputs → forward → decode outputs.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrange">runBatchRange</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run independent (non-recurrent) inference over a range of frames.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrange">runBatchRange</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> &gt; const &amp; memory_frames, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run independent (non-recurrent) inference over a range of frames.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structBatchInferenceResult.html">BatchInferenceResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrangeoffline">runBatchRangeOffline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classSlotAssembler.html#using-mediaoverrides">MediaOverrides</a> const &amp; media_overrides, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, std::atomic&lt; bool &gt; const &amp; cancel_requested, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr, <a href="../../api_generated/Classes/classSlotAssembler.html#using-resultcallback">ResultCallback</a> const &amp; result_callback =nullptr)<br>Run independent inference over a frame range without writing to <a href="">DataManager</a>.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrangeoffline">runBatchRangeOffline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Files/MediaOverrides_8hpp.html#using-mediaoverrides">MediaOverrides</a> const &amp; media_overrides, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> &gt; const &amp; memory_frames, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int end_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, std::atomic&lt; bool &gt; const &amp; cancel_requested, int batch_size =1, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr, <a href="../../api_generated/Classes/classSlotAssembler.html#using-resultcallback">ResultCallback</a> const &amp; result_callback =nullptr)<br>Run independent inference over a frame range without writing to <a href="">DataManager</a>.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runrecurrentsequence">runRecurrentSequence</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt; const &amp; static_inputs, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, std::vector&lt; <a href="../../api_generated/Classes/structRecurrentBindingData.html">RecurrentBindingData</a> &gt; const &amp; recurrent_bindings, int start_frame, int frame_count, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run sequential recurrent inference over a range of frames.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-runrecurrentsequence">runRecurrentSequence</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; <a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a> &gt; const &amp; input_bindings, std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> &gt; const &amp; memory_frames, std::vector&lt; <a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a> &gt; const &amp; output_bindings, int start_frame, int frame_count, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Classes/classSlotAssembler.html#using-progresscallback">ProgressCallback</a> const &amp; progress =nullptr)<br>Run sequential recurrent inference over a range of frames.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classdl_1_1DataBank.html">dl::DataBank</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-databank">dataBank</a></strong>()<br>Named store of geometry sources and channel-encoded tensors.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classdl_1_1DataBank.html">dl::DataBank</a> const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-databank">dataBank</a></strong>() const</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-cleardatabank">clearDataBank</a></strong>()<br>Remove all entries from the DataBank.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-capturetobank">captureToBank</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; bank_entry_id, <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> const &amp; entry, int frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Capture a static input into a named DataBank entry.</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-capturestaticinput">captureStaticInput</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> const &amp; entry, int frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Capture a static input at a specific frame and store in the cache.</td>
-</tr>
-<tr class="even">
-<td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearstaticcacheentry">clearStaticCacheEntry</a></strong>(std::string const &amp; cache_key)<br>Clear a single entry from the static tensor cache.</td>
-</tr>
-<tr class="odd">
-<td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearstaticcache">clearStaticCache</a></strong>()<br>Clear the entire static tensor cache.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-capturestaticinput">captureStaticInput</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> const &amp; entry, int frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Capture a static input at a specific frame into the DataBank.</td>
 </tr>
 <tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-clearrecurrentcache">clearRecurrentCache</a></strong>()<br>Clear the recurrent tensor cache.</td>
 </tr>
 <tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-hasstaticcacheentry">hasStaticCacheEntry</a></strong>(std::string const &amp; cache_key) const<br>Whether a cached tensor exists for the given key.</td>
-</tr>
-<tr class="even">
-<td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachekeys">staticCacheKeys</a></strong>() const<br>List all keys currently in the static tensor cache.</td>
-</tr>
-<tr class="odd">
-<td>std::vector&lt; int64_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachetensorshape">staticCacheTensorShape</a></strong>(std::string const &amp; cache_key) const<br>Get the dimensions of a cached tensor as a vector of int64_t.</td>
-</tr>
-<tr class="even">
-<td>std::pair&lt; float, float &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-staticcachetensorrange">staticCacheTensorRange</a></strong>(std::string const &amp; cache_key) const<br>Get min/max values of a cached tensor for preview display.</td>
-</tr>
-<tr class="odd">
-<td>std::optional&lt; <a href="../../api_generated/Classes/structModelDisplayInfo.html">ModelDisplayInfo</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentmodeldisplayinfo">currentModelDisplayInfo</a></strong>() const<br>Get display metadata from the currently loaded model instance.</td>
+<td>std::optional&lt; <a href="../../api_generated/Classes/structdl_1_1ModelInfo.html">dl::ModelInfo</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentmodelinfo">currentModelInfo</a></strong>() const<br>Get metadata from the currently loaded model instance.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-configurepostencodermodule">configurePostEncoderModule</a></strong>(std::string const &amp; module_type, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size ={}, std::string const &amp; interpolation =“nearest”)<br>Configure a post-encoder module on the currently loaded model.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-configurepostencodermodule">configurePostEncoderModule</a></strong>(<a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a> const &amp; params, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size ={})<br>Configure the post-encoder pipeline stage for the current model.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-updatespatialpoint">updateSpatialPoint</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; point_key, int frame)<br>Update the spatial-point query for the current frame.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-applymodelconfiguration">applyModelConfiguration</a></strong>(std::string const &amp; configuration_json)<br>Apply persisted model configuration JSON to the current model.</td>
 </tr>
 <tr class="even">
-<td>void</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-configuremodelshape">configureModelShape</a></strong>(int input_height, int input_width, std::vector&lt; int64_t &gt; const &amp; output_shape ={})<br>Reconfigure input resolution and output shape on the current model.</td>
-</tr>
-<tr class="odd">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-iscudaavailable">isCudaAvailable</a></strong>()<br>Whether CUDA is available on this system (compile-time + runtime).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-currentdevicename">currentDeviceName</a></strong>()<br>Human-readable name of the active device (“GPU (CUDA)” or “CPU”).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-setdevicebyname">setDeviceByName</a></strong>(std::string const &amp; name)<br>Set the active device by name: “cuda” or “cpu”.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-initdeviceforcurrentthread">initDeviceForCurrentThread</a></strong>()<br>Initialize the deep-learning device context on the calling thread.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availablemodelids">availableModelIds</a></strong>()<br>List all registered model IDs.</td>
 </tr>
-<tr class="even">
-<td>std::optional&lt; <a href="../../api_generated/Classes/structModelDisplayInfo.html">ModelDisplayInfo</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-getmodeldisplayinfo">getModelDisplayInfo</a></strong>(std::string const &amp; model_id)<br>Get display metadata for a registered model.</td>
-</tr>
 <tr class="odd">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structdl_1_1ModelInfo.html">dl::ModelInfo</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-getmodelinfo">getModelInfo</a></strong>(std::string const &amp; model_id)<br>Get metadata for a registered model.</td>
+</tr>
+<tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availableencoders">availableEncoders</a></strong>()<br>Available encoder names (e.g.&nbsp;“ImageEncoder”, “Point2DEncoder”, …).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::vector&lt; std::string &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-availabledecoders">availableDecoders</a></strong>()<br>Available decoder names (e.g.&nbsp;“TensorToMask2D”, …).</td>
 </tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypeforencoder">dataTypeForEncoder</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-encodervariant">dl::EncoderVariant</a> const &amp; encoder)<br>Map encoder params → <a href="">DataManager</a> data type name for combo filtering.</td>
+</tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypeforencoder">dataTypeForEncoder</a></strong>(std::string const &amp; encoder_id)<br>Map encoder name → <a href="">DataManager</a> data type name for combo filtering.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypeforencoder">dataTypeForEncoder</a></strong>(std::string const &amp; factory_name)<br>Map encoder factory name → <a href="">DataManager</a> data type name.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypefordecoder">dataTypeForDecoder</a></strong>(std::string const &amp; decoder_id)<br>Map decoder name → <a href="">DataManager</a> data type name for combo filtering.</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypefordecoder">dataTypeForDecoder</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-decodervariant">dl::DecoderVariant</a> const &amp; decoder)<br>Map decoder params → <a href="">DataManager</a> data type name for combo filtering.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/classSlotAssembler.html#function-datatypefordecoder">dataTypeForDecoder</a></strong>(std::string const &amp; decoder_factory_name)<br>Map decoder factory name → <a href="">DataManager</a> data type name.</td>
 </tr>
 </tbody>
 </table>
@@ -649,40 +639,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> SlotAssembler<span class="op">::</span>ResultCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>FrameResult<span class="op">&gt;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Callback invoked per-frame with decoded results for progressive delivery. When provided to <a href="">runBatchRangeOffline()</a>, results are pushed via this callback instead of accumulating in <a href="../../api_generated/Classes/structBatchInferenceResult.html#variable-results">BatchInferenceResult::results</a>.</p>
 </section>
-<section id="using-mediaoverrides" class="level3">
-<h3 class="anchored" data-anchor-id="using-mediaoverrides">using MediaOverrides</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> SlotAssembler<span class="op">::</span>MediaOverrides <span class="op">=</span>  <span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MediaData<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Map from <a href="">DataManager</a> data_key to a cloned <a href="">MediaData</a> instance.</p>
-<p>Used by <a href="../../api_generated/Classes/classSlotAssembler.html#function-runbatchrangeoffline">runBatchRangeOffline()</a> so the worker thread has its own independent <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> (e.g.&nbsp;a separate <a href="../../api_generated/Classes/classVideoData.html">VideoData</a> with its own FFmpeg decoder state) while the UI continues using the original.</p>
-</section>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-slotassembler" class="level3">
 <h3 class="anchored" data-anchor-id="function-slotassembler">function SlotAssembler</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-slotassembler-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-slotassembler-1">function ~SlotAssembler</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>SlotAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-slotassembler-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-slotassembler-2">function SlotAssembler</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-operator" class="level3">
 <h3 class="anchored" data-anchor-id="function-operator">function operator=</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>SlotAssembler <span class="op">&amp;</span> <span class="kw">operator</span><span class="op">=(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    SlotAssembler <span class="op">&amp;&amp;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-loadmodel" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadmodel">function loadModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadModel<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadModel<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load a model by ID from the registry. Resets previous weights.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -692,9 +676,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-loadweights" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadweights">function loadWeights</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadWeights<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> weights_path</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadWeights<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> weights_path</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load weights from a file path into the current model.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -704,7 +688,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-validateweights" class="level3">
 <h3 class="anchored" data-anchor-id="function-validateweights">function validateWeights</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string validateWeights<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string validateWeights<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run a dummy forward pass to validate weight compatibility.</p>
 <p><strong>Return</strong>: Empty string on success, or a diagnostic message on mismatch.</p>
 <p><strong>Precondition</strong>: <a href="../../api_generated/Classes/classSlotAssembler.html#function-ismodelready">isModelReady()</a> must be true.</p>
@@ -712,35 +696,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-ismodelready" class="level3">
 <h3 class="anchored" data-anchor-id="function-ismodelready">function isModelReady</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isModelReady<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isModelReady<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether a model is loaded AND its weights are active.</p>
 </section>
 <section id="function-currentmodelid" class="level3">
 <h3 class="anchored" data-anchor-id="function-currentmodelid">function currentModelId</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> currentModelId<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> currentModelId<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Currently loaded model ID, or empty.</p>
 </section>
 <section id="function-resetmodel" class="level3">
 <h3 class="anchored" data-anchor-id="function-resetmodel">function resetModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> resetModel<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> resetModel<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear the current model and free resources.</p>
 </section>
 <section id="function-runsingleframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-runsingleframe">function runSingleFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runSingleFrame<span class="op">(</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> current_frame<span class="op">,</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runSingleFrame<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> dl<span class="op">::</span>MemoryFrameBinding <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> memory_frames<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> current_frame<span class="op">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run a single-frame inference pipeline: assemble inputs → forward → decode outputs.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
 <li><strong>input_bindings</strong> Dynamic input slot bindings</li>
-<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>memory_frames</strong> Memory frame bindings</li>
 <li><strong>output_bindings</strong> Output slot bindings</li>
 <li><strong>current_frame</strong> Current frame index</li>
 <li><strong>source_image_size</strong> Original image dimensions</li>
@@ -752,23 +736,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runbatchrange" class="level3">
 <h3 class="anchored" data-anchor-id="function-runbatchrange">function runBatchRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runBatchRange<span class="op">(</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runBatchRange<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> dl<span class="op">::</span>MemoryFrameBinding <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> memory_frames<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run independent (non-recurrent) inference over a range of frames.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
 <li><strong>input_bindings</strong> Dynamic input slot bindings</li>
-<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>memory_frames</strong> Memory frame bindings</li>
 <li><strong>output_bindings</strong> Output slot bindings</li>
 <li><strong>start_frame</strong> First frame to process (inclusive)</li>
 <li><strong>end_frame</strong> Last frame to process (inclusive)</li>
@@ -783,27 +767,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runbatchrangeoffline" class="level3">
 <h3 class="anchored" data-anchor-id="function-runbatchrangeoffline">function runBatchRangeOffline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>BatchInferenceResult runBatchRangeOffline<span class="op">(</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    MediaOverrides <span class="at">const</span> <span class="op">&amp;</span> media_overrides<span class="op">,</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>atomic<span class="op">&lt;</span> <span class="dt">bool</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> cancel_requested<span class="op">,</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    ResultCallback <span class="at">const</span> <span class="op">&amp;</span> result_callback <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>BatchInferenceResult runBatchRangeOffline<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    MediaOverrides <span class="at">const</span> <span class="op">&amp;</span> media_overrides<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> dl<span class="op">::</span>MemoryFrameBinding <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> memory_frames<span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_frame<span class="op">,</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>atomic<span class="op">&lt;</span> <span class="dt">bool</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> cancel_requested<span class="op">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> batch_size <span class="op">=</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    ResultCallback <span class="at">const</span> <span class="op">&amp;</span> result_callback <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run independent inference over a frame range without writing to <a href="">DataManager</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for non-media input encoding (masks, points, lines)</li>
 <li><strong>media_overrides</strong> Cloned <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> instances keyed by data_key</li>
 <li><strong>input_bindings</strong> Dynamic input slot bindings</li>
-<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>memory_frames</strong> Memory frame bindings</li>
 <li><strong>output_bindings</strong> Output slot bindings</li>
 <li><strong>start_frame</strong> First frame to process (inclusive)</li>
 <li><strong>end_frame</strong> Last frame to process (inclusive)</li>
@@ -823,25 +807,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runrecurrentsequence" class="level3">
 <h3 class="anchored" data-anchor-id="function-runrecurrentsequence">function runRecurrentSequence</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runRecurrentSequence<span class="op">(</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> static_inputs<span class="op">,</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> RecurrentBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> recurrent_bindings<span class="op">,</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_count<span class="op">,</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> runRecurrentSequence<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> SlotBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_bindings<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> dl<span class="op">::</span>MemoryFrameBinding <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> memory_frames<span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_bindings<span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> start_frame<span class="op">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_count<span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    ProgressCallback <span class="at">const</span> <span class="op">&amp;</span> progress <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run sequential recurrent inference over a range of frames.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for encoding inputs / writing outputs</li>
 <li><strong>input_bindings</strong> Dynamic input slot bindings</li>
-<li><strong>static_inputs</strong> Static (memory) input entries</li>
+<li><strong>memory_frames</strong> Memory frame bindings</li>
 <li><strong>output_bindings</strong> Output slot bindings</li>
-<li><strong>recurrent_bindings</strong> Recurrent feedback bindings</li>
 <li><strong>start_frame</strong> First frame to process</li>
 <li><strong>frame_count</strong> Number of frames to process</li>
 <li><strong>source_image_size</strong> Original image dimensions</li>
@@ -861,182 +843,162 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>Batch size is forced to 1 during recurrent inference.</p>
 </section>
+<section id="function-databank" class="level3">
+<h3 class="anchored" data-anchor-id="function-databank">function dataBank</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>DataBank <span class="op">&amp;</span> dataBank<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Named store of geometry sources and channel-encoded tensors.</p>
+<p>Session-scoped: survives model switches via <a href="../../api_generated/Classes/classSlotAssembler.html#function-resetmodel">resetModel()</a>.</p>
+</section>
+<section id="function-databank-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-databank-1">function dataBank</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>DataBank <span class="at">const</span> <span class="op">&amp;</span> dataBank<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-cleardatabank" class="level3">
+<h3 class="anchored" data-anchor-id="function-cleardatabank">function clearDataBank</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearDataBank<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Remove all entries from the DataBank.</p>
+</section>
+<section id="function-capturetobank" class="level3">
+<h3 class="anchored" data-anchor-id="function-capturetobank">function captureToBank</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> captureToBank<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> bank_entry_id<span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> entry<span class="op">,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">,</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Capture a static input into a named DataBank entry.</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>bank_entry_id must pass <a href="../../api_generated/Namespaces/namespacedl.html#function-validateentryid">dl::validateEntryId()</a></li>
+<li>entry.data_key must be non-empty</li>
+</ul>
+<p>Fetches geometry/image data from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, stores the source in the DataBank, and channel-encodes it for the static slot.</p>
+</section>
 <section id="function-capturestaticinput" class="level3">
 <h3 class="anchored" data-anchor-id="function-capturestaticinput">function captureStaticInput</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> captureStaticInput<span class="op">(</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    StaticInputData <span class="at">const</span> <span class="op">&amp;</span> entry<span class="op">,</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">,</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Capture a static input at a specific frame and store in the cache.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>dm</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to fetch data from</li>
-<li><strong>entry</strong> Static input entry describing what to capture</li>
-<li><strong>frame</strong> The frame number to encode and cache</li>
-<li><strong>source_image_size</strong> Original image dimensions for coordinate scaling</li>
-</ul>
-<p><strong>Return</strong>: true if the tensor was successfully captured and cached</p>
-<p>Encodes the data from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at the given frame using the model’s recommended encoder for the slot, then stores the resulting tensor. The cached tensor is reused during inference for Absolute-mode entries.</p>
-</section>
-<section id="function-clearstaticcacheentry" class="level3">
-<h3 class="anchored" data-anchor-id="function-clearstaticcacheentry">function clearStaticCacheEntry</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearStaticCacheEntry<span class="op">(</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Clear a single entry from the static tensor cache.</p>
-</section>
-<section id="function-clearstaticcache" class="level3">
-<h3 class="anchored" data-anchor-id="function-clearstaticcache">function clearStaticCache</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearStaticCache<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Clear the entire static tensor cache.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> captureStaticInput<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> entry<span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Capture a static input at a specific frame into the DataBank.</p>
+<p><strong>Precondition</strong>: entry.resolvedBankEntryId() must be non-empty</p>
+<p>Uses <code>entry.resolvedBankEntryId()</code> as the bank key. Encodes data from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at the given frame using the model’s recommended encoder.</p>
 </section>
 <section id="function-clearrecurrentcache" class="level3">
 <h3 class="anchored" data-anchor-id="function-clearrecurrentcache">function clearRecurrentCache</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearRecurrentCache<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearRecurrentCache<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear the recurrent tensor cache.</p>
 <p>Call when changing models, starting a new sequence, or clearing state.</p>
 </section>
-<section id="function-hasstaticcacheentry" class="level3">
-<h3 class="anchored" data-anchor-id="function-hasstaticcacheentry">function hasStaticCacheEntry</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasStaticCacheEntry<span class="op">(</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Whether a cached tensor exists for the given key.</p>
-</section>
-<section id="function-staticcachekeys" class="level3">
-<h3 class="anchored" data-anchor-id="function-staticcachekeys">function staticCacheKeys</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> staticCacheKeys<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>List all keys currently in the static tensor cache.</p>
-</section>
-<section id="function-staticcachetensorshape" class="level3">
-<h3 class="anchored" data-anchor-id="function-staticcachetensorshape">function staticCacheTensorShape</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> staticCacheTensorShape<span class="op">(</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get the dimensions of a cached tensor as a vector of int64_t.</p>
-<p><strong>Return</strong>: The dimensions of the cached tensor as a vector of int64_t. Returns empty vector if the key is not in the cache.</p>
-</section>
-<section id="function-staticcachetensorrange" class="level3">
-<h3 class="anchored" data-anchor-id="function-staticcachetensorrange">function staticCacheTensorRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> <span class="dt">float</span> <span class="op">&gt;</span> staticCacheTensorRange<span class="op">(</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> cache_key</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get min/max values of a cached tensor for preview display.</p>
-<p><strong>Return</strong>: The min and max values of the cached tensor as a pair of float. Returns {0.0f, 0.0f} if the key is not in the cache.</p>
-</section>
-<section id="function-currentmodeldisplayinfo" class="level3">
-<h3 class="anchored" data-anchor-id="function-currentmodeldisplayinfo">function currentModelDisplayInfo</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> ModelDisplayInfo <span class="op">&gt;</span> currentModelDisplayInfo<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get display metadata from the currently loaded model instance.</p>
-<p>Unlike the static <code>[getModelDisplayInfo()](/api_generated/Classes/classSlotAssembler.md#function-getmodeldisplayinfo)</code>, this reflects any runtime reconfiguration (e.g.&nbsp;changed input resolution or output shape).</p>
+<section id="function-currentmodelinfo" class="level3">
+<h3 class="anchored" data-anchor-id="function-currentmodelinfo">function currentModelInfo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> dl<span class="op">::</span>ModelInfo <span class="op">&gt;</span> currentModelInfo<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get metadata from the currently loaded model instance.</p>
+<p>Unlike the static <code>[getModelInfo()](/api_generated/Classes/classSlotAssembler.md#function-getmodelinfo)</code>, this reflects any runtime reconfiguration (e.g.&nbsp;changed input resolution or output shape).</p>
 </section>
 <section id="function-configurepostencodermodule" class="level3">
 <h3 class="anchored" data-anchor-id="function-configurepostencodermodule">function configurePostEncoderModule</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configurePostEncoderModule<span class="op">(</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">module_type</span><span class="op">,</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size <span class="op">={},</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> interpolation <span class="op">=</span><span class="st">"nearest"</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Configure a post-encoder module on the currently loaded model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configurePostEncoderModule<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>PostEncoderStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size <span class="op">={}</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Configure the post-encoder pipeline stage for the current model.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>module_type</strong> Module key: “” / “none”, “global_avg_pool”, or “spatial_point”.</li>
-<li><strong>source_image_size</strong> Source image size used for “spatial_point” coordinate scaling.</li>
-<li><strong>interpolation</strong> “nearest” or “bilinear” (spatial_point only).</li>
+<li><strong>params</strong> Registry-driven module key and JSON parameters.</li>
+<li><strong>source_image_size</strong> Source image size used for spatial_point coordinate scaling.</li>
 </ul>
-<p>Only applies when the current model is a <code>GeneralEncoderModel</code>. Calling this when the model changes will reset the configuration.</p>
+<p>Applies to the first model output slot between <code>forward()</code> and decoding. Cleared when the model is loaded or reset.</p>
 </section>
-<section id="function-updatespatialpoint" class="level3">
-<h3 class="anchored" data-anchor-id="function-updatespatialpoint">function updateSpatialPoint</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateSpatialPoint<span class="op">(</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key<span class="op">,</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Update the spatial-point query for the current frame.</p>
-<p>For the “spatial_point” post-encoder, reads the point at <code>frame</code> from <code>point_key</code> in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and forwards it to the module.</p>
-<p>No-op if the current module is not “spatial_point” or if <code>point_key</code> is empty.</p>
-</section>
-<section id="function-configuremodelshape" class="level3">
-<h3 class="anchored" data-anchor-id="function-configuremodelshape">function configureModelShape</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configureModelShape<span class="op">(</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> input_height<span class="op">,</span></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> input_width<span class="op">,</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> output_shape <span class="op">={}</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Reconfigure input resolution and output shape on the current model.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>input_height</strong> Input image height in pixels (&gt; 0).</li>
-<li><strong>input_width</strong> Input image width in pixels (&gt; 0).</li>
-<li><strong>output_shape</strong> Raw encoder output shape (excluding batch dim). If empty, only input resolution is changed.</li>
-</ul>
-<p>Only applies when the current model is a <code>GeneralEncoderModel</code>. Must be called before <code>[loadWeights()](/api_generated/Classes/classSlotAssembler.md#function-loadweights)</code> or inference.</p>
+<section id="function-applymodelconfiguration" class="level3">
+<h3 class="anchored" data-anchor-id="function-applymodelconfiguration">function applyModelConfiguration</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applyModelConfiguration<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> configuration_json</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Apply persisted model configuration JSON to the current model.</p>
+<p><strong>Precondition</strong>: A model must be loaded.</p>
 </section>
 <section id="function-iscudaavailable" class="level3">
 <h3 class="anchored" data-anchor-id="function-iscudaavailable">function isCudaAvailable</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">bool</span> isCudaAvailable<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">bool</span> isCudaAvailable<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether CUDA is available on this system (compile-time + runtime).</p>
 </section>
 <section id="function-currentdevicename" class="level3">
 <h3 class="anchored" data-anchor-id="function-currentdevicename">function currentDeviceName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string currentDeviceName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string currentDeviceName<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Human-readable name of the active device (“GPU (CUDA)” or “CPU”).</p>
 </section>
 <section id="function-setdevicebyname" class="level3">
 <h3 class="anchored" data-anchor-id="function-setdevicebyname">function setDeviceByName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> setDeviceByName<span class="op">(</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> setDeviceByName<span class="op">(</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the active device by name: “cuda” or “cpu”.</p>
 </section>
 <section id="function-initdeviceforcurrentthread" class="level3">
 <h3 class="anchored" data-anchor-id="function-initdeviceforcurrentthread">function initDeviceForCurrentThread</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> initDeviceForCurrentThread<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> initDeviceForCurrentThread<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Initialize the deep-learning device context on the calling thread.</p>
 <p>On CUDA builds this ensures the CUDA runtime context is set for the current thread — required on Windows where CUDA per-thread state is not inherited from the main thread. Safe to call from any thread; no-op when the active device is CPU.</p>
 <p>Call at the start of worker thread <code>run()</code> methods before any libtorch operations.</p>
 </section>
 <section id="function-availablemodelids" class="level3">
 <h3 class="anchored" data-anchor-id="function-availablemodelids">function availableModelIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableModelIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableModelIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>List all registered model IDs.</p>
 </section>
-<section id="function-getmodeldisplayinfo" class="level3">
-<h3 class="anchored" data-anchor-id="function-getmodeldisplayinfo">function getModelDisplayInfo</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> ModelDisplayInfo <span class="op">&gt;</span> getModelDisplayInfo<span class="op">(</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get display metadata for a registered model.</p>
+<section id="function-getmodelinfo" class="level3">
+<h3 class="anchored" data-anchor-id="function-getmodelinfo">function getModelInfo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>optional<span class="op">&lt;</span> dl<span class="op">::</span>ModelInfo <span class="op">&gt;</span> getModelInfo<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> model_id</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get metadata for a registered model.</p>
 </section>
 <section id="function-availableencoders" class="level3">
 <h3 class="anchored" data-anchor-id="function-availableencoders">function availableEncoders</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableEncoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableEncoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Available encoder names (e.g.&nbsp;“ImageEncoder”, “Point2DEncoder”, …).</p>
 </section>
 <section id="function-availabledecoders" class="level3">
 <h3 class="anchored" data-anchor-id="function-availabledecoders">function availableDecoders</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableDecoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableDecoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Available decoder names (e.g.&nbsp;“TensorToMask2D”, …).</p>
 </section>
 <section id="function-datatypeforencoder" class="level3">
 <h3 class="anchored" data-anchor-id="function-datatypeforencoder">function dataTypeForEncoder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForEncoder<span class="op">(</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> encoder_id</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Map encoder name → <a href="">DataManager</a> data type name for combo filtering.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForEncoder<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>EncoderVariant <span class="at">const</span> <span class="op">&amp;</span> encoder</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map encoder params → <a href="">DataManager</a> data type name for combo filtering.</p>
 <p><strong>Return</strong>: “MediaData”, “PointData”, “MaskData”, “LineData”, or ““.</p>
+</section>
+<section id="function-datatypeforencoder-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-datatypeforencoder-1">function dataTypeForEncoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForEncoder<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> factory_name</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map encoder factory name → <a href="">DataManager</a> data type name.</p>
+<p>Used for model metadata <code>recommended_encoder</code> hints.</p>
 </section>
 <section id="function-datatypefordecoder" class="level3">
 <h3 class="anchored" data-anchor-id="function-datatypefordecoder">function dataTypeForDecoder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForDecoder<span class="op">(</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> decoder_id</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Map decoder name → <a href="">DataManager</a> data type name for combo filtering.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForDecoder<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>DecoderVariant <span class="at">const</span> <span class="op">&amp;</span> decoder</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map decoder params → <a href="">DataManager</a> data type name for combo filtering.</p>
+</section>
+<section id="function-datatypefordecoder-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-datatypefordecoder-1">function dataTypeForDecoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>string dataTypeForDecoder<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> decoder_factory_name</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map decoder factory name → <a href="">DataManager</a> data type name.</p>
+<p>Used for model metadata <code>recommended_decoder</code> hints.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:51 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:21 +0000</p>
 
 
 </section>

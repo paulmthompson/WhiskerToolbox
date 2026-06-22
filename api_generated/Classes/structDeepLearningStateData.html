@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -356,15 +356,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-current_frame" id="toc-variable-current_frame" class="nav-link" data-scroll-target="#variable-current_frame">variable current_frame</a></li>
   <li><a href="#variable-input_bindings" id="toc-variable-input_bindings" class="nav-link" data-scroll-target="#variable-input_bindings">variable input_bindings</a></li>
   <li><a href="#variable-output_bindings" id="toc-variable-output_bindings" class="nav-link" data-scroll-target="#variable-output_bindings">variable output_bindings</a></li>
-  <li><a href="#variable-static_inputs" id="toc-variable-static_inputs" class="nav-link" data-scroll-target="#variable-static_inputs">variable static_inputs</a></li>
-  <li><a href="#variable-recurrent_bindings" id="toc-variable-recurrent_bindings" class="nav-link" data-scroll-target="#variable-recurrent_bindings">variable recurrent_bindings</a></li>
+  <li><a href="#variable-memory_frames" id="toc-variable-memory_frames" class="nav-link" data-scroll-target="#variable-memory_frames">variable memory_frames</a></li>
   <li><a href="#variable-instance_id" id="toc-variable-instance_id" class="nav-link" data-scroll-target="#variable-instance_id">variable instance_id</a></li>
   <li><a href="#variable-display_name" id="toc-variable-display_name" class="nav-link" data-scroll-target="#variable-display_name">variable display_name</a></li>
-  <li><a href="#variable-post_encoder_module_type" id="toc-variable-post_encoder_module_type" class="nav-link" data-scroll-target="#variable-post_encoder_module_type">variable post_encoder_module_type</a></li>
-  <li><a href="#variable-post_encoder_point_key" id="toc-variable-post_encoder_point_key" class="nav-link" data-scroll-target="#variable-post_encoder_point_key">variable post_encoder_point_key</a></li>
-  <li><a href="#variable-encoder_input_height" id="toc-variable-encoder_input_height" class="nav-link" data-scroll-target="#variable-encoder_input_height">variable encoder_input_height</a></li>
-  <li><a href="#variable-encoder_input_width" id="toc-variable-encoder_input_width" class="nav-link" data-scroll-target="#variable-encoder_input_width">variable encoder_input_width</a></li>
-  <li><a href="#variable-encoder_output_shape" id="toc-variable-encoder_output_shape" class="nav-link" data-scroll-target="#variable-encoder_output_shape">variable encoder_output_shape</a></li>
+  <li><a href="#variable-post_encoder_params" id="toc-variable-post_encoder_params" class="nav-link" data-scroll-target="#variable-post_encoder_params">variable post_encoder_params</a></li>
+  <li><a href="#variable-model_configurations" id="toc-variable-model_configurations" class="nav-link" data-scroll-target="#variable-model_configurations">variable model_configurations</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -432,40 +428,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-output-bindings">output_bindings</a></strong></td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-static-inputs">static_inputs</a></strong></td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-memory-frames">memory_frames</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structRecurrentBindingData.html">RecurrentBindingData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-recurrent-bindings">recurrent_bindings</a></strong></td>
-</tr>
-<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-instance-id">instance_id</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-display-name">display_name</a></strong></td>
 </tr>
-<tr class="odd">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-post-encoder-module-type">post_encoder_module_type</a></strong></td>
-</tr>
 <tr class="even">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-post-encoder-point-key">post_encoder_point_key</a></strong></td>
+<td><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a></td>
+<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-post-encoder-params">post_encoder_params</a></strong> <br>Post-encoder module configuration.</td>
 </tr>
 <tr class="odd">
-<td>int</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-encoder-input-height">encoder_input_height</a></strong> <br>Custom input height for GeneralEncoderModel (0 = use default 224).</td>
-</tr>
-<tr class="even">
-<td>int</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-encoder-input-width">encoder_input_width</a></strong> <br>Custom input width for GeneralEncoderModel (0 = use default 224).</td>
-</tr>
-<tr class="odd">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-encoder-output-shape">encoder_output_shape</a></strong></td>
+<td>std::map&lt; std::string, std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structDeepLearningStateData.html#variable-model-configurations">model_configurations</a></strong> <br>Per-model configuration JSON blobs keyed by model_id.</td>
 </tr>
 </tbody>
 </table>
@@ -496,48 +476,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-output_bindings">variable output_bindings</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> OutputBindingData <span class="op">&gt;</span> output_bindings<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-static_inputs" class="level3">
-<h3 class="anchored" data-anchor-id="variable-static_inputs">variable static_inputs</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> StaticInputData <span class="op">&gt;</span> static_inputs<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="variable-recurrent_bindings" class="level3">
-<h3 class="anchored" data-anchor-id="variable-recurrent_bindings">variable recurrent_bindings</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> RecurrentBindingData <span class="op">&gt;</span> recurrent_bindings<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-memory_frames" class="level3">
+<h3 class="anchored" data-anchor-id="variable-memory_frames">variable memory_frames</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> dl<span class="op">::</span>MemoryFrameBinding <span class="op">&gt;</span> memory_frames<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-instance_id" class="level3">
 <h3 class="anchored" data-anchor-id="variable-instance_id">variable instance_id</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string instance_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string instance_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-display_name" class="level3">
 <h3 class="anchored" data-anchor-id="variable-display_name">variable display_name</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Deep Learning"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Deep Learning"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-post_encoder_module_type" class="level3">
-<h3 class="anchored" data-anchor-id="variable-post_encoder_module_type">variable post_encoder_module_type</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">post_encoder_module_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Post-encoder module type for GeneralEncoderModel. Accepted values: “” / “none” (pass-through), “global_avg_pool”, “spatial_point”.</p>
+<section id="variable-post_encoder_params" class="level3">
+<h3 class="anchored" data-anchor-id="variable-post_encoder_params">variable post_encoder_params</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>PostEncoderStepDescriptor post_encoder_params<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Post-encoder module configuration.</p>
 </section>
-<section id="variable-post_encoder_point_key" class="level3">
-<h3 class="anchored" data-anchor-id="variable-post_encoder_point_key">variable post_encoder_point_key</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string post_encoder_point_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key of the <a href="../../api_generated/Classes/classPointData.html">PointData</a> object supplying the per-frame query point for the “spatial_point” post-encoder module.</p>
-</section>
-<section id="variable-encoder_input_height" class="level3">
-<h3 class="anchored" data-anchor-id="variable-encoder_input_height">variable encoder_input_height</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> encoder_input_height <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Custom input height for GeneralEncoderModel (0 = use default 224).</p>
-</section>
-<section id="variable-encoder_input_width" class="level3">
-<h3 class="anchored" data-anchor-id="variable-encoder_input_width">variable encoder_input_width</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> encoder_input_width <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Custom input width for GeneralEncoderModel (0 = use default 224).</p>
-</section>
-<section id="variable-encoder_output_shape" class="level3">
-<h3 class="anchored" data-anchor-id="variable-encoder_output_shape">variable encoder_output_shape</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string encoder_output_shape<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Custom raw output shape string for GeneralEncoderModel. Comma-separated dimensions, e.g.&nbsp;“768,16,16” (empty = use default).</p>
+<section id="variable-model_configurations" class="level3">
+<h3 class="anchored" data-anchor-id="variable-model_configurations">variable model_configurations</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> model_configurations<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Per-model configuration JSON blobs keyed by model_id.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:50 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:20 +0000</p>
 
 
 </section>

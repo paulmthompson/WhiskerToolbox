@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -347,11 +347,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#srccoregeometryincludecoregeometryangle.hpp" id="toc-srccoregeometryincludecoregeometryangle.hpp" class="nav-link active" data-scroll-target="#srccoregeometryincludecoregeometryangle.hpp">src/CoreGeometry/include/CoreGeometry/angle.hpp</a>
   <ul class="collapse">
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-normalize_angle" id="toc-function-normalize_angle" class="nav-link" data-scroll-target="#function-normalize_angle">function normalize_angle</a></li>
-  <li><a href="#function-calculate_direct_angle" id="toc-function-calculate_direct_angle" class="nav-link" data-scroll-target="#function-calculate_direct_angle">function calculate_direct_angle</a></li>
+  <li><a href="#function-compute_sliding_secant_span" id="toc-function-compute_sliding_secant_span" class="nav-link" data-scroll-target="#function-compute_sliding_secant_span">function compute_sliding_secant_span</a></li>
+  <li><a href="#function-make_planar_orthonormal_basis" id="toc-function-make_planar_orthonormal_basis" class="nav-link" data-scroll-target="#function-make_planar_orthonormal_basis">function make_planar_orthonormal_basis</a></li>
+  <li><a href="#function-angle_degrees_vector_in_basis" id="toc-function-angle_degrees_vector_in_basis" class="nav-link" data-scroll-target="#function-angle_degrees_vector_in_basis">function angle_degrees_vector_in_basis</a></li>
+  <li><a href="#function-calculate_direct_angle_secant" id="toc-function-calculate_direct_angle_secant" class="nav-link" data-scroll-target="#function-calculate_direct_angle_secant">function calculate_direct_angle_secant</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
@@ -383,6 +387,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="srccoregeometryincludecoregeometryangle.hpp" class="level1">
 <h1>src/CoreGeometry/include/CoreGeometry/angle.hpp</h1>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structArcLengthFractionSpan.html">ArcLengthFractionSpan</a></strong> <br>Fractional arc-length span along a polyline (0 = start, 1 = end of total length).</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structPlanarOrthonormalBasis2D.html">PlanarOrthonormalBasis2D</a></strong> <br>Orthonormal right-handed basis in the plane ex, ey (column vectors as components).</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
 <table class="caption-top table">
@@ -398,8 +423,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-normalize-angle">normalize_angle</a></strong>(float raw_angle, float reference_x, float reference_y)<br>Normalize an angle relative to a reference vector direction.</td>
 </tr>
 <tr class="even">
+<td><a href="../../api_generated/Classes/structArcLengthFractionSpan.html">ArcLengthFractionSpan</a></td>
+<td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-compute-sliding-secant-span">compute_sliding_secant_span</a></strong>(float position, float window)<br>Symmetric window around midpoint, slid so it lies in [0, 1] (fractional arc length).</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structPlanarOrthonormalBasis2D.html">PlanarOrthonormalBasis2D</a></td>
+<td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-make-planar-orthonormal-basis">make_planar_orthonormal_basis</a></strong>(float axis_positive_x_x, float axis_positive_x_y, float axis_positive_y_x, float axis_positive_y_y)<br>Build an orthonormal right-handed (ê_x, ê_y) from user positive X and positive Y directions.</td>
+</tr>
+<tr class="even">
 <td>float</td>
-<td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-calculate-direct-angle">calculate_direct_angle</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, float position, float reference_x, float reference_y)<br>Calculate the angle from the base (first point) to an interpolated position along a line.</td>
+<td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-angle-degrees-vector-in-basis">angle_degrees_vector_in_basis</a></strong>(float vx, float vy, <a href="../../api_generated/Classes/structPlanarOrthonormalBasis2D.html">PlanarOrthonormalBasis2D</a> const &amp; basis)<br>Angle in degrees of world vector (vx, vy) expressed in basis (atan2 in ê_x, ê_y frame).</td>
+</tr>
+<tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Files/angle_8hpp.html#function-calculate-direct-angle-secant">calculate_direct_angle_secant</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, float t_low, float t_high, <a href="../../api_generated/Classes/structPlanarOrthonormalBasis2D.html">PlanarOrthonormalBasis2D</a> const &amp; basis)<br>Secant angle between interpolated points at t_low and t_high, in the given basis.</td>
 </tr>
 </tbody>
 </table>
@@ -428,47 +465,93 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Subtracts the reference vector’s angle from raw_angle and wraps the result into the range (-180, 180].</p>
 </section>
-<section id="function-calculate_direct_angle" class="level3">
-<h3 class="anchored" data-anchor-id="function-calculate_direct_angle">function calculate_direct_angle</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_direct_angle<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> position<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> reference_x<span class="op">,</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> reference_y</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Calculate the angle from the base (first point) to an interpolated position along a line.</p>
+<section id="function-compute_sliding_secant_span" class="level3">
+<h3 class="anchored" data-anchor-id="function-compute_sliding_secant_span">function compute_sliding_secant_span</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ArcLengthFractionSpan compute_sliding_secant_span<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> position<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> window</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Symmetric window around midpoint, slid so it lies in [0, 1] (fractional arc length).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>line</strong> The line to calculate the angle on</li>
-<li><strong>position</strong> Fractional position along the line (0.0 to 1.0)</li>
-<li><strong>reference_x</strong> X component of the reference direction vector</li>
-<li><strong>reference_y</strong> Y component of the reference direction vector</li>
+<li><strong>position</strong> Midpoint fraction in [0, 1] (clamped)</li>
+<li><strong>window</strong> Full width of the window in [0, 1] (clamped)</li>
 </ul>
-<p><strong>Return</strong>: Angle in degrees in (-180, 180], or 0.0f if line has fewer than 2 points</p>
-<p><strong>Precondition</strong>:</p>
-<ul>
-<li>line must have at least 2 points for a meaningful result; returns 0.0f otherwise (enforcement: runtime_check)</li>
-<li>position should be in [0.0, 1.0]; values outside are clamped (enforcement: runtime_check)</li>
-<li>reference_x and reference_y should not both be zero (enforcement: none) [LOW]</li>
-</ul>
-<p>The position is specified as a fractional distance along the line’s cumulative arc length (0.0 = start, 1.0 = end). The point at that position is obtained by linear interpolation along the line segments, so that the result varies smoothly with the position parameter.</p>
+<p>Nominal interval is [position - window/2, position + window/2], then shifted into [0, 1]. If window &gt;= 1, returns [0, 1]. If the span collapses, expands a small neighborhood around position so t_low &lt; t_high.</p>
+</section>
+<section id="function-make_planar_orthonormal_basis" class="level3">
+<h3 class="anchored" data-anchor-id="function-make_planar_orthonormal_basis">function make_planar_orthonormal_basis</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>PlanarOrthonormalBasis2D make_planar_orthonormal_basis<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> axis_positive_x_x<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> axis_positive_x_y<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> axis_positive_y_x<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> axis_positive_y_y</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build an orthonormal right-handed (ê_x, ê_y) from user positive X and positive Y directions.</p>
+<p>Normalizes the X direction, Gram–Schmidt orthogonalizes Y onto X, then normalizes Y. If X is degenerate, uses (1, 0). If Y is parallel to X after projection, uses (-ê_x_y, ê_x_x). If the resulting pair is left-handed, flips ê_y so cross(ê_x, ê_y) &gt; 0.</p>
+</section>
+<section id="function-angle_degrees_vector_in_basis" class="level3">
+<h3 class="anchored" data-anchor-id="function-angle_degrees_vector_in_basis">function angle_degrees_vector_in_basis</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> angle_degrees_vector_in_basis<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> vx<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> vy<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Angle in degrees of world vector (vx, vy) expressed in basis (atan2 in ê_x, ê_y frame).</p>
+<p><strong>Postcondition</strong>: Result wrapped to (-180, 180]</p>
+</section>
+<section id="function-calculate_direct_angle_secant" class="level3">
+<h3 class="anchored" data-anchor-id="function-calculate_direct_angle_secant">function calculate_direct_angle_secant</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_direct_angle_secant<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> t_low<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> t_high<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Secant angle between interpolated points at t_low and t_high, in the given basis.</p>
+<p><strong>Precondition</strong>: line must have at least 2 points (enforcement: returns 0.0f otherwise)</p>
+<p>Uses cumulative arc-length fractions and linear interpolation along polyline segments (see point_at_fractional_position with interpolation enabled).</p>
 </section>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef COREGEOMETRY_ANGLE_HPP</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COREGEOMETRY_ANGLE_HPP</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Line2D<span class="op">;</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> normalize_angle<span class="op">(</span><span class="dt">float</span> raw_angle<span class="op">,</span> <span class="dt">float</span> reference_x<span class="op">,</span> <span class="dt">float</span> reference_y<span class="op">);</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_direct_angle<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span> <span class="dt">float</span> position<span class="op">,</span> <span class="dt">float</span> reference_x<span class="op">,</span> <span class="dt">float</span> reference_y<span class="op">);</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// COREGEOMETRY_ANGLE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef COREGEOMETRY_ANGLE_HPP</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COREGEOMETRY_ANGLE_HPP</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Line2D<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ArcLengthFractionSpan <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> t_low <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> t_high <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PlanarOrthonormalBasis2D <span class="op">{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> ex_x <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> ex_y <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> ey_x <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> ey_y <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> normalize_angle<span class="op">(</span><span class="dt">float</span> raw_angle<span class="op">,</span> <span class="dt">float</span> reference_x<span class="op">,</span> <span class="dt">float</span> reference_y<span class="op">);</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> ArcLengthFractionSpan compute_sliding_secant_span<span class="op">(</span><span class="dt">float</span> position<span class="op">,</span> <span class="dt">float</span> window<span class="op">);</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> PlanarOrthonormalBasis2D make_planar_orthonormal_basis<span class="op">(</span><span class="dt">float</span> axis_positive_x_x<span class="op">,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                                                                    <span class="dt">float</span> axis_positive_x_y<span class="op">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                                                                    <span class="dt">float</span> axis_positive_y_x<span class="op">,</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>                                                                    <span class="dt">float</span> axis_positive_y_y<span class="op">);</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> angle_degrees_vector_in_basis<span class="op">(</span><span class="dt">float</span> vx<span class="op">,</span> <span class="dt">float</span> vy<span class="op">,</span> PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis<span class="op">);</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> calculate_direct_angle_secant<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                                                  <span class="dt">float</span> t_low<span class="op">,</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>                                                  <span class="dt">float</span> t_high<span class="op">,</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>                                                  PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis<span class="op">);</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// COREGEOMETRY_ANGLE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

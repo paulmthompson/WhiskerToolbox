@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -352,10 +352,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
+  <li><a href="#enum-alignmentpoint" id="toc-enum-alignmentpoint" class="nav-link" data-scroll-target="#enum-alignmentpoint">enum AlignmentPoint</a></li>
   <li><a href="#using-element_type_of_t" id="toc-using-element_type_of_t" class="nav-link" data-scroll-target="#using-element_type_of_t">using element_type_of_t</a></li>
+  <li><a href="#using-viewadaptorfn" id="toc-using-viewadaptorfn" class="nav-link" data-scroll-target="#using-viewadaptorfn">using ViewAdaptorFn</a></li>
+  <li><a href="#using-erasedviewadaptorfn" id="toc-using-erasedviewadaptorfn" class="nav-link" data-scroll-target="#using-erasedviewadaptorfn">using ErasedViewAdaptorFn</a></li>
+  <li><a href="#using-reducerfn" id="toc-using-reducerfn" class="nav-link" data-scroll-target="#using-reducerfn">using ReducerFn</a></li>
+  <li><a href="#using-erasedreducerfn" id="toc-using-erasedreducerfn" class="nav-link" data-scroll-target="#using-erasedreducerfn">using ErasedReducerFn</a></li>
+  <li><a href="#using-reducerfactoryv2" id="toc-using-reducerfactoryv2" class="nav-link" data-scroll-target="#using-reducerfactoryv2">using ReducerFactoryV2</a></li>
+  <li><a href="#using-erasedreducerfactoryv2" id="toc-using-erasedreducerfactoryv2" class="nav-link" data-scroll-target="#using-erasedreducerfactoryv2">using ErasedReducerFactoryV2</a></li>
   </ul></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
+  <li><a href="#function-expandevents" id="toc-function-expandevents" class="nav-link" data-scroll-target="#function-expandevents">function expandEvents</a></li>
+  <li><a href="#function-expandevents-1" id="toc-function-expandevents-1" class="nav-link" data-scroll-target="#function-expandevents-1">function expandEvents</a></li>
+  <li><a href="#function-withalignment" id="toc-function-withalignment" class="nav-link" data-scroll-target="#function-withalignment">function withAlignment</a></li>
+  <li><a href="#function-withalignment-1" id="toc-function-withalignment-1" class="nav-link" data-scroll-target="#function-withalignment-1">function withAlignment</a></li>
   <li><a href="#function-extractsinglefloat" id="toc-function-extractsinglefloat" class="nav-link" data-scroll-target="#function-extractsinglefloat">function extractSingleFloat</a></li>
   <li><a href="#function-gatherandexecutepipeline" id="toc-function-gatherandexecutepipeline" class="nav-link" data-scroll-target="#function-gatherandexecutepipeline">function gatherAndExecutePipeline</a></li>
   </ul></li>
@@ -400,19 +411,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of.html">WhiskerToolbox::Gather::element_type_of</a></strong> <br>Helper to get element type from a data container.</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1AlignedInterval.html">WhiskerToolbox::Gather::AlignedInterval</a></strong> <br>An interval with an associated alignment time.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01AnalogTimeSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; AnalogTimeSeries &gt;</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1BoundReducer.html">WhiskerToolbox::Gather::BoundReducer</a></strong> <br>Result of binding a pipeline to produce a reducer.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01DigitalEventSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; DigitalEventSeries &gt;</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1BoundViewAdaptor.html">WhiskerToolbox::Gather::BoundViewAdaptor</a></strong> <br>Result of binding a pipeline to produce a view adaptor.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of.html">WhiskerToolbox::Gather::element_type_of</a></strong> <br>Helper to get element type from a data container.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01AnalogTimeSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; AnalogTimeSeries &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01DigitalEventSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; DigitalEventSeries &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of_3_01DigitalIntervalSeries_01_4.html">WhiskerToolbox::Gather::element_type_of&lt; DigitalIntervalSeries &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1EventExpanderAdapter.html">WhiskerToolbox::Gather::EventExpanderAdapter</a></strong> <br>Lazily expands a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> into intervals.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1IntervalWithAlignmentAdapter.html">WhiskerToolbox::Gather::IntervalWithAlignmentAdapter</a></strong> <br>Adapter that provides intervals with custom alignment points.</td>
 </tr>
 </tbody>
 </table>
@@ -428,8 +459,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a></strong> { Start, End, Center}<br>Alignment point options for intervals.</td>
+</tr>
+<tr class="even">
 <td>template &lt;typename T &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1element__type__of.html">element_type_of</a>&lt; T &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-element-type-of-t">element_type_of_t</a></strong></td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InElement ,typename OutElement &gt; <br>using std::function&lt; std::vector&lt; OutElement &gt;(std::span&lt; InElement const &gt;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-viewadaptorfn">ViewAdaptorFn</a></strong> <br>Type-erased view adaptor function.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; std::any(std::any const &amp;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-erasedviewadaptorfn">ErasedViewAdaptorFn</a></strong> <br>Type-erased view adaptor that works with std::any.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InElement ,typename Scalar &gt; <br>using std::function&lt; Scalar(std::span&lt; InElement const &gt;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-reducerfn">ReducerFn</a></strong> <br>Typed reducer function.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; std::any(std::any const &amp;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-erasedreducerfn">ErasedReducerFn</a></strong> <br>Type-erased reducer that works with std::any.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InElement ,typename Scalar &gt; <br>using std::function&lt; <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-reducerfn">ReducerFn</a>&lt; InElement, Scalar &gt;(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineValueStore.html">WhiskerToolbox::Transforms::V2::PipelineValueStore</a> const &amp;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-reducerfactoryv2">ReducerFactoryV2</a></strong> <br>Factory that creates a reducer from PipelineValueStore.</td>
+</tr>
+<tr class="even">
+<td>using std::function&lt; <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-erasedreducerfn">ErasedReducerFn</a>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineValueStore.html">WhiskerToolbox::Transforms::V2::PipelineValueStore</a> const &amp;)&gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#using-erasedreducerfactoryv2">ErasedReducerFactoryV2</a></strong> <br>Type-erased reducer factory (V2 pattern)</td>
 </tr>
 </tbody>
 </table>
@@ -445,6 +504,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1EventExpanderAdapter.html">EventExpanderAdapter</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#function-expandevents">expandEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; events, int64_t pre_window, int64_t post_window)<br>Create an <a href="">EventExpanderAdapter</a>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1EventExpanderAdapter.html">EventExpanderAdapter</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#function-expandevents">expandEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; events, int64_t window)<br>Create an <a href="">EventExpanderAdapter</a> with symmetric window.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1IntervalWithAlignmentAdapter.html">IntervalWithAlignmentAdapter</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#function-withalignment">withAlignment</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a> align =<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#enumvalue-start">AlignmentPoint::Start</a>)<br>Create an <a href="">IntervalWithAlignmentAdapter</a>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1IntervalWithAlignmentAdapter.html">IntervalWithAlignmentAdapter</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#function-withalignment">withAlignment</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a> align, int64_t pre_window, int64_t post_window)<br>Create an <a href="">IntervalWithAlignmentAdapter</a> with explicit window.</td>
+</tr>
+<tr class="odd">
 <td>float</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html#function-extractsinglefloat">extractSingleFloat</a></strong>(<a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; output)<br>Extract a single float from a DataTypeVariant pipeline output.</td>
 </tr>
@@ -457,19 +532,153 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="types-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="enum-alignmentpoint" class="level3">
+<h3 class="anchored" data-anchor-id="enum-alignmentpoint">enum AlignmentPoint</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Start</td>
+<td></td>
+<td>Use interval start as alignment time.</td>
+</tr>
+<tr class="even">
+<td>End</td>
+<td></td>
+<td>Use interval end as alignment time.</td>
+</tr>
+<tr class="odd">
+<td>Center</td>
+<td></td>
+<td>Use interval center as alignment time.</td>
+</tr>
+</tbody>
+</table>
+<p>Alignment point options for intervals.</p>
+</section>
 <section id="using-element_type_of_t" class="level3">
 <h3 class="anchored" data-anchor-id="using-element_type_of_t">using element_type_of_t</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span><span class="dt">element_type_of_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> element_type_of<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="using-viewadaptorfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-viewadaptorfn">using ViewAdaptorFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ViewAdaptorFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>vector<span class="op">&lt;</span>OutElement<span class="op">&gt;(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Type-erased view adaptor function.</p>
+<p><strong>Note</strong>: This is primarily used when type erasure is needed (e.g., storing in containers, passing through non-template interfaces).</p>
+<p>Takes a span of input elements and produces a vector of output elements. This is the materialized version - for lazy evaluation, use the templated view adaptor that returns a range adaptor.</p>
+</section>
+<section id="using-erasedviewadaptorfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-erasedviewadaptorfn">using ErasedViewAdaptorFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ErasedViewAdaptorFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Type-erased view adaptor that works with std::any.</p>
+<p>Used internally by the pipeline for runtime-typed execution.</p>
+</section>
+<section id="using-reducerfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-reducerfn">using ReducerFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ReducerFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span>Scalar<span class="op">(</span><span class="bu">std::</span>span<span class="op">&lt;</span>InElement <span class="at">const</span><span class="op">&gt;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Typed reducer function.</p>
+<p>Consumes a span of input elements and produces a scalar. This combines the view transformation and range reduction.</p>
+</section>
+<section id="using-erasedreducerfn" class="level3">
+<h3 class="anchored" data-anchor-id="using-erasedreducerfn">using ErasedReducerFn</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ErasedReducerFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Type-erased reducer that works with std::any.</p>
+</section>
+<section id="using-reducerfactoryv2" class="level3">
+<h3 class="anchored" data-anchor-id="using-reducerfactoryv2">using ReducerFactoryV2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ReducerFactoryV2 <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ReducerFn<span class="op">&lt;</span>InElement<span class="op">,</span> Scalar<span class="op">&gt;(</span>WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Factory that creates a reducer from PipelineValueStore.</p>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>InElement</strong> Input element type</li>
+<li><strong>Scalar</strong> Output scalar type</li>
+</ul>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classGatherResult.html#function-reduce">GatherResult::reduce()</a> for usage</li>
+<li>PipelineValueStore for store documentation</li>
+</ul>
+</section>
+<section id="using-erasedreducerfactoryv2" class="level3">
+<h3 class="anchored" data-anchor-id="using-erasedreducerfactoryv2">using ErasedReducerFactoryV2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Gather<span class="op">::</span>ErasedReducerFactoryV2 <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span>ErasedReducerFn<span class="op">(</span>WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Type-erased reducer factory (V2 pattern)</p>
+</section>
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-expandevents" class="level3">
+<h3 class="anchored" data-anchor-id="function-expandevents">function expandEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EventExpanderAdapter expandEvents<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> events<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an <a href="">EventExpanderAdapter</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>events</strong> Event series to expand</li>
+<li><strong>pre_window</strong> Time before each event</li>
+<li><strong>post_window</strong> Time after each event</li>
+</ul>
+</section>
+<section id="function-expandevents-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-expandevents-1">function expandEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EventExpanderAdapter expandEvents<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> events<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> window</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an <a href="">EventExpanderAdapter</a> with symmetric window.</p>
+</section>
+<section id="function-withalignment" class="level3">
+<h3 class="anchored" data-anchor-id="function-withalignment">function withAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> IntervalWithAlignmentAdapter withAlignment<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an <a href="">IntervalWithAlignmentAdapter</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Interval series</li>
+<li><strong>align</strong> Alignment point (default: Start)</li>
+</ul>
+</section>
+<section id="function-withalignment-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-withalignment-1">function withAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> IntervalWithAlignmentAdapter withAlignment<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an <a href="">IntervalWithAlignmentAdapter</a> with explicit window.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Interval series</li>
+<li><strong>align</strong> Alignment point (Start, End, Center)</li>
+<li><strong>pre_window</strong> Absolute time units before alignment point</li>
+<li><strong>post_window</strong> Absolute time units after alignment point</li>
+</ul>
+<p>The window is specified in absolute time units. The adapter produces intervals centered on the alignment point: [align - pre, align + post].</p>
+</section>
 <section id="function-extractsinglefloat" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractsinglefloat">function extractSingleFloat</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> extractSingleFloat<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> extractSingleFloat<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract a single float from a DataTypeVariant pipeline output.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -489,11 +698,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-gatherandexecutepipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-gatherandexecutepipeline">function gatherAndExecutePipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> gatherAndExecutePipeline<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> gatherAndExecutePipeline<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">Gather</a> source data over intervals and execute a pipeline on each gathered view, returning one float per interval.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -515,7 +724,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>If the source data and <code>intervals</code> use different TimeFrames, the interval boundaries are converted to the source’s coordinate system before gathering (same logic as TensorColumnBuilders::prepareIntervalsForGather).</p>
 <p>Dispatch is fully type-erased: the function visits the DataTypeVariant and uses <a href="../../api_generated/Classes/classGatherResult.html#function-create">GatherResult<t>::create()</t></a> + pipeline.execute<t>() for each concrete contained type that satisfies TypeTraits::HasDataTraits<t>.</t></t></p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

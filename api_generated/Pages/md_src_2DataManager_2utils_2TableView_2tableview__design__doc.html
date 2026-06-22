@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -38,14 +38,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -362,7 +362,7 @@ ul.task-list li input[type="checkbox"] {
 <p>3.1. <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> (The Unified Data Interface) This abstract base class is the cornerstone of the system’s flexibility. It provides a common interface for any data that can be treated as a simple array of doubles.</p>
 <p>// Interface for any data source that can be viewed as an analog signal. class <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> { public: virtual ~IAnalogSource() = default;</p>
 <p>// Gets the ID of the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> the data belongs to. virtual int getTimeFrameId() const = 0;</p>
-<p>// Gets the total number of samples in the source. virtual size_t size() const = 0;</p>
+<p>// Gets the total number of samples in the source. virtual size_t <a href="../../api_generated/Files/MaskMedianFilter_8cpp.html#variable-size">size() const</a>= 0;</p>
 <p>// Provides a view over the data. // This may trigger a one-time lazy materialization for non-contiguous sources. virtual std::span<const double=""> getDataSpan() = 0; };</const></p>
 <p>Implementations: AnalogData (physical), PointComponentAdapter (virtual), TensorSliceAdapter (virtual), etc.</p>
 <p>3.2. <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> (The Source Factory) The <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> acts as a facade and a factory. It manages the lifecycle of raw data objects and is responsible for creating and caching <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> adapters.</p>
@@ -485,7 +485,7 @@ ul.task-list li input[type="checkbox"] {
 <p>// Add a column to gather the LFP data within each interval. // The column’s type will be std::vector<double>. builder.addColumn&lt;std::vector<double>&gt;(“LFP_Snippets”, std::make_unique&lt;AnalogSliceGathererComputer<double>&gt;(lfp_source));</double></double></double></p>
 <p><a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
 <p>// Retrieve the materialized column data. // <code>lfp_waveforms</code> is a const reference to a std::vector&lt;std::vector<double>&gt;. const auto&amp; lfp_waveforms = table.getColumnValues&lt;std::vector<double>&gt;(“LFP_Snippets”);</double></double></p>
-<p>// We can now work with the gathered data. if (!lfp_waveforms.empty()) { std::cout &lt;&lt; “First LFP snippet has” &lt;&lt; lfp_waveforms[0].size() &lt;&lt; ” samples.” &lt;&lt; std::endl; } }</p>
+<p>// We can now work with the gathered data. if (!lfp_waveforms.empty()) { std::cout &lt;&lt; “First LFP snippet has” &lt;&lt; lfp_waveforms[0].<a href="../../api_generated/Files/MaskMedianFilter_8cpp.html#variable-size">size()</a> &lt;&lt; ” samples.” &lt;&lt; std::endl; } }</p>
 <p>Addendum 3: Support for Statistical Standardization Date: July 15, 2025</p>
 <p>This addendum addresses the requirement to create a column by standardizing another numerical column (Z-scoring).</p>
 <p>A7. Problem Statement A frequent need in statistical analysis is to normalize data by centering it on its mean and scaling it by its standard deviation. This operation requires a full-column transformation: the statistics (mean, stddev) must be computed for the entire source column before the element-wise transformation can be applied.</p>
@@ -535,7 +535,7 @@ ul.task-list li input[type="checkbox"] {
 <p>// 2. Use std::visit with a lambda to process the descriptor type-safely. std::string tooltip_text = std::visit(<a href="auto&amp;&amp; arg"></a> -&gt; std::string { using T = std::decay_t&lt;decltype(arg)&gt;; if constexpr (std::is_same_v&lt;T, size_t&gt;) { return “Source Index:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, double&gt;) { return “Source Timestamp:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, Interval&gt;) { return “Source Interval: [” + std::to_string(arg.start) + ”, ” + std::to_string(arg.end) + ”]”; } else { return “Source: N/A”; } }, desc);</p>
 <p>// 3. Display the generated tooltip text to the user. show_tooltip(tooltip_text); }</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:57 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:27 +0000</p>
 
 
 </section>

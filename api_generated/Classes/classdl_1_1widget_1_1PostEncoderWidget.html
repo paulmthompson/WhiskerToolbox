@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -365,8 +365,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-params" id="toc-function-params" class="nav-link" data-scroll-target="#function-params">function params</a></li>
   <li><a href="#function-setparams" id="toc-function-setparams" class="nav-link" data-scroll-target="#function-setparams">function setParams</a></li>
   <li><a href="#function-refreshdatasources" id="toc-function-refreshdatasources" class="nav-link" data-scroll-target="#function-refreshdatasources">function refreshDataSources</a></li>
-  <li><a href="#function-moduletypeforstate" id="toc-function-moduletypeforstate" class="nav-link" data-scroll-target="#function-moduletypeforstate">function moduleTypeForState</a></li>
-  <li><a href="#function-paramsfromstate" id="toc-function-paramsfromstate" class="nav-link" data-scroll-target="#function-paramsfromstate">function paramsFromState</a></li>
+  <li><a href="#function-synctoassembler" id="toc-function-synctoassembler" class="nav-link" data-scroll-target="#function-synctoassembler">function syncToAssembler</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -452,24 +451,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-operator=">operator=</a></strong>(<a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html">PostEncoderWidget</a> &amp;&amp; ) =delete</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">PostEncoderSlotParams</a></td>
+<td><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a></td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-params">params</a></strong>() const<br>Return the current parameter values.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-setparams">setParams</a></strong>(<a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">PostEncoderSlotParams</a> const &amp; params)<br>Set the parameter values and update the UI.</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-setparams">setParams</a></strong>(<a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a> const &amp; params)<br>Set the parameter values and update the UI.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-refreshdatasources">refreshDataSources</a></strong>()<br>Refresh the point_key combo from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
 </tr>
 <tr class="even">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-moduletypeforstate">moduleTypeForState</a></strong>() const<br>Return the module type string for decoder consistency enforcement. Returns “none”, “global_avg_pool”, or “spatial_point”.</td>
-</tr>
-<tr class="odd">
-<td><a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">PostEncoderSlotParams</a></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-paramsfromstate">paramsFromState</a></strong>(std::string const &amp; module_type, std::string const &amp; point_key)<br>Build <a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">PostEncoderSlotParams</a> from saved state (for restore).</td>
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html#function-synctoassembler">syncToAssembler</a></strong>()<br>Push current params to <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> when the model is ready.</td>
 </tr>
 </tbody>
 </table>
@@ -479,7 +474,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>widget<span class="op">::</span>PostEncoderWidget<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Widget for configuring the post-encoder module.</p>
 <p><strong>Note</strong>: Not thread-safe — must be used from the GUI thread only.</p>
-<p>Wraps an <a href="../../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a> driven by the <code>[PostEncoderSlotParams](/api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.md)</code> schema. The module variant offers None, GlobalAvgPool, and SpatialPoint options. The point_key combo (for SpatialPoint) is populated from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
+<p>Presents a module combo populated from <code>[PostEncoderModuleRegistry](/api_generated/Classes/classdl_1_1PostEncoderModuleRegistry.md)</code> and a dynamic parameter form loaded from the registry schema for the selected module. The point_key combo (for spatial_point) is populated from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
 </section>
 <section id="public-signals-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
@@ -502,7 +497,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Construct the post-encoder widget.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>state</strong> <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a> to sync module type and point key.</li>
+<li><strong>state</strong> <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a> to sync post-encoder params.</li>
 <li><strong>dm</strong> Shared <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> for populating the point_key combo.</li>
 <li><strong>assembler</strong> <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> for configurePostEncoderModule.</li>
 <li><strong>parent</strong> Optional parent widget.</li>
@@ -539,13 +534,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-params" class="level3">
 <h3 class="anchored" data-anchor-id="function-params">function params</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>PostEncoderSlotParams params<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>PostEncoderStepDescriptor params<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return the current parameter values.</p>
 </section>
 <section id="function-setparams" class="level3">
 <h3 class="anchored" data-anchor-id="function-setparams">function setParams</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setParams<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    PostEncoderSlotParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>PostEncoderStepDescriptor <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the parameter values and update the UI.</p>
 </section>
@@ -554,20 +549,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> refreshDataSources<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Refresh the point_key combo from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
 </section>
-<section id="function-moduletypeforstate" class="level3">
-<h3 class="anchored" data-anchor-id="function-moduletypeforstate">function moduleTypeForState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string moduleTypeForState<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Return the module type string for decoder consistency enforcement. Returns “none”, “global_avg_pool”, or “spatial_point”.</p>
-</section>
-<section id="function-paramsfromstate" class="level3">
-<h3 class="anchored" data-anchor-id="function-paramsfromstate">function paramsFromState</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> PostEncoderSlotParams paramsFromState<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">module_type</span><span class="op">,</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Build <a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">PostEncoderSlotParams</a> from saved state (for restore).</p>
+<section id="function-synctoassembler" class="level3">
+<h3 class="anchored" data-anchor-id="function-synctoassembler">function syncToAssembler</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> syncToAssembler<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Push current params to <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> when the model is ready.</p>
+<p>Used after model load or weight validation when <code>loadModel()</code> cleared the assembler’s post-encoder module.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -349,23 +349,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#directory-structure" id="toc-directory-structure" class="nav-link" data-scroll-target="#directory-structure">Directory Structure</a></li>
-  <li><a href="#step-by-step-process" id="toc-step-by-step-process" class="nav-link" data-scroll-target="#step-by-step-process">Step-by-Step Process</a>
+  <li><a href="#recommended-test-vector-pattern" id="toc-recommended-test-vector-pattern" class="nav-link" data-scroll-target="#recommended-test-vector-pattern">Recommended: Test Vector Pattern</a>
   <ul class="collapse">
-  <li><a href="#step-1-analyze-existing-v1-tests" id="toc-step-1-analyze-existing-v1-tests" class="nav-link" data-scroll-target="#step-1-analyze-existing-v1-tests">Step 1: Analyze Existing V1 Tests</a></li>
-  <li><a href="#step-2-create-the-test-fixture" id="toc-step-2-create-the-test-fixture" class="nav-link" data-scroll-target="#step-2-create-the-test-fixture">Step 2: Create the Test Fixture</a></li>
-  <li><a href="#step-3-refactor-v1-tests-to-use-fixture" id="toc-step-3-refactor-v1-tests-to-use-fixture" class="nav-link" data-scroll-target="#step-3-refactor-v1-tests-to-use-fixture">Step 3: Refactor V1 Tests to Use Fixture</a></li>
-  <li><a href="#step-4-create-v2-tests-using-same-fixture" id="toc-step-4-create-v2-tests-using-same-fixture" class="nav-link" data-scroll-target="#step-4-create-v2-tests-using-same-fixture">Step 4: Create V2 Tests Using Same Fixture</a></li>
-  <li><a href="#step-5-verify-consistency" id="toc-step-5-verify-consistency" class="nav-link" data-scroll-target="#step-5-verify-consistency">Step 5: Verify Consistency</a></li>
+  <li><a href="#step-1-extract-rows-from-v1-tests" id="toc-step-1-extract-rows-from-v1-tests" class="nav-link" data-scroll-target="#step-1-extract-rows-from-v1-tests">Step 1: Extract rows from V1 tests</a></li>
+  <li><a href="#step-2-add-shared-helpers" id="toc-step-2-add-shared-helpers" class="nav-link" data-scroll-target="#step-2-add-shared-helpers">Step 2: Add shared helpers</a></li>
+  <li><a href="#step-3-table-driven-algorithm-tests-v1-and-v2" id="toc-step-3-table-driven-algorithm-tests-v1-and-v2" class="nav-link" data-scroll-target="#step-3-table-driven-algorithm-tests-v1-and-v2">Step 3: Table-driven algorithm tests (V1 and V2)</a></li>
+  <li><a href="#step-4-datamanager-json-integration" id="toc-step-4-datamanager-json-integration" class="nav-link" data-scroll-target="#step-4-datamanager-json-integration">Step 4: DataManager / JSON integration</a></li>
+  <li><a href="#step-4b-typed-pipeline-json-no-filesystem" id="toc-step-4b-typed-pipeline-json-no-filesystem" class="nav-link" data-scroll-target="#step-4b-typed-pipeline-json-no-filesystem">Step 4b: Typed pipeline JSON (no filesystem)</a></li>
+  <li><a href="#step-5-what-stays-out-of-the-vector" id="toc-step-5-what-stays-out-of-the-vector" class="nav-link" data-scroll-target="#step-5-what-stays-out-of-the-vector">Step 5: What stays out of the vector</a></li>
   </ul></li>
-  <li><a href="#fixture-patterns" id="toc-fixture-patterns" class="nav-link" data-scroll-target="#fixture-patterns">Fixture Patterns</a>
+  <li><a href="#alternative-scenario-builders-input-only" id="toc-alternative-scenario-builders-input-only" class="nav-link" data-scroll-target="#alternative-scenario-builders-input-only">Alternative: Scenario Builders (input only)</a></li>
+  <li><a href="#alternative-datamanager-fixture-class" id="toc-alternative-datamanager-fixture-class" class="nav-link" data-scroll-target="#alternative-datamanager-fixture-class">Alternative: DataManager Fixture Class</a></li>
+  <li><a href="#fixture-patterns-legacy-specialized" id="toc-fixture-patterns-legacy-specialized" class="nav-link" data-scroll-target="#fixture-patterns-legacy-specialized">Fixture Patterns (legacy / specialized)</a>
   <ul class="collapse">
-  <li><a href="#pattern-multiple-data-types" id="toc-pattern-multiple-data-types" class="nav-link" data-scroll-target="#pattern-multiple-data-types">Pattern: Multiple Data Types</a></li>
-  <li><a href="#pattern-expected-results-documentation" id="toc-pattern-expected-results-documentation" class="nav-link" data-scroll-target="#pattern-expected-results-documentation">Pattern: Expected Results Documentation</a></li>
-  <li><a href="#pattern-parameterized-data" id="toc-pattern-parameterized-data" class="nav-link" data-scroll-target="#pattern-parameterized-data">Pattern: Parameterized Data</a></li>
+  <li><a href="#multiple-data-types" id="toc-multiple-data-types" class="nav-link" data-scroll-target="#multiple-data-types">Multiple data types</a></li>
+  <li><a href="#parameterized-data-without-a-vector" id="toc-parameterized-data-without-a-vector" class="nav-link" data-scroll-target="#parameterized-data-without-a-vector">Parameterized data without a vector</a></li>
   </ul></li>
-  <li><a href="#what-stays-in-test-files" id="toc-what-stays-in-test-files" class="nav-link" data-scroll-target="#what-stays-in-test-files">What Stays in Test Files</a></li>
   <li><a href="#checklist-for-porting" id="toc-checklist-for-porting" class="nav-link" data-scroll-target="#checklist-for-porting">Checklist for Porting</a></li>
   <li><a href="#example-analogeventthreshold" id="toc-example-analogeventthreshold" class="nav-link" data-scroll-target="#example-analogeventthreshold">Example: AnalogEventThreshold</a></li>
+  <li><a href="#related-follow-up" id="toc-related-follow-up" class="nav-link" data-scroll-target="#related-follow-up">Related follow-up</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -379,284 +381,323 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="test-fixture-porting-guide-v1-to-v2-transform-testing" class="level1">
 <h1>Test Fixture Porting Guide: V1 to V2 Transform Testing</h1>
-<p>This guide describes the process for creating reusable test fixtures that enable consistent testing between V1 and V2 transform implementations. By decoupling test data creation from the transform-specific API, you can verify that both V1 and V2 produce identical results for the same input data.</p>
+<p>This guide describes how to share test data and expected results between V1 and V2 transform implementations. The preferred approach for <strong>algorithm parity</strong> is a <strong>test vector</strong> (one table row = input + parameters + expected output). Heavier <strong>fixtures</strong> (Catch2 <code>TEST_CASE_METHOD</code>, DataManager setup) remain useful when tests need pre-loaded DataManager state or multiple named objects.</p>
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>The goal is to: 1. <strong>Decouple test data</strong> from transformation logic 2. <strong>Reuse the same test data</strong> across V1 and V2 tests 3. <strong>Ensure algorithmic consistency</strong> between implementations 4. <strong>Keep parameter/JSON testing</strong> in their respective test files</p>
+<p>Goals when porting tests:</p>
+<ol type="1">
+<li><strong>Decouple test data</strong> from transform-specific APIs (V1 free functions vs V2 <code>ElementRegistry</code>)</li>
+<li><strong>Reuse the same cases</strong> in both test binaries</li>
+<li><strong>Encode expected outputs once</strong> so V1/V2 drift is caught immediately</li>
+<li><strong>Keep version-specific tests separate</strong> — JSON formats, registry metadata, progress/cancellation, null-input edge cases</li>
+</ol>
+<p>Choose an approach:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Best for</th>
+<th>Shared artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Test vector</strong></td>
+<td>Container/element transforms with clear I/O (signal in → events out)</td>
+<td><code>fixtures/vectors/.../*_vectors.hpp</code> + optional <code>*_test_helpers.hpp</code></td>
+</tr>
+<tr class="even">
+<td><strong>Scenario builders</strong></td>
+<td>Input-only reuse (parameters still duplicated in tests)</td>
+<td><code>fixtures/scenarios/.../*_scenarios.hpp</code></td>
+</tr>
+<tr class="odd">
+<td><strong>DataManager fixture</strong></td>
+<td>Many named objects, time frames, integration tests</td>
+<td><code>fixtures/*TestFixture.hpp</code></td>
+</tr>
+</tbody>
+</table>
+<p>For new work, prefer <strong>test vectors</strong> over scenario-only headers when parameters and expected results are duplicated across V1 and V2.</p>
 </section>
 <section id="directory-structure" class="level2">
 <h2 class="anchored" data-anchor-id="directory-structure">Directory Structure</h2>
-<pre><code>tests/
-└── DataManager/
-    └── fixtures/
-        ├── MaskAreaTestFixture.hpp      # Shared test data
-        ├── AnalogEventThresholdTestFixture.hpp
-        └── ...
+<pre><code>tests/DataManager/fixtures/
+├── builders/                          # AnalogTimeSeriesBuilder, MaskDataBuilder, ...
+├── vectors/                           # Preferred: full I/O test rows
+│   └── analog/
+│       ├── analog_event_threshold_vectors.hpp
+│       └── analog_event_threshold_test_helpers.hpp
+├── pipeline/                          # Typed pipeline JSON builders for integration tests
+│   └── pipeline_json_test_helpers.hpp
+├── scenarios/                         # Input-only factory functions (legacy / simple cases)
+│   └── analog/
+│       └── interval_threshold_scenarios.hpp
+├── MaskAreaTestFixture.hpp            # DataManager-backed fixtures (when needed)
+└── ...
 
-src/DataManager/
-├── transforms/
-│   └── Masks/
-│       └── Mask_Area/
-│           └── mask_area.test.cpp       # V1 tests (uses fixture)
-└── transforms/v2/
-    └── algorithms/
-        └── MaskArea/
-            └── MaskArea.test.cpp        # V2 tests (uses same fixture)</code></pre>
+src/DataManager/transforms/.../my_transform.test.cpp     # V1
+src/TransformsV2/algorithms/MyTransform/MyTransform.test.cpp   # V2</code></pre>
+<p>Both <code>test_data_manager</code> and <code>test_TransformsV2</code> add <code>tests/DataManager</code> to their include path — no CMake change is required for new headers under <code>fixtures/vectors/</code>.</p>
 </section>
-<section id="step-by-step-process" class="level2">
-<h2 class="anchored" data-anchor-id="step-by-step-process">Step-by-Step Process</h2>
-<section id="step-1-analyze-existing-v1-tests" class="level3">
-<h3 class="anchored" data-anchor-id="step-1-analyze-existing-v1-tests">Step 1: Analyze Existing V1 Tests</h3>
-<p>Identify the test data patterns in your V1 tests:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before: Data creation scattered in V1 tests</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Mask area calculation"</span><span class="op">,</span> <span class="st">"[mask][area]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mask_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MaskData<span class="op">&gt;();</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Data creation mixed with test logic</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> x1 <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> y1 <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    mask_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">),</span> Mask2D<span class="op">(</span>x1<span class="op">,</span> y1<span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> area<span class="op">(</span>mask_data<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... assertions</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="recommended-test-vector-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="recommended-test-vector-pattern">Recommended: Test Vector Pattern</h2>
+<section id="step-1-extract-rows-from-v1-tests" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-extract-rows-from-v1-tests">Step 1: Extract rows from V1 tests</h3>
+<p>Each duplicated <code>SECTION</code> becomes one <code>Case</code> row: raw <code>values</code>/<code>times</code>, neutral parameters (<code>threshold</code>, <code>direction</code>, <code>lockout</code>), and <code>expected_event_times</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tests/DataManager/fixtures/vectors/analog/my_transform_vectors.hpp</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> my_transform_vectors <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> Direction <span class="op">{</span> positive<span class="op">,</span> negative<span class="op">,</span> absolute <span class="op">};</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Case <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view name<span class="op">;</span>              <span class="co">// Catch2 DYNAMIC_SECTION label</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view dm_key<span class="op">;</span>            <span class="co">// DataManager key for JSON integration tests</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> values<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> times<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ... version-neutral parameters ...</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> expected_event_times<span class="op">;</span>  <span class="co">// empty =&gt; expect no output events</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Case<span class="op">&gt;</span> <span class="at">const</span><span class="op">&amp;</span> algorithmCases<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Case<span class="op">&gt;</span> <span class="at">const</span> cases <span class="op">=</span> <span class="op">{</span> <span class="co">/* rows */</span> <span class="op">};</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> cases<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Case <span class="at">const</span><span class="op">*</span> findCaseByDmKey<span class="op">(</span><span class="bu">std::</span>string_view dm_key<span class="op">)</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <code>static std::vector&lt;Case&gt; const</code> inside a function (not <code>constexpr std::array</code>) when rows contain <code>std::vector</code> members.</p>
 </section>
-<section id="step-2-create-the-test-fixture" class="level3">
-<h3 class="anchored" data-anchor-id="step-2-create-the-test-fixture">Step 2: Create the Test Fixture</h3>
-<p>Create a fixture header in <code>tests/DataManager/fixtures/</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tests/DataManager/fixtures/MyTransformTestFixture.hpp</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef MY_TRANSFORM_TEST_FIXTURE_HPP</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MY_TRANSFORM_TEST_FIXTURE_HPP</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"catch2/catch_test_macros.hpp"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"MyDataType.hpp"</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/StrongTimeTypes.hpp"</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;map&gt;</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<section id="step-2-add-shared-helpers" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-add-shared-helpers">Step 2: Add shared helpers</h3>
+<p>Keep helpers free of V2 headers when only V1 tests need them; put V2 param adapters in the V2 test <code>.cpp</code> if the V1 target must not link TransformsV2.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tests/DataManager/fixtures/vectors/analog/my_transform_test_helpers.hpp</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> my_transform_test <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> buildAnalogTimeSeries<span class="op">(</span>Case <span class="at">const</span><span class="op">&amp;</span> tc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> AnalogTimeSeriesBuilder<span class="op">().</span>withValues<span class="op">(</span>tc<span class="op">.</span>values<span class="op">).</span>atTimes<span class="op">(</span>tc<span class="op">.</span>times<span class="op">).</span>build<span class="op">();</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ThresholdParams toThresholdParams<span class="op">(</span>Case <span class="at">const</span><span class="op">&amp;</span> tc<span class="op">)</span> <span class="op">{</span> <span class="co">/* map neutral enum → V1 */</span> <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> requireEventTimes<span class="op">(</span>DigitalEventSeries <span class="at">const</span><span class="op">&amp;</span> events<span class="op">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                              <span class="bu">std::</span>span<span class="op">&lt;</span><span class="dt">int</span> <span class="at">const</span><span class="op">&gt;</span> expected_times<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// RangeEquals on event.time()</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyTransformTestFixture <span class="op">{</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    MyTransformTestFixture<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_data_manager</span> <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_time_frame</span> <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_data_manager</span><span class="op">-&gt;</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> <span class="va">m_time_frame</span><span class="op">);</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        populateTestData<span class="op">();</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>MyTransformTestFixture<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    DataManager<span class="op">*</span> getDataManager<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">m_data_manager</span><span class="op">.</span>get<span class="op">();</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Map of named test data objects</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MyDataType<span class="op">&gt;&gt;</span> <span class="va">m_test_data</span><span class="op">;</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> populateTestData<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create each test scenario with a descriptive key</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        createData<span class="op">(</span><span class="st">"empty_data"</span><span class="op">,</span> <span class="co">/* ... */</span><span class="op">);</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        createData<span class="op">(</span><span class="st">"single_element"</span><span class="op">,</span> <span class="co">/* ... */</span><span class="op">);</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        createData<span class="op">(</span><span class="st">"multiple_elements"</span><span class="op">,</span> <span class="co">/* ... */</span><span class="op">);</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        createData<span class="op">(</span><span class="st">"edge_case_scenario"</span><span class="op">,</span> <span class="co">/* ... */</span><span class="op">);</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> createData<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string<span class="op">&amp;</span> key<span class="op">,</span> <span class="co">/* ... */</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MyDataType<span class="op">&gt;();</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ... populate data ...</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_data_manager</span><span class="op">-&gt;</span>setData<span class="op">(</span>key<span class="op">,</span> data<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_test_data</span><span class="op">[</span>key<span class="op">]</span> <span class="op">=</span> data<span class="op">;</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> <span class="va">m_data_manager</span><span class="op">;</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TimeFrame<span class="op">&gt;</span> <span class="va">m_time_frame</span><span class="op">;</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Key Design Principles:</strong></p>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="step-3-table-driven-algorithm-tests-v1-and-v2" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-table-driven-algorithm-tests-v1-and-v2">Step 3: Table-driven algorithm tests (V1 and V2)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> tc <span class="op">:</span> my_transform_vectors<span class="op">::</span>algorithmCases<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isHappyPathCase<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">))</span> <span class="op">{</span> <span class="cf">continue</span><span class="op">;</span> <span class="op">}</span>  <span class="co">// optional filter</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    DYNAMIC_SECTION<span class="op">(</span>tc<span class="op">.</span>name<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> input <span class="op">=</span> my_transform_test<span class="op">::</span>buildAnalogTimeSeries<span class="op">(</span>tc<span class="op">);</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> my_transform_test<span class="op">::</span>toThresholdParams<span class="op">(</span>tc<span class="op">);</span>  <span class="co">// or V2 adapter</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> event_threshold<span class="op">(</span>input<span class="op">.</span>get<span class="op">(),</span> params<span class="op">);</span>  <span class="co">// V1</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// auto result = registry.executeContainerTransform&lt;...&gt;(..., toV2Params(tc), ctx);  // V2</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        my_transform_test<span class="op">::</span>requireEventTimes<span class="op">(*</span>result<span class="op">,</span> tc<span class="op">.</span>expected_event_times<span class="op">);</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <strong><code>DYNAMIC_SECTION(tc.name)</code></strong> so each row appears as its own subcase in Catch2 reports.</p>
+<p>Split <strong>happy path</strong> vs <strong>shared edge</strong> loops with a small <code>isHappyPathCase(dm_key)</code> helper if edge rows should live in a separate <code>TEST_CASE</code>.</p>
+</section>
+<section id="step-4-datamanager-json-integration" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-datamanager-json-integration">Step 4: DataManager / JSON integration</h3>
+<p>Populate the DataManager from the same table:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> tc <span class="op">:</span> my_transform_vectors<span class="op">::</span>algorithmCases<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> time_key <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">)</span> <span class="op">+</span> <span class="st">"_time"</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span> buildAnalogTimeSeries<span class="op">(</span>tc<span class="op">),</span> TimeKey<span class="op">(</span>time_key<span class="op">));</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>JSON <code>input_key</code> values must match <code>Case::dm_key</code>. Assert pipeline output with <code>findCaseByDmKey("positive_no_lockout")</code> and <code>requireEventTimes</code>.</p>
+</section>
+<section id="step-4b-typed-pipeline-json-no-filesystem" class="level3">
+<h3 class="anchored" data-anchor-id="step-4b-typed-pipeline-json-no-filesystem">Step 4b: Typed pipeline JSON (no filesystem)</h3>
+<p>Avoid hand-written JSON strings and temp files. Use <a href="../../tests/DataManager/fixtures/pipeline/pipeline_json_test_helpers.hpp"><code>pipeline_json_test_helpers.hpp</code></a> to build <code>DataManagerPipelineDescriptor</code> from typed reflect-cpp parameter structs and execute in memory.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/pipeline/pipeline_json_test_helpers.hpp"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> pipeline_json_test<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Params come from your vector adapter or a local helper — not duplicated in JSON</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> toAnalogEventThresholdParams<span class="op">(</span>tc<span class="op">);</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AnalogEventThreshold"</span><span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"v2_"</span> <span class="op">+</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">)</span> <span class="op">+</span> <span class="st">"_out"</span><span class="op">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    params<span class="op">);</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">// V1-compatible loader path (load_data_from_json_config_v2)</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Or direct executor path (DataManagerPipelineExecutor)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> executeViaExecutor<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>REQUIRE<span class="op">(</span>result<span class="op">.</span>load_ok<span class="op">);</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>REQUIRE<span class="op">(</span>result<span class="op">.</span>execution<span class="op">.</span>success<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>How it works:</strong> <code>parametersAsGeneric()</code> calls <code>saveParametersToJson&lt;ParamsT&gt;()</code> then wraps the result in <code>rfl::Generic</code> for <code>DataManagerStepDescriptor::parameters</code>. The descriptor serializes via reflect-cpp; execution uses existing in-memory overloads (<code>loadFromJson</code>, <code>load_data_from_json_config_v2(dm, json, "")</code>).</p>
+<p><strong>Table-driven JSON tests:</strong> Loop the same <code>algorithmCases()</code> as algorithm correctness tests — each row gets a unique <code>output_key</code> (e.g.&nbsp;<code>"v2_" + dm_key + "_out"</code>) so cases do not overwrite each other in one <code>DataManager</code>.</p>
+<p><strong>Binary / multi-input transforms:</strong> Pass secondary input keys via the optional <code>additional_input_keys</code> argument on <code>makeStep</code> / <code>makeSingleStepPipeline</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalBoolean"</span><span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"and_overlapping_input"</span><span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"and_result"</span><span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    params<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"boolean_and"</span><span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;{</span><span class="st">"and_overlapping_other"</span><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reference: <a href="../../src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp"><code>AnalogEventThreshold.test.cpp</code></a> (full vector loop), <a href="../../src/TransformsV2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp"><code>AnalogIntervalThreshold.test.cpp</code></a> (scenario-based sections with <code>toIntervalThresholdParams</code> helper), <a href="../../src/TransformsV2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp"><code>DigitalIntervalBoolean.test.cpp</code></a> (binary transform with <code>additional_input_keys</code>).</p>
+</section>
+<section id="step-5-what-stays-out-of-the-vector" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-what-stays-out-of-the-vector">Step 5: What stays out of the vector</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Keep in V1 test only</th>
+<th>Keep in V2 test only</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ProgressCallback</code> sequencing</td>
+<td><code>ComputeContext::is_cancelled</code></td>
+</tr>
+<tr class="even">
+<td>Null pointer / invalid enum handling</td>
+<td><code>loadParametersFromJson</code>, rfl validation</td>
+</tr>
+<tr class="odd">
+<td>V1 <code>TransformRegistry</code> / <code>load_data_from_json_config</code></td>
+<td><code>ElementRegistry</code> metadata</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>load_data_from_json_config_v2</code></td>
+</tr>
+</tbody>
+</table>
+<p>Optional explicit <strong>parity</strong> <code>TEST_CASE</code> is usually unnecessary if both binaries iterate the same <code>algorithmCases()</code>.</p>
+</section>
+</section>
+<section id="alternative-scenario-builders-input-only" class="level2">
+<h2 class="anchored" data-anchor-id="alternative-scenario-builders-input-only">Alternative: Scenario Builders (input only)</h2>
+<p>When you only need shared <strong>inputs</strong>, use <code>fixtures/scenarios/</code> with builder functions:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> positive_threshold_no_lockout<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> AnalogTimeSeriesBuilder<span class="op">()</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>withValues<span class="op">({</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.8</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.2</span><span class="bu">f</span><span class="op">})</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>atTimes<span class="op">({</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">,</span> <span class="dv">300</span><span class="op">,</span> <span class="dv">400</span><span class="op">,</span> <span class="dv">500</span><span class="op">})</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>build<span class="op">();</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Downside: <strong>parameters and expected outputs are still duplicated</strong> in V1 and V2 test files. Migrate to a test vector when that duplication becomes painful (as with AnalogEventThreshold).</p>
+</section>
+<section id="alternative-datamanager-fixture-class" class="level2">
+<h2 class="anchored" data-anchor-id="alternative-datamanager-fixture-class">Alternative: DataManager Fixture Class</h2>
+<p>Use <code>TEST_CASE_METHOD</code> fixtures when tests need a fully wired <code>DataManager</code>, multiple time keys, or many interdependent objects.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyTransformTestFixture <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    MyTransformTestFixture<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_data_manager</span> <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_time_frame</span> <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_data_manager</span><span class="op">-&gt;</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> <span class="va">m_time_frame</span><span class="op">);</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        populateTestData<span class="op">();</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    DataManager<span class="op">*</span> getDataManager<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">m_data_manager</span><span class="op">.</span>get<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MyDataType<span class="op">&gt;&gt;</span> <span class="va">m_test_data</span><span class="op">;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> populateTestData<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        createData<span class="op">(</span><span class="st">"single_element"</span><span class="op">,</span> <span class="co">/* ... */</span><span class="op">);</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Design principles:</strong></p>
 <ol type="1">
-<li><strong>Use descriptive keys</strong> - Name test data by the scenario, not the expected result</li>
-<li><strong>Store both in map and DataManager</strong> - Allows direct access and key-based lookup</li>
-<li><strong>Document expected results in comments</strong> - But don’t encode them in the fixture</li>
-<li><strong>Keep fixture minimal</strong> - Only data creation, no transform logic</li>
+<li><strong>Descriptive keys</strong> — name by scenario, not by expected numeric result</li>
+<li><strong>Document expectations in comments</strong> on <code>populateTestData</code>, or prefer encoding them in a test vector</li>
+<li><strong>No transform logic in the fixture</strong> — data creation only</li>
 </ol>
 </section>
-<section id="step-3-refactor-v1-tests-to-use-fixture" class="level3">
-<h3 class="anchored" data-anchor-id="step-3-refactor-v1-tests-to-use-fixture">Step 3: Refactor V1 Tests to Use Fixture</h3>
-<p>Update the V1 test file to use <code>TEST_CASE_METHOD</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/DataManager/transforms/.../my_transform.test.cpp</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"my_transform.hpp"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/MyTransformTestFixture.hpp"</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests using fixture data</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>MyTransformTestFixture<span class="op">,</span> </span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Transform - Scenario Name"</span><span class="op">,</span> </span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"[transforms][v1][my_transform]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> input <span class="op">=</span> <span class="va">m_test_data</span><span class="op">[</span><span class="st">"single_element"</span><span class="op">];</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> my_transform<span class="op">(</span>input<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... assertions specific to this scenario</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Keep non-fixture tests for simple cases</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Transform - Simple inline test"</span><span class="op">,</span> <span class="st">"[transforms][v1][my_transform]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Small inline tests that don't benefit from fixture</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Keep parameter/JSON tests separate</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Transform - JSON pipeline"</span><span class="op">,</span> <span class="st">"[transforms][v1][json]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// JSON/parameter-specific tests stay in this file</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="fixture-patterns-legacy-specialized" class="level2">
+<h2 class="anchored" data-anchor-id="fixture-patterns-legacy-specialized">Fixture Patterns (legacy / specialized)</h2>
+<section id="multiple-data-types" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-data-types">Multiple data types</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MultiInputTestFixture <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TypeA<span class="op">&gt;&gt;</span> <span class="va">m_type_a_data</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TypeB<span class="op">&gt;&gt;</span> <span class="va">m_type_b_data</span><span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-4-create-v2-tests-using-same-fixture" class="level3">
-<h3 class="anchored" data-anchor-id="step-4-create-v2-tests-using-same-fixture">Step 4: Create V2 Tests Using Same Fixture</h3>
-<p>In the V2 test file, use the same fixture:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/DataManager/transforms/v2/algorithms/MyTransform/MyTransform.test.cpp</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"MyTransform.hpp"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/MyTransformTestFixture.hpp"</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/v2/core/DataManagerIntegration.hpp"</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// V2 tests using same fixture data</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>MyTransformTestFixture<span class="op">,</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"TransformsV2 - Scenario Name"</span><span class="op">,</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"[transforms][v2][my_transform]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> input <span class="op">=</span> <span class="va">m_test_data</span><span class="op">[</span><span class="st">"single_element"</span><span class="op">];</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use V2 registry</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span><span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    MyTransformParams params<span class="op">;</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> registry<span class="op">.</span>execute<span class="op">&lt;</span>ElementType<span class="op">,</span> OutputType<span class="op">,</span> MyTransformParams<span class="op">&gt;(</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"MyTransform"</span><span class="op">,</span> <span class="op">*</span>input<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Same assertions as V1 (verify algorithmic parity)</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> expected_value<span class="op">);</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">// V2 JSON/DataManager integration tests</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>MyTransformTestFixture<span class="op">,</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"TransformsV2 - DataManager Integration via load_data_from_json_config_v2"</span><span class="op">,</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"[transforms][v2][datamanager]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fixture pre-populates data in DataManager</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> getDataManager<span class="op">();</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// V2 JSON format</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string json_config <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="vs">        "name": "Test Pipeline",</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="vs">        "steps": [{</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="vs">            "name": "MyTransform",</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="vs">            "input_key": "single_element",</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="vs">            "output_key": "result",</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="vs">            "parameters": </span><span class="sc">{}</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="vs">        }]</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> load_data_from_json_config_v2<span class="op">(</span>dm<span class="op">,</span> json_config<span class="op">);</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> output <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>OutputType<span class="op">&gt;(</span><span class="st">"result"</span><span class="op">);</span></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>output <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... verify results match V1</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="parameterized-data-without-a-vector" class="level3">
+<h3 class="anchored" data-anchor-id="parameterized-data-without-a-vector">Parameterized data without a vector</h3>
+<p>Base signal in the fixture; parameter variations stay in each test file (acceptable only for a few cases).</p>
 </section>
-<section id="step-5-verify-consistency" class="level3">
-<h3 class="anchored" data-anchor-id="step-5-verify-consistency">Step 5: Verify Consistency</h3>
-<p>Create explicit parity tests:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE_METHOD<span class="op">(</span>MyTransformTestFixture<span class="op">,</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"V1/V2 Parity - Single element"</span><span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"[transforms][parity]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> input <span class="op">=</span> <span class="va">m_test_data</span><span class="op">[</span><span class="st">"single_element"</span><span class="op">];</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// V1 result</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> v1_result <span class="op">=</span> v1_transform<span class="op">(</span>input<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// V2 result</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span><span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> v2_result <span class="op">=</span> registry<span class="op">.</span>execute<span class="op">&lt;...&gt;(</span><span class="st">"Transform"</span><span class="op">,</span> <span class="op">*</span>input<span class="op">,</span> <span class="op">{});</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compare (accounting for V1-&gt;AnalogTimeSeries vs V2-&gt;RaggedAnalogTimeSeries)</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="co">/* results equivalent */</span><span class="op">);</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</section>
-<section id="fixture-patterns" class="level2">
-<h2 class="anchored" data-anchor-id="fixture-patterns">Fixture Patterns</h2>
-<section id="pattern-multiple-data-types" class="level3">
-<h3 class="anchored" data-anchor-id="pattern-multiple-data-types">Pattern: Multiple Data Types</h3>
-<p>For transforms that work on different input types:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MultiInputTestFixture <span class="op">{</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span><span class="op">:</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TypeA<span class="op">&gt;&gt;</span> <span class="va">m_type_a_data</span><span class="op">;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TypeB<span class="op">&gt;&gt;</span> <span class="va">m_type_b_data</span><span class="op">;</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="pattern-expected-results-documentation" class="level3">
-<h3 class="anchored" data-anchor-id="pattern-expected-results-documentation">Pattern: Expected Results Documentation</h3>
-<p>Document expected results without encoding them:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> populateTestData<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Scenario: Single mask at timestamp 100 with 3 pixels</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// V1 Expected: AnalogTimeSeries with {100: 3.0}</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// V2 Expected: RaggedAnalogTimeSeries with {100: [3.0]}</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    createMask<span class="op">(</span><span class="st">"single_mask_3px"</span><span class="op">,</span> </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">/*timestamp=*/</span><span class="dv">100</span><span class="op">,</span> </span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">/*pixels=*/</span><span class="op">{</span>Point2D<span class="op">{</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">},</span> Point2D<span class="op">{</span><span class="dv">1</span><span class="op">,</span><span class="dv">2</span><span class="op">},</span> Point2D<span class="op">{</span><span class="dv">2</span><span class="op">,</span><span class="dv">1</span><span class="op">}});</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="pattern-parameterized-data" class="level3">
-<h3 class="anchored" data-anchor-id="pattern-parameterized-data">Pattern: Parameterized Data</h3>
-<p>For testing parameter variations:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> populateTestData<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Base data for parameter testing</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    createSignal<span class="op">(</span><span class="st">"param_test_base"</span><span class="op">,</span> <span class="op">{</span><span class="fl">1.0</span><span class="op">,</span> <span class="fl">2.0</span><span class="op">,</span> <span class="fl">3.0</span><span class="op">},</span> <span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">});</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The parameters themselves stay in the test files,</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// only the data is shared via fixture</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</section>
-<section id="what-stays-in-test-files" class="level2">
-<h2 class="anchored" data-anchor-id="what-stays-in-test-files">What Stays in Test Files</h2>
-<p>Keep these in the respective V1/V2 test files:</p>
-<ol type="1">
-<li><strong>Parameter struct tests</strong> - JSON loading, validation</li>
-<li><strong>Transform-specific API tests</strong> - V1 <code>TransformOperation</code> vs V2 <code>ElementRegistry</code></li>
-<li><strong>JSON pipeline format tests</strong> - V1 format vs V2 format</li>
-<li><strong>Registry-specific tests</strong> - Metadata, type mapping</li>
-<li><strong>Simple inline tests</strong> - Trivial cases that don’t need fixture</li>
-</ol>
 </section>
 <section id="checklist-for-porting" class="level2">
 <h2 class="anchored" data-anchor-id="checklist-for-porting">Checklist for Porting</h2>
 <ul class="task-list">
-<li><label><input type="checkbox">Identify reusable test scenarios in V1 tests</label></li>
-<li><label><input type="checkbox">Create fixture in <code>tests/DataManager/fixtures/</code></label></li>
-<li><label><input type="checkbox">Add fixture to V1 test’s CMakeLists.txt includes</label></li>
-<li><label><input type="checkbox">Refactor V1 tests to use <code>TEST_CASE_METHOD</code></label></li>
-<li><label><input type="checkbox">Verify V1 tests still pass</label></li>
-<li><label><input type="checkbox">Add fixture include to V2 test file</label></li>
-<li><label><input type="checkbox">Create V2 tests using same data keys</label></li>
-<li><label><input type="checkbox">Create DataManager integration tests using <code>load_data_from_json_config_v2</code></label></li>
-<li><label><input type="checkbox">Verify V2 tests pass with same expected results</label></li>
-<li><label><input type="checkbox">(Optional) Add explicit V1/V2 parity tests</label></li>
+<li><label><input type="checkbox">List duplicated V1 <code>SECTION</code>s (input, params, expected output)</label></li>
+<li><label><input type="checkbox">Add <code>fixtures/vectors/.../*_vectors.hpp</code> with <code>Case</code> + <code>algorithmCases()</code></label></li>
+<li><label><input type="checkbox">Add <code>*_test_helpers.hpp</code> (<code>build*</code>, <code>to*Params</code>, shared matchers)</label></li>
+<li><label><input type="checkbox">Refactor V1 algorithm tests: loop + <code>DYNAMIC_SECTION</code></label></li>
+<li><label><input type="checkbox">Refactor V2 algorithm tests: same loop, V2 param adapter + registry/direct call</label></li>
+<li><label><input type="checkbox">Wire DataManager/JSON tests from <code>dm_key</code> / <code>findCaseByDmKey</code></label></li>
+<li><label><input type="checkbox">Leave version-specific API tests in the respective <code>.cpp</code> files</label></li>
+<li><label><input type="checkbox">Run V1 and V2 tests; remove obsolete scenario headers if fully migrated</label></li>
 </ul>
 </section>
 <section id="example-analogeventthreshold" class="level2">
 <h2 class="anchored" data-anchor-id="example-analogeventthreshold">Example: AnalogEventThreshold</h2>
-<p>See the complete implementation: - Fixture: <code>tests/DataManager/fixtures/AnalogEventThresholdTestFixture.hpp</code> - V2 Tests: <code>src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp</code></p>
-<p>The fixture creates named test signals like <code>"positive_no_lockout"</code>, <code>"negative_with_lockout"</code>, etc., which are then used in both V1 and V2 tests with their respective APIs.</p>
+<p>Reference implementation (test vector + helpers + table-driven tests):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../tests/DataManager/fixtures/vectors/analog/analog_event_threshold_vectors.hpp"><code>analog_event_threshold_vectors.hpp</code></a></td>
+<td><code>Case</code> rows: <code>values</code>, <code>times</code>, <code>threshold</code>, <code>direction</code>, <code>lockout</code>, <code>expected_event_times</code>, <code>dm_key</code></td>
+</tr>
+<tr class="even">
+<td><a href="../../tests/DataManager/fixtures/vectors/analog/analog_event_threshold_test_helpers.hpp"><code>analog_event_threshold_test_helpers.hpp</code></a></td>
+<td><code>buildAnalogTimeSeries</code>, <code>toThresholdParams</code>, <code>requireEventTimes</code> (V2 <code>toAnalogEventThresholdParams</code> lives in the V2 test <code>.cpp</code>)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../src/DataManager/transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.test.cpp"><code>analog_event_threshold.test.cpp</code></a></td>
+<td>V1: <code>algorithmCases()</code> loop; separate cases for progress, null input, invalid enum</td>
+</tr>
+<tr class="even">
+<td><a href="../../src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp"><code>AnalogEventThreshold.test.cpp</code></a></td>
+<td>V2: same loop via registry; cancellation, JSON, registry tests separate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sample row</strong> (positive threshold, no lockout):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">{.</span>name <span class="op">=</span> <span class="st">"positive_no_lockout"</span><span class="op">,</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>dm_key <span class="op">=</span> <span class="st">"positive_no_lockout"</span><span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>values <span class="op">=</span> <span class="op">{</span><span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.8</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.5</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.2</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>times <span class="op">=</span> <span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">,</span> <span class="dv">300</span><span class="op">,</span> <span class="dv">400</span><span class="op">,</span> <span class="dv">500</span><span class="op">},</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>threshold <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>direction <span class="op">=</span> Direction<span class="op">::</span>positive<span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>lockout <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a> <span class="op">.</span>expected_event_times <span class="op">=</span> <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">400</span><span class="op">,</span> <span class="dv">500</span><span class="op">}},</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Parity note:</strong> V1 and V2 absolute mode compare <code>abs(value)</code> to <code>threshold</code> vs <code>abs(threshold)</code> respectively. Shared vectors use positive absolute thresholds only; add a dedicated row before testing negative absolute thresholds.</p>
+</section>
+<section id="related-follow-up" class="level2">
+<h2 class="anchored" data-anchor-id="related-follow-up">Related follow-up</h2>
+<p>The same vector pattern can replace input-only <a href="../../tests/DataManager/fixtures/scenarios/analog/interval_threshold_scenarios.hpp"><code>interval_threshold_scenarios.hpp</code></a> for AnalogIntervalThreshold when parameter/expected duplication becomes a maintenance burden.</p>
 
 
 </section>

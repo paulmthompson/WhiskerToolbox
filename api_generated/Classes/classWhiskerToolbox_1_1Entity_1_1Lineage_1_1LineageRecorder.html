@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -353,6 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-record" id="toc-function-record" class="nav-link" data-scroll-target="#function-record">function record</a></li>
   <li><a href="#function-recordmultiinput" id="toc-function-recordmultiinput" class="nav-link" data-scroll-target="#function-recordmultiinput">function recordMultiInput</a></li>
   <li><a href="#function-recordsource" id="toc-function-recordsource" class="nav-link" data-scroll-target="#function-recordsource">function recordSource</a></li>
+  <li><a href="#function-recordfilesource" id="toc-function-recordfilesource" class="nav-link" data-scroll-target="#function-recordfilesource">function recordFileSource</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -405,6 +406,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRecorder.html#function-recordsource">recordSource</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRegistry.html">LineageRegistry</a> &amp; registry, std::string const &amp; data_key)<br>Record source lineage (for original/loaded data)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRecorder.html#function-recordfilesource">recordFileSource</a></strong>(<a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRegistry.html">LineageRegistry</a> &amp; registry, std::string const &amp; data_key, <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Entity_1_1Lineage_1_1FileOrigin.html">FileOrigin</a> file_origin)<br>Record source lineage with filesystem provenance.</td>
 </tr>
 </tbody>
 </table>
@@ -464,8 +469,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data_key</strong> Key of the source container</li>
 </ul>
 <p>Marks a container as source data with no parent dependencies.</p>
+</section>
+<section id="function-recordfilesource" class="level3">
+<h3 class="anchored" data-anchor-id="function-recordfilesource">function recordFileSource</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> recordFileSource<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    LineageRegistry <span class="op">&amp;</span> registry<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    FileOrigin file_origin</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Record source lineage with filesystem provenance.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>registry</strong> The <a href="../../api_generated/Classes/classWhiskerToolbox_1_1Entity_1_1Lineage_1_1LineageRegistry.html">LineageRegistry</a> to record to.</li>
+<li><strong>data_key</strong> Key of the loaded source container.</li>
+<li><strong>file_origin</strong> Filesystem provenance for the load event.</li>
+</ul>
+<p><strong>Postcondition</strong>: The data key is marked as source data with file-origin metadata.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -370,6 +370,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-weights_variants" id="toc-variable-weights_variants" class="nav-link" data-scroll-target="#variable-weights_variants">variable weights_variants</a></li>
   <li><a href="#variable-inputs" id="toc-variable-inputs" class="nav-link" data-scroll-target="#variable-inputs">variable inputs</a></li>
   <li><a href="#variable-outputs" id="toc-variable-outputs" class="nav-link" data-scroll-target="#variable-outputs">variable outputs</a></li>
+  <li><a href="#variable-recommended_post_encoder" id="toc-variable-recommended_post_encoder" class="nav-link" data-scroll-target="#variable-recommended_post_encoder">variable recommended_post_encoder</a></li>
   <li><a href="#variable-post_encoder" id="toc-variable-post_encoder" class="nav-link" data-scroll-target="#variable-post_encoder">variable post_encoder</a></li>
   </ul></li>
   </ul></li>
@@ -401,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlruntimemodelspec" class="level1">
 <h1>dl::RuntimeModelSpec</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>JSON-serializable specification for a runtime-defined model. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;RuntimeModelSpec.hpp&gt;</code></p>
 <section id="public-functions" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
@@ -419,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>rfl::Result&lt; <a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#function-fromjsonfile">fromJsonFile</a></strong>(std::filesystem::path const &amp; path)</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#function-fromjsonfile">fromJsonFile</a></strong>(std::filesystem::path const &amp; path)<br>Parse a <a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> from a JSON file.</td>
 </tr>
 <tr class="odd">
 <td>std::string</td>
@@ -435,7 +436,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#function-validate">validate</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#function-validate">validate</a></strong>() const<br>Validate semantic correctness beyond JSON schema.</td>
 </tr>
 </tbody>
 </table>
@@ -468,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::optional&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-backend">backend</a></strong> <br>“auto”, “torchscript”, “aotinductor”, “executorch”</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-backend">backend</a></strong></td>
 </tr>
 <tr class="even">
 <td>std::optional&lt; int &gt;</td>
@@ -480,11 +481,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::optional&lt; <a href="../../api_generated/Classes/structdl_1_1BatchModeSpec.html">BatchModeSpec</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-batch-mode">batch_mode</a></strong> <br>Rich batch-size constraint.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-batch-mode">batch_mode</a></strong></td>
 </tr>
 <tr class="odd">
 <td>std::optional&lt; std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1WeightsVariant.html">WeightsVariant</a> &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-weights-variants">weights_variants</a></strong> <br>Multi-variant weights.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-weights-variants">weights_variants</a></strong></td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1SlotSpec.html">SlotSpec</a> &gt;</td>
@@ -495,8 +496,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-outputs">outputs</a></strong></td>
 </tr>
 <tr class="even">
+<td>std::optional&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-recommended-post-encoder">recommended_post_encoder</a></strong></td>
+</tr>
+<tr class="odd">
 <td>std::optional&lt; std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1PostEncoderStepSpec.html">PostEncoderStepSpec</a> &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-post-encoder">post_encoder</a></strong> <br>Optional post-encoder pipeline.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html#variable-post-encoder">post_encoder</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -523,7 +528,8 @@ static rfl::Result&lt; RuntimeModelSpec &gt; fromJson(
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> rfl<span class="op">::</span>Result<span class="op">&lt;</span> RuntimeModelSpec <span class="op">&gt;</span> fromJsonFile<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Parse a <a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> from a JSON file. Relative <code>weights_path</code> values are resolved against the file’s directory.</p>
+<p>Parse a <a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">RuntimeModelSpec</a> from a JSON file.</p>
+<p>Relative <code>weights_path</code> values are resolved against the file’s directory.</p>
 </section>
 <section id="function-tojson" class="level3">
 <h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
@@ -543,7 +549,8 @@ static rfl::Result&lt; RuntimeModelSpec &gt; fromJson(
 <section id="function-validate" class="level3">
 <h3 class="anchored" data-anchor-id="function-validate">function validate</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> validate<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Validate semantic correctness beyond JSON schema. Returns error messages; empty if valid.</p>
+<p>Validate semantic correctness beyond JSON schema.</p>
+<p><strong>Return</strong>: Error messages; empty if valid.</p>
 </section>
 </section>
 <section id="public-attributes-documentation" class="level2">
@@ -580,12 +587,12 @@ static rfl::Result&lt; RuntimeModelSpec &gt; fromJson(
 <section id="variable-batch_mode" class="level3">
 <h3 class="anchored" data-anchor-id="variable-batch_mode">variable batch_mode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> BatchModeSpec <span class="op">&gt;</span> batch_mode<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Rich batch-size constraint.</p>
+<p>Rich batch-size constraint</p>
 </section>
 <section id="variable-weights_variants" class="level3">
 <h3 class="anchored" data-anchor-id="variable-weights_variants">variable weights_variants</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> WeightsVariant <span class="op">&gt;</span> <span class="op">&gt;</span> weights_variants<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Multi-variant weights.</p>
+<p>Multi-variant weights</p>
 </section>
 <section id="variable-inputs" class="level3">
 <h3 class="anchored" data-anchor-id="variable-inputs">variable inputs</h3>
@@ -595,12 +602,17 @@ static rfl::Result&lt; RuntimeModelSpec &gt; fromJson(
 <h3 class="anchored" data-anchor-id="variable-outputs">variable outputs</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> SlotSpec <span class="op">&gt;</span> outputs<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="variable-recommended_post_encoder" class="level3">
+<h3 class="anchored" data-anchor-id="variable-recommended_post_encoder">variable recommended_post_encoder</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> recommended_post_encoder<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>UI hint: post-encoder module registry key (e.g.&nbsp;“global_avg_pool”)</p>
+</section>
 <section id="variable-post_encoder" class="level3">
 <h3 class="anchored" data-anchor-id="variable-post_encoder">variable post_encoder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> PostEncoderStepSpec <span class="op">&gt;</span> <span class="op">&gt;</span> post_encoder<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Optional post-encoder pipeline.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> PostEncoderStepSpec <span class="op">&gt;</span> <span class="op">&gt;</span> post_encoder<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional post-encoder pipeline</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

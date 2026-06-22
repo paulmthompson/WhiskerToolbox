@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningBindingData.hpp – Neuralyzer</title>
+<title>src/DeepLearning/bindings/DeepLearningBindingData.hpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -345,23 +345,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#srcwhiskertoolboxdeeplearning_widgetcoredeeplearningbindingdata.hpp" id="toc-srcwhiskertoolboxdeeplearning_widgetcoredeeplearningbindingdata.hpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxdeeplearning_widgetcoredeeplearningbindingdata.hpp">src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningBindingData.hpp</a>
+  <li><a href="#srcdeeplearningbindingsdeeplearningbindingdata.hpp" id="toc-srcdeeplearningbindingsdeeplearningbindingdata.hpp" class="nav-link active" data-scroll-target="#srcdeeplearningbindingsdeeplearningbindingdata.hpp">src/DeepLearning/bindings/DeepLearningBindingData.hpp</a>
   <ul class="collapse">
+  <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
-  <li><a href="#enum-capturemode" id="toc-enum-capturemode" class="nav-link" data-scroll-target="#enum-capturemode">enum CaptureMode</a></li>
+  <li><a href="#enum-staticinputsource" id="toc-enum-staticinputsource" class="nav-link" data-scroll-target="#enum-staticinputsource">enum StaticInputSource</a></li>
   <li><a href="#enum-recurrentinitmode" id="toc-enum-recurrentinitmode" class="nav-link" data-scroll-target="#enum-recurrentinitmode">enum RecurrentInitMode</a></li>
   </ul></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-computeencodingframe" id="toc-function-computeencodingframe" class="nav-link" data-scroll-target="#function-computeencodingframe">function computeEncodingFrame</a></li>
-  <li><a href="#function-capturemodetostring" id="toc-function-capturemodetostring" class="nav-link" data-scroll-target="#function-capturemodetostring">function captureModeToString</a></li>
-  <li><a href="#function-capturemodefromstring" id="toc-function-capturemodefromstring" class="nav-link" data-scroll-target="#function-capturemodefromstring">function captureModeFromString</a></li>
-  <li><a href="#function-staticcachekey" id="toc-function-staticcachekey" class="nav-link" data-scroll-target="#function-staticcachekey">function staticCacheKey</a></li>
+  <li><a href="#function-staticinputsourcetostring" id="toc-function-staticinputsourcetostring" class="nav-link" data-scroll-target="#function-staticinputsourcetostring">function staticInputSourceToString</a></li>
+  <li><a href="#function-staticinputsourcefromstring" id="toc-function-staticinputsourcefromstring" class="nav-link" data-scroll-target="#function-staticinputsourcefromstring">function staticInputSourceFromString</a></li>
+  <li><a href="#function-defaultbankentryid" id="toc-function-defaultbankentryid" class="nav-link" data-scroll-target="#function-defaultbankentryid">function defaultBankEntryId</a></li>
   <li><a href="#function-recurrentinitmodetostring" id="toc-function-recurrentinitmodetostring" class="nav-link" data-scroll-target="#function-recurrentinitmodetostring">function recurrentInitModeToString</a></li>
   <li><a href="#function-recurrentinitmodefromstring" id="toc-function-recurrentinitmodefromstring" class="nav-link" data-scroll-target="#function-recurrentinitmodefromstring">function recurrentInitModeFromString</a></li>
   <li><a href="#function-recurrentcachekey" id="toc-function-recurrentcachekey" class="nav-link" data-scroll-target="#function-recurrentcachekey">function recurrentCacheKey</a></li>
@@ -377,7 +378,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningBindingData.hpp</h1>
+<h1 class="title">src/DeepLearning/bindings/DeepLearningBindingData.hpp</h1>
 </div>
 
 
@@ -394,9 +395,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="srcwhiskertoolboxdeeplearning_widgetcoredeeplearningbindingdata.hpp" class="level1">
-<h1>src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningBindingData.hpp</h1>
+<section id="srcdeeplearningbindingsdeeplearningbindingdata.hpp" class="level1">
+<h1>src/DeepLearning/bindings/DeepLearningBindingData.hpp</h1>
 <p>Pure-data structs for model slot bindings. <a href="#detailed-description">More…</a></p>
+<section id="namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html">dl</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="classes" class="level2">
 <h2 class="anchored" data-anchor-id="classes">Classes</h2>
 <table class="caption-top table">
@@ -409,19 +425,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structSlotBindingData.html">SlotBindingData</a></strong> <br>Serializable binding for a dynamic (per-frame) model input slot.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataManagerStaticSource.html">dl::DataManagerStaticSource</a></strong> <br>Re-encode from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at (current_frame + time_offset) each run.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structOutputBindingData.html">OutputBindingData</a></strong> <br>Serializable binding for a model output slot.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankStaticSource.html">dl::DataBankStaticSource</a></strong> <br>Reuse a pre-encoded tensor from a named <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a> entry.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStaticInputData.html">StaticInputData</a></strong> <br>Serializable entry for a static (memory) model input.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticFrameSource.html">dl::StaticFrameSource</a></strong> <br>Static memory frame is input already exists in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> or <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a>.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structRecurrentBindingData.html">RecurrentBindingData</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ZerosInit.html">dl::ZerosInit</a></strong> <br>Initialize recurrent state with zeros at t=0.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticCaptureInit.html">dl::StaticCaptureInit</a></strong> <br>Initialize recurrent state by capturing a static data source.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1FirstOutputInit.html">dl::FirstOutputInit</a></strong> <br>Initialize recurrent state from the first output of the model.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentFrameSource.html">dl::RecurrentFrameSource</a></strong> <br>Recurrent memory frame is the raw model output from the previous step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a></strong> <br>Binding for one position along a memory (static) input slot.</td>
 </tr>
 </tbody>
 </table>
@@ -438,11 +470,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-capturemode">CaptureMode</a></strong> { Relative, Absolute}</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-staticinputsource">StaticInputSource</a></strong> { DataManager, DataBank}<br>How a static (memory) model input resolves its tensor data.</td>
 </tr>
 <tr class="even">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-recurrentinitmode">RecurrentInitMode</a></strong> { Zeros, StaticCapture, FirstOutput}</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-recurrentinitmode">RecurrentInitMode</a></strong> { Zeros, StaticCapture, FirstOutput}<br>Initialization mode for a recurrent (feedback) input at t=0.</td>
 </tr>
 </tbody>
 </table>
@@ -459,19 +491,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>int</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame</a></strong>(int current_frame, int batch_index, int time_offset, int max_frame)</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-computeencodingframe">computeEncodingFrame</a></strong>(int current_frame, int batch_index, int time_offset, int max_frame)<br>Compute the effective frame index for a dynamic input slot.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-capturemodetostring">captureModeToString</a></strong>(<a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-capturemode">CaptureMode</a> mode)<br>Convert CaptureMode to a string for serialization.</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-staticinputsourcetostring">staticInputSourceToString</a></strong>(<a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-staticinputsource">StaticInputSource</a> source)<br>Convert StaticInputSource to a string for serialization.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-capturemode">CaptureMode</a></td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-capturemodefromstring">captureModeFromString</a></strong>(std::string const &amp; s)<br>Convert a string to CaptureMode (defaults to Relative on unknown input).</td>
+<td><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#enum-staticinputsource">StaticInputSource</a></td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-staticinputsourcefromstring">staticInputSourceFromString</a></strong>(std::string const &amp; s)<br>Convert a string to StaticInputSource (defaults to <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>).</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-staticcachekey">staticCacheKey</a></strong>(std::string const &amp; slot_name, int memory_index)</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-defaultbankentryid">defaultBankEntryId</a></strong>(std::string const &amp; slot_name, int memory_index)<br>Default DataBank entry ID for a static slot position.</td>
 </tr>
 <tr class="odd">
 <td>std::string</td>
@@ -483,7 +515,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-recurrentcachekey">recurrentCacheKey</a></strong>(std::string const &amp; input_slot_name)</td>
+<td><strong><a href="../../api_generated/Files/DeepLearningBindingData_8hpp.html#function-recurrentcachekey">recurrentCacheKey</a></strong>(std::string const &amp; input_slot_name)<br>Build a cache key for a recurrent binding’s carried tensor.</td>
 </tr>
 </tbody>
 </table>
@@ -491,12 +523,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <p>Pure-data structs for model slot bindings.</p>
-<p>These are deliberately kept in a separate header from <a href="../../api_generated/Classes/classDeepLearningState.html">DeepLearningState</a> so that <a href="../../api_generated/Files/SlotAssembler_8cpp.html#file-slotassembler.cpp">SlotAssembler.cpp</a> (which includes libtorch) can use them without pulling in Qt headers via <a href="../../api_generated/Classes/classEditorState.html">EditorState</a>.</p>
+<p><strong>See</strong>: docs/developer/DeepLearning/vocabulary.qmd for terminology (slot vs Qt slot).</p>
+<p>Session I/O configuration types describing how <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, DataBank, and recurrent feedback populate model tensor slots. No Qt or libtorch dependencies.</p>
 </section>
 <section id="types-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
-<section id="enum-capturemode" class="level3">
-<h3 class="anchored" data-anchor-id="enum-capturemode">enum CaptureMode</h3>
+<section id="enum-staticinputsource" class="level3">
+<h3 class="anchored" data-anchor-id="enum-staticinputsource">enum StaticInputSource</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -507,21 +540,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>Relative</td>
+<td>DataManager</td>
 <td></td>
-<td>Re-encode each run (default, original behaviour)</td>
+<td></td>
 </tr>
 <tr class="even">
-<td>Absolute</td>
+<td>DataBank</td>
 <td></td>
-<td>Encode once, cache, and reuse.</td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<p>Capture mode for static (memory) model inputs.</p>
+<p>How a static (memory) model input resolves its tensor data.</p>
 <ul>
-<li>Relative: re-encodes at <code>current_frame + time_offset</code> every invocation.</li>
-<li>Absolute: encodes once at a user-chosen frame; the tensor is cached and reused on subsequent invocations without re-encoding.</li>
+<li><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> mode re-encodes from a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key at <code>current_frame + time_offset</code> every invocation.</li>
+<li>DataBank mode reuses a pre-encoded tensor from a named <code>[dl::DataBank](/api_generated/Classes/classdl_1_1DataBank.md)</code> entry.</li>
 </ul>
 </section>
 <section id="enum-recurrentinitmode" class="level3">
@@ -543,25 +576,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Zeros</td>
 <td></td>
-<td>Initialize with all-zeros tensor.</td>
+<td>Initialize with all-zeros tensor</td>
 </tr>
 <tr class="even">
 <td>StaticCapture</td>
 <td></td>
-<td>Use a user-captured tensor from a specific frame.</td>
+<td>Use a user-captured tensor from a specific frame</td>
 </tr>
 <tr class="odd">
 <td>FirstOutput</td>
 <td></td>
-<td>Run once with zeros, use raw output as initial state.</td>
+<td>Run once with zeros, use raw output as initial state</td>
 </tr>
 </tbody>
 </table>
 <p>Initialization mode for a recurrent (feedback) input at t=0.</p>
 <ul>
-<li>Zeros: start with an all-zeros tensor matching the input slot shape.</li>
-<li>StaticCapture: use a user-provided captured tensor (e.g., ground-truth mask at a reference frame).</li>
-<li>FirstOutput: run the model once with zeros, discard the decoded result, use the raw output tensor as the initial state for the real sequence.</li>
+<li>Zeros mode starts with an all-zeros tensor matching the input slot shape.</li>
+<li>StaticCapture mode uses a user-provided captured tensor (e.g., ground-truth mask at a reference frame).</li>
+<li>FirstOutput mode runs the model once with zeros, discards the decoded result, and uses the raw output tensor as the initial state for the real sequence.</li>
 </ul>
 </section>
 </section>
@@ -575,33 +608,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> time_offset<span class="op">,</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> max_frame</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the effective frame index for a dynamic input slot.</p>
 <p><strong>Return</strong>: Frame index clamped to [0, max_frame]</p>
 <p><strong>Precondition</strong>: max_frame &gt;= 0</p>
-<p>Compute the effective frame index for a dynamic input slot.</p>
 <p>Combines the current frame, batch index, and temporal offset, then clamps the result to [0, max_frame].</p>
 </section>
-<section id="function-capturemodetostring" class="level3">
-<h3 class="anchored" data-anchor-id="function-capturemodetostring">function captureModeToString</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string captureModeToString<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    CaptureMode mode</span>
+<section id="function-staticinputsourcetostring" class="level3">
+<h3 class="anchored" data-anchor-id="function-staticinputsourcetostring">function staticInputSourceToString</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string staticInputSourceToString<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    StaticInputSource source</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert CaptureMode to a string for serialization.</p>
+<p>Convert StaticInputSource to a string for serialization.</p>
 </section>
-<section id="function-capturemodefromstring" class="level3">
-<h3 class="anchored" data-anchor-id="function-capturemodefromstring">function captureModeFromString</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CaptureMode captureModeFromString<span class="op">(</span></span>
+<section id="function-staticinputsourcefromstring" class="level3">
+<h3 class="anchored" data-anchor-id="function-staticinputsourcefromstring">function staticInputSourceFromString</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> StaticInputSource staticInputSourceFromString<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> s</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert a string to CaptureMode (defaults to Relative on unknown input).</p>
+<p>Convert a string to StaticInputSource (defaults to <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>).</p>
 </section>
-<section id="function-staticcachekey" class="level3">
-<h3 class="anchored" data-anchor-id="function-staticcachekey">function staticCacheKey</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string staticCacheKey<span class="op">(</span></span>
+<section id="function-defaultbankentryid" class="level3">
+<h3 class="anchored" data-anchor-id="function-defaultbankentryid">function defaultBankEntryId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string defaultBankEntryId<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> slot_name<span class="op">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> memory_index</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Build a cache key for a static input entry.</p>
-<p>Used by <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> to index into its tensor cache. Format: “slot_name:memory_index”</p>
+<p>Default DataBank entry ID for a static slot position.</p>
 </section>
 <section id="function-recurrentinitmodetostring" class="level3">
 <h3 class="anchored" data-anchor-id="function-recurrentinitmodetostring">function recurrentInitModeToString</h3>
@@ -631,126 +663,289 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef DEEP_LEARNING_BINDING_DATA_HPP</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DEEP_LEARNING_BINDING_DATA_HPP</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SlotBindingData <span class="op">{</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string slot_name<span class="op">;</span>      </span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span>       </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string encoder_id<span class="op">;</span>     </span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string mode <span class="op">=</span> <span class="st">"Raw"</span><span class="op">;</span>   </span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> gaussian_sigma <span class="op">=</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> normalize <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>      </span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>        </span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> computeEncodingFrame<span class="op">(</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> current_frame<span class="op">,</span> <span class="dt">int</span> batch_index<span class="op">,</span> <span class="dt">int</span> time_offset<span class="op">,</span> <span class="dt">int</span> max_frame<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>clamp<span class="op">(</span>current_frame <span class="op">+</span> batch_index <span class="op">+</span> time_offset<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> max_frame<span class="op">);</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> OutputBindingData <span class="op">{</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string slot_name<span class="op">;</span> </span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span>  </span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string decoder_id<span class="op">;</span></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> threshold <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> subpixel <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>  </span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> CaptureMode <span class="op">{</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    Relative<span class="op">,</span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    Absolute </span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string captureModeToString<span class="op">(</span>CaptureMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mode <span class="op">==</span> CaptureMode<span class="op">::</span>Absolute <span class="op">?</span> <span class="st">"Absolute"</span> <span class="op">:</span> <span class="st">"Relative"</span><span class="op">;</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> CaptureMode captureModeFromString<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> s<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s <span class="op">==</span> <span class="st">"Absolute"</span> <span class="op">?</span> CaptureMode<span class="op">::</span>Absolute <span class="op">:</span> CaptureMode<span class="op">::</span>Relative<span class="op">;</span></span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string staticCacheKey<span class="op">(</span></span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> slot_name<span class="op">,</span> <span class="dt">int</span> memory_index<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> slot_name <span class="op">+</span> <span class="st">":"</span> <span class="op">+</span> <span class="bu">std::</span>to_string<span class="op">(</span>memory_index<span class="op">);</span></span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> StaticInputData <span class="op">{</span></span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string slot_name<span class="op">;</span>                    </span>
-<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> memory_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>                     </span>
-<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span>                     </span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>                      </span>
-<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>                       </span>
-<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string capture_mode_str <span class="op">=</span> <span class="st">"Relative"</span><span class="op">;</span></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> captured_frame <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span>                  </span>
-<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CaptureMode captureMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> captureModeFromString<span class="op">(</span>capture_mode_str<span class="op">);</span></span>
-<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setCaptureMode<span class="op">(</span>CaptureMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>        capture_mode_str <span class="op">=</span> captureModeToString<span class="op">(</span>mode<span class="op">);</span></span>
-<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
-<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a><span class="co">// Recurrent (Feedback) Inputs — Phase 4</span></span>
-<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
-<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> RecurrentInitMode <span class="op">{</span></span>
-<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>    Zeros<span class="op">,</span>        </span>
-<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>    StaticCapture<span class="op">,</span></span>
-<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    FirstOutput   </span>
-<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string recurrentInitModeToString<span class="op">(</span>RecurrentInitMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> RecurrentInitMode<span class="op">::</span>StaticCapture<span class="op">:</span></span>
-<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"StaticCapture"</span><span class="op">;</span></span>
-<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> RecurrentInitMode<span class="op">::</span>FirstOutput<span class="op">:</span></span>
-<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"FirstOutput"</span><span class="op">;</span></span>
-<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span></span>
-<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"Zeros"</span><span class="op">;</span></span>
-<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> RecurrentInitMode recurrentInitModeFromString<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> s<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s <span class="op">==</span> <span class="st">"StaticCapture"</span><span class="op">)</span> <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>StaticCapture<span class="op">;</span></span>
-<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s <span class="op">==</span> <span class="st">"FirstOutput"</span><span class="op">)</span> <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>FirstOutput<span class="op">;</span></span>
-<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>Zeros<span class="op">;</span></span>
-<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string recurrentCacheKey<span class="op">(</span></span>
-<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input_slot_name<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"recurrent:"</span> <span class="op">+</span> input_slot_name<span class="op">;</span></span>
-<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RecurrentBindingData <span class="op">{</span></span>
-<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string input_slot_name<span class="op">;</span>        </span>
-<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string output_slot_name<span class="op">;</span>       </span>
-<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string init_mode_str <span class="op">=</span> <span class="st">"Zeros"</span><span class="op">;</span></span>
-<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string init_data_key<span class="op">;</span>          </span>
-<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> init_frame <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span>                </span>
-<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> target_memory_index <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> hasTargetMemoryIndex<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> target_memory_index <span class="op">&gt;=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> RecurrentInitMode initMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> recurrentInitModeFromString<span class="op">(</span>init_mode_str<span class="op">);</span></span>
-<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setInitMode<span class="op">(</span>RecurrentInitMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a>        init_mode_str <span class="op">=</span> recurrentInitModeToString<span class="op">(</span>mode<span class="op">);</span></span>
-<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DEEP_LEARNING_BINDING_DATA_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;type_traits&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> computeEncodingFrame<span class="op">(</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> current_frame<span class="op">,</span> <span class="dt">int</span> batch_index<span class="op">,</span> <span class="dt">int</span> time_offset<span class="op">,</span> <span class="dt">int</span> max_frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>clamp<span class="op">(</span>current_frame <span class="op">+</span> batch_index <span class="op">+</span> time_offset<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> max_frame<span class="op">);</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> StaticInputSource <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    DataManager<span class="op">,</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    DataBank</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string staticInputSourceToString<span class="op">(</span>StaticInputSource source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> source <span class="op">==</span> StaticInputSource<span class="op">::</span>DataBank <span class="op">?</span> <span class="st">"DataBank"</span> <span class="op">:</span> <span class="st">"DataManager"</span><span class="op">;</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> StaticInputSource staticInputSourceFromString<span class="op">(</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s <span class="op">==</span> <span class="st">"DataBank"</span> <span class="op">?</span> StaticInputSource<span class="op">::</span>DataBank</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                           <span class="op">:</span> StaticInputSource<span class="op">::</span>DataManager<span class="op">;</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string defaultBankEntryId<span class="op">(</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> slot_name<span class="op">,</span> <span class="dt">int</span> memory_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> slot_name <span class="op">+</span> <span class="st">"_"</span> <span class="op">+</span> <span class="bu">std::</span>to_string<span class="op">(</span>memory_index<span class="op">);</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="co">// Memory frame source variants</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> dl <span class="op">{</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DataManagerStaticSource <span class="op">{</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DataBankStaticSource <span class="op">{</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string bank_entry_id<span class="op">;</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StaticInputSourceVariant <span class="op">=</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>        <span class="st">"static_source"</span><span class="op">,</span></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>        DataManagerStaticSource<span class="op">,</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>        DataBankStaticSource<span class="op">&gt;;</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> StaticFrameSource <span class="op">{</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    StaticInputSourceVariant source <span class="op">=</span> DataManagerStaticSource<span class="op">{};</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ZerosInit <span class="op">{};</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> StaticCaptureInit <span class="op">{</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> FirstOutputInit <span class="op">{};</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> RecurrentInitVariant <span class="op">=</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>        <span class="st">"init_mode"</span><span class="op">,</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>        ZerosInit<span class="op">,</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>        StaticCaptureInit<span class="op">,</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>        FirstOutputInit<span class="op">&gt;;</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RecurrentFrameSource <span class="op">{</span></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string output_slot_name<span class="op">;</span></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>    RecurrentInitVariant init <span class="op">=</span> ZerosInit<span class="op">{};</span></span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MemoryFrameSourceVariant <span class="op">=</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>        <span class="st">"frame_kind"</span><span class="op">,</span></span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>        StaticFrameSource<span class="op">,</span></span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>        RecurrentFrameSource<span class="op">&gt;;</span></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MemoryFrameBinding <span class="op">{</span></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string slot_name<span class="op">;</span></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> memory_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>    MemoryFrameSourceVariant frame <span class="op">=</span> StaticFrameSource<span class="op">{};</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">bool</span> isStaticFrame<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>StaticFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">());</span></span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">bool</span> isRecurrentFrame<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>RecurrentFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">());</span></span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> StaticInputSource staticSourceType<span class="op">(</span></span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isStaticFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> StaticInputSource<span class="op">::</span>DataManager<span class="op">;</span></span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> source <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>source<span class="op">;</span></span>
+<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>DataBankStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> StaticInputSource<span class="op">::</span>DataBank<span class="op">;</span></span>
+<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> StaticInputSource<span class="op">::</span>DataManager<span class="op">;</span></span>
+<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string staticDataKey<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isStaticFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> source <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>source<span class="op">;</span></span>
+<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>DataManagerStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>DataManagerStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()).</span>data_key<span class="op">;</span></span>
+<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-123"><a href="#cb8-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-124"><a href="#cb8-124" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">int</span> staticTimeOffset<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isStaticFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> source <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>source<span class="op">;</span></span>
+<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>DataManagerStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>DataManagerStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()).</span>time_offset<span class="op">;</span></span>
+<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string staticBankEntryId<span class="op">(</span></span>
+<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isStaticFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-140"><a href="#cb8-140" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> source <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>source<span class="op">;</span></span>
+<span id="cb8-141"><a href="#cb8-141" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>DataBankStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>DataBankStaticSource<span class="op">&gt;(</span>source<span class="op">.</span>variant<span class="op">()).</span>bank_entry_id<span class="op">;</span></span>
+<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string resolvedBankEntryId<span class="op">(</span></span>
+<span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-149"><a href="#cb8-149" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> explicit_id <span class="op">=</span> staticBankEntryId<span class="op">(</span>binding<span class="op">);</span></span>
+<span id="cb8-150"><a href="#cb8-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>explicit_id<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> explicit_id<span class="op">;</span></span>
+<span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-153"><a href="#cb8-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>staticSourceType<span class="op">(</span>binding<span class="op">)</span> <span class="op">==</span> StaticInputSource<span class="op">::</span>DataBank<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-154"><a href="#cb8-154" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> defaultBankEntryId<span class="op">(</span>binding<span class="op">.</span>slot_name<span class="op">,</span> binding<span class="op">.</span>memory_index<span class="op">);</span></span>
+<span id="cb8-155"><a href="#cb8-155" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-157"><a href="#cb8-157" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-158"><a href="#cb8-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-159"><a href="#cb8-159" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">bool</span> hasActiveStaticSource<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-160"><a href="#cb8-160" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isStaticFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-161"><a href="#cb8-161" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-162"><a href="#cb8-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-163"><a href="#cb8-163" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>staticSourceType<span class="op">(</span>binding<span class="op">)</span> <span class="op">==</span> StaticInputSource<span class="op">::</span>DataBank<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">!</span>resolvedBankEntryId<span class="op">(</span>binding<span class="op">).</span>empty<span class="op">();</span></span>
+<span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">!</span>staticDataKey<span class="op">(</span>binding<span class="op">).</span>empty<span class="op">();</span></span>
+<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-168"><a href="#cb8-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string recurrentOutputSlot<span class="op">(</span></span>
+<span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-171"><a href="#cb8-171" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isRecurrentFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-172"><a href="#cb8-172" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>RecurrentFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>output_slot_name<span class="op">;</span></span>
+<span id="cb8-175"><a href="#cb8-175" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-176"><a href="#cb8-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-177"><a href="#cb8-177" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">bool</span> hasActiveRecurrentBinding<span class="op">(</span></span>
+<span id="cb8-178"><a href="#cb8-178" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-179"><a href="#cb8-179" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isRecurrentFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-180"><a href="#cb8-180" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb8-181"><a href="#cb8-181" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-182"><a href="#cb8-182" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> name <span class="op">=</span> recurrentOutputSlot<span class="op">(</span>binding<span class="op">);</span></span>
+<span id="cb8-183"><a href="#cb8-183" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">!</span>name<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> name <span class="op">!=</span> <span class="st">"(None)"</span><span class="op">;</span></span>
+<span id="cb8-184"><a href="#cb8-184" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-185"><a href="#cb8-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">bool</span> hasActiveRecurrentBindings<span class="op">(</span></span>
+<span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>MemoryFrameBinding<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> frames<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>any_of<span class="op">(</span></span>
+<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a>            frames<span class="op">.</span>begin<span class="op">(),</span></span>
+<span id="cb8-190"><a href="#cb8-190" aria-hidden="true" tabindex="-1"></a>            frames<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a>            <span class="op">[](</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-192"><a href="#cb8-192" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> hasActiveRecurrentBinding<span class="op">(</span>frame<span class="op">);</span></span>
+<span id="cb8-193"><a href="#cb8-193" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
+<span id="cb8-194"><a href="#cb8-194" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-195"><a href="#cb8-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-196"><a href="#cb8-196" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> MemoryFrameBinding <span class="at">const</span> <span class="op">*</span> findMemoryFrame<span class="op">(</span></span>
+<span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>MemoryFrameBinding<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> frames<span class="op">,</span></span>
+<span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> slot_name<span class="op">,</span></span>
+<span id="cb8-199"><a href="#cb8-199" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> memory_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-200"><a href="#cb8-200" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> frame<span class="op">:</span> frames<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-201"><a href="#cb8-201" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>frame<span class="op">.</span>slot_name <span class="op">==</span> slot_name <span class="op">&amp;&amp;</span> frame<span class="op">.</span>memory_index <span class="op">==</span> memory_index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-202"><a href="#cb8-202" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">&amp;</span>frame<span class="op">;</span></span>
+<span id="cb8-203"><a href="#cb8-203" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-204"><a href="#cb8-204" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-205"><a href="#cb8-205" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb8-206"><a href="#cb8-206" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-207"><a href="#cb8-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-208"><a href="#cb8-208" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace dl</span></span>
+<span id="cb8-209"><a href="#cb8-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-210"><a href="#cb8-210" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
+<span id="cb8-211"><a href="#cb8-211" aria-hidden="true" tabindex="-1"></a><span class="co">// Recurrent (Feedback) Inputs</span></span>
+<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a><span class="co">// ════════════════════════════════════════════════════════════════════════════</span></span>
+<span id="cb8-213"><a href="#cb8-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-214"><a href="#cb8-214" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> RecurrentInitMode <span class="op">{</span></span>
+<span id="cb8-215"><a href="#cb8-215" aria-hidden="true" tabindex="-1"></a>    Zeros<span class="op">,</span></span>
+<span id="cb8-216"><a href="#cb8-216" aria-hidden="true" tabindex="-1"></a>    StaticCapture<span class="op">,</span></span>
+<span id="cb8-217"><a href="#cb8-217" aria-hidden="true" tabindex="-1"></a>    FirstOutput</span>
+<span id="cb8-218"><a href="#cb8-218" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-219"><a href="#cb8-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-220"><a href="#cb8-220" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string recurrentInitModeToString<span class="op">(</span>RecurrentInitMode mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-221"><a href="#cb8-221" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-222"><a href="#cb8-222" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> RecurrentInitMode<span class="op">::</span>StaticCapture<span class="op">:</span></span>
+<span id="cb8-223"><a href="#cb8-223" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"StaticCapture"</span><span class="op">;</span></span>
+<span id="cb8-224"><a href="#cb8-224" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> RecurrentInitMode<span class="op">::</span>FirstOutput<span class="op">:</span></span>
+<span id="cb8-225"><a href="#cb8-225" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"FirstOutput"</span><span class="op">;</span></span>
+<span id="cb8-226"><a href="#cb8-226" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb8-227"><a href="#cb8-227" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">"Zeros"</span><span class="op">;</span></span>
+<span id="cb8-228"><a href="#cb8-228" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-229"><a href="#cb8-229" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-230"><a href="#cb8-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-231"><a href="#cb8-231" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> RecurrentInitMode recurrentInitModeFromString<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s <span class="op">==</span> <span class="st">"StaticCapture"</span><span class="op">)</span> <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>StaticCapture<span class="op">;</span></span>
+<span id="cb8-233"><a href="#cb8-233" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s <span class="op">==</span> <span class="st">"FirstOutput"</span><span class="op">)</span> <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>FirstOutput<span class="op">;</span></span>
+<span id="cb8-234"><a href="#cb8-234" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>Zeros<span class="op">;</span></span>
+<span id="cb8-235"><a href="#cb8-235" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-236"><a href="#cb8-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-237"><a href="#cb8-237" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> dl <span class="op">{</span></span>
+<span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> RecurrentInitMode recurrentInitMode<span class="op">(</span></span>
+<span id="cb8-240"><a href="#cb8-240" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-241"><a href="#cb8-241" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isRecurrentFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-242"><a href="#cb8-242" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>Zeros<span class="op">;</span></span>
+<span id="cb8-243"><a href="#cb8-243" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-244"><a href="#cb8-244" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> init <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>RecurrentFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>init<span class="op">;</span></span>
+<span id="cb8-245"><a href="#cb8-245" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>StaticCaptureInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-246"><a href="#cb8-246" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>StaticCapture<span class="op">;</span></span>
+<span id="cb8-247"><a href="#cb8-247" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-248"><a href="#cb8-248" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>FirstOutputInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-249"><a href="#cb8-249" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>FirstOutput<span class="op">;</span></span>
+<span id="cb8-250"><a href="#cb8-250" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-251"><a href="#cb8-251" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> RecurrentInitMode<span class="op">::</span>Zeros<span class="op">;</span></span>
+<span id="cb8-252"><a href="#cb8-252" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-253"><a href="#cb8-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-254"><a href="#cb8-254" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string staticCaptureDataKey<span class="op">(</span></span>
+<span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a>        MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isRecurrentFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-257"><a href="#cb8-257" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-259"><a href="#cb8-259" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> init <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>RecurrentFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>init<span class="op">;</span></span>
+<span id="cb8-260"><a href="#cb8-260" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>StaticCaptureInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-261"><a href="#cb8-261" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticCaptureInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()).</span>data_key<span class="op">;</span></span>
+<span id="cb8-262"><a href="#cb8-262" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-263"><a href="#cb8-263" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb8-264"><a href="#cb8-264" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-265"><a href="#cb8-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-266"><a href="#cb8-266" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">int</span> staticCaptureFrame<span class="op">(</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> binding<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-267"><a href="#cb8-267" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>isRecurrentFrame<span class="op">(</span>binding<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-268"><a href="#cb8-268" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb8-269"><a href="#cb8-269" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-270"><a href="#cb8-270" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> init <span class="op">=</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>RecurrentFrameSource<span class="op">&gt;(</span>binding<span class="op">.</span>frame<span class="op">.</span>variant<span class="op">()).</span>init<span class="op">;</span></span>
+<span id="cb8-271"><a href="#cb8-271" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>rfl<span class="op">::</span>holds_alternative<span class="op">&lt;</span>StaticCaptureInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb8-272"><a href="#cb8-272" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rfl<span class="op">::</span>get<span class="op">&lt;</span>StaticCaptureInit<span class="op">&gt;(</span>init<span class="op">.</span>variant<span class="op">()).</span>frame<span class="op">;</span></span>
+<span id="cb8-273"><a href="#cb8-273" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-274"><a href="#cb8-274" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb8-275"><a href="#cb8-275" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-276"><a href="#cb8-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-277"><a href="#cb8-277" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace dl</span></span>
+<span id="cb8-278"><a href="#cb8-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-279"><a href="#cb8-279" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="bu">std::</span>string recurrentCacheKey<span class="op">(</span></span>
+<span id="cb8-280"><a href="#cb8-280" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input_slot_name<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-281"><a href="#cb8-281" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"recurrent:"</span> <span class="op">+</span> input_slot_name<span class="op">;</span></span>
+<span id="cb8-282"><a href="#cb8-282" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-283"><a href="#cb8-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-284"><a href="#cb8-284" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DEEP_LEARNING_BINDING_DATA_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:25 +0000</p>
 
 
 </section>

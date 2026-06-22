@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -556,7 +556,7 @@ public:
 
 # Integration with Transform System
 
-The transform system (`transforms/v2/core/ContainerTraits.hpp`) uses these traits to:
+The transform system (`[DataManager/utils/ContainerElementMapping.hpp](/api_generated/Files/ContainerElementMapping_8hpp.md#file-containerelementmapping.hpp)`) uses these traits to:
 
 * Map element types to container types
 * Determine appropriate output containers for transforms
@@ -564,7 +564,7 @@ The transform system (`transforms/v2/core/ContainerTraits.hpp`) uses these trait
 
 ```cpp
 
-// ContainerTraits now queries DataTraits instead of defining its own
+// ContainerElementMapping queries DataTraits for container → element mapping
 template&lt;typename T&gt;
 inline constexpr bool is_ragged_v = WhiskerToolbox::TypeTraits::is_ragged_v&lt;T&gt;;</code></pre>
 </section>
@@ -582,11 +582,11 @@ inline constexpr bool is_ragged_v = WhiskerToolbox::TypeTraits::is_ragged_v&lt;T
 <h1>Related Documentation</h1>
 <ul>
 <li>Transform System V2: <code>transforms/v2/DESIGN.md</code></li>
-<li>Container Traits: <code>transforms/v2/core/ContainerTraits.hpp</code></li>
-<li>Type Index Mapping: <code>transforms/v2/core/ContainerTraits.cpp</code></li>
+<li>Container mapping: <code>[DataManager/utils/ContainerElementMapping.hpp](/api_generated/Files/ContainerElementMapping_8hpp.md#file-containerelementmapping.hpp)</code></li>
+<li>Type index mapping: <code>[DataManager/utils/ContainerTypeIndex.hpp](/api_generated/Files/ContainerTypeIndex_8hpp.md#file-containertypeindex.hpp)</code></li>
 </ul>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:57 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:27 +0000</p>
 
 
 </section>

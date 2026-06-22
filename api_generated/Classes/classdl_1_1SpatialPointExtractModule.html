@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -360,6 +360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-currentpoint" id="toc-function-currentpoint" class="nav-link" data-scroll-target="#function-currentpoint">function currentPoint</a></li>
   <li><a href="#function-sourceimagesize" id="toc-function-sourceimagesize" class="nav-link" data-scroll-target="#function-sourceimagesize">function sourceImageSize</a></li>
   <li><a href="#function-interpolationmode" id="toc-function-interpolationmode" class="nav-link" data-scroll-target="#function-interpolationmode">function interpolationMode</a></li>
+  <li><a href="#function-pointkey" id="toc-function-pointkey" class="nav-link" data-scroll-target="#function-pointkey">function pointKey</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -390,7 +391,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlspatialpointextractmodule" class="level1">
 <h1>dl::SpatialPointExtractModule</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Extracts the feature vector at a 2D point location within the feature map. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;SpatialPointExtractModule.hpp&gt;</code></p>
 <p>Inherits from <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">dl::PostEncoderModule</a></p>
 <section id="public-functions" class="level2">
@@ -405,7 +406,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-spatialpointextractmodule">SpatialPointExtractModule</a></strong>(<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Namespaces/namespacedl.html#enum-interpolationmode">InterpolationMode</a> mode =<a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-nearest">InterpolationMode::Nearest</a>)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-spatialpointextractmodule">SpatialPointExtractModule</a></strong>(<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Classes/structdl_1_1SpatialPointModuleParams.html">SpatialPointModuleParams</a> params ={})<br>Construct a spatial point extraction module.</td>
 </tr>
 <tr class="even">
 <td>virtual std::string</td>
@@ -413,27 +414,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>virtual at::Tensor</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-apply">apply</a></strong>(at::Tensor const &amp; features) const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-apply">apply</a></strong>(at::Tensor const &amp; features) const override<br>Extract the feature vector at the current query point.</td>
 </tr>
 <tr class="even">
 <td>virtual std::vector&lt; int64_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-outputshape">outputShape</a></strong>(std::vector&lt; int64_t &gt; const &amp; input_shape) const override</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-outputshape">outputShape</a></strong>(std::vector&lt; int64_t &gt; const &amp; input_shape) const override<br>Returns <code>{C}</code> where C is <code>input_shape[0]</code>.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-setpoint">setPoint</a></strong>(<a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; point)</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-setpoint">setPoint</a></strong>(<a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; point)<br>Update the query point (in source-image coordinates) for the next frame.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-currentpoint">currentPoint</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-currentpoint">currentPoint</a></strong>() const<br>The current query point in source-image coordinates.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structImageSize.html">ImageSize</a></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-sourceimagesize">sourceImageSize</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-sourceimagesize">sourceImageSize</a></strong>() const<br>The source image size used for coordinate scaling.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Namespaces/namespacedl.html#enum-interpolationmode">InterpolationMode</a></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-interpolationmode">interpolationMode</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-interpolationmode">interpolationMode</a></strong>() const<br>The interpolation mode.</td>
+</tr>
+<tr class="odd">
+<td>std::string const &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-pointkey">pointKey</a></strong>() const<br><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key for per-frame <a href="../../api_generated/Classes/classPointData.html">PointData</a> lookup.</td>
 </tr>
 </tbody>
 </table>
@@ -473,8 +478,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The current query point must be set via <code>[setPoint()](/api_generated/Classes/classdl_1_1SpatialPointExtractModule.md#function-setpoint)</code> before each <code>[apply()](/api_generated/Classes/classdl_1_1SpatialPointExtractModule.md#function-apply)</code>.</p>
 <p>Example:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dl<span class="op">::</span>SpatialPointExtractModule extractor<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="dv">640</span><span class="op">,</span> <span class="dv">480</span><span class="op">},</span>                     <span class="co">// source image size</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>InterpolationMode<span class="op">::</span>Bilinear<span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="dv">640</span><span class="op">,</span> <span class="dv">480</span><span class="op">},</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>SpatialPointModuleParams<span class="op">{.</span>interpolation <span class="op">=</span> dl<span class="op">::</span>InterpolationMode<span class="op">::</span>Bilinear<span class="op">});</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>extractor<span class="op">.</span>setPoint<span class="op">({</span><span class="fl">320.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">240.0</span><span class="bu">f</span><span class="op">});</span>  <span class="co">// centre pixel</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> vec <span class="op">=</span> extractor<span class="op">.</span>apply<span class="op">(</span>features<span class="op">);</span>  <span class="co">// → [B, C]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -485,17 +490,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-spatialpointextractmodule">function SpatialPointExtractModule</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> SpatialPointExtractModule<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    InterpolationMode mode <span class="op">=</span>InterpolationMode<span class="op">::</span>Nearest</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    SpatialPointModuleParams params <span class="op">={}</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct a spatial point extraction module.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>source_image_size</strong> Dimensions of the original source image (before any encoding/resizing). Used for coordinate scaling.</li>
-<li><strong>mode</strong> Interpolation strategy (Nearest or Bilinear).</li>
+<li><strong>params</strong> User-configurable module parameters (interpolation, point_key).</li>
 </ul>
 <p><strong>Precondition</strong>:</p>
 <ul>
-<li>source_image_size.width &gt; 0 (enforcement: assert)</li>
-<li>source_image_size.height &gt; 0 (enforcement: assert)</li>
+<li>source_image_size.width &gt; 0</li>
+<li>source_image_size.height &gt; 0</li>
 </ul>
 </section>
 <section id="function-name" class="level3">
@@ -509,6 +515,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> at<span class="op">::</span>Tensor apply<span class="op">(</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    at<span class="op">::</span>Tensor <span class="at">const</span> <span class="op">&amp;</span> features</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract the feature vector at the current query point.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>features</strong> Input tensor of shape <code>[B, C, H, W]</code>.</li>
@@ -516,55 +523,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: Tensor of shape <code>[B, C]</code>.</p>
 <p><strong>Precondition</strong>:</p>
 <ul>
-<li>features must be defined (not a default-constructed undefined tensor) (enforcement: assert)</li>
-<li>features.dim() == 4 (enforcement: exception)</li>
-<li>features.size(0) &gt;= 1 (batch dim B &gt;= 1) (enforcement: none) [IMPORTANT]</li>
-<li>features.size(2) &gt;= 1 and features.size(3) &gt;= 1 (H and W &gt;= 1; bilinear path divides by W-1 and H-1) (enforcement: none) [CRITICAL]</li>
-<li><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-setpoint">setPoint()</a> should have been called with a meaningful point before <a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-apply">apply()</a>; default {0,0} is used otherwise (enforcement: none) [IMPORTANT]</li>
+<li>features is defined</li>
+<li>features.dim() == 4 (layout <code>[B, C, H, W]</code>)</li>
+<li>features.size(0) &gt;= 1</li>
+<li>features.size(1) &gt;= 1</li>
+<li>features.size(2) &gt;= 1 and features.size(3) &gt;= 1</li>
+<li>for bilinear mode: features.size(2) &gt;= 2 and features.size(3) &gt;= 2</li>
+<li><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-setpoint">setPoint()</a> should have been called before <a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html#function-apply">apply()</a>; default <code>{0, 0}</code> is used otherwise</li>
 </ul>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html#function-apply">dl::PostEncoderModule::apply</a></p>
-<p>Extract the feature vector at the current query point.</p>
 </section>
 <section id="function-outputshape" class="level3">
 <h3 class="anchored" data-anchor-id="function-outputshape">function outputShape</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> outputShape<span class="op">(</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> input_shape</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Returns <code>{C}</code> where C is <code>input_shape[0]</code>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input_shape</strong> Encoder output shape <code>[C, H, W]</code> excluding the batch dimension.</li>
+</ul>
 <p><strong>Precondition</strong>:</p>
 <ul>
-<li>input_shape must not be empty (enforcement: assert)</li>
-<li>input_shape[0] &gt;= 1 (channel count C must be positive) (enforcement: none) [IMPORTANT]</li>
+<li>input_shape is not empty</li>
+<li>input_shape[0] &gt;= 1</li>
 </ul>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html#function-outputshape">dl::PostEncoderModule::outputShape</a></p>
-<p>Returns <code>{C}</code> where C is <code>input_shape[0]</code>.</p>
 </section>
 <section id="function-setpoint" class="level3">
 <h3 class="anchored" data-anchor-id="function-setpoint">function setPoint</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPoint<span class="op">(</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> point</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the query point (in source-image coordinates) for the next frame.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>point</strong> Query location in pixel coordinates of the source image. (0, 0) is the top-left corner.</li>
 </ul>
-<p>Update the query point (in source-image coordinates) for the next frame.</p>
 </section>
 <section id="function-currentpoint" class="level3">
 <h3 class="anchored" data-anchor-id="function-currentpoint">function currentPoint</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> currentPoint<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Return</strong>: The current query point in source-image coordinates.</p>
+<p>The current query point in source-image coordinates.</p>
 </section>
 <section id="function-sourceimagesize" class="level3">
 <h3 class="anchored" data-anchor-id="function-sourceimagesize">function sourceImageSize</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ImageSize sourceImageSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Return</strong>: The source image size used for coordinate scaling.</p>
+<p>The source image size used for coordinate scaling.</p>
 </section>
 <section id="function-interpolationmode" class="level3">
 <h3 class="anchored" data-anchor-id="function-interpolationmode">function interpolationMode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> InterpolationMode interpolationMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Return</strong>: The interpolation mode.</p>
+<p>The interpolation mode.</p>
+</section>
+<section id="function-pointkey" class="level3">
+<h3 class="anchored" data-anchor-id="function-pointkey">function pointKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> pointKey<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key for per-frame <a href="../../api_generated/Classes/classPointData.html">PointData</a> lookup.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

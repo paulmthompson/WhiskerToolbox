@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -588,28 +588,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Tests</strong>: Layout constraint test via <code>LayoutTesting</code> — verify no zero-dimension widgets.</li>
 </ul>
 </section>
-<section id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-or-genericsaverpanel" class="level4">
-<h4 class="anchored" data-anchor-id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-or-genericsaverpanel">Step 1.2: Add file/directory browsing support to <code>AutoParamWidget</code> or <code>GenericSaverPanel</code></h4>
+<section id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-implemented" class="level4">
+<h4 class="anchored" data-anchor-id="step-1.2-add-filedirectory-browsing-support-to-autoparamwidget-implemented">Step 1.2: Add file/directory browsing support to <code>AutoParamWidget</code> — <strong>implemented</strong></h4>
 <p>The loader/saver Options structs have fields like <code>filepath</code>, <code>filename</code>, <code>parent_dir</code>, <code>directory_path</code>. These should get a browse button rather than a plain <code>QLineEdit</code>.</p>
-<p><strong>Option A</strong>: Add a <code>ParameterFieldDescriptor</code> flag (<code>bool is_file_path = false; bool is_directory_path = false;</code>) and teach <code>AutoParamWidget</code> to create a <code>QLineEdit + QPushButton("Browse...")</code> combo for these fields.</p>
-<p><strong>Option B</strong>: Handle this in <code>GenericSaverPanel</code> / <code>GenericLoaderPanel</code> by detecting field names containing “filepath”, “filename”, “directory”, “parent_dir” and overlaying browse buttons.</p>
-<p><strong>Recommendation</strong>: Option A is cleaner and reusable. Add the flags to <code>ParameterFieldDescriptor</code> and handle them in <code>AutoParamWidget</code>. Use <code>ParameterUIHints</code> specializations to mark which fields are file/directory paths:</p>
+<p><strong>Implemented design:</strong> <code>ParameterFieldDescriptor</code> uses a <code>PathFieldKind</code> enum (<code>None</code>, <code>FilePath</code>, <code>DirectoryPath</code>) plus optional <code>file_dialog_id</code>. This replaces the earlier proposal of separate <code>is_file_path</code> / <code>is_directory_path</code> booleans (mutually exclusive). <code>AutoParamWidget</code> renders <code>QLineEdit</code> + Browse for non-<code>None</code> kinds. Fallback directories are registered at app startup via <code>AutoParamWidget::registerDialogFallback()</code>, keyed by <code>file_dialog_id</code> — not as a per-field schema hint.</p>
+<p>Use <code>ParameterUIHints</code> to mark path fields:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints<span class="op">&lt;</span>CSVPointSaverOptions<span class="op">&gt;</span> <span class="op">{</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="dt">void</span> annotate<span class="op">(</span>ParameterSchema <span class="op">&amp;</span> schema<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"filename"</span><span class="op">))</span> <span class="op">{</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>is_file_path <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output filename"</span><span class="op">;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"parent_dir"</span><span class="op">))</span> <span class="op">{</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>is_directory_path <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output directory"</span><span class="op">;</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>path_field_kind <span class="op">=</span> PathFieldKind<span class="op">::</span>FilePath<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>file_dialog_id <span class="op">=</span> <span class="st">"export_csv"</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output filename"</span><span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> f <span class="op">=</span> schema<span class="op">.</span>field<span class="op">(</span><span class="st">"parent_dir"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>path_field_kind <span class="op">=</span> PathFieldKind<span class="op">::</span>DirectoryPath<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>file_dialog_id <span class="op">=</span> <span class="st">"export_dir"</span><span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            f<span class="op">-&gt;</span>tooltip <span class="op">=</span> <span class="st">"Output directory"</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>MainWindow</code> wires <code>AutoParamWidget::setFileDialogOpener()</code> to <code>AppFileDialog</code> and registers fallbacks (e.g.&nbsp;<code>transformv2_pipeline_open</code> → user pipeline library). First command consumer: <code>RunTransformsV2PipelineAtTime.pipeline_path</code> in TriageSession. <code>TransformsV2Properties_Widget</code> still uses hand-written buttons (no schema).</p>
 <ul>
-<li><strong>Files to modify</strong>: <code>ParameterSchema.hpp</code> (add <code>is_file_path</code>, <code>is_directory_path</code> to <code>ParameterFieldDescriptor</code>), <code>AutoParamWidget.cpp</code> (create browse button layout for these fields).</li>
-<li><strong>Tests</strong>: Unit test that <code>extractParameterSchema</code> preserves the flags after annotation.</li>
+<li><strong>Files modified:</strong> <code>ParameterSchema.hpp</code>, <code>AutoParamWidget.hpp/cpp</code>, <code>mainwindow.cpp</code></li>
+<li><strong>Tests:</strong> <code>RunTransformsV2PipelineAtTime.test.cpp</code> schema hint extraction; <code>GenericLoaderPanel</code> / <code>GenericSaverPanel</code> browse UX still future work.</li>
 </ul>
 </section>
 <section id="step-1.3-refactor-dataexport_widget-to-use-registry-driven-discovery" class="level4">
@@ -960,7 +962,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="key-design-decisions" class="level2">
 <h2 class="anchored" data-anchor-id="key-design-decisions">Key Design Decisions</h2>
 <ol type="1">
-<li><p><strong><code>filepath</code> handling</strong>: Loader Options structs have a <code>filepath</code> field. In the auto-generated UI, this needs a browse button. Add <code>is_file_path</code> / <code>is_directory_path</code> flags to <code>ParameterFieldDescriptor</code> and teach <code>AutoParamWidget</code> to create browse buttons for these.</p></li>
+<li><p><strong><code>filepath</code> handling</strong>: Loader Options structs have a <code>filepath</code> field. In the auto-generated UI, this needs a browse button. Use <code>PathFieldKind</code> + <code>file_dialog_id</code> on <code>ParameterFieldDescriptor</code> and <code>AutoParamWidget</code> browse rows (implemented — see Step 1.2).</p></li>
 <li><p><strong>Saver <code>parent_dir</code> + <code>filename</code> pattern</strong>: Many savers split the output path into <code>parent_dir</code> and <code>filename</code>. The auto-generated UI will show both as browseable fields. This is actually cleaner than the current approach where some widgets combine them.</p></li>
 <li><p><strong>Batch loading</strong>: Handled by a flag on <code>LoaderInfo</code>, with a secondary “Load All” button when supported. The JSON config is identical for single and batch loading.</p></li>
 <li><p><strong>Post-import transforms</strong> (scaling, coordinate maps): These are orthogonal to format-specific options. Model them as an optional auxiliary section below the <code>GenericLoaderPanel</code>, not as part of the <code>AutoParamWidget</code> form.</p></li>
@@ -988,7 +990,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>File browse UX is worse than hand-written</td>
-<td>Add <code>is_file_path</code> / <code>is_directory_path</code> to <code>ParameterFieldDescriptor</code> (Step 1.2) to get proper browse dialogs.</td>
+<td><code>PathFieldKind</code> + <code>file_dialog_id</code> on <code>ParameterFieldDescriptor</code> and <code>AutoParamWidget::registerDialogFallback()</code> (Step 1.2 — implemented for commands; IO panels pending).</td>
 </tr>
 <tr class="odd">
 <td>Batch loading UI needs custom logic</td>

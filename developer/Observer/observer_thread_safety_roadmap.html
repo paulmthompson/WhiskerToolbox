@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Task list for hardening ObserverData callbacks against cross-thread Qt violations">
+
+<title>Observer Thread-Safety Roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#problem-statement" id="toc-problem-statement" class="nav-link" data-scroll-target="#problem-statement">Problem Statement</a>
+  <ul class="collapse">
+  <li><a href="#why-it-surfaces-intermittently" id="toc-why-it-surfaces-intermittently" class="nav-link" data-scroll-target="#why-it-surfaces-intermittently">Why It Surfaces Intermittently</a></li>
+  </ul></li>
+  <li><a href="#current-state-of-callbacks" id="toc-current-state-of-callbacks" class="nav-link" data-scroll-target="#current-state-of-callbacks">Current State of Callbacks</a>
+  <ul class="collapse">
+  <li><a href="#safe-callbacks" id="toc-safe-callbacks" class="nav-link" data-scroll-target="#safe-callbacks">Safe Callbacks</a></li>
+  <li><a href="#unsafe-callbacks" id="toc-unsafe-callbacks" class="nav-link" data-scroll-target="#unsafe-callbacks">Unsafe Callbacks</a></li>
+  </ul></li>
+  <li><a href="#fix-patterns" id="toc-fix-patterns" class="nav-link" data-scroll-target="#fix-patterns">Fix Patterns</a>
+  <ul class="collapse">
+  <li><a href="#pattern-1-deferred-writes-worker-side" id="toc-pattern-1-deferred-writes-worker-side" class="nav-link" data-scroll-target="#pattern-1-deferred-writes-worker-side">Pattern 1: Deferred Writes (Worker-Side)</a></li>
+  <li><a href="#pattern-2-thread-safe-callback-wrappers-observer-side" id="toc-pattern-2-thread-safe-callback-wrappers-observer-side" class="nav-link" data-scroll-target="#pattern-2-thread-safe-callback-wrappers-observer-side">Pattern 2: Thread-Safe Callback Wrappers (Observer-Side)</a></li>
+  <li><a href="#pattern-3-main-thread-assertion-defensive" id="toc-pattern-3-main-thread-assertion-defensive" class="nav-link" data-scroll-target="#pattern-3-main-thread-assertion-defensive">Pattern 3: Main-Thread Assertion (Defensive)</a></li>
+  </ul></li>
+  <li><a href="#task-checklist" id="toc-task-checklist" class="nav-link" data-scroll-target="#task-checklist">Task Checklist</a>
+  <ul class="collapse">
+  <li><a href="#phase-1-immediate-hardening-no-architecture-changes" id="toc-phase-1-immediate-hardening-no-architecture-changes" class="nav-link" data-scroll-target="#phase-1-immediate-hardening-no-architecture-changes">Phase 1: Immediate Hardening (No Architecture Changes)</a></li>
+  <li><a href="#phase-2-structural-improvements" id="toc-phase-2-structural-improvements" class="nav-link" data-scroll-target="#phase-2-structural-improvements">Phase 2: Structural Improvements</a></li>
+  <li><a href="#phase-3-verification" id="toc-phase-3-verification" class="nav-link" data-scroll-target="#phase-3-verification">Phase 3: Verification</a></li>
+  </ul></li>
+  <li><a href="#design-decisions" id="toc-design-decisions" class="nav-link" data-scroll-target="#design-decisions">Design Decisions</a></li>
+  <li><a href="#relationship-to-other-roadmaps" id="toc-relationship-to-other-roadmaps" class="nav-link" data-scroll-target="#relationship-to-other-roadmaps">Relationship to Other Roadmaps</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Observer Thread-Safety Roadmap</h1>
+</div>
+
+<div>
+  <div class="description">
+    Task list for hardening ObserverData callbacks against cross-thread Qt violations
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This document provides a concrete task list for hardening the <code>ObserverData</code> callback system against thread-safety violations. It describes the problem, the patterns that fix it, and step-by-step instructions for applying each pattern to existing code.</p>
+<p>For the core <code>ObserverData</code> API and integration patterns, see the <a href="../../developer/Observer/index.html">Observer Library</a>.</p>
+<p>For the broader concurrency architecture — ownership model, write reservations, and staged design — see <a href="../../developer/DataManager/concurrency_architecture.html">Concurrency Architecture</a>.</p>
+</section>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
+<p><code>ObserverData</code> is explicitly <strong>not thread-safe</strong>: <code>notifyObservers()</code> calls every registered callback synchronously on the <em>calling</em> thread. When <code>DataManager::setData()</code> is called from a background <code>QThread</code>, observer callbacks that manipulate Qt widgets execute on the wrong thread — undefined behavior that causes heap corruption, ASAN crashes, and intermittent segfaults.</p>
+<p>This was discovered via a crash in <code>MLCoreWidget</code>: the <code>PipelineWorker</code> (QThread) called <code>writePredictions()</code> → <code>dm.setData()</code> → <code>notifyObservers()</code> on the background thread. Many widget callbacks directly called <code>QComboBox::clear()</code>, <code>QTreeWidget::clear()</code>, and similar — all require the main thread.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Re-entrancy vs.&nbsp;Thread Safety
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>ObserverData::notifyObservers()</code> copies the observer map to a snapshot before invoking callbacks. Adding or removing observers from within a callback is therefore safe for a single notification round — additions take effect on the next <code>notifyObservers()</code> call. This does <strong>not</strong> make the library thread-safe: concurrent <code>addObserver</code>, <code>removeObserver</code>, or <code>notifyObservers</code> calls from different threads remain undefined behavior.</p>
+</div>
+</div>
+<section id="why-it-surfaces-intermittently" class="level3">
+<h3 class="anchored" data-anchor-id="why-it-surfaces-intermittently">Why It Surfaces Intermittently</h3>
+<p>On the first pipeline run, few observers are registered for the new output keys. On subsequent runs, more widgets have attached observers, increasing the number of unsafe cross-thread callbacks and making the race more likely to manifest.</p>
+</section>
+</section>
+<section id="current-state-of-callbacks" class="level2">
+<h2 class="anchored" data-anchor-id="current-state-of-callbacks">Current State of Callbacks</h2>
+<p>An audit of Qt widget <code>addObserver</code> call sites (paths relative to <code>src/WhiskerToolbox/</code>) found two categories. Re-audit after major refactors — several widgets moved out of <code>DataManager_Widget/</code> into standalone modules or <code>DataInspector_Widget/</code>.</p>
+<section id="safe-callbacks" class="level3">
+<h3 class="anchored" data-anchor-id="safe-callbacks">Safe Callbacks</h3>
+<p>These callbacks marshal work to the main thread before touching Qt widgets:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 26%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>File</th>
+<th>Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ClusteringPanel</td>
+<td><code>MLCore_Widget/UI/ClusteringPanel/ClusteringPanel.cpp</code></td>
+<td><code>QTimer::singleShot(0, this, &amp;...)</code></td>
+</tr>
+<tr class="even">
+<td>PredictionPanel</td>
+<td><code>MLCore_Widget/UI/PredictionPanel/PredictionPanel.cpp</code></td>
+<td><code>QTimer::singleShot(0, this, &amp;...)</code></td>
+</tr>
+<tr class="odd">
+<td>RegionSelectionPanel</td>
+<td><code>MLCore_Widget/UI/RegionSelectionPanel/RegionSelectionPanel.cpp</code></td>
+<td><code>QTimer::singleShot(0, this, &amp;...)</code></td>
+</tr>
+<tr class="even">
+<td>FeatureSelectionPanel</td>
+<td><code>MLCore_Widget/UI/FeatureSelectionPanel/FeatureSelectionPanel.cpp</code></td>
+<td><code>QTimer::singleShot(0, this, &amp;...)</code></td>
+</tr>
+<tr class="odd">
+<td>LabelConfigPanel</td>
+<td><code>MLCore_Widget/UI/LabelConfigPanel/LabelConfigPanel.cpp</code></td>
+<td><code>QTimer::singleShot(0, this, &amp;...)</code></td>
+</tr>
+<tr class="even">
+<td>GroupManager</td>
+<td><code>GroupManagementWidget/GroupManager.cpp</code></td>
+<td><code>QMetaObject::invokeMethod(this, ...)</code></td>
+</tr>
+<tr class="odd">
+<td>DataViewer_Widget</td>
+<td><code>DataViewer_Widget/UI/DataViewer_Widget.cpp</code></td>
+<td><code>QMetaObject::invokeMethod(..., Qt::QueuedConnection)</code></td>
+</tr>
+<tr class="even">
+<td>DataManagerParameter_Widget</td>
+<td><code>DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.cpp</code></td>
+<td><code>QMetaObject::invokeMethod(self, ...)</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="unsafe-callbacks" class="level3">
+<h3 class="anchored" data-anchor-id="unsafe-callbacks">Unsafe Callbacks</h3>
+<p>These callbacks directly manipulate Qt widgets inside the observer callback body. They are safe <strong>only</strong> when called from the main thread:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 57%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Whisker_Widget</td>
+<td><code>Whisker_Widget/Whisker_Widget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>Media_Window</td>
+<td><code>Media_Widget/Rendering/Media_Window/Media_Window.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>Media_Widget</td>
+<td><code>Media_Widget/UI/Media_Widget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>Feature_Tree_Widget</td>
+<td><code>Feature_Tree_Widget/Feature_Tree_Widget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>Feature_Table_Widget</td>
+<td><code>Feature_Table_Widget/Feature_Table_Widget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>TimeScrollBar</td>
+<td><code>TimeScrollBar/TimeScrollBar.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>TableDesignerWidget</td>
+<td><code>TableDesignerWidget/TableDesignerWidget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>DimReductionPanel</td>
+<td><code>MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>LineInspector</td>
+<td><code>DataInspector_Widget/LineData/LineInspector.cpp</code></td>
+</tr>
+<tr class="even">
+<td>PointInspector</td>
+<td><code>DataInspector_Widget/PointData/PointInspector.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>MaskInspector</td>
+<td><code>DataInspector_Widget/MaskData/MaskInspector.cpp</code></td>
+</tr>
+<tr class="even">
+<td>DataInspectorPropertiesWidget</td>
+<td><code>DataInspector_Widget/DataInspectorPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>TimeFrame_Table_Widget</td>
+<td><code>TimeFrame_Table_Widget/TimeFrame_Table_Widget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>DeepLearningPropertiesWidget</td>
+<td><code>DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>TemporalProjectionViewPropertiesWidget</td>
+<td><code>Plots/TemporalProjectionViewWidget/UI/TemporalProjectionViewPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>ACFPropertiesWidget</td>
+<td><code>Plots/ACFWidget/UI/ACFPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>OnionSkinViewPropertiesWidget</td>
+<td><code>Plots/OnionSkinViewWidget/UI/OnionSkinViewPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>PlotAlignmentWidget</td>
+<td><code>Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>ScatterPlotPropertiesWidget</td>
+<td><code>Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>EventPlotPropertiesWidget</td>
+<td><code>Plots/EventPlotWidget/UI/EventPlotPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>3DPlotPropertiesWidget</td>
+<td><code>Plots/3DPlot/UI/3DPlotPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="even">
+<td>PSTHPropertiesWidget</td>
+<td><code>Plots/PSTHWidget/UI/PSTHPropertiesWidget.cpp</code></td>
+</tr>
+<tr class="odd">
+<td>LinePlotPropertiesWidget</td>
+<td><code>Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.cpp</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="fix-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="fix-patterns">Fix Patterns</h2>
+<p>Three complementary strategies address the problem at different layers. They can be adopted independently and incrementally.</p>
+<section id="pattern-1-deferred-writes-worker-side" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-1-deferred-writes-worker-side">Pattern 1: Deferred Writes (Worker-Side)</h3>
+<p><strong>Idea:</strong> The background worker never calls <code>DataManager::setData()</code>. Instead, it stores its output in the result struct. The main-thread completion handler writes to DataManager after the worker finishes.</p>
+<p><strong>When to use:</strong> Any <code>QThread</code> worker that produces data to write into DataManager (pipelines, inference, batch transforms).</p>
+<p><strong>Already implemented:</strong> <code>MLCoreWidget</code> sets <code>defer_dm_writes = true</code> for <code>ClassificationPipeline</code>, <code>ClusteringPipeline</code>, <code>DimReductionPipeline</code>, and <code>SupervisedDimReductionPipeline</code>. The <code>defer_dm_writes</code> flag is also available on those pipeline config structs for non-GUI callers.</p>
+<section id="how-it-works" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works">How It Works</h4>
+<pre><code>         Background Thread                 Main Thread
+         ────────────────                  ───────────
+         run pipeline logic
+         store output in result struct
+         emit finished()
+                                    ← Qt::QueuedConnection ←
+                                           _onPipelineComplete()
+                                           dm.setData(...)
+                                           notifyObservers() [safe: main thread]</code></pre>
+</section>
+<section id="step-by-step-adding-deferred-writes-to-a-new-worker" class="level4">
+<h4 class="anchored" data-anchor-id="step-by-step-adding-deferred-writes-to-a-new-worker">Step-by-Step: Adding Deferred Writes to a New Worker</h4>
+<ol type="1">
+<li><strong>Add <code>defer_dm_writes</code> to the pipeline config struct:</strong></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyPipelineConfig <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// When true, the pipeline stores output in the result struct</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// instead of writing to DataManager. The caller is responsible</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// for writing the deferred output on the main thread.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> defer_dm_writes <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="2" type="1">
+<li><strong>Add deferred output fields to the result struct:</strong></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyPipelineResult <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> success <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string error_message<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Deferred output — populated when defer_dm_writes is true.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// The caller must write this to DataManager on the main thread.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>OutputType<span class="op">&gt;</span> deferred_output<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="3" type="1">
+<li><strong>Conditionally skip writes in the pipeline:</strong></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>config<span class="op">.</span>defer_dm_writes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    result<span class="op">.</span>deferred_output <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    writeOutput<span class="op">(</span>dm<span class="op">,</span> output<span class="op">);</span>  <span class="co">// existing code path for tests/scripts</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="4" type="1">
+<li><strong>Write in the main-thread completion handler:</strong></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MyWidget<span class="op">::</span>_onWorkerComplete<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This runs on the main thread (Qt::QueuedConnection from finished())</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_last_result<span class="op">-&gt;</span>deferred_output<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        writeOutput<span class="op">(*</span>_data_manager<span class="op">,</span> <span class="op">*</span>_last_result<span class="op">-&gt;</span>deferred_output<span class="op">);</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        _last_result<span class="op">-&gt;</span>deferred_output<span class="op">.</span>reset<span class="op">();</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="5" type="1">
+<li><strong>Set <code>defer_dm_writes = true</code> in the widget’s config builder:</strong></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> config <span class="op">=</span> _buildConfig<span class="op">();</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>defer_dm_writes <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>  <span class="co">// Widget always defers</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Default <code>defer_dm_writes</code> to <code>false</code> so that non-GUI callers (unit tests, scripts, CLI tools) continue working without changes.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="pattern-2-thread-safe-callback-wrappers-observer-side" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-2-thread-safe-callback-wrappers-observer-side">Pattern 2: Thread-Safe Callback Wrappers (Observer-Side)</h3>
+<p><strong>Idea:</strong> Each widget wraps its observer callback so that Qt widget operations always execute on the main thread, regardless of which thread calls <code>notifyObservers()</code>.</p>
+<p><strong>When to use:</strong> Any widget that registers an observer callback on DataManager or any <code>ObserverData</code>-based object. Use this to harden existing callbacks without modifying the data-producing code.</p>
+<section id="option-a-qtimersingleshot0-..." class="level4">
+<h4 class="anchored" data-anchor-id="option-a-qtimersingleshot0-...">Option A: <code>QTimer::singleShot(0, ...)</code></h4>
+<p>Defers the callback body to the next main-thread event loop iteration.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// BEFORE (unsafe — runs on calling thread):</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> id <span class="op">=</span> dm<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    _combo_box<span class="op">-&gt;</span>clear<span class="op">();</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key <span class="op">:</span> dm<span class="op">-&gt;</span>getKeys<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        _combo_box<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>key<span class="op">));</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">// AFTER (safe — always runs on main thread):</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> id <span class="op">=</span> dm<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        _combo_box<span class="op">-&gt;</span>clear<span class="op">();</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key <span class="op">:</span> dm<span class="op">-&gt;</span>getKeys<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            _combo_box<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>key<span class="op">));</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Pros:</strong> Simple, one-line wrapper. The <code>this</code> receiver ensures the lambda is not invoked if the widget is destroyed before the timer fires.</p>
+<p><strong>Cons:</strong> Introduces a one-event-loop-iteration delay. Multiple observers may see a stale DataManager state between iterations.</p>
+</section>
+<section id="option-b-qmetaobjectinvokemethod-with-qtqueuedconnection" class="level4">
+<h4 class="anchored" data-anchor-id="option-b-qmetaobjectinvokemethod-with-qtqueuedconnection">Option B: <code>QMetaObject::invokeMethod</code> with <code>Qt::QueuedConnection</code></h4>
+<p>Equivalent to <code>QTimer::singleShot(0, ...)</code> but more explicit about intent:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> id <span class="op">=</span> dm<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QMetaObject::invokeMethod</span><span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        refreshList<span class="op">();</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="ex">Qt::QueuedConnection</span><span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Pros:</strong> Explicit connection type. Familiar to Qt developers.</p>
+<p><strong>Cons:</strong> Slightly more verbose.</p>
+</section>
+<section id="step-by-step-hardening-an-existing-callback" class="level4">
+<h4 class="anchored" data-anchor-id="step-by-step-hardening-an-existing-callback">Step-by-Step: Hardening an Existing Callback</h4>
+<ol type="1">
+<li><strong>Find the <code>addObserver</code> call</strong> in the widget’s constructor or setup method.</li>
+<li><strong>Identify the callback body</strong> — the lambda passed to <code>addObserver</code>.</li>
+<li><strong>Wrap the body</strong> with <code>QTimer::singleShot(0, this, [this]() { ... })</code>.</li>
+<li><strong>Verify the widget stores the <code>CallbackID</code></strong> and calls <code>removeObserver</code> in its destructor. (This is an existing requirement, not new.)</li>
+<li><strong>Test:</strong> Run the widget with ASAN/TSAN enabled while triggering observer notifications from a background thread.</li>
+</ol>
+</section>
+</section>
+<section id="pattern-3-main-thread-assertion-defensive" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-3-main-thread-assertion-defensive">Pattern 3: Main-Thread Assertion (Defensive)</h3>
+<p><strong>Idea:</strong> Add a debug-only assertion to <code>ObserverData::notifyObservers()</code> that verifies it is being called from the Qt main thread. This catches violations at the call site rather than waiting for a crash downstream.</p>
+<p><strong>When to use:</strong> As a global safety net. Once added, every existing and future <code>notifyObservers()</code> call is automatically guarded.</p>
+<p><strong>Status:</strong> Not yet implemented. The current <code>notifyObservers()</code> copies the observer map to a snapshot and logs per-callback timing via <code>spdlog</code> before invoking callbacks.</p>
+<section id="implementation" class="level4">
+<h4 class="anchored" data-anchor-id="implementation">Implementation</h4>
+<p>Add to <code>Observer_Data.cpp</code> (preserving the existing snapshot iteration):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cassert&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifdef QT_CORE_LIB</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QThread&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QCoreApplication&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ObserverData<span class="op">::</span>notifyObservers<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#if !defined(NDEBUG) &amp;&amp; defined(QT_CORE_LIB)</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// In debug builds with Qt available, assert we're on the main thread.</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ObserverData callbacks typically manipulate Qt widgets, which require</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// the main thread. If this fires, the caller must defer the write to</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// the main thread (see observer_thread_safety_roadmap.qmd).</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> app <span class="op">=</span> <span class="ex">QCoreApplication::instance</span><span class="op">();</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>app <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        <span class="ot">assert</span><span class="op">(</span><span class="ex">QThread::currentThread</span><span class="op">()</span> <span class="op">==</span> app<span class="op">-&gt;</span>thread<span class="op">()</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>               <span class="op">&amp;&amp;</span> <span class="st">"notifyObservers() called from non-main thread. "</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Observer callbacks may touch Qt widgets. "</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Use deferred writes or QTimer::singleShot to marshal to main thread."</span><span class="op">);</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> snapshot <span class="op">=</span> _observers<span class="op">;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing spdlog timing and snapshot iteration ...</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Adding this assertion will immediately surface all existing violations in debug builds.</strong> Before enabling it project-wide, either (a) harden all unsafe callbacks first, or (b) add it behind a <code>#define</code> that can be enabled per-developer for auditing.</p>
+</div>
+</div>
+</section>
+<section id="staged-rollout-for-the-assertion" class="level4">
+<h4 class="anchored" data-anchor-id="staged-rollout-for-the-assertion">Staged Rollout for the Assertion</h4>
+<ol type="1">
+<li><strong>Phase A — Opt-in:</strong> Add the assertion behind <code>#ifdef WHISKER_ASSERT_OBSERVER_MAIN_THREAD</code>. Developers enable it locally to find violations.</li>
+<li><strong>Phase B — Fix callbacks:</strong> Work through the unsafe callback list above, wrapping each with <code>QTimer::singleShot</code>. This can be done incrementally.</li>
+<li><strong>Phase C — Enable by default:</strong> Remove the opt-in <code>#ifdef</code> and enable the assertion unconditionally in debug builds. Any new violation is caught immediately during development.</li>
+</ol>
+</section>
+<section id="alternative-assert_main_thread-macro" class="level4">
+<h4 class="anchored" data-anchor-id="alternative-assert_main_thread-macro">Alternative: <code>ASSERT_MAIN_THREAD</code> Macro</h4>
+<p>For use in individual widget callbacks:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#if !defined(NDEBUG) &amp;&amp; defined(QT_CORE_LIB)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ASSERT_MAIN_THREAD</span><span class="op">()</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="cf">do</span><span class="pp"> </span><span class="op">{</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">        </span><span class="kw">auto</span><span class="pp"> </span><span class="at">const</span><span class="pp"> </span><span class="op">*</span><span class="pp"> </span>_app<span class="pp"> </span><span class="op">=</span><span class="pp"> </span>QCoreApplication<span class="op">::</span>instance<span class="op">();</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">        </span><span class="ot">assert</span><span class="op">((!</span>_app<span class="pp"> </span><span class="op">||</span><span class="pp"> </span>QThread<span class="op">::</span>currentThread<span class="op">()</span><span class="pp"> </span><span class="op">==</span><span class="pp"> </span>_app<span class="op">-&gt;</span>thread<span class="op">())</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">               </span><span class="op">&amp;&amp;</span><span class="pp"> </span><span class="st">"Must be called from the main thread"</span><span class="op">);</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="op">}</span><span class="pp"> </span><span class="cf">while</span><span class="pp"> </span><span class="op">(</span><span class="kw">false</span><span class="op">)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ASSERT_MAIN_THREAD</span><span class="op">()</span><span class="pp"> </span><span class="op">((</span><span class="dt">void</span><span class="op">)</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Usage in a widget method called from an observer:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MyWidget<span class="op">::</span>refreshList<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ASSERT_MAIN_THREAD<span class="op">();</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    _combo_box<span class="op">-&gt;</span>clear<span class="op">();</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+</section>
+<section id="task-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="task-checklist">Task Checklist</h2>
+<section id="phase-1-immediate-hardening-no-architecture-changes" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1-immediate-hardening-no-architecture-changes">Phase 1: Immediate Hardening (No Architecture Changes)</h3>
+<p>These tasks use the existing API. Each can be done as an independent PR.</p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" checked=""><strong>Defer MLCore pipeline writes</strong> — <code>ClassificationPipeline</code>, <code>ClusteringPipeline</code>, <code>DimReductionPipeline</code>, and <code>SupervisedDimReductionPipeline</code> support <code>defer_dm_writes</code>; <code>MLCoreWidget</code> writes deferred output on the main thread. <em>(Done — the fix that prompted this document.)</em></label></p></li>
+<li><p><label><input type="checkbox"><strong>Add <code>ASSERT_MAIN_THREAD</code> macro</strong> — Define in a shared header (e.g., <code>src/CoreUtilities/ThreadAssert.hpp</code>). Zero runtime cost in release builds.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Add assertion to <code>ObserverData::notifyObservers()</code></strong> — Behind opt-in <code>#ifdef WHISKER_ASSERT_OBSERVER_MAIN_THREAD</code>. Enable locally, run the application, fix any firing assertions.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Harden feature and inspector callbacks</strong> — Wrap observer callbacks in <code>Feature_Tree_Widget</code>, <code>Feature_Table_Widget</code>, <code>LineInspector</code>, <code>PointInspector</code>, <code>MaskInspector</code>, and <code>DataInspectorPropertiesWidget</code> with <code>QTimer::singleShot(0, ...)</code>.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Harden Media_Widget callbacks</strong> — Wrap <code>Media_Widget</code> and <code>Media_Window</code> observer callbacks.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Harden Plot widget callbacks</strong> — Wrap all <code>*PropertiesWidget</code> observer callbacks. These are numerous but follow the same pattern.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Harden remaining widget callbacks</strong> — <code>Whisker_Widget</code>, <code>DimReductionPanel</code>, <code>TimeScrollBar</code>, <code>TableDesignerWidget</code>, <code>TimeFrame_Table_Widget</code>.</label></p></li>
+</ul>
+</section>
+<section id="phase-2-structural-improvements" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-structural-improvements">Phase 2: Structural Improvements</h3>
+<ul class="task-list">
+<li><p><label><input type="checkbox"><strong>Add <code>NotifyObservers::No</code> overload to <code>DataManager::setData()</code></strong> — Allow callers to batch multiple writes and notify once:</label></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"key1"</span><span class="op">,</span> data1<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"key2"</span><span class="op">,</span> data2<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>dm<span class="op">.</span>notifyObservers<span class="op">();</span>  <span class="co">// single notification</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>NotifyObservers</code> enum already exists in <code>Observer_Data.hpp</code>. Individual data objects (e.g., <code>LineData::addAtTime</code>) already accept <code>NotifyObservers</code>, but <code>DataManager::setData()</code> always notifies today.</p></li>
+<li><p><label><input type="checkbox"><strong>Create <code>QtObserverBridge</code> utility</strong> — A small Qt helper that wraps <code>ObserverData::addObserver()</code> with automatic main-thread marshaling:</label></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> QtObserverBridge <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// Register callback that always runs on the main thread</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> ObserverData<span class="op">::</span>CallbackID addSafeObserver<span class="op">(</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            ObserverData <span class="op">&amp;</span> observable<span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QObject</span> <span class="op">*</span> receiver<span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">()&gt;</span> callback<span class="op">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> observable<span class="op">.</span>addObserver<span class="op">([</span>receiver<span class="op">,</span> cb <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>callback<span class="op">)]()</span> <span class="op">{</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> receiver<span class="op">,</span> <span class="op">[</span>cb<span class="op">]()</span> <span class="op">{</span> cb<span class="op">();</span> <span class="op">});</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Widgets then use:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>_observer_id <span class="op">=</span> QtObserverBridge<span class="op">::</span>addSafeObserver<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>_data_manager<span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span> refreshList<span class="op">();</span> <span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This centralizes the pattern so individual widgets don’t need to remember the wrapping.</p></li>
+<li><p><label><input type="checkbox"><strong>Enable <code>notifyObservers()</code> assertion by default in debug builds</strong> — After all callbacks are hardened, remove the opt-in <code>#ifdef</code>.</label></p></li>
+</ul>
+</section>
+<section id="phase-3-verification" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-verification">Phase 3: Verification</h3>
+<ul class="task-list">
+<li><p><label><input type="checkbox"><strong>Enable ThreadSanitizer (TSAN) in CI</strong> — Add a <code>linux-clang-tsan</code> CMake preset with <code>-fsanitize=thread</code>. Run the test suite under TSAN to catch any remaining data races.</label></p></li>
+<li><p><label><input type="checkbox"><strong>Integration test for threaded observer safety</strong> — Write a test that calls <code>DataManager::setData()</code> from a background thread while observers are registered. Verify no TSAN warnings, no crashes.</label></p></li>
+</ul>
+</section>
+</section>
+<section id="design-decisions" class="level2">
+<h2 class="anchored" data-anchor-id="design-decisions">Design Decisions</h2>
+<ul>
+<li><p><strong><code>QTimer::singleShot(0, ...)</code> over <code>Qt::QueuedConnection</code> signals.</strong> Both work. <code>QTimer::singleShot</code> is simpler to add to existing lambdas and does not require adding new signals.</p></li>
+<li><p><strong>Assertion in <code>notifyObservers()</code> instead of individual widgets.</strong> Catches the problem at the source (wrong-thread notification) rather than the symptom (wrong-thread widget manipulation). One assertion covers all current and future observers.</p></li>
+<li><p><strong>Deferred writes as the primary fix for workers, not callback hardening.</strong> Hardening callbacks makes them tolerant of wrong-thread calls, but the fundamental design principle is: <strong>workers should never call <code>DataManager::setData()</code>.</strong> Deferred writes enforce this at the architecture level.</p></li>
+<li><p><strong><code>ObserverData</code> stays Qt-free.</strong> The assertion uses <code>#ifdef QT_CORE_LIB</code> guards. Non-Qt consumers of <code>ObserverData</code> are not affected.</p></li>
+</ul>
+</section>
+<section id="relationship-to-other-roadmaps" class="level2">
+<h2 class="anchored" data-anchor-id="relationship-to-other-roadmaps">Relationship to Other Roadmaps</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Roadmap</th>
+<th>Scope</th>
+<th>Relationship</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../developer/DataManager/concurrency_architecture.html">Concurrency Architecture</a></td>
+<td>DataManager ownership, write reservations, borrow tracking</td>
+<td>This document addresses the <em>immediate</em> observer problem; the concurrency architecture provides the <em>long-term</em> structural solution (workers never write to DataManager directly)</td>
+</tr>
+<tr class="even">
+<td><a href="../../developer/DataManager/threaded_loading_roadmap.html">Threaded Loading Roadmap</a></td>
+<td>Background data loading via fork-join</td>
+<td>Data loading is already safe by design (worker returns data, main thread calls <code>setData</code>). No observer hardening needed — but the <code>ASSERT_MAIN_THREAD</code> macro will verify this.</td>
+</tr>
+</tbody>
+</table>
+<p>The deferred-writes pattern in this document is the low-cost precursor to Stage 2 (Write Reservations) of the concurrency architecture. It achieves the same thread confinement guarantee without the full reservation infrastructure.</p>
+<pre><code>This document              Concurrency Architecture
+(immediate fixes)          (long-term design)
+─────────────────          ──────────────────────────
+Deferred writes      →     Write Reservations (Stage 2)
+Callback hardening   →     Eliminated (workers never notify)
+notifyObservers()    →     Borrow Tracking (Stage 3)
+ assertion                  enforces protocol at compile time</code></pre>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

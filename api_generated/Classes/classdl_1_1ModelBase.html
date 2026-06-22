@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -362,6 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-preferredbatchsize" id="toc-function-preferredbatchsize" class="nav-link" data-scroll-target="#function-preferredbatchsize">function preferredBatchSize</a></li>
   <li><a href="#function-maxbatchsize" id="toc-function-maxbatchsize" class="nav-link" data-scroll-target="#function-maxbatchsize">function maxBatchSize</a></li>
   <li><a href="#function-batchmode" id="toc-function-batchmode" class="nav-link" data-scroll-target="#function-batchmode">function batchMode</a></li>
+  <li><a href="#function-recommendedpostencodermodule" id="toc-function-recommendedpostencodermodule" class="nav-link" data-scroll-target="#function-recommendedpostencodermodule">function recommendedPostEncoderModule</a></li>
   <li><a href="#function-forward" id="toc-function-forward" class="nav-link" data-scroll-target="#function-forward">function forward</a></li>
   </ul></li>
   </ul></li>
@@ -393,7 +394,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlmodelbase" class="level1">
 <h1>dl::ModelBase</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Abstract base class for all v2 deep-learning model wrappers. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;ModelBase.hpp&gt;</code></p>
 <p>Inherited by <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html">dl::GeneralEncoderModel</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html">dl::NeuroSAMModel</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html">dl::RuntimeModel</a></p>
 <section id="public-functions" class="level2">
@@ -424,11 +425,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>virtual std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">TensorSlotDescriptor</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-inputslots">inputSlots</a></strong>() const =0</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-inputslots">inputSlots</a></strong>() const =0<br>Input slot descriptors (ordered).</td>
 </tr>
 <tr class="even">
 <td>virtual std::vector&lt; <a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">TensorSlotDescriptor</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-outputslots">outputSlots</a></strong>() const =0</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-outputslots">outputSlots</a></strong>() const =0<br>Output slot descriptors (ordered).</td>
 </tr>
 <tr class="odd">
 <td>virtual void</td>
@@ -440,19 +441,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>virtual int</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-preferredbatchsize">preferredBatchSize</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-preferredbatchsize">preferredBatchSize</a></strong>() const<br>Preferred batch size.</td>
 </tr>
 <tr class="even">
 <td>virtual int</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-maxbatchsize">maxBatchSize</a></strong>() const<br>Maximum batch size the model supports. 0 = unlimited.</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-maxbatchsize">maxBatchSize</a></strong>() const<br>Maximum batch size the model supports.</td>
 </tr>
 <tr class="odd">
 <td>virtual <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a></td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-batchmode">batchMode</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-batchmode">batchMode</a></strong>() const<br>Batch mode describing the model’s batch-size constraints.</td>
 </tr>
 <tr class="even">
-<td>virtual std::unordered_map&lt; std::string, torch::Tensor &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-forward">forward</a></strong>(std::unordered_map&lt; std::string, torch::Tensor &gt; const &amp; inputs) =0</td>
+<td>virtual std::string</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-recommendedpostencodermodule">recommendedPostEncoderModule</a></strong>() const<br>Recommended post-encoder module key for the UI (e.g.&nbsp;“global_avg_pool”).</td>
+</tr>
+<tr class="odd">
+<td>virtual std::unordered_map&lt; std::string, at::Tensor &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html#function-forward">forward</a></strong>(std::unordered_map&lt; std::string, at::Tensor &gt; const &amp; inputs) =0<br>Run inference.</td>
 </tr>
 </tbody>
 </table>
@@ -491,14 +496,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-inputslots" class="level3">
 <h3 class="anchored" data-anchor-id="function-inputslots">function inputSlots</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> inputSlots<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Input slot descriptors (ordered).</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-inputslots">dl::GeneralEncoderModel::inputSlots</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-inputslots">dl::NeuroSAMModel::inputSlots</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-inputslots">dl::RuntimeModel::inputSlots</a></p>
-<p>Input slot descriptors (ordered). Each describes one named tensor the model expects. Does not include the batch dimension.</p>
+<p>Each describes one named tensor the model expects. Does not include the batch dimension.</p>
 </section>
 <section id="function-outputslots" class="level3">
 <h3 class="anchored" data-anchor-id="function-outputslots">function outputSlots</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TensorSlotDescriptor <span class="op">&gt;</span> outputSlots<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output slot descriptors (ordered).</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-outputslots">dl::GeneralEncoderModel::outputSlots</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-outputslots">dl::NeuroSAMModel::outputSlots</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-outputslots">dl::RuntimeModel::outputSlots</a></p>
-<p>Output slot descriptors (ordered). Each describes one named tensor the model produces. Does not include the batch dimension.</p>
+<p>Each describes one named tensor the model produces. Does not include the batch dimension.</p>
 </section>
 <section id="function-loadweights" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadweights">function loadWeights</h3>
@@ -517,38 +524,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-preferredbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-preferredbatchsize">function preferredBatchSize</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">int</span> preferredBatchSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Preferred batch size.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-preferredbatchsize">dl::GeneralEncoderModel::preferredBatchSize</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-preferredbatchsize">dl::NeuroSAMModel::preferredBatchSize</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-preferredbatchsize">dl::RuntimeModel::preferredBatchSize</a></p>
-<p>Preferred batch size. 0 = model decides; 1 = single-frame (e.g.&nbsp;NeuroSAM with output→input feedback); N = process N frames at once. UI uses this as the default for the “Batch Size” spinbox.</p>
+<p>0 = model decides; 1 = single-frame (e.g.&nbsp;NeuroSAM with output→input feedback); N = process N frames at once. UI uses this as the default for the “Batch Size” spinbox.</p>
 </section>
 <section id="function-maxbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-maxbatchsize">function maxBatchSize</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">int</span> maxBatchSize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Maximum batch size the model supports. 0 = unlimited.</p>
+<p>Maximum batch size the model supports.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-maxbatchsize">dl::GeneralEncoderModel::maxBatchSize</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-maxbatchsize">dl::NeuroSAMModel::maxBatchSize</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-maxbatchsize">dl::RuntimeModel::maxBatchSize</a></p>
+<p>0 = unlimited.</p>
 </section>
 <section id="function-batchmode" class="level3">
 <h3 class="anchored" data-anchor-id="function-batchmode">function batchMode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> BatchMode batchMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-batchmode">dl::GeneralEncoderModel::batchMode</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-batchmode">dl::NeuroSAMModel::batchMode</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-batchmode">dl::RuntimeModel::batchMode</a></p>
 <p>Batch mode describing the model’s batch-size constraints.</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-batchmode">dl::GeneralEncoderModel::batchMode</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-batchmode">dl::NeuroSAMModel::batchMode</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-batchmode">dl::RuntimeModel::batchMode</a></p>
 <p>The default returns <code>[DynamicBatch](/api_generated/Classes/structdl_1_1DynamicBatch.md){1, 0}</code> (any batch size). Override in subclasses to report <code>[FixedBatch](/api_generated/Classes/structdl_1_1FixedBatch.md)</code>, <code>[RecurrentOnlyBatch](/api_generated/Classes/structdl_1_1RecurrentOnlyBatch.md)</code>, or a <code>[DynamicBatch](/api_generated/Classes/structdl_1_1DynamicBatch.md)</code> with specific limits.</p>
 <p>The widget uses this to configure the batch-size spinbox and to auto-select the correct weights variant for multi-variant models.</p>
 </section>
+<section id="function-recommendedpostencodermodule" class="level3">
+<h3 class="anchored" data-anchor-id="function-recommendedpostencodermodule">function recommendedPostEncoderModule</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="bu">std::</span>string recommendedPostEncoderModule<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Recommended post-encoder module key for the UI (e.g.&nbsp;“global_avg_pool”).</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-recommendedpostencodermodule">dl::GeneralEncoderModel::recommendedPostEncoderModule</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-recommendedpostencodermodule">dl::RuntimeModel::recommendedPostEncoderModule</a></p>
+<p>Empty string means no post-encoder module is recommended. The UI pre-selects this but the user can override it.</p>
+</section>
 <section id="function-forward" class="level3">
 <h3 class="anchored" data-anchor-id="function-forward">function forward</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> forward<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> forward<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> at<span class="op">::</span>Tensor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> inputs</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run inference.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>inputs</strong> Map of slot_name → Tensor, each with a leading batch dimension.</li>
 </ul>
 <p><strong>Return</strong>: Map of slot_name → Tensor for each output slot.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html#function-forward">dl::GeneralEncoderModel::forward</a>, <a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html#function-forward">dl::NeuroSAMModel::forward</a>, <a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html#function-forward">dl::RuntimeModel::forward</a></p>
-<p>Run inference.</p>
 <p>Tensors have a leading batch dimension whose size is controlled by the caller (and bounded by <code>[maxBatchSize()](/api_generated/Classes/classdl_1_1ModelBase.md#function-maxbatchsize)</code>).</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>src/TransformsV2/extension/IntervalAdapters.hpp – Neuralyzer</title>
+<title>src/GatherResult/IntervalAdapters.hpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -345,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#srctransformsv2extensionintervaladapters.hpp" id="toc-srctransformsv2extensionintervaladapters.hpp" class="nav-link active" data-scroll-target="#srctransformsv2extensionintervaladapters.hpp">src/TransformsV2/extension/IntervalAdapters.hpp</a>
+  <li><a href="#srcgatherresultintervaladapters.hpp" id="toc-srcgatherresultintervaladapters.hpp" class="nav-link active" data-scroll-target="#srcgatherresultintervaladapters.hpp">src/GatherResult/IntervalAdapters.hpp</a>
   <ul class="collapse">
   <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
@@ -361,7 +361,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">src/TransformsV2/extension/IntervalAdapters.hpp</h1>
+<h1 class="title">src/GatherResult/IntervalAdapters.hpp</h1>
 </div>
 
 
@@ -378,8 +378,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="srctransformsv2extensionintervaladapters.hpp" class="level1">
-<h1>src/TransformsV2/extension/IntervalAdapters.hpp</h1>
+<section id="srcgatherresultintervaladapters.hpp" class="level1">
+<h1>src/GatherResult/IntervalAdapters.hpp</h1>
 <p>Lazy interval adapters for flexible interval sources in <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>. <a href="#detailed-description">More…</a></p>
 <section id="namespaces" class="level2">
 <h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
@@ -394,10 +394,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a></strong></td>
 </tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms.html">WhiskerToolbox::Transforms</a></strong></td>
-</tr>
-<tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">WhiskerToolbox::Transforms::V2</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Gather.html">WhiskerToolbox::Gather</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -414,23 +411,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1AlignedInterval.html">WhiskerToolbox::Transforms::V2::AlignedInterval</a></strong> <br>An interval with an associated alignment time.</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1AlignedInterval.html">WhiskerToolbox::Gather::AlignedInterval</a></strong> <br>An interval with an associated alignment time.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1EventExpanderAdapter.html">WhiskerToolbox::Transforms::V2::EventExpanderAdapter</a></strong> <br>Lazily expands a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> into intervals.</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1EventExpanderAdapter.html">WhiskerToolbox::Gather::EventExpanderAdapter</a></strong> <br>Lazily expands a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> into intervals.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1EventExpanderAdapter_1_1iterator.html">WhiskerToolbox::Transforms::V2::EventExpanderAdapter::iterator</a></strong> <br>Iterator that lazily produces <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1AlignedInterval.html">AlignedInterval</a> from events.</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1EventExpanderAdapter_1_1iterator.html">WhiskerToolbox::Gather::EventExpanderAdapter::iterator</a></strong> <br>Iterator that lazily produces <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1AlignedInterval.html">AlignedInterval</a> from events.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IntervalWithAlignmentAdapter.html">WhiskerToolbox::Transforms::V2::IntervalWithAlignmentAdapter</a></strong> <br>Adapter that provides intervals with custom alignment points.</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1IntervalWithAlignmentAdapter.html">WhiskerToolbox::Gather::IntervalWithAlignmentAdapter</a></strong> <br>Adapter that provides intervals with custom alignment points.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1IntervalWithAlignmentAdapter_1_1iterator.html">WhiskerToolbox::Transforms::V2::IntervalWithAlignmentAdapter::iterator</a></strong> <br>Iterator that produces <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1AlignedInterval.html">AlignedInterval</a> with custom alignment.</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Gather_1_1IntervalWithAlignmentAdapter_1_1iterator.html">WhiskerToolbox::Gather::IntervalWithAlignmentAdapter::iterator</a></strong> <br>Iterator that produces <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Gather_1_1AlignedInterval.html">AlignedInterval</a> with custom alignment.</td>
 </tr>
 </tbody>
 </table>
@@ -458,7 +455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iterator&gt;</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Gather <span class="op">{</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Interval Element Types</span></span>
@@ -788,11 +785,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>intervals<span class="op">),</span> align<span class="op">,</span> pre_window<span class="op">,</span> post_window<span class="op">);</span></span>
 <span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Transforms::V2</span></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Gather</span></span>
 <span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:25 +0000</p>
 
 
 </section>

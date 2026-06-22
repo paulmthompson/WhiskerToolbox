@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -73,14 +38,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -348,16 +313,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#dlwidget" id="toc-dlwidget" class="nav-link active" data-scroll-target="#dlwidget">dl::widget</a>
   <ul class="collapse">
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
-  <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
-  <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
-  <ul class="collapse">
-  <li><a href="#using-capturemodevariant" id="toc-using-capturemodevariant" class="nav-link" data-scroll-target="#using-capturemodevariant">using CaptureModeVariant</a></li>
-  <li><a href="#using-recurrentinitvariant" id="toc-using-recurrentinitvariant" class="nav-link" data-scroll-target="#using-recurrentinitvariant">using RecurrentInitVariant</a></li>
-  <li><a href="#using-sequenceentryvariant" id="toc-using-sequenceentryvariant" class="nav-link" data-scroll-target="#using-sequenceentryvariant">using SequenceEntryVariant</a></li>
-  <li><a href="#using-postencodervariant" id="toc-using-postencodervariant" class="nav-link" data-scroll-target="#using-postencodervariant">using PostEncoderVariant</a></li>
-  <li><a href="#using-decodervariant" id="toc-using-decodervariant" class="nav-link" data-scroll-target="#using-decodervariant">using DecoderVariant</a></li>
-  <li><a href="#using-encodervariant" id="toc-using-encodervariant" class="nav-link" data-scroll-target="#using-encodervariant">using EncoderVariant</a></li>
-  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -398,176 +353,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1AbsoluteCaptureParams.html">dl::widget::AbsoluteCaptureParams</a></strong> <br>Absolute capture to encode data once at a specific frame and cache the tensor.</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1DataBankPropertiesWidget.html">dl::widget::DataBankPropertiesWidget</a></strong> <br>Properties panel widget for capturing frames into the session <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a>.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1DataSourceComboHelper.html">dl::widget::DataSourceComboHelper</a></strong> <br>Manages DataManager-aware QComboBox population and auto-refresh.</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1DataBankViewWidget.html">dl::widget::DataBankViewWidget</a></strong> <br>Displays metadata for captured static tensors in the memory bank.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1DynamicInputSlotParams.html">dl::widget::DynamicInputSlotParams</a></strong> <br>Full configuration for one dynamic (per-frame) input slot.</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1DataSourceComboHelper.html">dl::widget::DataSourceComboHelper</a></strong> <br>Manages DataManager-aware QComboBox population and auto-refresh.</td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1DynamicInputSlotWidget.html">dl::widget::DynamicInputSlotWidget</a></strong> <br>Widget for configuring a single dynamic (per-frame) input slot.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1EncoderShapeParams.html">dl::widget::EncoderShapeParams</a></strong> <br>Custom encoder input/output dimensions (UI-only, passed to <a href="../../api_generated/Classes/classSlotAssembler.html#function-configuremodelshape">SlotAssembler::configureModelShape()</a>).</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1EncoderShapeWidget.html">dl::widget::EncoderShapeWidget</a></strong> <br>Widget for configuring a model’s registered configuration parameters.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1EncoderShapeWidget.html">dl::widget::EncoderShapeWidget</a></strong> <br>Widget for configuring encoder input resolution and output shape.</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1MemorySlotWidget.html">dl::widget::MemorySlotWidget</a></strong> <br>Widget for configuring memory frame bindings for one static input slot.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1FirstOutputInitParams.html">dl::widget::FirstOutputInitParams</a></strong> <br>Initialize recurrent state from the first output of the model.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1NoPostEncoderParams.html">dl::widget::NoPostEncoderParams</a></strong> <br>No post-encoder processing (identity pass-through).</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1OutputSlotParams.html">dl::widget::OutputSlotParams</a></strong> <br>Parameters for an output slot binding (target key + decoder configuration).</td>
-</tr>
-<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1OutputSlotWidget.html">dl::widget::OutputSlotWidget</a></strong> <br>Widget for configuring a single model output slot.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1PostEncoderSlotParams.html">dl::widget::PostEncoderSlotParams</a></strong> <br>Full configuration for the post-encoder module section.</td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1PostEncoderWidget.html">dl::widget::PostEncoderWidget</a></strong> <br>Widget for configuring the post-encoder module.</td>
 </tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1RecurrentBindingSlotParams.html">dl::widget::RecurrentBindingSlotParams</a></strong> <br>Full configuration for one non-sequence recurrent (feedback) binding.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1RecurrentBindingWidget.html">dl::widget::RecurrentBindingWidget</a></strong> <br>Widget for configuring a single non-sequence recurrent binding.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1RecurrentSequenceEntryParams.html">dl::widget::RecurrentSequenceEntryParams</a></strong> <br>A sequence entry sourced from a model output (recurrent feedback).</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1RelativeCaptureParams.html">dl::widget::RelativeCaptureParams</a></strong> <br>Relative capture to encode data at (current_frame + time_offset) each run.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1SequenceEntryParams.html">dl::widget::SequenceEntryParams</a></strong> <br>Wrapper for <a href="../../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a>.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1SequenceSlotWidget.html">dl::widget::SequenceSlotWidget</a></strong> <br>Widget for configuring a single sequence (memory) input slot.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1StaticCaptureInitParams.html">dl::widget::StaticCaptureInitParams</a></strong> <br>Initialize recurrent state by capturing a static data source.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1StaticInputSlotParams.html">dl::widget::StaticInputSlotParams</a></strong> <br>Full configuration for one non-sequence static (memory) input slot.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1widget_1_1StaticInputSlotWidget.html">dl::widget::StaticInputSlotWidget</a></strong> <br>Widget for configuring a single non-sequence static (memory) input slot.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1StaticSequenceEntryParams.html">dl::widget::StaticSequenceEntryParams</a></strong> <br>A sequence entry sourced from a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> data object (static data).</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1widget_1_1ZerosInitParams.html">dl::widget::ZerosInitParams</a></strong> <br>Initialize recurrent state with zeros.</td>
-</tr>
 </tbody>
 </table>
-</section>
-<section id="types" class="level2">
-<h2 class="anchored" data-anchor-id="types">Types</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th></th>
-<th>Name</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>using rfl::TaggedUnion&lt; “capture_mode”, <a href="../../api_generated/Classes/structdl_1_1widget_1_1RelativeCaptureParams.html">RelativeCaptureParams</a>, <a href="../../api_generated/Classes/structdl_1_1widget_1_1AbsoluteCaptureParams.html">AbsoluteCaptureParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-capturemodevariant">CaptureModeVariant</a></strong> <br>Tagged union discriminated by “capture_mode”.</td>
-</tr>
-<tr class="even">
-<td>using rfl::TaggedUnion&lt; “init_mode”, <a href="../../api_generated/Classes/structdl_1_1widget_1_1ZerosInitParams.html">ZerosInitParams</a>, <a href="../../api_generated/Classes/structdl_1_1widget_1_1StaticCaptureInitParams.html">StaticCaptureInitParams</a>, <a href="../../api_generated/Classes/structdl_1_1widget_1_1FirstOutputInitParams.html">FirstOutputInitParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-recurrentinitvariant">RecurrentInitVariant</a></strong> <br>Tagged union discriminated by “init_mode”.</td>
-</tr>
-<tr class="odd">
-<td>using rfl::TaggedUnion&lt; “source_type”, <a href="../../api_generated/Classes/structdl_1_1widget_1_1StaticSequenceEntryParams.html">StaticSequenceEntryParams</a>, <a href="../../api_generated/Classes/structdl_1_1widget_1_1RecurrentSequenceEntryParams.html">RecurrentSequenceEntryParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-sequenceentryvariant">SequenceEntryVariant</a></strong> <br>Tagged union discriminated by “source_type”.</td>
-</tr>
-<tr class="even">
-<td>using rfl::TaggedUnion&lt; “module”, <a href="../../api_generated/Classes/structdl_1_1widget_1_1NoPostEncoderParams.html">NoPostEncoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1GlobalAvgPoolModuleParams.html">dl::GlobalAvgPoolModuleParams</a>, <a href="../../api_generated/Classes/structdl_1_1SpatialPointModuleParams.html">dl::SpatialPointModuleParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-postencodervariant">PostEncoderVariant</a></strong> <br>Tagged union discriminated by “module”.</td>
-</tr>
-<tr class="odd">
-<td>using rfl::TaggedUnion&lt; “decoder”, <a href="../../api_generated/Classes/structdl_1_1MaskDecoderParams.html">dl::MaskDecoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">dl::PointDecoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1LineDecoderParams.html">dl::LineDecoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.html">dl::FeatureVectorDecoderParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-decodervariant">DecoderVariant</a></strong> <br>Tagged union discriminated by “decoder”.</td>
-</tr>
-<tr class="even">
-<td>using rfl::TaggedUnion&lt; “encoder”, <a href="../../api_generated/Classes/structdl_1_1ImageEncoderParams.html">dl::ImageEncoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1Point2DEncoderParams.html">dl::Point2DEncoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1Mask2DEncoderParams.html">dl::Mask2DEncoderParams</a>, <a href="../../api_generated/Classes/structdl_1_1Line2DEncoderParams.html">dl::Line2DEncoderParams</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl_1_1widget.html#using-encodervariant">EncoderVariant</a></strong> <br>Tagged union discriminated by “encoder”.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="types-documentation" class="level2">
-<h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
-<section id="using-capturemodevariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-capturemodevariant">using CaptureModeVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>CaptureModeVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"capture_mode"</span><span class="op">,</span> RelativeCaptureParams<span class="op">,</span> AbsoluteCaptureParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “capture_mode”.</p>
-</section>
-<section id="using-recurrentinitvariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-recurrentinitvariant">using RecurrentInitVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>RecurrentInitVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"init_mode"</span><span class="op">,</span> ZerosInitParams<span class="op">,</span> StaticCaptureInitParams<span class="op">,</span> FirstOutputInitParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “init_mode”.</p>
-</section>
-<section id="using-sequenceentryvariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-sequenceentryvariant">using SequenceEntryVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>SequenceEntryVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"source_type"</span><span class="op">,</span> StaticSequenceEntryParams<span class="op">,</span> RecurrentSequenceEntryParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “source_type”.</p>
-</section>
-<section id="using-postencodervariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-postencodervariant">using PostEncoderVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>PostEncoderVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"module"</span><span class="op">,</span> NoPostEncoderParams<span class="op">,</span> dl<span class="op">::</span>GlobalAvgPoolModuleParams<span class="op">,</span> dl<span class="op">::</span>SpatialPointModuleParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “module”.</p>
-<p><a href="../../api_generated/Classes/structdl_1_1GlobalAvgPoolModuleParams.html">GlobalAvgPoolModuleParams</a> and <a href="../../api_generated/Classes/structdl_1_1SpatialPointModuleParams.html">SpatialPointModuleParams</a> are re-used from the DeepLearning library.</p>
-</section>
-<section id="using-decodervariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-decodervariant">using DecoderVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>DecoderVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"decoder"</span><span class="op">,</span> dl<span class="op">::</span>MaskDecoderParams<span class="op">,</span> dl<span class="op">::</span>PointDecoderParams<span class="op">,</span> dl<span class="op">::</span>LineDecoderParams<span class="op">,</span> dl<span class="op">::</span>FeatureVectorDecoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “decoder”.</p>
-<p>All alternative structs are re-used from the DeepLearning library.</p>
-</section>
-<section id="using-encodervariant" class="level3">
-<h3 class="anchored" data-anchor-id="using-encodervariant">using EncoderVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>widget<span class="op">::</span>EncoderVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"encoder"</span><span class="op">,</span> dl<span class="op">::</span>ImageEncoderParams<span class="op">,</span> dl<span class="op">::</span>Point2DEncoderParams<span class="op">,</span> dl<span class="op">::</span>Mask2DEncoderParams<span class="op">,</span> dl<span class="op">::</span>Line2DEncoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Tagged union discriminated by “encoder”.</p>
-<p>All alternative structs are re-used from the DeepLearning library.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
-</section>
 </section>
 </section>
 

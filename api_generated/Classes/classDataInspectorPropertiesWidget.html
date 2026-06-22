@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -362,6 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-state" id="toc-function-state" class="nav-link" data-scroll-target="#function-state">function state</a></li>
   <li><a href="#function-setselectioncontext" id="toc-function-setselectioncontext" class="nav-link" data-scroll-target="#function-setselectioncontext">function setSelectionContext</a></li>
   <li><a href="#function-setoperationcontext" id="toc-function-setoperationcontext" class="nav-link" data-scroll-target="#function-setoperationcontext">function setOperationContext</a></li>
+  <li><a href="#function-setpipelinelibraryconfigdir" id="toc-function-setpipelinelibraryconfigdir" class="nav-link" data-scroll-target="#function-setpipelinelibraryconfigdir">function setPipelineLibraryConfigDir</a></li>
   <li><a href="#function-setcommandrecorder" id="toc-function-setcommandrecorder" class="nav-link" data-scroll-target="#function-setcommandrecorder">function setCommandRecorder</a></li>
   <li><a href="#function-inspectdata" id="toc-function-inspectdata" class="nav-link" data-scroll-target="#function-inspectdata">function inspectData</a></li>
   <li><a href="#function-inspecttimeframe" id="toc-function-inspecttimeframe" class="nav-link" data-scroll-target="#function-inspecttimeframe">function inspectTimeFrame</a></li>
@@ -453,21 +454,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-setcommandrecorder">setCommandRecorder</a></strong>(<a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">commands::CommandRecorder</a> * recorder)<br>Set the CommandRecorder for recording command executions.</td>
+<td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-setpipelinelibraryconfigdir">setPipelineLibraryConfigDir</a></strong>(QString const &amp; config_dir)<br>Set the application config directory for the TransformsV2 pipeline library.</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-setcommandrecorder">setCommandRecorder</a></strong>(<a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">commands::CommandRecorder</a> * recorder)<br>Set the CommandRecorder for recording command executions.</td>
+</tr>
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-inspectdata">inspectData</a></strong>(QString const &amp; key)<br>Directly set the data key to inspect (bypasses <a href="../../api_generated/Classes/classSelectionContext.html">SelectionContext</a>)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-inspecttimeframe">inspectTimeFrame</a></strong>(QString const &amp; key)<br>Directly set the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key to inspect (bypasses <a href="../../api_generated/Classes/classSelectionContext.html">SelectionContext</a>)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-setviewwidget">setViewWidget</a></strong>(<a href="../../api_generated/Classes/classDataInspectorViewWidget.html">DataInspectorViewWidget</a> * view_widget)<br>Set the view widget to connect inspectors to views.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classDataInspectorPropertiesWidget.html#function-setkeymapmanager">setKeymapManager</a></strong>(<a href="../../api_generated/Classes/classKeymapSystem_1_1KeymapManager.html">KeymapSystem::KeymapManager</a> * manager)<br>Set the keymap manager so it can be forwarded to type-specific inspectors.</td>
 </tr>
@@ -554,11 +559,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>context</strong> OperationContext instance (can be nullptr)</li>
 </ul>
 </section>
+<section id="function-setpipelinelibraryconfigdir" class="level3">
+<h3 class="anchored" data-anchor-id="function-setpipelinelibraryconfigdir">function setPipelineLibraryConfigDir</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPipelineLibraryConfigDir<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> config_dir</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the application config directory for the TransformsV2 pipeline library.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>config_dir</strong> StateManager::configDir() (used to resolve pipelines/transforms_v2/)</li>
+</ul>
+</section>
 <section id="function-setcommandrecorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-setcommandrecorder">function setCommandRecorder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCommandRecorder<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    commands<span class="op">::</span>CommandRecorder <span class="op">*</span> recorder</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setCommandRecorder<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    commands<span class="op">::</span>CommandRecorder <span class="op">*</span> recorder</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the CommandRecorder for recording command executions.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -568,9 +584,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-inspectdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-inspectdata">function inspectData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> inspectData<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> inspectData<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Directly set the data key to inspect (bypasses <a href="../../api_generated/Classes/classSelectionContext.html">SelectionContext</a>)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -579,9 +595,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-inspecttimeframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-inspecttimeframe">function inspectTimeFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> inspectTimeFrame<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> inspectTimeFrame<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Directly set the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key to inspect (bypasses <a href="../../api_generated/Classes/classSelectionContext.html">SelectionContext</a>)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -590,9 +606,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-setviewwidget" class="level3">
 <h3 class="anchored" data-anchor-id="function-setviewwidget">function setViewWidget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setViewWidget<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DataInspectorViewWidget <span class="op">*</span> view_widget</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setViewWidget<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    DataInspectorViewWidget <span class="op">*</span> view_widget</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the view widget to connect inspectors to views.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -602,16 +618,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-setkeymapmanager" class="level3">
 <h3 class="anchored" data-anchor-id="function-setkeymapmanager">function setKeymapManager</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setKeymapManager<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> manager</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setKeymapManager<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> manager</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the keymap manager so it can be forwarded to type-specific inspectors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>manager</strong> Non-owning pointer to the KeymapManager (can be nullptr)</li>
 </ul>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

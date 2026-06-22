@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -360,11 +360,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-commandrowwidget" id="toc-function-commandrowwidget" class="nav-link" data-scroll-target="#function-commandrowwidget">function CommandRowWidget</a></li>
+  <li><a href="#function-commandrowwidget-1" id="toc-function-commandrowwidget-1" class="nav-link" data-scroll-target="#function-commandrowwidget-1">function ~CommandRowWidget</a></li>
   <li><a href="#function-commandname" id="toc-function-commandname" class="nav-link" data-scroll-target="#function-commandname">function commandName</a></li>
   <li><a href="#function-todescriptor" id="toc-function-todescriptor" class="nav-link" data-scroll-target="#function-todescriptor">function toDescriptor</a></li>
   <li><a href="#function-fromdescriptor" id="toc-function-fromdescriptor" class="nav-link" data-scroll-target="#function-fromdescriptor">function fromDescriptor</a></li>
   <li><a href="#function-setmoveupenabled" id="toc-function-setmoveupenabled" class="nav-link" data-scroll-target="#function-setmoveupenabled">function setMoveUpEnabled</a></li>
   <li><a href="#function-setmovedownenabled" id="toc-function-setmovedownenabled" class="nav-link" data-scroll-target="#function-setmovedownenabled">function setMoveDownEnabled</a></li>
+  <li><a href="#function-setdatamanager" id="toc-function-setdatamanager" class="nav-link" data-scroll-target="#function-setdatamanager">function setDataManager</a></li>
+  <li><a href="#function-refreshdynamiccombos" id="toc-function-refreshdynamiccombos" class="nav-link" data-scroll-target="#function-refreshdynamiccombos">function refreshDynamicCombos</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -442,24 +445,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-commandrowwidget">CommandRowWidget</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">commands::CommandInfo</a> info, QWidget * parent =nullptr)</td>
 </tr>
 <tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-~commandrowwidget">~CommandRowWidget</a></strong>() override</td>
+</tr>
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-commandname">commandName</a></strong>() const<br>Get the command name.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structcommands_1_1CommandDescriptor.html">commands::CommandDescriptor</a></td>
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-todescriptor">toDescriptor</a></strong>() const<br>Build a CommandDescriptor from current widget state.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-fromdescriptor">fromDescriptor</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandDescriptor.html">commands::CommandDescriptor</a> const &amp; desc)<br>Populate the parameter widgets from a CommandDescriptor.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-setmoveupenabled">setMoveUpEnabled</a></strong>(bool enabled)<br>Enable/disable the move-up button.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-setmovedownenabled">setMoveDownEnabled</a></strong>(bool enabled)<br>Enable/disable the move-down button.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-setdatamanager">setDataManager</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; dm)<br>Bind a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and refresh dynamic combo fields.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classCommandRowWidget.html#function-refreshdynamiccombos">refreshDynamicCombos</a></strong>()<br>Re-populate all <code>dynamic_combo</code> fields from the bound <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -498,38 +513,58 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-commandrowwidget-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-commandrowwidget-1">function ~CommandRowWidget</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>CommandRowWidget<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-commandname" class="level3">
 <h3 class="anchored" data-anchor-id="function-commandname">function commandName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string commandName<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string commandName<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the command name.</p>
 </section>
 <section id="function-todescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="function-todescriptor">function toDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>commands<span class="op">::</span>CommandDescriptor toDescriptor<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>commands<span class="op">::</span>CommandDescriptor toDescriptor<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a CommandDescriptor from current widget state.</p>
 </section>
 <section id="function-fromdescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="function-fromdescriptor">function fromDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> fromDescriptor<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    commands<span class="op">::</span>CommandDescriptor <span class="at">const</span> <span class="op">&amp;</span> desc</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> fromDescriptor<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    commands<span class="op">::</span>CommandDescriptor <span class="at">const</span> <span class="op">&amp;</span> desc</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Populate the parameter widgets from a CommandDescriptor.</p>
 </section>
 <section id="function-setmoveupenabled" class="level3">
 <h3 class="anchored" data-anchor-id="function-setmoveupenabled">function setMoveUpEnabled</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMoveUpEnabled<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMoveUpEnabled<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Enable/disable the move-up button.</p>
 </section>
 <section id="function-setmovedownenabled" class="level3">
 <h3 class="anchored" data-anchor-id="function-setmovedownenabled">function setMoveDownEnabled</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMoveDownEnabled<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMoveDownEnabled<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Enable/disable the move-down button.</p>
+</section>
+<section id="function-setdatamanager" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdatamanager">function setDataManager</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setDataManager<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> dm</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Bind a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and refresh dynamic combo fields.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dm</strong> Shared <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> used to populate <code>dynamic_combo</code> parameters</li>
+</ul>
+</section>
+<section id="function-refreshdynamiccombos" class="level3">
+<h3 class="anchored" data-anchor-id="function-refreshdynamiccombos">function refreshDynamicCombos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> refreshDynamicCombos<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Re-populate all <code>dynamic_combo</code> fields from the bound <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>

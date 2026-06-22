@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>src/WhiskerToolbox/DeepLearning_Widget/Core/BatchInferenceResult.hpp – Neuralyzer</title>
+<title>src/WhiskerToolbox/DeepLearning_Widget/Inference/BatchInferenceResult.hpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -345,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#srcwhiskertoolboxdeeplearning_widgetcorebatchinferenceresult.hpp" id="toc-srcwhiskertoolboxdeeplearning_widgetcorebatchinferenceresult.hpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxdeeplearning_widgetcorebatchinferenceresult.hpp">src/WhiskerToolbox/DeepLearning_Widget/Core/BatchInferenceResult.hpp</a>
+  <li><a href="#srcwhiskertoolboxdeeplearning_widgetinferencebatchinferenceresult.hpp" id="toc-srcwhiskertoolboxdeeplearning_widgetinferencebatchinferenceresult.hpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxdeeplearning_widgetinferencebatchinferenceresult.hpp">src/WhiskerToolbox/DeepLearning_Widget/Inference/BatchInferenceResult.hpp</a>
   <ul class="collapse">
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
@@ -365,7 +365,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">src/WhiskerToolbox/DeepLearning_Widget/Core/BatchInferenceResult.hpp</h1>
+<h1 class="title">src/WhiskerToolbox/DeepLearning_Widget/Inference/BatchInferenceResult.hpp</h1>
 </div>
 
 
@@ -382,8 +382,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="srcwhiskertoolboxdeeplearning_widgetcorebatchinferenceresult.hpp" class="level1">
-<h1>src/WhiskerToolbox/DeepLearning_Widget/Core/BatchInferenceResult.hpp</h1>
+<section id="srcwhiskertoolboxdeeplearning_widgetinferencebatchinferenceresult.hpp" class="level1">
+<h1>src/WhiskerToolbox/DeepLearning_Widget/Inference/BatchInferenceResult.hpp</h1>
 <p>Data structures for accumulating off-thread batch inference results. <a href="#detailed-description">More…</a></p>
 <section id="classes" class="level2">
 <h2 class="anchored" data-anchor-id="classes">Classes</h2>
@@ -417,8 +417,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>using std::variant&lt; <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, std::vector&lt; float &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Files/BatchInferenceResult_8hpp.html#using-decodedoutputvariant">DecodedOutputVariant</a></strong> <br>Decoded data produced by a single output decoder for one frame.</td>
+<td>using <a href="../../api_generated/Namespaces/namespacedl.html#using-decodedgeometryvariant">dl::DecodedGeometryVariant</a></td>
+<td><strong><a href="../../api_generated/Files/BatchInferenceResult_8hpp.html#using-decodedoutputvariant">DecodedOutputVariant</a></strong> <br>Alias for geometry decoded by channel decoders (shared with DecoderDispatch).</td>
 </tr>
 </tbody>
 </table>
@@ -432,9 +432,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
 <section id="using-decodedoutputvariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-decodedoutputvariant">using DecodedOutputVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DecodedOutputVariant <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span>Mask2D<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> Line2D<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Decoded data produced by a single output decoder for one frame.</p>
-<p><code>std::vector&lt;float&gt;</code> represents a feature vector output from <code>TensorToFeatureVector</code>, to be written into a <code>[TensorData](/api_generated/Classes/classTensorData.md)</code> row.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DecodedOutputVariant <span class="op">=</span>  dl<span class="op">::</span>DecodedGeometryVariant<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Alias for geometry decoded by channel decoders (shared with DecoderDispatch).</p>
 </section>
 </section>
 <section id="source-code" class="level2">
@@ -443,33 +442,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef BATCH_INFERENCE_RESULT_HPP</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BATCH_INFERENCE_RESULT_HPP</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/lines.hpp"</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/masks.hpp"</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/points.hpp"</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;variant&gt;</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DecodedOutputVariant <span class="op">=</span> <span class="bu">std::</span>variant<span class="op">&lt;</span>Mask2D<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> Line2D<span class="op">,</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                                          <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;;</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> FrameResult <span class="op">{</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>      </span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    DecodedOutputVariant data<span class="op">;</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span>     </span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string decoder_id<span class="op">;</span>   </span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BatchInferenceResult <span class="op">{</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>FrameResult<span class="op">&gt;</span> results<span class="op">;</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> success <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>             </span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string error_message<span class="op">;</span>       </span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// BATCH_INFERENCE_RESULT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning/channel_decoding/DecoderDispatch.hpp"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> DecodedOutputVariant <span class="op">=</span> dl<span class="op">::</span>DecodedGeometryVariant<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> FrameResult <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>       </span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    DecodedOutputVariant data<span class="op">;</span> </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string data_key<span class="op">;</span>      </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> BatchInferenceResult <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>FrameResult<span class="op">&gt;</span> results<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> success <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>             </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string error_message<span class="op">;</span>       </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// BATCH_INFERENCE_RESULT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:26 +0000</p>
 
 
 </section>

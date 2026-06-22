@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -387,6 +387,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="srccoremathpolynomial_fit.hpp" class="level1">
 <h1>src/CoreMath/polynomial_fit.hpp</h1>
+<p>Polynomial fitting utilities for line parameterization and angle calculation.</p>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
 <table class="caption-top table">
@@ -415,7 +416,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Files/polynomial__fit_8hpp.html#function-calculate-polynomial-angle">calculate_polynomial_angle</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, float position, int polynomial_order, float reference_x, float reference_y)<br>Calculate angle at a position along a line using polynomial fit derivative.</td>
+<td><strong><a href="../../api_generated/Files/polynomial__fit_8hpp.html#function-calculate-polynomial-angle">calculate_polynomial_angle</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, float position, float window, int polynomial_order, <a href="../../api_generated/Classes/structPlanarOrthonormalBasis2D.html">PlanarOrthonormalBasis2D</a> const &amp; basis)<br>Calculate angle using a polynomial fit on samples within a sliding arc-length window.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt;</td>
@@ -501,27 +502,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_polynomial_angle<span class="op">(</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> position<span class="op">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> reference_x<span class="op">,</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> reference_y</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> window<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Calculate angle at a position along a line using polynomial fit derivative.</p>
+<p>Calculate angle using a polynomial fit on samples within a sliding arc-length window.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>line</strong> The line to evaluate</li>
-<li><strong>position</strong> Fractional position along the line (0.0 to 1.0)</li>
+<li><strong>position</strong> Fractional midpoint along full line (0.0 to 1.0)</li>
+<li><strong>window</strong> Full width of arc-length window (0.0 to 1.0), same semantics as direct secant</li>
 <li><strong>polynomial_order</strong> Order of polynomial to fit</li>
-<li><strong>reference_x</strong> X component of reference direction for angle zero</li>
-<li><strong>reference_y</strong> Y component of reference direction for angle zero</li>
+<li><strong>basis</strong> Orthonormal basis for angle measurement</li>
 </ul>
-<p><strong>Return</strong>: Angle in degrees relative to the reference vector</p>
-<p><strong>Precondition</strong>:</p>
-<ul>
-<li>line.size() &gt;= 2 for polynomial fit path; otherwise falls back (enforcement: none)</li>
-<li>polynomial_order &gt;= 0 (enforcement: none; propagates to fit_polynomial)</li>
-<li>line.size() &gt; polynomial_order for polynomial fit; otherwise falls back to direct angle</li>
-</ul>
-<p>Fits parametric polynomials x(t) and y(t) to the line, then returns the angle of the tangent (dx/dt, dy/dt) at the given position, normalized with respect to the reference vector. Falls back to direct angle calculation if the line has too few points.</p>
+<p><strong>Return</strong>: Angle in degrees in (-180, 180]</p>
+<p><strong>Precondition</strong>: polynomial_order &gt;= 0 (enforcement: returns 0.0f if negative)</p>
+<p>Samples (u in [0,1]) are taken along [t_low, t_high] via point_at_fractional_position with interpolation. Fits x(u), y(u), then uses tangent (dx/du, dy/du) at u corresponding to position. Falls back to calculate_direct_angle_secant on the same window if fitting fails.</p>
 </section>
 <section id="function-extract_parametric_subsegment" class="level3">
 <h3 class="anchored" data-anchor-id="function-extract_parametric_subsegment">function extract_parametric_subsegment</h3>
@@ -552,36 +548,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef POLYNOMIAL_FIT_HPP</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define POLYNOMIAL_FIT_HPP</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/points.hpp"</span><span class="pp"> </span><span class="co">// For Point2D</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Line2D<span class="op">;</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> fit_polynomial<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> x<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> y<span class="op">,</span> <span class="dt">int</span> order<span class="op">);</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> x<span class="op">);</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial_derivative<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> x<span class="op">);</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial_second_derivative<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> t<span class="op">);</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef POLYNOMIAL_FIT_HPP</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define POLYNOMIAL_FIT_HPP</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/angle.hpp"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/points.hpp"</span><span class="co">// For Point2D</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Line2D<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> fit_polynomial<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> x<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> y<span class="op">,</span> <span class="dt">int</span> order<span class="op">);</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> x<span class="op">);</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial_derivative<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> x<span class="op">);</span></span>
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_polynomial_angle<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span> <span class="dt">float</span> position<span class="op">,</span> <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> reference_x<span class="op">,</span> <span class="dt">float</span> reference_y<span class="op">);</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> evaluate_polynomial_second_derivative<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> coeffs<span class="op">,</span> <span class="dt">double</span> t<span class="op">);</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;</span> extract_parametric_subsegment<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">float</span> start_pos<span class="op">,</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">float</span> end_pos<span class="op">,</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">int</span> output_points<span class="op">);</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> calculate_polynomial_angle<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> position<span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> window<span class="op">,</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                                 PlanarOrthonormalBasis2D <span class="at">const</span> <span class="op">&amp;</span> basis<span class="op">);</span></span>
 <span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// POLYNOMIAL_FIT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;</span> extract_parametric_subsegment<span class="op">(</span>Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">float</span> start_pos<span class="op">,</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">float</span> end_pos<span class="op">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">int</span> polynomial_order<span class="op">,</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                                                          <span class="dt">int</span> output_points<span class="op">);</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// POLYNOMIAL_FIT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:53 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:23 +0000</p>
 
 
 </section>

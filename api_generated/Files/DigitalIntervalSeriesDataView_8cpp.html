@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -384,8 +384,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IntervalTableModel.hpp"</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager_Widget/utils/DataManager_Widget_utils.hpp"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager_Widget/utils/DataManager_Widget_utils.hpp"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
@@ -510,142 +510,144 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> interval <span class="op">=</span> _table_model<span class="op">-&gt;</span>getInterval<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
-<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Navigate to start (column 0) or end (column 1) based on which cell was clicked</span></span>
-<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> target_frame <span class="op">=</span> <span class="op">(</span>index<span class="op">.</span>column<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> interval<span class="op">.</span>start <span class="op">:</span> interval<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> frameSelected<span class="op">(</span>TimePosition<span class="op">(</span>target_frame<span class="op">,</span> tf<span class="op">));</span></span>
-<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_onDataChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>    updateView<span class="op">();</span></span>
-<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_onGroupChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>    updateView<span class="op">();</span></span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> DigitalIntervalSeriesDataView<span class="op">::</span>getSelectedIntervals<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> selected_intervals<span class="op">;</span></span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_table_view <span class="op">||</span> <span class="op">!</span>_table_model<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> selected_intervals<span class="op">;</span></span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>    QModelIndexList selected_indexes <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="ex">QModelIndex</span> <span class="at">const</span> <span class="op">&amp;</span> index<span class="op">:</span> selected_indexes<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>            Interval interval <span class="op">=</span> _table_model<span class="op">-&gt;</span>getInterval<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>            selected_intervals<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">);</span></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> selected_intervals<span class="op">;</span></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DigitalIntervalSeriesDataView<span class="op">::</span>getSelectedEntityIds<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> entity_ids<span class="op">;</span></span>
-<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_table_view <span class="op">||</span> <span class="op">!</span>_table_model<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> entity_ids<span class="op">;</span></span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> selection <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>    entity_ids<span class="op">.</span>reserve<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>selection<span class="op">.</span>size<span class="op">()));</span></span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> index <span class="op">:</span> selection<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> row_data <span class="op">=</span> _table_model<span class="op">-&gt;</span>getRowData<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>row_data<span class="op">.</span>entity_id <span class="op">!=</span> EntityId<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>                entity_ids<span class="op">.</span>push_back<span class="op">(</span>row_data<span class="op">.</span>entity_id<span class="op">);</span></span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entity_ids<span class="op">;</span></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_showContextMenu<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> position<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QModelIndex</span> <span class="at">const</span> index <span class="op">=</span> _table_view<span class="op">-&gt;</span>indexAt<span class="op">(</span>position<span class="op">);</span></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QMenu</span> context_menu<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>column<span class="op">()</span> <span class="op">!=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> index<span class="op">.</span>column<span class="op">()</span> <span class="op">!=</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> target_frame <span class="op">=</span> <span class="op">(</span>index<span class="op">.</span>column<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> interval<span class="op">.</span>start <span class="op">:</span> interval<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> frameSelected<span class="op">(</span>TimePosition<span class="op">(</span>target_frame<span class="op">,</span> tf<span class="op">));</span></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_onDataChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>    updateView<span class="op">();</span></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_onGroupChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>    updateView<span class="op">();</span></span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> DigitalIntervalSeriesDataView<span class="op">::</span>getSelectedIntervals<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> selected_intervals<span class="op">;</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_table_view <span class="op">||</span> <span class="op">!</span>_table_model<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> selected_intervals<span class="op">;</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>    QModelIndexList <span class="at">const</span> selected_indexes <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="ex">QModelIndex</span> <span class="at">const</span> <span class="op">&amp;</span> index<span class="op">:</span> selected_indexes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>            Interval <span class="at">const</span> interval <span class="op">=</span> _table_model<span class="op">-&gt;</span>getInterval<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>            selected_intervals<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">);</span></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> selected_intervals<span class="op">;</span></span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DigitalIntervalSeriesDataView<span class="op">::</span>getSelectedEntityIds<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> entity_ids<span class="op">;</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_table_view <span class="op">||</span> <span class="op">!</span>_table_model<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> entity_ids<span class="op">;</span></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> selection <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>    entity_ids<span class="op">.</span>reserve<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>selection<span class="op">.</span>size<span class="op">()));</span></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> index<span class="op">:</span> selection<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> row_data <span class="op">=</span> _table_model<span class="op">-&gt;</span>getRowData<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>row_data<span class="op">.</span>entity_id <span class="op">!=</span> EntityId<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>                entity_ids<span class="op">.</span>push_back<span class="op">(</span>row_data<span class="op">.</span>entity_id<span class="op">);</span></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entity_ids<span class="op">;</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_showContextMenu<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> position<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QModelIndex</span> <span class="at">const</span> index <span class="op">=</span> _table_view<span class="op">-&gt;</span>indexAt<span class="op">(</span>position<span class="op">);</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add move and copy submenus using the utility function</span></span>
-<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> move_callback <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> target_key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> moveIntervalsRequested<span class="op">(</span>target_key<span class="op">);</span></span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> copy_callback <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> target_key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> copyIntervalsRequested<span class="op">(</span>target_key<span class="op">);</span></span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>    add_move_copy_submenus<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(&amp;</span>context_menu<span class="op">,</span> dataManager<span class="op">().</span>get<span class="op">(),</span> _active_key<span class="op">,</span> move_callback<span class="op">,</span> copy_callback<span class="op">);</span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QMenu</span> context_menu<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add move and copy submenus using the utility function</span></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> move_callback <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> target_key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> moveIntervalsRequested<span class="op">(</span>target_key<span class="op">);</span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> copy_callback <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> target_key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> copyIntervalsRequested<span class="op">(</span>target_key<span class="op">);</span></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
 <span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add group management options</span></span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>        context_menu<span class="op">.</span>addSeparator<span class="op">();</span></span>
-<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMenu</span> <span class="op">*</span> group_menu <span class="op">=</span> context_menu<span class="op">.</span>addMenu<span class="op">(</span><span class="st">"Group Management"</span><span class="op">);</span></span>
-<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add "Move to Group" submenu</span></span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMenu</span> <span class="op">*</span> move_to_group_menu <span class="op">=</span> group_menu<span class="op">-&gt;</span>addMenu<span class="op">(</span><span class="st">"Move to Group"</span><span class="op">);</span></span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>        _populateGroupSubmenu<span class="op">(</span>move_to_group_menu<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add "Remove from Group" action</span></span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QAction</span> <span class="op">*</span> remove_from_group_action <span class="op">=</span> group_menu<span class="op">-&gt;</span>addAction<span class="op">(</span><span class="st">"Remove from Group"</span><span class="op">);</span></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>remove_from_group_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span></span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DigitalIntervalSeriesDataView<span class="op">::</span>removeIntervalsFromGroupRequested<span class="op">);</span></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add separator and delete operation</span></span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>    context_menu<span class="op">.</span>addSeparator<span class="op">();</span></span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QAction</span> <span class="op">*</span> delete_action <span class="op">=</span> context_menu<span class="op">.</span>addAction<span class="op">(</span><span class="st">"Delete Selected Interval"</span><span class="op">);</span></span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>delete_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span></span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DigitalIntervalSeriesDataView<span class="op">::</span>deleteIntervalsRequested<span class="op">);</span></span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>    context_menu<span class="op">.</span>exec<span class="op">(</span>_table_view<span class="op">-&gt;</span>mapToGlobal<span class="op">(</span>position<span class="op">));</span></span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_populateGroupSubmenu<span class="op">(</span><span class="ex">QMenu</span> <span class="op">*</span> menu<span class="op">,</span> <span class="dt">bool</span> for_moving<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get current groups of selected entities to exclude them from the move list</span></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>set<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> current_groups<span class="op">;</span></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>for_moving<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> selection <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> index <span class="op">:</span> selection<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> row_data <span class="op">=</span> _table_model<span class="op">-&gt;</span>getRowData<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>row_data<span class="op">.</span>entity_id <span class="op">!=</span> EntityId<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">int</span> current_group <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityGroup<span class="op">(</span>row_data<span class="op">.</span>entity_id<span class="op">);</span></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>current_group <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>                        current_groups<span class="op">.</span>insert<span class="op">(</span>current_group<span class="op">);</span></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> groups <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getGroups<span class="op">();</span></span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> it <span class="op">=</span> groups<span class="op">.</span>begin<span class="op">();</span> it <span class="op">!=</span> groups<span class="op">.</span>end<span class="op">();</span> <span class="op">++</span>it<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> group_id <span class="op">=</span> it<span class="op">.</span>key<span class="op">();</span></span>
-<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> group_name <span class="op">=</span> it<span class="op">.</span>value<span class="op">().</span>name<span class="op">;</span></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip current groups when moving</span></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>for_moving <span class="op">&amp;&amp;</span> current_groups<span class="op">.</span>find<span class="op">(</span>group_id<span class="op">)</span> <span class="op">!=</span> current_groups<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QAction</span> <span class="op">*</span> action <span class="op">=</span> menu<span class="op">-&gt;</span>addAction<span class="op">(</span>group_name<span class="op">);</span></span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">,</span> group_id<span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>            <span class="ex">emit</span> moveIntervalsToGroupRequested<span class="op">(</span>group_id<span class="op">);</span></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>    add_move_copy_submenus<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(&amp;</span>context_menu<span class="op">,</span> dataManager<span class="op">().</span>get<span class="op">(),</span> _active_key<span class="op">,</span> move_callback<span class="op">,</span> copy_callback<span class="op">);</span></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add group management options</span></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>        context_menu<span class="op">.</span>addSeparator<span class="op">();</span></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMenu</span> <span class="op">*</span> group_menu <span class="op">=</span> context_menu<span class="op">.</span>addMenu<span class="op">(</span><span class="st">"Group Management"</span><span class="op">);</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add "Move to Group" submenu</span></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QMenu</span> <span class="op">*</span> move_to_group_menu <span class="op">=</span> group_menu<span class="op">-&gt;</span>addMenu<span class="op">(</span><span class="st">"Move to Group"</span><span class="op">);</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>        _populateGroupSubmenu<span class="op">(</span>move_to_group_menu<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add "Remove from Group" action</span></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QAction</span> <span class="op">*</span> remove_from_group_action <span class="op">=</span> group_menu<span class="op">-&gt;</span>addAction<span class="op">(</span><span class="st">"Remove from Group"</span><span class="op">);</span></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>remove_from_group_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DigitalIntervalSeriesDataView<span class="op">::</span>removeIntervalsFromGroupRequested<span class="op">);</span></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add separator and delete operation</span></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>    context_menu<span class="op">.</span>addSeparator<span class="op">();</span></span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QAction</span> <span class="op">*</span> delete_action <span class="op">=</span> context_menu<span class="op">.</span>addAction<span class="op">(</span><span class="st">"Delete Selected Interval"</span><span class="op">);</span></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>delete_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DigitalIntervalSeriesDataView<span class="op">::</span>deleteIntervalsRequested<span class="op">);</span></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>    context_menu<span class="op">.</span>exec<span class="op">(</span>_table_view<span class="op">-&gt;</span>mapToGlobal<span class="op">(</span>position<span class="op">));</span></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DigitalIntervalSeriesDataView<span class="op">::</span>_populateGroupSubmenu<span class="op">(</span><span class="ex">QMenu</span> <span class="op">*</span> menu<span class="op">,</span> <span class="dt">bool</span> for_moving<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get current groups of selected entities to exclude them from the move list</span></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>set<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> current_groups<span class="op">;</span></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>for_moving<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> selection <span class="op">=</span> _table_view<span class="op">-&gt;</span>selectionModel<span class="op">()-&gt;</span>selectedRows<span class="op">();</span></span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> index<span class="op">:</span> selection<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>index<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> row_data <span class="op">=</span> _table_model<span class="op">-&gt;</span>getRowData<span class="op">(</span>index<span class="op">.</span>row<span class="op">());</span></span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>row_data<span class="op">.</span>entity_id <span class="op">!=</span> EntityId<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">int</span> <span class="at">const</span> current_group <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityGroup<span class="op">(</span>row_data<span class="op">.</span>entity_id<span class="op">);</span></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>current_group <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>                        current_groups<span class="op">.</span>insert<span class="op">(</span>current_group<span class="op">);</span></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> groups <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getGroups<span class="op">();</span></span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> it <span class="op">=</span> groups<span class="op">.</span>begin<span class="op">();</span> it <span class="op">!=</span> groups<span class="op">.</span>end<span class="op">();</span> <span class="op">++</span>it<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> group_id <span class="op">=</span> it<span class="op">.</span>key<span class="op">();</span></span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> <span class="at">const</span> group_name <span class="op">=</span> it<span class="op">.</span>value<span class="op">().</span>name<span class="op">;</span></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip current groups when moving</span></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>for_moving <span class="op">&amp;&amp;</span> current_groups<span class="op">.</span>find<span class="op">(</span>group_id<span class="op">)</span> <span class="op">!=</span> current_groups<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QAction</span> <span class="op">*</span> action <span class="op">=</span> menu<span class="op">-&gt;</span>addAction<span class="op">(</span>group_name<span class="op">);</span></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">,</span> group_id<span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>            <span class="ex">emit</span> moveIntervalsToGroupRequested<span class="op">(</span>group_id<span class="op">);</span></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:56 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:26 +0000</p>
 
 
 </section>

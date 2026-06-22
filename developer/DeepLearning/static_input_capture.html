@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Static Input Capture &amp; Preview (Phase 2) – Neuralyzer</title>
+<title>Static Input Capture – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -340,7 +340,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture &amp; Preview (Phase 2)</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -473,6 +473,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Core Geometry</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/angle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Planar angles and line tangents</span></a>
+  </div>
+</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
@@ -538,11 +544,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlottingSVG/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlottingSVG Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlottingSVG/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -555,11 +558,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/PlotDataExport/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">PlotDataExport — Implementation Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/PlotDataExport/roadmap.md</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -592,7 +592,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+ <span class="menu-text">Static Input Capture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -604,7 +604,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+ <span class="menu-text">Hybrid Sequence Inputs</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -614,23 +614,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Batch Range Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/batch_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Background Inference</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/background_inference.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
@@ -640,21 +631,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+ <span class="menu-text">Post-Encoder Modules</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Per-Component Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToMask2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToMask2D</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/widget_param_schemas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Widget-Level Parameter Schemas</span></a>
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToFeatureVector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToFeatureVector</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToPoint2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToPoint2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DeepLearning/channel_decoding/TensorToLine2D.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TensorToLine2D</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/param_schemas.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DeepLearning/widget_param_schemas.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DeepLearning/device_selector.html" class="sidebar-item-text sidebar-link">
@@ -662,11 +671,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deep Learning Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning/roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -726,6 +732,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">TensorWhitening</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/pipeline_library.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pipeline Library (TransformsV2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/transforms_v2/pipeline_library_roadmap.md</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/transforms_v2/command_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Registration</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -738,11 +759,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/ParameterSchema/enum_variant_roadmap.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -991,6 +1009,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/transforms/data_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Legacy transform progress (<code>data_transforms.hpp</code>)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
@@ -1045,6 +1069,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/merge_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Object Merge</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/utils/ContainerTypeIndex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Container Type Index Utilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Storage Backend Architecture</span></a>
   </div>
@@ -1068,11 +1104,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/observer_thread_safety_roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Observer Thread-Safety Roadmap</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/observer_thread_safety_roadmap.qmd</span>
+  </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
@@ -1116,7 +1149,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+            <a href="../../developer/DataManager/Commands/index.qmd" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Command Architecture</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -1124,95 +1157,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/roadmap.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/core_types.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/sequence_execution.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/get_entity_ids_in_range.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/commands.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/save_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/DataManager/Commands/load_data.qmd</span>
+  </li>
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Architecture Roadmap</span></a>
+  <a href="../../developer/Commands/IO/SavePathResolver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Save Path Resolver</span></a>
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Core Types &amp; Factory</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/synthesize_data.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/validation.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">getEntityIdsInRange Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_introspection.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Concrete Commands</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_registry.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SaveData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/gui_verb_audit.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">LoadData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/widget_save_refactoring_guide.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SynthesizeData Command</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/data_manager_snapshot.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Validation</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Introspection</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_registry.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Registry</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DataManagerSnapshot</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Command Log Widget</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DataManager/Commands/command_log_widget.qmd</span>
+  </li>
       </ul>
   </li>
       </ul>
@@ -1233,11 +1227,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/TriageSession/optimized_contact_triage_plan.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Optimized Manual Contact Triage Plan</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/TriageSession/optimized_contact_triage_plan.md</span>
+  </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1390,17 +1381,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
       <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/helpers.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DeepLearning Widget Helpers</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/helpers.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/DeepLearning_Widget/inference_controller.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">InferenceController</span></a>
-  </div>
-</li>
+ <span class="menu-text">developer/DeepLearning_Widget/inference_controller.qmd</span>
+  </li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1546,21 +1531,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
+  <li><a href="#static-source-configuration" id="toc-static-source-configuration" class="nav-link" data-scroll-target="#static-source-configuration">Static source configuration</a>
   <ul class="collapse">
-  <li><a href="#capturemode-enum" id="toc-capturemode-enum" class="nav-link" data-scroll-target="#capturemode-enum">CaptureMode Enum</a></li>
-  <li><a href="#staticinputdata-extensions" id="toc-staticinputdata-extensions" class="nav-link" data-scroll-target="#staticinputdata-extensions">StaticInputData Extensions</a></li>
-  <li><a href="#tensor-cache-in-slotassembler" id="toc-tensor-cache-in-slotassembler" class="nav-link" data-scroll-target="#tensor-cache-in-slotassembler">Tensor Cache in SlotAssembler</a></li>
-  <li><a href="#batch-dimension-expansion" id="toc-batch-dimension-expansion" class="nav-link" data-scroll-target="#batch-dimension-expansion">Batch Dimension Expansion</a></li>
-  <li><a href="#cache-invalidation" id="toc-cache-invalidation" class="nav-link" data-scroll-target="#cache-invalidation">Cache Invalidation</a></li>
+  <li><a href="#in-memoryslotwidget" id="toc-in-memoryslotwidget" class="nav-link" data-scroll-target="#in-memoryslotwidget">In MemorySlotWidget</a></li>
+  <li><a href="#default-bank-entry-ids" id="toc-default-bank-entry-ids" class="nav-link" data-scroll-target="#default-bank-entry-ids">Default bank entry IDs</a></li>
   </ul></li>
-  <li><a href="#ui-integration" id="toc-ui-integration" class="nav-link" data-scroll-target="#ui-integration">UI Integration</a>
+  <li><a href="#capture-api" id="toc-capture-api" class="nav-link" data-scroll-target="#capture-api">Capture API</a>
   <ul class="collapse">
-  <li><a href="#properties-widget" id="toc-properties-widget" class="nav-link" data-scroll-target="#properties-widget">Properties Widget</a></li>
-  <li><a href="#view-widget" id="toc-view-widget" class="nav-link" data-scroll-target="#view-widget">View Widget</a></li>
+  <li><a href="#capturetobank" id="toc-capturetobank" class="nav-link" data-scroll-target="#capturetobank"><code>captureToBank()</code></a></li>
+  <li><a href="#capturestaticinput" id="toc-capturestaticinput" class="nav-link" data-scroll-target="#capturestaticinput"><code>captureStaticInput()</code></a></li>
   </ul></li>
-  <li><a href="#data-flow" id="toc-data-flow" class="nav-link" data-scroll-target="#data-flow">Data Flow</a></li>
+  <li><a href="#preview-api" id="toc-preview-api" class="nav-link" data-scroll-target="#preview-api">Preview API</a></li>
+  <li><a href="#data-flow" id="toc-data-flow" class="nav-link" data-scroll-target="#data-flow">Data flow</a>
+  <ul class="collapse">
+  <li><a href="#properties-panel-capture" id="toc-properties-panel-capture" class="nav-link" data-scroll-target="#properties-panel-capture">Properties-panel capture</a></li>
+  <li><a href="#recurrent-staticcaptureinit" id="toc-recurrent-staticcaptureinit" class="nav-link" data-scroll-target="#recurrent-staticcaptureinit">Recurrent StaticCaptureInit</a></li>
+  </ul></li>
+  <li><a href="#cache-invalidation" id="toc-cache-invalidation" class="nav-link" data-scroll-target="#cache-invalidation">Cache invalidation</a></li>
   <li><a href="#serialization" id="toc-serialization" class="nav-link" data-scroll-target="#serialization">Serialization</a></li>
+  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related documentation</a></li>
   </ul>
 </nav>
     </div>
@@ -1568,9 +1557,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture &amp; Preview (Phase 2)</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/index.html">Deep Learning</a></li><li class="breadcrumb-item"><a href="../../developer/DeepLearning/static_input_capture.html">Static Input Capture</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Static Input Capture &amp; Preview (Phase 2)</h1>
+<h1 class="title">Static Input Capture</h1>
 </div>
 
 
@@ -1589,130 +1578,135 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Phase 2 of the input pipeline architecture adds <strong>Absolute capture mode</strong> for static (memory) model inputs. This allows users to encode a tensor from a specific frame and cache it for reuse across multiple inference runs, rather than re-encoding every time (Relative mode).</p>
-</section>
-<section id="architecture" class="level2">
-<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
-<section id="capturemode-enum" class="level3">
-<h3 class="anchored" data-anchor-id="capturemode-enum">CaptureMode Enum</h3>
-<p>Defined in <code>DeepLearningBindingData.hpp</code>:</p>
+<p>Static (memory) model inputs resolve their tensor data through <code>StaticInputSourceVariant</code>:</p>
 <ul>
-<li><strong>Relative</strong> (default): Re-encodes data from DataManager at <code>current_frame + time_offset</code> every inference run. This is the original behaviour.</li>
-<li><strong>Absolute</strong>: Encodes data once at a user-chosen frame. The tensor is cached in <code>SlotAssembler</code> and reused on subsequent runs without re-encoding.</li>
+<li><strong>DataManager</strong> — re-encode from a DataManager key at <code>current_frame + time_offset</code> on every <code>assembleInputs()</code> call.</li>
+<li><strong>DataBank</strong> — reuse a pre-encoded tensor from a named session bank entry.</li>
 </ul>
+<p>The DataBank path avoids repeated encoding for reference frames that do not change across inference runs. Capture APIs populate the bank; binding metadata records which entry each static position uses.</p>
+<p>See <a href="../../developer/DeepLearning/data_bank.html">DataBank</a> for storage types and <a href="../../developer/DeepLearning/bindings/memory_frames.html">Memory Frame Bindings</a> for the binding model.</p>
+<p><strong>Capture API:</strong> <code>src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.hpp</code><br>
+<strong>Capture UI:</strong> <code>src/WhiskerToolbox/DeepLearning_Widget/UI/DataBank/DataBankPropertiesWidget.hpp</code><br>
+<strong>Binding UI:</strong> <code>src/WhiskerToolbox/DeepLearning_Widget/UI/Helpers/MemorySlotWidget.hpp</code></p>
 </section>
-<section id="staticinputdata-extensions" class="level3">
-<h3 class="anchored" data-anchor-id="staticinputdata-extensions">StaticInputData Extensions</h3>
-<p>Two new fields were added to the <code>StaticInputData</code> struct:</p>
-<ul>
-<li><code>capture_mode_str</code>: Serialization-friendly string (<code>"Relative"</code> or <code>"Absolute"</code>)</li>
-<li><code>captured_frame</code>: The frame number that was captured in Absolute mode (-1 if not yet captured)</li>
-</ul>
-<p>Helper methods <code>captureMode()</code> and <code>setCaptureMode()</code> convert between enum and string.</p>
-</section>
-<section id="tensor-cache-in-slotassembler" class="level3">
-<h3 class="anchored" data-anchor-id="tensor-cache-in-slotassembler">Tensor Cache in SlotAssembler</h3>
-<p>The <code>SlotAssembler::Impl</code> PIMPL struct now contains:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> torch<span class="op">::</span>Tensor<span class="op">&gt;</span> static_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Keys use the format <code>"slot_name:memory_index"</code> (generated by <code>staticCacheKey()</code>).</p>
-<section id="public-api" class="level4">
-<h4 class="anchored" data-anchor-id="public-api">Public API</h4>
+<section id="static-source-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="static-source-configuration">Static source configuration</h2>
+<section id="in-memoryslotwidget" class="level3">
+<h3 class="anchored" data-anchor-id="in-memoryslotwidget">In MemorySlotWidget</h3>
+<p>Each static position uses <code>StaticFrameSourceForm</code>:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Method</th>
-<th>Purpose</th>
+<th><code>static_source</code></th>
+<th>Fields</th>
+<th>Assembly behavior</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>captureStaticInput()</code></td>
-<td>Encode data at a specific frame and store in cache</td>
+<td><code>DataManagerStaticSource</code></td>
+<td><code>data_key</code>, <code>time_offset</code></td>
+<td>Encode at <code>current_frame + time_offset</code></td>
 </tr>
 <tr class="even">
-<td><code>clearStaticCacheEntry()</code></td>
-<td>Remove a single cache entry</td>
-</tr>
-<tr class="odd">
-<td><code>clearStaticCache()</code></td>
-<td>Clear all cached tensors</td>
-</tr>
-<tr class="even">
-<td><code>hasStaticCacheEntry()</code></td>
-<td>Check if a key exists in the cache</td>
-</tr>
-<tr class="odd">
-<td><code>staticCacheKeys()</code></td>
-<td>List all cached keys</td>
-</tr>
-<tr class="even">
-<td><code>staticCacheTensorShape()</code></td>
-<td>Get tensor dimensions for preview</td>
-</tr>
-<tr class="odd">
-<td><code>staticCacheTensorRange()</code></td>
-<td>Get min/max values for preview</td>
+<td><code>DataBankStaticSource</code></td>
+<td><code>bank_entry_id</code></td>
+<td>Copy <code>DataBank::getEncoded(bank_entry_id)</code>; when empty, <code>resolvedBankEntryId()</code> falls back to <code>{slot_name}_{memory_index}</code></td>
 </tr>
 </tbody>
 </table>
+<p><code>hasActiveStaticSource()</code> requires a non-empty <code>data_key</code> (DataManager) or a resolvable bank entry ID (DataBank).</p>
+</section>
+<section id="default-bank-entry-ids" class="level3">
+<h3 class="anchored" data-anchor-id="default-bank-entry-ids">Default bank entry IDs</h3>
+<p><code>defaultBankEntryId(slot_name, memory_index)</code> produces keys like <code>memory_masks_0</code>. <code>DataBankPropertiesWidget</code> uses this convention by default; <code>MemorySlotWidget</code> populates <code>bank_entry_id</code> combos from current bank contents via <code>refreshBankEntries()</code>.</p>
 </section>
 </section>
-<section id="batch-dimension-expansion" class="level3">
-<h3 class="anchored" data-anchor-id="batch-dimension-expansion">Batch Dimension Expansion</h3>
-<p>When <code>batch_size &gt; 1</code> and the cached tensor has <code>batch_dim=1</code>, the tensor is expanded using <code>torch::Tensor::expand()</code> to match the requested batch size. This is a zero-copy operation.</p>
-</section>
-<section id="cache-invalidation" class="level3">
-<h3 class="anchored" data-anchor-id="cache-invalidation">Cache Invalidation</h3>
-<p>Cached tensors are invalidated in three scenarios:</p>
-<ol type="1">
-<li><strong>Model switch</strong>: <code>resetModel()</code> clears the entire cache</li>
-<li><strong>Data source change</strong>: When the user changes the source combo for a static slot, the corresponding cache entry is cleared</li>
-<li><strong>Re-capture</strong>: Calling <code>captureStaticInput()</code> overwrites any existing entry</li>
-</ol>
-</section>
-</section>
-<section id="ui-integration" class="level2">
-<h2 class="anchored" data-anchor-id="ui-integration">UI Integration</h2>
-<section id="properties-widget" class="level3">
-<h3 class="anchored" data-anchor-id="properties-widget">Properties Widget</h3>
-<p>The static input group now includes:</p>
+<section id="capture-api" class="level2">
+<h2 class="anchored" data-anchor-id="capture-api">Capture API</h2>
+<section id="capturetobank" class="level3">
+<h3 class="anchored" data-anchor-id="capturetobank"><code>captureToBank()</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> captureToBank<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> bank_entry_id<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>MemoryFrameBinding <span class="at">const</span> <span class="op">&amp;</span> entry<span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fetches geometry from DataManager, stores the raw source via <code>DataBank::putSource()</code>, then channel-encodes via <code>DataBank::encodeEntry()</code>.</p>
+<p>Requirements:</p>
 <ul>
-<li><strong>Mode combo</strong>: Choose between Relative and Absolute capture modes</li>
-<li><strong>Time Offset spinbox</strong>: Enabled only in Relative mode</li>
-<li><strong>“Capture Current Frame” button</strong>: Enabled only in Absolute mode when the model is loaded. Encodes data at the current timeline position and caches it.</li>
-<li><strong>Capture status label</strong>: Shows whether a tensor is cached, which frame was captured, and the value range</li>
+<li>Model loaded (<code>isModelReady()</code>)</li>
+<li><code>bank_entry_id</code> passes <code>dl::validateEntryId()</code></li>
+<li><code>dl::staticDataKey(entry)</code> non-empty (entry must describe a DataManager source)</li>
+<li>Target slot exists and <code>is_static</code></li>
 </ul>
+<p><code>DataBankPropertiesWidget</code> builds a temporary binding with <code>dl::makeCaptureBinding(slot_name, memory_index, data_key)</code> and passes an explicit <code>bank_entry_id</code>.</p>
 </section>
-<section id="view-widget" class="level3">
-<h3 class="anchored" data-anchor-id="view-widget">View Widget</h3>
-<p>The View widget displays cached tensor information via <code>refreshCachePreview()</code>:</p>
+<section id="capturestaticinput" class="level3">
+<h3 class="anchored" data-anchor-id="capturestaticinput"><code>captureStaticInput()</code></h3>
+<p>Convenience wrapper that calls <code>captureToBank()</code> using <code>entry.resolvedBankEntryId()</code> as the bank key. Used by recurrent <code>StaticCaptureInit</code> when no pre-existing bank tensor is available.</p>
+</section>
+</section>
+<section id="preview-api" class="level2">
+<h2 class="anchored" data-anchor-id="preview-api">Preview API</h2>
+<p>The view panel queries <code>SlotAssembler::dataBank()</code>:</p>
 <ul>
-<li>Tensor shape</li>
-<li>Value range (min, max)</li>
-<li>Captured frame number</li>
-<li>Cache status indicator</li>
+<li><code>ids()</code> filtered by entries with encoded tensors — previewable entries</li>
+<li><code>encodedShape()</code> / <code>encodedRange()</code> — tensor metadata for display</li>
+<li><code>DataBankEntryMetadata</code> — provenance (<code>data_key</code>, <code>captured_frame</code>, <code>source_image_size</code>, <code>encoder_factory_name</code>)</li>
 </ul>
-<p>The preview is updated via the <code>staticCacheChanged</code> signal from the Properties widget.</p>
-</section>
+<p><code>DeepLearningPropertiesWidget::dataBankChanged</code> triggers <code>DeepLearningViewWidget::refreshDataBankView()</code> and <code>_refreshBankEntryCombos()</code> on memory slot widgets.</p>
 </section>
 <section id="data-flow" class="level2">
-<h2 class="anchored" data-anchor-id="data-flow">Data Flow</h2>
-<pre><code>1. User sets static slot to "Absolute" mode → offset spinbox disabled, capture button enabled
-2. User navigates to desired frame in timeline
-3. User clicks "Capture Current Frame"
-4. _onCaptureStaticInput() calls SlotAssembler::captureStaticInput()
-5. SlotAssembler encodes the frame data into a tensor and stores it in _static_cache
-6. staticCacheChanged signal → ViewWidget::refreshCachePreview()
-7. During inference, assembleInputs() finds cached tensor and uses it directly
-8. For batch_size &gt; 1, the cached tensor is expanded along the batch dimension</code></pre>
+<h2 class="anchored" data-anchor-id="data-flow">Data flow</h2>
+<section id="properties-panel-capture" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel-capture">Properties-panel capture</h3>
+<pre><code>1. User selects target slot + memory index in DataBankPropertiesWidget
+2. Entry ID defaults to {slot_name}_{memory_index}
+3. User chooses a DataManager data source
+4. "Capture Current Frame" → captureToBank()
+5. dataBankChanged → refresh view + bank_entry_id combos
+6. User sets static position source to DataBank (or leaves default entry ID)
+7. assembleInputs() copies getEncoded() — no re-encoding</code></pre>
+</section>
+<section id="recurrent-staticcaptureinit" class="level3">
+<h3 class="anchored" data-anchor-id="recurrent-staticcaptureinit">Recurrent StaticCaptureInit</h3>
+<p>At t=0 of <code>runRecurrentSequence()</code>, <code>StaticCaptureInit</code> may use:</p>
+<ul>
+<li>An existing DataBank tensor at the same <code>memory_index</code> (if a static binding points there), or</li>
+<li><code>defaultBankEntryId</code>, or</li>
+<li>On-the-fly <code>captureStaticInput()</code> from the init’s <code>data_key</code> / <code>frame</code></li>
+</ul>
+<p>See <a href="../../developer/DeepLearning/recurrent_inputs.html">Recurrent Inputs</a>.</p>
+</section>
+</section>
+<section id="cache-invalidation" class="level2">
+<h2 class="anchored" data-anchor-id="cache-invalidation">Cache invalidation</h2>
+<p>DataBank entries are invalidated when:</p>
+<ol type="1">
+<li><strong>Explicit removal</strong> — <code>dataBank().remove(id)</code> or <code>clearDataBank()</code></li>
+<li><strong>Re-capture</strong> — <code>captureToBank()</code> overwrites an existing entry with the same ID</li>
+</ol>
+<p><code>resetModel()</code> does <strong>not</strong> clear the DataBank (session-scoped across model switches).</p>
+<p>Changing a static binding’s <code>data_key</code> or <code>bank_entry_id</code> in the UI does not automatically remove bank entries — stale entries remain until explicitly removed or overwritten.</p>
 </section>
 <section id="serialization" class="level2">
 <h2 class="anchored" data-anchor-id="serialization">Serialization</h2>
-<p>The <code>capture_mode_str</code> and <code>captured_frame</code> fields are serialized via reflect-cpp as part of <code>DeepLearningStateData</code>. However, the actual cached tensors are <strong>not</strong> serialized — they must be re-captured after workspace restore. This is by design: tensor data can be large and the source data may have changed.</p>
+<p><code>MemoryFrameBinding</code> metadata (including nested <code>StaticInputSourceVariant</code> and <code>RecurrentInitVariant</code>) serializes via reflect-cpp as part of <code>DeepLearningStateData::memory_frames</code>.</p>
+<p>Encoded tensors in the DataBank are <strong>not</strong> serialized — they must be re-captured after workspace restore.</p>
+</section>
+<section id="related-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="related-documentation">Related documentation</h2>
+<ul>
+<li><a href="../../developer/DeepLearning/data_bank.html">DataBank</a> — <code>DataBank</code> API, <code>SlotAssembler</code> integration</li>
+<li><a href="../../developer/DeepLearning/hybrid_sequence_inputs.html">Hybrid Sequence Inputs</a> — static positions in sequence slots</li>
+<li><a href="../../ui/DeepLearning_Widget/UI/DataBank/DataBankPropertiesWidget.qmd">DataBankPropertiesWidget</a> — capture UI</li>
+</ul>
 
 
 </section>

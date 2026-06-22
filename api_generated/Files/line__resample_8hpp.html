@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -422,7 +422,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Files/line__resample_8hpp.html#enum-linesimplificationalgorithm">LineSimplificationAlgorithm</a></strong> { FixedSpacing, DouglasPeucker}</td>
+<td><strong><a href="../../api_generated/Files/line__resample_8hpp.html#enum-linesimplificationalgorithm">LineSimplificationAlgorithm</a></strong> { FixedSpacing, DouglasPeucker, PolynomialSmooth}</td>
 </tr>
 </tbody>
 </table>
@@ -471,6 +471,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td></td>
 </tr>
+<tr class="odd">
+<td>PolynomialSmooth</td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -504,16 +509,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>line_data</strong> The <a href="../../api_generated/Classes/classLineData.html">LineData</a> to process.</li>
 <li><strong>params</strong> Parameters for resampling, including algorithm, target spacing, and epsilon.</li>
 <li><strong>progressCallback</strong> A callback function to report progress (0-100).</li>
-<li><strong>line_data</strong> A pointer to the input <a href="../../api_generated/Classes/classLineData.html">LineData</a> object. Must not be null.</li>
-<li><strong>params</strong> A struct containing the algorithm type, target spacing (for FixedSpacing), and epsilon value (for Douglas-Peucker).</li>
-<li><strong>progressCallback</strong> An optional function that can be called to report progress (0-100). If nullptr, progress is not reported.</li>
 </ul>
-<p><strong>Return</strong>:</p>
-<ul>
-<li>A new <a href="../../api_generated/Classes/classLineData.html">LineData</a> containing the resampled lines.</li>
-<li>A std::shared_ptr<linedata> containing the resampled lines. Returns an empty <a href="../../api_generated/Classes/classLineData.html">LineData</a> if line_data is null or has no data.</linedata></li>
-</ul>
-<p>This function processes all lines in the input <a href="../../api_generated/Classes/classLineData.html">LineData</a> object using the specified algorithm (FixedSpacing or Douglas-Peucker) and returns a new <a href="../../api_generated/Classes/classLineData.html">LineData</a> object with the resampled lines.</p>
+<p><strong>Return</strong>: A new <a href="../../api_generated/Classes/classLineData.html">LineData</a> containing the resampled lines.</p>
 </section>
 </section>
 <section id="source-code" class="level2">
@@ -529,45 +526,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> LineSimplificationAlgorithm <span class="op">{</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    FixedSpacing<span class="op">,</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    DouglasPeucker</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineResampleParameters <span class="op">:</span> <span class="kw">public</span> TransformParametersBase <span class="op">{</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    LineSimplificationAlgorithm algorithm <span class="op">=</span> LineSimplificationAlgorithm<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span><span class="co">// Default desired spacing in pixels (for FixedSpacing)</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> epsilon <span class="op">=</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span>       <span class="co">// Default epsilon for Douglas-Peucker algorithm</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Min/Max values will be handled by the UI widget</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineData<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    DouglasPeucker<span class="op">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    PolynomialSmooth</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineResampleParameters <span class="op">:</span> <span class="kw">public</span> TransformParametersBase <span class="op">{</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    LineSimplificationAlgorithm algorithm <span class="op">=</span> LineSimplificationAlgorithm<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span> <span class="co">// Default desired spacing in pixels (for FixedSpacing / PolynomialSmooth)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> epsilon <span class="op">=</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">;</span>        <span class="co">// Default epsilon for Douglas-Peucker algorithm</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> polynomial_order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span>    <span class="co">// Polynomial order for PolynomialSmooth (1-9)</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Min/Max values will be handled by the UI widget</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> line_resample<span class="op">(</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        LineResampleParameters <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">);</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> line_resample<span class="op">(</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        LineResampleParameters <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        ProgressCallback progressCallback<span class="op">);</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineResampleOperation <span class="kw">final</span> <span class="op">:</span> <span class="kw">public</span> TransformOperation <span class="op">{</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>type_index getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                            TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineData<span class="op">;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> line_resample<span class="op">(</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        LineResampleParameters <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">);</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> line_resample<span class="op">(</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        LineResampleParameters <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        ProgressCallback progressCallback<span class="op">);</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineResampleOperation <span class="kw">final</span> <span class="op">:</span> <span class="kw">public</span> TransformOperation <span class="op">{</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>type_index getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
 <span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>                            TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>                            ProgressCallback progressCallback<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// LINE_RESAMPLE_OPERATION_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>                            TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>                            TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                            ProgressCallback progressCallback<span class="op">)</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// LINE_RESAMPLE_OPERATION_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:54 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:24 +0000</p>
 
 
 </section>

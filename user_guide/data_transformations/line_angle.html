@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -673,6 +673,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Data Manager Overview</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../user_guide/data_manager/json_pipeline_runner.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">JSON Pipeline Runner</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -694,6 +700,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../../user_guide/data_transformations/transforms_v2_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../user_guide/data_transformations/pipeline_library.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TransformsV2 Pipeline Library</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -960,6 +972,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">CSV Plot Export</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../user_guide/export/provenance_save_defaults.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Saving Back to Loaded Files</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1064,16 +1082,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>This transform calculates the angle of a line at a specific position along its length for each point in time.</p>
+<p>This transform estimates the local orientation of a tracked polyline at each time, using a <strong>midpoint</strong> and <strong>arc-length window</strong> shared by both calculation modes, and reports the angle in a user-defined <strong>measured X/Y</strong> frame.</p>
 <section id="detailed-description" class="level3">
 <h3 class="anchored" data-anchor-id="detailed-description">Detailed Description</h3>
-<p>The Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).</p>
+<p>The Line Angle transform quantifies local orientation of a polyline in 2D for each time sample. You choose a <strong>midpoint</strong> along cumulative arc length (0 = first vertex, 1 = last), and a <strong>window</strong> width (also as a fraction of total arc length). The window is centered on the midpoint and <strong>slides</strong> so it always lies on the polyline (for example, near the tip a wide window shifts toward the base instead of extending past 100%).</p>
+<p>Any fractional position is resolved with <strong>linear interpolation between the two bracketing vertices</strong> along the polyline (the same rule as arc-length interpolation elsewhere in the toolbox).</p>
+<p><strong>Direct points</strong> uses the <strong>secant</strong> between the interpolated endpoints of the window. <strong>Polynomial fit</strong> resamples inside that window, fits <code>x(u)</code> and <code>y(u)</code> in local parameter <code>u ∈ [0,1]</code>, and uses the <strong>tangent</strong> <code>(dx/du, dy/du)</code> from the polynomial coefficients evaluated at the midpoint’s local parameter.</p>
+<p>Angles are reported in a <strong>measured coordinate frame</strong>: you supply world-space directions for positive measured X and positive measured Y. The implementation orthonormalizes (Gram–Schmidt) so that (_x) follows your X direction and (_y) is perpendicular, forming a right-handed basis. The output angle uses <code>atan2</code> in that basis (defaults match world +X / +Y).</p>
 <p>There are two methods for calculating the angle:</p>
 <ul>
-<li><strong>Direct Points:</strong> This method approximates the tangent at a given <code>position</code> by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.</li>
-<li><strong>Polynomial Fit:</strong> This method fits a polynomial of a given order to the line’s points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified <code>position</code>. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.</li>
+<li><strong>Direct Points:</strong> Secant chord across the slid window, expressed in the measured basis.</li>
+<li><strong>Polynomial Fit:</strong> Local polynomial on the window; tangent from derivatives at the midpoint, same basis.</li>
 </ul>
 <p><img src="images/clipboard-186657572.png" class="img-fluid"></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The figure below (hidden in HTML builds) uses older schematic code (vertex-pair tangent and global polynomial). The implementation follows the windowed arc-length description above.</p>
+</div>
+</div>
 </section>
 <section id="neuroscience-use-cases" class="level3">
 <h3 class="anchored" data-anchor-id="neuroscience-use-cases">Neuroscience Use Cases</h3>
@@ -1089,20 +1123,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="parameters">Parameters</h2>
 <p>This transform has the following parameters:</p>
 <ul>
-<li><code>position</code>: A value between 0.0 and 1.0 that specifies the point along the line at which to calculate the angle. For example, <code>0.5</code> would be the midpoint of the line.</li>
-<li><code>method</code>: The calculation method to use.
-<ul>
-<li><code>Direct Points</code>: (Default) Calculates the angle based on the vector from the start of the line to the point at <code>position</code>.</li>
-<li><code>Polynomial Fit</code>: Fits a polynomial to the line and calculates the angle from the derivative.</li>
-</ul></li>
-<li><code>polynomial_order</code>: The order of the polynomial to fit to the line when using the <code>Polynomial Fit</code> method. A higher order can capture more complex curves but requires more points and can be prone to overfitting. A typical value is 2 or 3.</li>
-<li><code>reference_x</code>: The x-component of the reference vector. Defaults to <code>1.0</code>.</li>
-<li><code>reference_y</code>: The y-component of the reference vector. Defaults to <code>0.0</code>. The default vector <code>(1.0, 0.0)</code> corresponds to the positive x-axis, meaning angles are measured with 0 degrees pointing to the right.</li>
+<li><code>position</code>: Fraction along cumulative arc length (0.0–1.0) for the <strong>midpoint</strong> where the angle is attributed.</li>
+<li><code>window</code>: Full width of the arc-length window (0.0–1.0), shared by both methods. A value of <code>0.2</code> with midpoint <code>0.2</code> nominally spans 10%–30% before sliding.</li>
+<li><code>method</code>: <code>Direct Points</code> (secant in the window) or <code>Polynomial Fit</code> (local fit in the window, tangent from coefficients).</li>
+<li><code>polynomial_order</code>: Polynomial degree when using <code>Polynomial Fit</code> (typical values 2–3).</li>
+<li><code>axis_x_x</code>, <code>axis_x_y</code>: World-vector direction of <strong>positive measured X</strong> (defaults <code>1</code>, <code>0</code>).</li>
+<li><code>axis_y_x</code>, <code>axis_y_y</code>: World-vector direction of <strong>positive measured Y</strong> (defaults <code>0</code>, <code>1</code>; orthogonalized to X).</li>
 </ul>
 </section>
 <section id="example-configuration" class="level2">
 <h2 class="anchored" data-anchor-id="example-configuration">Example Configuration</h2>
-<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the angle at the midpoint of a line using the “Direct Points” method.</p>
+<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example uses the midpoint at 50% of arc length, a 20% window, and the default world axes.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"transformations"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -1120,16 +1151,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"line_angles"</span><span class="fu">,</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"position"</span><span class="fu">:</span> <span class="fl">0.5</span><span class="fu">,</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"method"</span><span class="fu">:</span> <span class="st">"Direct Points"</span><span class="fu">,</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"polynomial_order"</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"reference_x"</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"reference_y"</span><span class="fu">:</span> <span class="fl">0.0</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"window"</span><span class="fu">:</span> <span class="fl">0.2</span><span class="fu">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"method"</span><span class="fu">:</span> <span class="st">"Direct Points"</span><span class="fu">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"polynomial_order"</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"axis_x_x"</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"axis_x_y"</span><span class="fu">:</span> <span class="fl">0.0</span><span class="fu">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"axis_y_x"</span><span class="fu">:</span> <span class="fl">0.0</span><span class="fu">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"axis_y_y"</span><span class="fu">:</span> <span class="fl">1.0</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -73,14 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-107650a566f85ffdf9b73d4d91aa964a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-1d75729acfce310eccd376c22942cc89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -349,14 +349,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
+  <li><a href="#using-containerfor_t" id="toc-using-containerfor_t" class="nav-link" data-scroll-target="#using-containerfor_t">using ContainerFor_t</a></li>
+  <li><a href="#using-containerptr_t" id="toc-using-containerptr_t" class="nav-link" data-scroll-target="#using-containerptr_t">using ContainerPtr_t</a></li>
+  <li><a href="#using-elementfor_t" id="toc-using-elementfor_t" class="nav-link" data-scroll-target="#using-elementfor_t">using ElementFor_t</a></li>
+  <li><a href="#using-elementforsafe_t" id="toc-using-elementforsafe_t" class="nav-link" data-scroll-target="#using-elementforsafe_t">using ElementForSafe_t</a></li>
   <li><a href="#using-traitsof_t" id="toc-using-traitsof_t" class="nav-link" data-scroll-target="#using-traitsof_t">using TraitsOf_t</a></li>
   <li><a href="#using-element_type_t" id="toc-using-element_type_t" class="nav-link" data-scroll-target="#using-element_type_t">using element_type_t</a></li>
   </ul></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-dmdatatypetocontainertypeindex" id="toc-function-dmdatatypetocontainertypeindex" class="nav-link" data-scroll-target="#function-dmdatatypetocontainertypeindex">function dmDataTypeToContainerTypeIndex</a></li>
+  <li><a href="#function-containertypeindextodmdatatype" id="toc-function-containertypeindextodmdatatype" class="nav-link" data-scroll-target="#function-containertypeindextodmdatatype">function containerTypeIndexToDmDataType</a></li>
+  </ul></li>
   <li><a href="#attributes-documentation" id="toc-attributes-documentation" class="nav-link" data-scroll-target="#attributes-documentation">Attributes Documentation</a>
   <ul class="collapse">
+  <li><a href="#variable-has_element_type_v" id="toc-variable-has_element_type_v" class="nav-link" data-scroll-target="#variable-has_element_type_v">variable has_element_type_v</a></li>
   <li><a href="#variable-is_ragged_v" id="toc-variable-is_ragged_v" class="nav-link" data-scroll-target="#variable-is_ragged_v">variable is_ragged_v</a></li>
   <li><a href="#variable-is_temporal_v" id="toc-variable-is_temporal_v" class="nav-link" data-scroll-target="#variable-is_temporal_v">variable is_temporal_v</a></li>
   <li><a href="#variable-has_entity_ids_v" id="toc-variable-has_entity_ids_v" class="nav-link" data-scroll-target="#variable-has_entity_ids_v">variable has_entity_ids_v</a></li>
@@ -403,11 +414,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1DataTypeTraitsBase.html">WhiskerToolbox::TypeTraits::DataTypeTraitsBase</a></strong> <br>Base trait structure for data container types.</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor.html">WhiskerToolbox::TypeTraits::ContainerFor</a></strong> <br>Maps element types to their default container types.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor_3_01float_01_4.html">WhiskerToolbox::TypeTraits::ContainerFor&lt; float &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor_3_01Line2D_01_4.html">WhiskerToolbox::TypeTraits::ContainerFor&lt; Line2D &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor_3_01Mask2D_01_4.html">WhiskerToolbox::TypeTraits::ContainerFor&lt; Mask2D &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor_3_01Point2D_3_01float_01_4_01_4.html">WhiskerToolbox::TypeTraits::ContainerFor&lt; Point2D&lt; float &gt; &gt;</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1DataTypeTraitsBase.html">WhiskerToolbox::TypeTraits::DataTypeTraitsBase</a></strong> <br>Base trait structure for data container types.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementFor.html">WhiskerToolbox::TypeTraits::ElementFor</a></strong> <br>Maps container types to their element types.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementFor_3_01Container_01_4.html">WhiskerToolbox::TypeTraits::ElementFor&lt; Container &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementForSafe.html">WhiskerToolbox::TypeTraits::ElementForSafe</a></strong> <br>SFINAE-safe <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementFor.html">ElementFor</a>; yields void for unsupported containers.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementForSafe_3_01Container_00_01std_1_1void__t_3.md">WhiskerToolbox::TypeTraits::ElementForSafe&lt; Container, std::void_t&lt; typename ElementFor&lt; Container &gt;::type &gt; &gt;</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1TraitsOf.html">WhiskerToolbox::TypeTraits::TraitsOf</a></strong> <br>Helper to access traits (with SFINAE for types without traits)</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1TypeTraits_1_1TypeIndexMapper.html">WhiskerToolbox::TypeTraits::TypeIndexMapper</a></strong> <br>Runtime mapping between element/container types, strings, and raggedness.</td>
 </tr>
 </tbody>
 </table>
@@ -423,12 +474,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td>template &lt;typename Element &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor.html">ContainerFor</a>&lt; Element &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-containerfor-t">ContainerFor_t</a></strong></td>
+</tr>
+<tr class="even">
+<td>template &lt;typename Element &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ContainerFor.html">ContainerFor</a>&lt; Element &gt;::container_ptr</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-containerptr-t">ContainerPtr_t</a></strong></td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename Container &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementFor.html">ElementFor</a>&lt; Container &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-elementfor-t">ElementFor_t</a></strong></td>
+</tr>
+<tr class="even">
+<td>template &lt;typename Container &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1ElementForSafe.html">ElementForSafe</a>&lt; Container &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-elementforsafe-t">ElementForSafe_t</a></strong></td>
+</tr>
+<tr class="odd">
 <td>template &lt;typename T &gt; <br>using typename <a href="../../api_generated/Classes/structWhiskerToolbox_1_1TypeTraits_1_1TraitsOf.html">TraitsOf</a>&lt; T &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-traitsof-t">TraitsOf_t</a></strong></td>
 </tr>
 <tr class="even">
 <td>template &lt;typename T &gt; <br>using typename <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-traitsof-t">TraitsOf_t</a>&lt; T &gt;::element_type</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#using-element-type-t">element_type_t</a></strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::type_index</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#function-dmdatatypetocontainertypeindex">dmDataTypeToContainerTypeIndex</a></strong>(<a href="../../api_generated/Files/DM__DataType_8hpp.html#enum-dm-datatype">DM_DataType</a> type)<br>Map DM_DataType to the corresponding container std::type_index.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Files/DM__DataType_8hpp.html#enum-dm-datatype">DM_DataType</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#function-containertypeindextodmdatatype">containerTypeIndexToDmDataType</a></strong>(std::type_index container_type)<br>Reverse map container type_index to DM_DataType when unambiguous.</td>
 </tr>
 </tbody>
 </table>
@@ -445,17 +533,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>constexpr bool</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-is-ragged-v">is_ragged_v</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-has-element-type-v">has_element_type_v</a></strong> <br>True when the container supports element-level transform pipelines (has elements()).</td>
 </tr>
 <tr class="even">
 <td>constexpr bool</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-is-temporal-v">is_temporal_v</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-is-ragged-v">is_ragged_v</a></strong></td>
 </tr>
 <tr class="odd">
 <td>constexpr bool</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-has-entity-ids-v">has_entity_ids_v</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-is-temporal-v">is_temporal_v</a></strong></td>
 </tr>
 <tr class="even">
+<td>constexpr bool</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-has-entity-ids-v">has_entity_ids_v</a></strong></td>
+</tr>
+<tr class="odd">
 <td>constexpr bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1TypeTraits.html#variable-is-spatial-v">is_spatial_v</a></strong></td>
 </tr>
@@ -464,36 +556,83 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="types-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="using-containerfor_t" class="level3">
+<h3 class="anchored" data-anchor-id="using-containerfor_t">using ContainerFor_t</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Element <span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">ContainerFor_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> ContainerFor<span class="op">&lt;</span>Element<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="using-containerptr_t" class="level3">
+<h3 class="anchored" data-anchor-id="using-containerptr_t">using ContainerPtr_t</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Element <span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">ContainerPtr_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> ContainerFor<span class="op">&lt;</span>Element<span class="op">&gt;::</span>container_ptr<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="using-elementfor_t" class="level3">
+<h3 class="anchored" data-anchor-id="using-elementfor_t">using ElementFor_t</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Container <span class="op">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">ElementFor_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> ElementFor<span class="op">&lt;</span>Container<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="using-elementforsafe_t" class="level3">
+<h3 class="anchored" data-anchor-id="using-elementforsafe_t">using ElementForSafe_t</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Container <span class="op">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">ElementForSafe_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> ElementForSafe<span class="op">&lt;</span>Container<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="using-traitsof_t" class="level3">
 <h3 class="anchored" data-anchor-id="using-traitsof_t">using TraitsOf_t</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">TraitsOf_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> TraitsOf<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">TraitsOf_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> TraitsOf<span class="op">&lt;</span>T<span class="op">&gt;::</span>type<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-element_type_t" class="level3">
 <h3 class="anchored" data-anchor-id="using-element_type_t">using element_type_t</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">element_type_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">::</span><span class="dt">element_type_t</span> <span class="op">=</span> <span class="kw">typedef</span> <span class="kw">typename</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-dmdatatypetocontainertypeindex" class="level3">
+<h3 class="anchored" data-anchor-id="function-dmdatatypetocontainertypeindex">function dmDataTypeToContainerTypeIndex</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>type_index dmDataTypeToContainerTypeIndex<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    DM_DataType type</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map DM_DataType to the corresponding container std::type_index.</p>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> for types that cannot be used as pipeline sources (Video, Images, Tensor, Time, Unknown).</li>
+</ul>
+</section>
+<section id="function-containertypeindextodmdatatype" class="level3">
+<h3 class="anchored" data-anchor-id="function-containertypeindextodmdatatype">function containerTypeIndexToDmDataType</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> DM_DataType <span class="op">&gt;</span> containerTypeIndexToDmDataType<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">container_type</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reverse map container type_index to DM_DataType when unambiguous.</p>
 </section>
 </section>
 <section id="attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
+<section id="variable-has_element_type_v" class="level3">
+<h3 class="anchored" data-anchor-id="variable-has_element_type_v">variable has_element_type_v</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> has_element_type_v <span class="op">=</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>        ElementForSafe<span class="op">&lt;</span>Container<span class="op">&gt;::</span>is_valid <span class="op">&amp;&amp;</span> HasElements<span class="op">&lt;</span>Container<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>True when the container supports element-level transform pipelines (has elements()).</p>
+</section>
 <section id="variable-is_ragged_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_ragged_v">variable is_ragged_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_ragged_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_ragged<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_ragged_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_ragged<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_temporal_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_temporal_v">variable is_temporal_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_temporal_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_temporal<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_temporal_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_temporal<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-has_entity_ids_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-has_entity_ids_v">variable has_entity_ids_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> has_entity_ids_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>has_entity_ids<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> has_entity_ids_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>has_entity_ids<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_spatial_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_spatial_v">variable is_spatial_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_spatial_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_spatial<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_spatial_v <span class="op">=</span> <span class="dt">TraitsOf_t</span><span class="op">&lt;</span>T<span class="op">&gt;::</span>is_spatial<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-05-14 at 12:10:52 +0000</p>
+<p>Updated on 2026-06-22 at 15:00:22 +0000</p>
 
 
 </section>
