@@ -7,10 +7,11 @@
  * 
  * DigitalIntervalSeriesDataView provides a table view for DigitalIntervalSeries
  * objects in the Center zone. It displays intervals in a table format with
- * start and end frame/time information, plus group column.
+ * start and end frame/time information, duration, plus group column.
  * 
  * ## Features
  * - Group filtering via GroupManager
+ * - Duration column (inclusive sample count)
  * - Group ID column in table
  * - Right-click context menu for move/copy/delete and group management
  * 
@@ -41,8 +42,8 @@ class DigitalIntervalSeriesDataView : public BaseDataView {
 
 public:
     explicit DigitalIntervalSeriesDataView(
-        std::shared_ptr<DataManager> data_manager,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            QWidget * parent = nullptr);
 
     ~DigitalIntervalSeriesDataView() override;
 
@@ -129,4 +130,4 @@ private:
     int _callback_id{-1};
 };
 
-#endif // DIGITAL_INTERVAL_SERIES_DATA_VIEW_HPP
+#endif// DIGITAL_INTERVAL_SERIES_DATA_VIEW_HPP

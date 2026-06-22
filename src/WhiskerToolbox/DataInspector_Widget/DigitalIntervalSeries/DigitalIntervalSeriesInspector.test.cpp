@@ -11,20 +11,20 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <QAbstractItemModel>
 #include <QApplication>
-#include <QLabel>
-#include <QPushButton>
-#include <QLineEdit>
 #include <QComboBox>
 #include <QItemSelectionModel>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QSignalSpy>
 #include <QTableView>
-#include <QAbstractItemModel>
 #include <QTest>
 #include <QTimer>
 
@@ -37,8 +37,7 @@
 namespace {
 // Ensures a QApplication exists for the process. Must be called before using any Qt widgets/signals.
 // Uses a leaked pointer intentionally - QApplication must outlive all Qt objects in tests.
-void ensureQApplication()
-{
+void ensureQApplication() {
     if (!QApplication::instance()) {
         static int argc = 1;
         static char app_name[] = "test";
@@ -47,15 +46,13 @@ void ensureQApplication()
     }
 }
 
-std::filesystem::path makeTempDir()
-{
+std::filesystem::path makeTempDir() {
     auto dir = std::filesystem::temp_directory_path() / "whisker_digital_interval_inspector_save_test";
     std::filesystem::create_directories(dir);
     return dir;
 }
 
-void cleanupTempDir(std::filesystem::path const & dir)
-{
+void cleanupTempDir(std::filesystem::path const & dir) {
     std::error_code ec;
     std::filesystem::remove_all(dir, ec);
 }
@@ -71,23 +68,23 @@ TEST_CASE("DigitalIntervalSeriesInspector construction", "[DigitalIntervalSeries
 
     SECTION("Constructs with data manager") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         // Inspector should be created without crashing
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Constructs with nullptr group manager") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         REQUIRE(inspector.supportsGroupFiltering() == false);
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Returns correct data type") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         REQUIRE(inspector.getDataType() == DM_DataType::DigitalInterval);
         REQUIRE(inspector.getTypeName() == QStringLiteral("Digital Interval Series"));
@@ -103,16 +100,16 @@ TEST_CASE("DigitalIntervalSeriesInspector has expected UI", "[DigitalIntervalSer
 
     SECTION("Contains total intervals label") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         // The inspector should have the label
-        app->processEvents();
+        QCoreApplication::processEvents();
         REQUIRE(inspector.getTypeName() == QStringLiteral("Digital Interval Series"));
     }
 
     SECTION("Contains create and remove interval buttons") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         // Find buttons through the wrapped widget
         auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
@@ -123,12 +120,12 @@ TEST_CASE("DigitalIntervalSeriesInspector has expected UI", "[DigitalIntervalSer
         REQUIRE(remove_button != nullptr);
         REQUIRE(remove_button->text() == QStringLiteral("Remove Interval"));
 
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Contains export section") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector(data_manager, nullptr, nullptr);
 
         // Find export-related widgets
         auto * filename_edit = inspector.findChild<QLineEdit *>("filename_edit");
@@ -138,7 +135,7 @@ TEST_CASE("DigitalIntervalSeriesInspector has expected UI", "[DigitalIntervalSer
         REQUIRE(export_type_combo != nullptr);
         REQUIRE(export_type_combo->count() > 0);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 }
 
@@ -167,7 +164,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
         inspector.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify the active key is set
         REQUIRE(inspector.getActiveKey() == "test_intervals");
@@ -200,7 +197,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         inspector.setState(state);
         inspector.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should have 0 intervals
         auto * total_intervals_label = inspector.findChild<QLabel *>("total_interval_label");
@@ -212,7 +209,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(create_button != nullptr);
         create_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should be in interval creation mode
         REQUIRE(create_button->text() == QStringLiteral("Mark Interval End"));
@@ -221,7 +218,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         state->current_position = TimePosition(TimeFrameIndex(60), tf);
         create_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should now have 1 interval
         REQUIRE(total_intervals_label->text() == QStringLiteral("1"));
@@ -259,7 +256,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         inspector.setState(state);
         inspector.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should have 2 intervals
         auto * total_intervals_label = inspector.findChild<QLabel *>("total_interval_label");
@@ -271,7 +268,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(remove_button != nullptr);
         remove_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should be in remove interval mode
         REQUIRE(remove_button->text() == QStringLiteral("Mark Remove Interval End"));
@@ -280,7 +277,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         state->current_position = TimePosition(TimeFrameIndex(18), tf);
         remove_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should still have intervals (the removal affects the interval but doesn't remove it completely)
         // The exact behavior depends on implementation, but we verify it doesn't crash
@@ -305,7 +302,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
         inspector.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should have 1 interval
         auto * total_intervals_label = inspector.findChild<QLabel *>("total_interval_label");
@@ -314,7 +311,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
 
         // Add an interval externally
         interval_series->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Label should update to show 2 intervals
         REQUIRE(total_intervals_label->text() == QStringLiteral("2"));
@@ -348,7 +345,7 @@ TEST_CASE("DigitalIntervalSeriesInspector saves data from DataManager", "[Digita
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
         inspector.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Set filename for export
         auto * filename_edit = inspector.findChild<QLineEdit *>("filename_edit");
@@ -368,7 +365,7 @@ TEST_CASE("DigitalIntervalSeriesInspector saves data from DataManager", "[Digita
         REQUIRE(save_button != nullptr);
         save_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto const filepath = temp_dir / "saved_intervals.csv";
         REQUIRE(std::filesystem::exists(filepath));
@@ -416,12 +413,12 @@ TEST_CASE("DigitalIntervalSeriesInspector callbacks", "[DigitalIntervalSeriesIns
         {
             DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
             inspector.setActiveKey("test_intervals");
-            app->processEvents();
+            QCoreApplication::processEvents();
         }// Inspector goes out of scope
 
         // Should not crash when data changes after inspector is destroyed
         interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Removes callbacks explicitly") {
@@ -440,14 +437,14 @@ TEST_CASE("DigitalIntervalSeriesInspector callbacks", "[DigitalIntervalSeriesIns
 
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
         inspector.setActiveKey("test_intervals");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Remove callbacks
         inspector.removeCallbacks();
 
         // Should not crash when data changes after callbacks removed
         interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 }
 
@@ -461,13 +458,13 @@ TEST_CASE("DigitalIntervalSeriesDataView construction", "[DigitalIntervalSeriesD
 
     SECTION("Constructs with data manager") {
         auto data_manager = std::make_shared<DataManager>();
-        DigitalIntervalSeriesDataView view(data_manager, nullptr);
+        DigitalIntervalSeriesDataView const view(data_manager, nullptr);
 
         REQUIRE(view.getDataType() == DM_DataType::DigitalInterval);
         REQUIRE(view.getTypeName() == QStringLiteral("Interval Table"));
         REQUIRE(view.tableView() != nullptr);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 }
 
@@ -496,7 +493,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify table model has correct initial data
         auto * table_view = view.tableView();
@@ -504,13 +501,17 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         auto * model = dynamic_cast<IntervalTableModel *>(table_view->model());
         REQUIRE(model != nullptr);
         REQUIRE(model->rowCount(QModelIndex()) == 2);
-        
-        Interval interval0 = model->getInterval(0);
-        Interval interval1 = model->getInterval(1);
+        REQUIRE(model->columnCount(QModelIndex()) == 4);
+
+        Interval const interval0 = model->getInterval(0);
+        Interval const interval1 = model->getInterval(1);
         REQUIRE(interval0.start == 10);
         REQUIRE(interval0.end == 20);
         REQUIRE(interval1.start == 30);
         REQUIRE(interval1.end == 40);
+
+        REQUIRE(model->data(model->index(0, 2), Qt::DisplayRole).toLongLong() == 11);
+        REQUIRE(model->data(model->index(1, 2), Qt::DisplayRole).toLongLong() == 11);
     }
 
     SECTION("Table model updates when interval is added externally") {
@@ -531,7 +532,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state
         auto * table_view = view.tableView();
@@ -542,11 +543,11 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Add an interval externally
         interval_series->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify table model is automatically updated
         REQUIRE(model->rowCount(QModelIndex()) == 2);
-        Interval interval1 = model->getInterval(1);
+        Interval const interval1 = model->getInterval(1);
         REQUIRE(interval1.start == 30);
         REQUIRE(interval1.end == 40);
     }
@@ -570,7 +571,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state
         auto * table_view = view.tableView();
@@ -580,13 +581,13 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         REQUIRE(model->rowCount(QModelIndex()) == 2);
 
         // Remove an interval externally
-        Interval to_remove{10, 20};
+        Interval const to_remove{10, 20};
         interval_series->removeInterval(to_remove);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify table model is automatically updated
         REQUIRE(model->rowCount(QModelIndex()) == 1);
-        Interval remaining = model->getInterval(0);
+        Interval const remaining = model->getInterval(0);
         REQUIRE(remaining.start == 30);
         REQUIRE(remaining.end == 40);
     }
@@ -609,7 +610,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("test_intervals");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state
         auto * table_view = view.tableView();
@@ -620,15 +621,15 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Add multiple intervals externally
         interval_series->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));
-        app->processEvents();
+        QCoreApplication::processEvents();
         REQUIRE(model->rowCount(QModelIndex()) == 2);
 
         interval_series->addEvent(TimeFrameIndex(50), TimeFrameIndex(60));
-        app->processEvents();
+        QCoreApplication::processEvents();
         REQUIRE(model->rowCount(QModelIndex()) == 3);
 
         interval_series->addEvent(TimeFrameIndex(70), TimeFrameIndex(80));
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify all intervals are in the table model
         REQUIRE(model->rowCount(QModelIndex()) == 4);
@@ -661,7 +662,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("intervals_1");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state
         auto * table_view = view.tableView();
@@ -672,7 +673,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Change active key
         view.setActiveKey("intervals_2");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify table model reflects new data
         REQUIRE(model->rowCount(QModelIndex()) == 2);
@@ -714,21 +715,21 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         inspector.setActiveKey("test_intervals");
         inspector.setDataView(&view);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Select intervals in the view
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
         auto * selection_model = table_view->selectionModel();
         REQUIRE(selection_model != nullptr);
-        
+
         // Select first and third intervals (rows 0 and 2)
         // Use select() with Select flag to add to selection instead of replacing
         auto index0 = table_view->model()->index(0, 0);
         auto index2 = table_view->model()->index(2, 0);
         selection_model->select(index0, QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(index2, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection provider returns selected intervals
         auto selected = view.getSelectedIntervals();
@@ -736,7 +737,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         // Note: selection order may vary, so check both possibilities
         bool found_first = false;
         bool found_third = false;
-        for (auto const & interval : selected) {
+        for (auto const & interval: selected) {
             if (interval.start == 10 && interval.end == 20) {
                 found_first = true;
             }
@@ -773,7 +774,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         inspector.setActiveKey("test_intervals");
         inspector.setDataView(&view);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should have 3 intervals
         REQUIRE(interval_series->size() == 3);
@@ -783,14 +784,14 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         REQUIRE(table_view != nullptr);
         auto * selection_model = table_view->selectionModel();
         REQUIRE(selection_model != nullptr);
-        
+
         // Use select() with Select flag to add to selection
         auto index0 = table_view->model()->index(0, 0);
         auto index1 = table_view->model()->index(1, 0);
         selection_model->select(index0, QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(index1, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Verify selection before merge
         auto selected_before = view.getSelectedIntervals();
         REQUIRE(selected_before.size() == 2);
@@ -800,15 +801,15 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         REQUIRE(merge_button != nullptr);
         merge_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should now have 2 intervals (first two merged)
         REQUIRE(interval_series->size() == 2);
-        
+
         // Verify the merged interval spans from 10 to 40
         auto interval_view = interval_series->view();
         bool found_merged = false;
-        for (auto const & interval_with_id : interval_view) {
+        for (auto const & interval_with_id: interval_view) {
             Interval const & interval = interval_with_id.value();
             if (interval.start == 10 && interval.end == 40) {
                 found_merged = true;
@@ -843,7 +844,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         inspector.setActiveKey("test_intervals");
         inspector.setDataView(&view);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should have 3 intervals
         REQUIRE(interval_series->size() == 3);
@@ -852,7 +853,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
         table_view->selectRow(1);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Get the widget and call delete (we need to access the widget directly)
         // Since delete is a private slot, we'll test through the selection mechanism
@@ -891,25 +892,25 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         inspector.setActiveKey("test_intervals");
         inspector.setDataView(&view);
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Select the interval in the view
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
         table_view->selectRow(0);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Click extend button
         auto * extend_button = inspector.findChild<QPushButton *>("extend_interval_button");
         REQUIRE(extend_button != nullptr);
         extend_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should now have an extended interval [10, 70]
         auto interval_view = interval_series->view();
         bool found_extended = false;
-        for (auto const & interval_with_id : interval_view) {
+        for (auto const & interval_with_id: interval_view) {
             Interval const & interval = interval_with_id.value();
             if (interval.start == 10 && interval.end == 70) {
                 found_extended = true;
@@ -957,7 +958,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
 
     // Trigger creation of the correct view/inspector
     state->setInspectedDataKey(QStringLiteral("test_intervals"));
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto * interval_view = dynamic_cast<DigitalIntervalSeriesDataView *>(view_widget.currentView());
     REQUIRE(interval_view != nullptr);
@@ -977,7 +978,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     state->current_position = TimePosition(TimeFrameIndex(50), tf);
 
     // Test 1: Double click row 0, column 0 (start) -> should emit frameSelected(start)
-    QModelIndex idx0_start = table_view->model()->index(0, 0);
+    QModelIndex const idx0_start = table_view->model()->index(0, 0);
     REQUIRE(idx0_start.isValid());
 
     bool ok = QMetaObject::invokeMethod(interval_view,
@@ -985,7 +986,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
                                         Qt::DirectConnection,
                                         Q_ARG(QModelIndex, idx0_start));
     REQUIRE(ok);
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Verify the data view emitted the signal with start frame
     REQUIRE(data_view_spy.count() == 1);
@@ -1002,7 +1003,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     REQUIRE(view_widget_pos_start.index.getValue() == 10);
 
     // Test 2: Double click row 0, column 1 (end) -> should emit frameSelected(end)
-    QModelIndex idx0_end = table_view->model()->index(0, 1);
+    QModelIndex const idx0_end = table_view->model()->index(0, 1);
     REQUIRE(idx0_end.isValid());
 
     ok = QMetaObject::invokeMethod(interval_view,
@@ -1010,7 +1011,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
                                    Qt::DirectConnection,
                                    Q_ARG(QModelIndex, idx0_end));
     REQUIRE(ok);
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Verify the data view emitted the signal with end frame
     REQUIRE(data_view_spy.count() == 1);
@@ -1037,7 +1038,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     REQUIRE(app != nullptr);
 
     auto data_manager = std::make_shared<DataManager>();
-    
+
     // Create timeframe (remove existing if present to avoid conflicts)
     data_manager->removeTime(TimeKey("time"));
     constexpr int kNumTimes = 1000;
@@ -1045,7 +1046,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
     data_manager->setTime(TimeKey("time"), tf);
-    
+
     // Create empty interval series and set TimeFrame before adding to DataManager
     auto interval_series = std::make_shared<DigitalIntervalSeries>();
     interval_series->setTimeFrame(tf);
@@ -1058,7 +1059,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
     inspector.setState(state);
     inspector.setActiveKey("test_intervals");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     SECTION("Initial state") {
         // Inspector should start in normal mode (not in interval creation)
@@ -1070,23 +1071,23 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     SECTION("Bidirectional interval creation - forward order") {
         // Reset state by setting active key (which cancels any ongoing interval creation)
         inspector.setActiveKey("test_intervals");
-        
+
         state->current_position = TimePosition(TimeFrameIndex(100), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state before clicking
         auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
         REQUIRE(create_button != nullptr);
         REQUIRE(create_button->text() == "Create Interval");
-        
+
         // Ensure widget is shown for button clicks to work properly
         inspector.show();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Simulate first button click - should enter interval creation mode
         create_button->click();
-        app->processEvents();
-        QTest::qWait(10); // Small delay to ensure UI updates
+        QCoreApplication::processEvents();
+        QTest::qWait(10);// Small delay to ensure UI updates
 
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
         auto * cancel_button = inspector.findChild<QPushButton *>("cancel_interval_button");
@@ -1097,9 +1098,9 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
 
         // Move to later frame and click again
         state->current_position = TimePosition(TimeFrameIndex(200), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
         create_button->click();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should create interval [100, 200] and reset state
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
@@ -1118,37 +1119,37 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     SECTION("Bidirectional interval creation - reverse order") {
         // Reset state by setting active key (which cancels any ongoing interval creation)
         inspector.setActiveKey("test_intervals");
-        
+
         // Clear any existing intervals from previous sections
         auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
         REQUIRE(intervals != nullptr);
         auto view = intervals->view();
-        for (auto const & interval_with_id : view) {
+        for (auto const & interval_with_id: view) {
             intervals->removeInterval(interval_with_id.value());
         }
-        
+
         state->current_position = TimePosition(TimeFrameIndex(300), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state before clicking
         auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
         REQUIRE(create_button != nullptr);
         REQUIRE(create_button->text() == "Create Interval");
-        
+
         // Ensure widget is shown for button clicks to work properly
         inspector.show();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Start interval creation at frame 300
         create_button->click();
-        app->processEvents();
-        QTest::qWait(10); // Small delay to ensure UI updates
+        QCoreApplication::processEvents();
+        QTest::qWait(10);// Small delay to ensure UI updates
 
         // Move to earlier frame and complete interval
         state->current_position = TimePosition(TimeFrameIndex(150), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
         create_button->click();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should create interval [150, 300] (automatically swapped)
         intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
@@ -1162,31 +1163,31 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     SECTION("Cancel interval creation via button") {
         // Reset state by setting active key (which cancels any ongoing interval creation)
         inspector.setActiveKey("test_intervals");
-        
+
         // Clear any existing intervals from previous sections
         auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
         REQUIRE(intervals != nullptr);
         auto view = intervals->view();
-        for (auto const & interval_with_id : view) {
+        for (auto const & interval_with_id: view) {
             intervals->removeInterval(interval_with_id.value());
         }
-        
+
         state->current_position = TimePosition(TimeFrameIndex(50), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial state before clicking
         auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
         REQUIRE(create_button != nullptr);
         REQUIRE(create_button->text() == "Create Interval");
-        
+
         // Ensure widget is shown for button clicks to work properly
         inspector.show();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Start interval creation
         create_button->click();
-        app->processEvents();
-        QTest::qWait(10); // Small delay to ensure UI updates
+        QCoreApplication::processEvents();
+        QTest::qWait(10);// Small delay to ensure UI updates
 
         REQUIRE(create_button->text() == "Mark Interval End");
         auto * cancel_button = inspector.findChild<QPushButton *>("cancel_interval_button");
@@ -1195,7 +1196,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
 
         // Cancel via button
         cancel_button->click();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should return to normal state
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
@@ -1216,7 +1217,7 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     REQUIRE(app != nullptr);
 
     auto data_manager = std::make_shared<DataManager>();
-    
+
     // Create timeframe (remove existing if present to avoid conflicts)
     data_manager->removeTime(TimeKey("time"));
     constexpr int kNumTimes = 1000;
@@ -1224,11 +1225,11 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
     data_manager->setTime(TimeKey("time"), tf, true);
-    
+
     // Create interval series
     auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
     data_manager->setData<DigitalIntervalSeries>("intervals1", interval_series_1, TimeKey("time"));
-    
+
     auto interval_series_2 = std::make_shared<DigitalIntervalSeries>();
     data_manager->setData<DigitalIntervalSeries>("intervals2", interval_series_2, TimeKey("time"));
 
@@ -1242,17 +1243,17 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     SECTION("State reset when switching active keys") {
         inspector.setActiveKey("intervals1");
         state->current_position = TimePosition(TimeFrameIndex(100), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Start interval creation
         QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
 
         // Switch to different key - should reset state
         inspector.setActiveKey("intervals2");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
         REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
@@ -1262,17 +1263,17 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     SECTION("State reset when removing callbacks") {
         inspector.setActiveKey("intervals1");
         state->current_position = TimePosition(TimeFrameIndex(100), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Start interval creation
         QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
 
         // Remove callbacks - should reset state
         inspector.removeCallbacks();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
         REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
@@ -1287,7 +1288,7 @@ TEST_CASE("DigitalIntervalSeriesInspector filename generation", "[DigitalInterva
     REQUIRE(app != nullptr);
 
     auto data_manager = std::make_shared<DataManager>();
-    
+
     // Create timeframe (remove existing if present to avoid conflicts)
     data_manager->removeTime(TimeKey("time"));
     constexpr int kNumTimes = 1000;
@@ -1295,11 +1296,11 @@ TEST_CASE("DigitalIntervalSeriesInspector filename generation", "[DigitalInterva
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
     data_manager->setTime(TimeKey("time"), tf, true);
-    
+
     // Create interval series
     auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
     data_manager->setData<DigitalIntervalSeries>("whisker_contacts", interval_series_1, TimeKey("time"));
-    
+
     auto interval_series_2 = std::make_shared<DigitalIntervalSeries>();
     data_manager->setData<DigitalIntervalSeries>("object_interactions", interval_series_2, TimeKey("time"));
 
@@ -1330,7 +1331,7 @@ TEST_CASE("DigitalIntervalSeriesInspector filename generation", "[DigitalInterva
 
     SECTION("Empty active key uses fallback filename") {
         // Inspector without active key should use fallback
-        DigitalIntervalSeriesInspector inspector_no_key(data_manager, nullptr, nullptr);
+        DigitalIntervalSeriesInspector const inspector_no_key(data_manager, nullptr, nullptr);
         REQUIRE(inspector_no_key.findChild<QLineEdit *>("filename_edit")->text() == "intervals_output.csv");
     }
 }
@@ -1342,7 +1343,7 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
     REQUIRE(app != nullptr);
 
     auto data_manager = std::make_shared<DataManager>();
-    
+
     // Create timeframe for state
     data_manager->removeTime(TimeKey("time"));
     constexpr int kNumTimes = 1000;
@@ -1350,7 +1351,7 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
     data_manager->setTime(TimeKey("time"), tf, true);
-    
+
     // Set up state with initial current position
     auto state = std::make_shared<DataInspectorState>();
     state->current_position = TimePosition(TimeFrameIndex(100), tf);
@@ -1372,17 +1373,17 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
         // Create interval series for this test
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
         data_manager->setData<DigitalIntervalSeries>("test_key", interval_series, TimeKey("time"));
-        
+
         inspector.setActiveKey("test_key");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Right-click when not in interval creation mode - context menu should not appear
         // (This is tested implicitly by the _showCreateIntervalContextMenu implementation)
 
         state->current_position = TimePosition(TimeFrameIndex(100), tf);
-        app->processEvents();
+        QCoreApplication::processEvents();
         QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Now in interval creation mode - context menu should be available
         // (Implementation allows context menu to appear)

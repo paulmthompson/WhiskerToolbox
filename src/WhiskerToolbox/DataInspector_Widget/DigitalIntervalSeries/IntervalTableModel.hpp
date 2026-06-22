@@ -6,7 +6,7 @@
  * @brief Table model for DigitalIntervalSeries data with group support
  *
  * Provides a QAbstractTableModel for displaying interval data with columns
- * for Start, End, and Group name. Supports group filtering via GroupManager.
+ * for Start, End, Duration, and Group name. Supports group filtering via GroupManager.
  */
 
 #include "Entity/EntityTypes.hpp"

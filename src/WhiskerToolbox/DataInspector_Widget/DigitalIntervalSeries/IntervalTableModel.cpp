@@ -5,6 +5,19 @@
 
 #include <iostream>
 
+namespace {
+
+/**
+ * @brief Compute inclusive sample count for a digital interval.
+ * @param interval Interval with inclusive start and end indices.
+ * @return Number of samples covered by the interval.
+ */
+[[nodiscard]] int64_t inclusiveIntervalDuration(Interval const & interval) noexcept {
+    return interval.end - interval.start + 1;
+}
+
+}// namespace
+
 IntervalTableModel::IntervalTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
 
@@ -15,12 +28,12 @@ void IntervalTableModel::setIntervals(DigitalIntervalSeries const * interval_dat
     _interval_data_source = interval_data;
 
     if (interval_data) {
-        for (auto const & interval_with_id : interval_data->view()) {
+        for (auto const & interval_with_id: interval_data->view()) {
             QString group_name = "No Group";
-            EntityId eid = interval_with_id.id();
+            EntityId const eid = interval_with_id.id();
 
             if (_group_manager && eid != EntityId(0)) {
-                int group_id = _group_manager->getEntityGroup(eid);
+                int const group_id = _group_manager->getEntityGroup(eid);
                 if (group_id != -1) {
                     auto group = _group_manager->getGroup(group_id);
                     if (group.has_value()) {
@@ -63,7 +76,7 @@ int IntervalTableModel::rowCount(QModelIndex const & parent) const {
 
 int IntervalTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 3;  // Start, End, Group
+    return 4;// Start, End, Duration, Group
 }
 
 QVariant IntervalTableModel::data(QModelIndex const & index, int role) const {
@@ -83,6 +96,8 @@ QVariant IntervalTableModel::data(QModelIndex const & index, int role) const {
         case 1:
             return QVariant::fromValue(row.interval.end);
         case 2:
+            return QVariant::fromValue(inclusiveIntervalDuration(row.interval));
+        case 3:
             return QVariant::fromValue(row.group_name);
         default:
             return QVariant{};
@@ -101,6 +116,8 @@ QVariant IntervalTableModel::headerData(int section, Qt::Orientation orientation
             case 1:
                 return QString("End");
             case 2:
+                return QString("Duration");
+            case 3:
                 return QString("Group");
             default:
                 return QVariant{};
@@ -138,9 +155,9 @@ void IntervalTableModel::_applyGroupFilter() {
     if (_filtered_group_id == -1) {
         _display_data = _all_data;
     } else {
-        for (auto const & row : _all_data) {
+        for (auto const & row: _all_data) {
             if (_group_manager) {
-                int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
+                int const entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
                     _display_data.push_back(row);
                 }

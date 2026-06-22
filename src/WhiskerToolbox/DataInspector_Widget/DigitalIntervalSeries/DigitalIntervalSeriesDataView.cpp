@@ -3,8 +3,8 @@
 #include "IntervalTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
@@ -129,8 +129,10 @@ void DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked(QModelIndex co
             return;
         }
         auto interval = _table_model->getInterval(index.row());
-        // Navigate to start (column 0) or end (column 1) based on which cell was clicked
-        int64_t target_frame = (index.column() == 0) ? interval.start : interval.end;
+        if (index.column() != 0 && index.column() != 1) {
+            return;
+        }
+        int64_t const target_frame = (index.column() == 0) ? interval.start : interval.end;
         emit frameSelected(TimePosition(target_frame, tf));
     }
 }
@@ -149,10 +151,10 @@ std::vector<Interval> DigitalIntervalSeriesDataView::getSelectedIntervals() cons
         return selected_intervals;
     }
 
-    QModelIndexList selected_indexes = _table_view->selectionModel()->selectedRows();
+    QModelIndexList const selected_indexes = _table_view->selectionModel()->selectedRows();
     for (QModelIndex const & index: selected_indexes) {
         if (index.isValid()) {
-            Interval interval = _table_model->getInterval(index.row());
+            Interval const interval = _table_model->getInterval(index.row());
             selected_intervals.push_back(interval);
         }
     }
@@ -170,7 +172,7 @@ std::vector<EntityId> DigitalIntervalSeriesDataView::getSelectedEntityIds() cons
     auto const selection = _table_view->selectionModel()->selectedRows();
     entity_ids.reserve(static_cast<size_t>(selection.size()));
 
-    for (auto const & index : selection) {
+    for (auto const & index: selection) {
         if (index.isValid()) {
             auto const row_data = _table_model->getRowData(index.row());
             if (row_data.entity_id != EntityId(0)) {
@@ -234,11 +236,11 @@ void DigitalIntervalSeriesDataView::_populateGroupSubmenu(QMenu * menu, bool for
     std::set<int> current_groups;
     if (for_moving) {
         auto const selection = _table_view->selectionModel()->selectedRows();
-        for (auto const & index : selection) {
+        for (auto const & index: selection) {
             if (index.isValid()) {
                 auto const row_data = _table_model->getRowData(index.row());
                 if (row_data.entity_id != EntityId(0)) {
-                    int current_group = _group_manager->getEntityGroup(row_data.entity_id);
+                    int const current_group = _group_manager->getEntityGroup(row_data.entity_id);
                     if (current_group != -1) {
                         current_groups.insert(current_group);
                     }
@@ -249,8 +251,8 @@ void DigitalIntervalSeriesDataView::_populateGroupSubmenu(QMenu * menu, bool for
 
     auto groups = _group_manager->getGroups();
     for (auto it = groups.begin(); it != groups.end(); ++it) {
-        int group_id = it.key();
-        QString group_name = it.value().name;
+        int const group_id = it.key();
+        QString const group_name = it.value().name;
 
         // Skip current groups when moving
         if (for_moving && current_groups.find(group_id) != current_groups.end()) {

@@ -36,9 +36,9 @@ inline int computeEncodingFrame(
 /**
  * @brief How a static (memory) model input resolves its tensor data.
  *
- * - DataManager: re-encodes from a DataManager key at
+ * - DataManager mode re-encodes from a DataManager key at
  *   `current_frame + time_offset` every invocation.
- * - DataBank: reuses a pre-encoded tensor from a named `dl::DataBank` entry.
+ * - DataBank mode reuses a pre-encoded tensor from a named `dl::DataBank` entry.
  */
 enum class StaticInputSource {
     DataManager,
@@ -99,7 +99,7 @@ using StaticInputSourceVariant = rfl::TaggedUnion<
         DataBankStaticSource>;
 
 /**
- * @brief Static memory frame: input already exists in DataManager or DataBank.
+ * @brief Static memory frame is input already exists in DataManager or DataBank.
  */
 struct StaticFrameSource {
     StaticInputSourceVariant source = DataManagerStaticSource{};
@@ -133,7 +133,7 @@ using RecurrentInitVariant = rfl::TaggedUnion<
         FirstOutputInit>;
 
 /**
- * @brief Recurrent memory frame: raw model output from the previous step.
+ * @brief Recurrent memory frame is the raw model output from the previous step.
  */
 struct RecurrentFrameSource {
     std::string output_slot_name;
@@ -325,11 +325,11 @@ struct MemoryFrameBinding {
 /**
  * @brief Initialization mode for a recurrent (feedback) input at t=0.
  *
- * - Zeros: start with an all-zeros tensor matching the input slot shape.
- * - StaticCapture: use a user-provided captured tensor (e.g., ground-truth
+ * - Zeros mode starts with an all-zeros tensor matching the input slot shape.
+ * - StaticCapture mode uses a user-provided captured tensor (e.g., ground-truth
  *   mask at a reference frame).
- * - FirstOutput: run the model once with zeros, discard the decoded result,
- *   use the raw output tensor as the initial state for the real sequence.
+ * - FirstOutput mode runs the model once with zeros, discards the decoded result,
+ *   and uses the raw output tensor as the initial state for the real sequence.
  */
 enum class RecurrentInitMode {
     /** Initialize with all-zeros tensor */
