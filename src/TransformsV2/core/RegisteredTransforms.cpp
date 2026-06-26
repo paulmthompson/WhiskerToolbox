@@ -1,5 +1,6 @@
 #include "core/RegisteredTransforms.hpp"
 
+#include "algorithms/AnalogDifference/AnalogDifference.hpp"
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
@@ -84,6 +85,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
+    registerPipelineStepFactoryFor<AnalogDifferenceParams>();
     registerPipelineStepFactoryFor<SincInterpolationParams>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
     registerPipelineStepFactoryFor<TensorICAParams>();
@@ -932,6 +934,20 @@ auto const register_tensor_temporal_neighbors = RegisterContainerTransform<Tenso
                 .input_type_name = "TensorData",
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorTemporalNeighborParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_analog_difference = RegisterContainerTransform<
+        AnalogTimeSeries, AnalogTimeSeries, AnalogDifferenceParams>(
+        "AnalogDifference",
+        analogDifference,
+        ContainerTransformMetadata{
+                .description = "Compute backward, central, or forward difference on an analog time series",
+                .category = "Signal Processing",
+                .input_type_name = "AnalogTimeSeries",
+                .output_type_name = "AnalogTimeSeries",
+                .params_type_name = "AnalogDifferenceParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});

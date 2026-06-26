@@ -64,6 +64,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorRobustPCA/TensorRobustPCA.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/SincInterpolation/SincInterpolation.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogDifference/AnalogDifference.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorToAnalog/TensorColumnAnalogStorage.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorCAR/TensorCAR.test.cpp

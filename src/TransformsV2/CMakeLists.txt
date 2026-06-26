@@ -99,6 +99,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp
         algorithms/TensorTSNE/TensorTSNE.hpp
         algorithms/TensorTSNE/TensorTSNE.cpp
+        algorithms/AnalogDifference/AnalogDifference.hpp
+        algorithms/AnalogDifference/AnalogDifference.cpp
         algorithms/AnalogToTensor/AnalogToTensor.hpp
         algorithms/AnalogToTensor/AnalogToTensor.cpp
         algorithms/TensorCAR/TensorCAR.hpp

@@ -1,0 +1,103 @@
+---
+title: "AnalogDifference (TransformsV2)"
+---
+
+## Overview
+
+`AnalogDifference` is a V2 native container transform that computes backward,
+central, or forward differences on an `AnalogTimeSeries`.
+
+| Property | Value |
+|----------|-------|
+| Registry name | `AnalogDifference` |
+| Container signature | `AnalogTimeSeries → AnalogTimeSeries` |
+| Category | Signal Processing |
+
+Source files:
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/algorithms/AnalogDifference/AnalogDifference.hpp` | Params + API |
+| `src/TransformsV2/algorithms/AnalogDifference/AnalogDifference.cpp` | Implementation |
+| `src/TransformsV2/core/RegisteredTransforms.cpp` | Static registration |
+
+## Algorithm
+
+Differencing operates on **index-adjacent samples** in storage order (not raw
+`TimeFrameIndex` frame gaps), consistent with `TensorCentralDifference`.
+
+For sample index `i` and window `w`:
+
+| Method | Formula |
+|--------|---------|
+| Backward | `data[i] - data[i - w]` |
+| Forward | `data[i + w] - data[i]` |
+| Central | `(data[i + w] - data[i - w]) / (2 * w)` |
+
+Each output sample is anchored at the same `TimeFrameIndex` as input index `i`.
+With the default **Skip** edge policy, samples with incomplete windows are omitted.
+
+## Parameters
+
+```cpp
+enum class DifferenceMethod { Backward, Central, Forward };
+
+enum class DifferenceEdgePolicy { Skip, NaN, Zero, Clamp };
+
+struct AnalogDifferenceParams {
+    DifferenceMethod method = DifferenceMethod::Backward;
+    rfl::Validator<int, rfl::Minimum<1>> window = 1;
+    DifferenceEdgePolicy edge_policy = DifferenceEdgePolicy::Skip;
+};
+```
+
+### Edge policies
+
+| Policy | Incomplete window behavior |
+|--------|---------------------------|
+| Skip (default) | Omit sample from output |
+| NaN | Output `quiet_NaN()` at the anchor time |
+| Zero | Output `0.0f` at the anchor time |
+| Clamp | Use first/last sample for missing neighbors |
+
+Example pipeline JSON:
+
+```json
+{
+  "method": "Central",
+  "window": 1,
+  "edge_policy": "Skip"
+}
+```
+
+## Usage
+
+### Pipeline step
+
+```json
+{
+  "steps": [{
+    "transform_name": "AnalogDifference",
+    "input_key": "voltage",
+    "output_key": "dv_dt",
+    "parameters": {
+      "method": "Backward",
+      "window": 1,
+      "edge_policy": "Skip"
+    }
+  }]
+}
+```
+
+### Registry execution
+
+```cpp
+auto result = ElementRegistry::instance().executeContainerTransform<
+    AnalogTimeSeries, AnalogTimeSeries, AnalogDifferenceParams>(
+    "AnalogDifference", input, params, ctx);
+```
+
+## Related transforms
+
+- `TensorCentralDifference` — central difference on multi-column `TensorData`
+- `SincInterpolation` — band-limited resampling on `AnalogTimeSeries`
