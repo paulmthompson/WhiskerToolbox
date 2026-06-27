@@ -462,7 +462,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Convenience template that:</p>
 <ol type="1">
 <li>Extracts <code>parameter_schema</code> from <code>Params</code> via <code>extractParameterSchema&lt;Params&gt;()</code>.</li>
-<li>Wraps JSON deserialization (<code>rfl::json::read&lt;Params&gt;</code>) and <code>normalizeJsonNumbers</code> into a <code>CommandCreator</code> lambda.</li>
+<li>Wraps JSON deserialization (<code>rfl::json::read&lt;Params, rfl::DefaultIfMissing&gt;</code>) and <code>normalizeJsonNumbers</code> into a <code>CommandCreator</code> lambda. Omitted JSON fields receive the C++ default member initializer from <code>Params</code> (same pattern as TransformsV2).</li>
 <li>Calls <code>reg.registerCommand(...)</code>.</li>
 </ol>
 </section>

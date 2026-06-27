@@ -633,284 +633,287 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/ICommand.hpp"</span></span>
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/SequenceExecution.hpp"</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> commands<span class="op">;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
 <span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Variable Substitution Tests</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> commands<span class="op">;</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables replaces a single variable"</span><span class="op">,</span> <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"pred_w0"</span><span class="op">);</span></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables replaces multiple variables in one string"</span><span class="op">,</span></span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">},</span></span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"dest"</span><span class="op">,</span> <span class="st">"gt_w0"</span><span class="op">}};</span></span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"from ${source} to ${dest}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"from pred_w0 to gt_w0"</span><span class="op">);</span></span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables leaves unresolved variables intact"</span><span class="op">,</span></span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source} and ${unknown}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"pred_w0 and ${unknown}"</span><span class="op">);</span></span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles empty variables map"</span><span class="op">,</span></span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars<span class="op">;</span></span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${source}"</span><span class="op">);</span></span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles string with no variables"</span><span class="op">,</span></span>
-<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"plain text"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"plain text"</span><span class="op">);</span></span>
-<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles empty input string"</span><span class="op">,</span></span>
-<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">""</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles malformed variable (no closing brace)"</span><span class="op">,</span></span>
-<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${source"</span><span class="op">);</span></span>
-<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles adjacent variables"</span><span class="op">,</span></span>
-<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"hello"</span><span class="op">},</span></span>
-<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"b"</span><span class="op">,</span> <span class="st">"world"</span><span class="op">}};</span></span>
-<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${a}${b}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"helloworld"</span><span class="op">);</span></span>
-<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles numeric values as strings"</span><span class="op">,</span></span>
-<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"start"</span><span class="op">,</span> <span class="st">"42000"</span><span class="op">}};</span></span>
-<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"frame_${start}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"frame_42000"</span><span class="op">);</span></span>
-<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles variable value containing ${ pattern"</span><span class="op">,</span></span>
-<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// A replacement value that itself looks like a variable should NOT be re-expanded</span></span>
-<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"${b}"</span><span class="op">},</span></span>
-<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"b"</span><span class="op">,</span> <span class="st">"actual"</span><span class="op">}};</span></span>
-<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${a}"</span><span class="op">,</span> vars<span class="op">);</span></span>
-<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The substitution for ${a} yields "${b}" and then the cursor advances past it.</span></span>
-<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The ${b} in the replacement should not be re-expanded in a single pass.</span></span>
-<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${b}"</span><span class="op">);</span></span>
-<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a><span class="co">// Sequence Execution Tests (using StubCommand infrastructure)</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Variable Substitution Tests</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables replaces a single variable"</span><span class="op">,</span> <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"pred_w0"</span><span class="op">);</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables replaces multiple variables in one string"</span><span class="op">,</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">},</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"dest"</span><span class="op">,</span> <span class="st">"gt_w0"</span><span class="op">}};</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"from ${source} to ${dest}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"from pred_w0 to gt_w0"</span><span class="op">);</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables leaves unresolved variables intact"</span><span class="op">,</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source} and ${unknown}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"pred_w0 and ${unknown}"</span><span class="op">);</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles empty variables map"</span><span class="op">,</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars<span class="op">;</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${source}"</span><span class="op">);</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles string with no variables"</span><span class="op">,</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"plain text"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"plain text"</span><span class="op">);</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles empty input string"</span><span class="op">,</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">""</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles malformed variable (no closing brace)"</span><span class="op">,</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"source"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${source"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${source"</span><span class="op">);</span></span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles adjacent variables"</span><span class="op">,</span></span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"hello"</span><span class="op">},</span></span>
+<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"b"</span><span class="op">,</span> <span class="st">"world"</span><span class="op">}};</span></span>
+<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${a}${b}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"helloworld"</span><span class="op">);</span></span>
+<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles numeric values as strings"</span><span class="op">,</span></span>
+<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{{</span><span class="st">"start"</span><span class="op">,</span> <span class="st">"42000"</span><span class="op">}};</span></span>
+<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"frame_${start}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"frame_42000"</span><span class="op">);</span></span>
+<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"substituteVariables handles variable value containing ${ pattern"</span><span class="op">,</span></span>
+<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][variable-substitution]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a>    <span class="co">// A replacement value that itself looks like a variable should NOT be re-expanded</span></span>
+<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> vars <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"${b}"</span><span class="op">},</span></span>
+<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">"b"</span><span class="op">,</span> <span class="st">"actual"</span><span class="op">}};</span></span>
+<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> substituteVariables<span class="op">(</span><span class="st">"${a}"</span><span class="op">,</span> vars<span class="op">);</span></span>
+<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The substitution for ${a} yields "${b}" and then the cursor advances past it.</span></span>
+<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The ${b} in the replacement should not be re-expanded in a single pass.</span></span>
+<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">==</span> <span class="st">"${b}"</span><span class="op">);</span></span>
+<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-100"><a href="#cb20-100" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a><span class="co">// Since no concrete commands are registered yet, sequence execution with real commands</span></span>
-<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a><span class="co">// will produce "unknown command" errors. These tests verify the execution infrastructure.</span></span>
-<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence succeeds on empty command list"</span><span class="op">,</span> <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>name <span class="op">=</span> <span class="st">"Empty Sequence"</span><span class="op">;</span></span>
-<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{};</span></span>
-<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="op">-</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence fails on unknown command (stop_on_error=true)"</span><span class="op">,</span></span>
-<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
-<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistentCommand"</span><span class="op">;</span></span>
-<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
-<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence continues past unknown command (stop_on_error=false)"</span><span class="op">,</span></span>
-<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd1<span class="op">;</span></span>
-<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a>    cmd1<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistent1"</span><span class="op">;</span></span>
-<span id="cb20-138"><a href="#cb20-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-139"><a href="#cb20-139" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd2<span class="op">;</span></span>
-<span id="cb20-140"><a href="#cb20-140" aria-hidden="true" tabindex="-1"></a>    cmd2<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistent2"</span><span class="op">;</span></span>
-<span id="cb20-141"><a href="#cb20-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-142"><a href="#cb20-142" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-143"><a href="#cb20-143" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd1<span class="op">,</span> cmd2<span class="op">};</span></span>
-<span id="cb20-144"><a href="#cb20-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-145"><a href="#cb20-145" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-146"><a href="#cb20-146" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
-<span id="cb20-147"><a href="#cb20-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-148"><a href="#cb20-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Both commands are unknown, but execution continues</span></span>
-<span id="cb20-149"><a href="#cb20-149" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-150"><a href="#cb20-150" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb20-151"><a href="#cb20-151" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-152"><a href="#cb20-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-153"><a href="#cb20-153" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies static variable substitution to parameters"</span><span class="op">,</span></span>
-<span id="cb20-154"><a href="#cb20-154" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-155"><a href="#cb20-155" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a sequence with static variables and verify substitution produces valid params</span></span>
-<span id="cb20-156"><a href="#cb20-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (The command itself will be unknown, but we can verify via the error message that</span></span>
-<span id="cb20-157"><a href="#cb20-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">//  the command name is correctly resolved)</span></span>
-<span id="cb20-158"><a href="#cb20-158" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
-<span id="cb20-159"><a href="#cb20-159" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${operation}"</span><span class="op">;</span></span>
-<span id="cb20-160"><a href="#cb20-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-161"><a href="#cb20-161" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-162"><a href="#cb20-162" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>variables <span class="op">=</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;{{</span><span class="st">"operation"</span><span class="op">,</span> <span class="st">"MoveByTimeRange"</span><span class="op">}};</span></span>
-<span id="cb20-163"><a href="#cb20-163" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
-<span id="cb20-164"><a href="#cb20-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-165"><a href="#cb20-165" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-166"><a href="#cb20-166" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb20-167"><a href="#cb20-167" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-168"><a href="#cb20-168" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails because MoveByTimeRange is not yet registered, but the variable was substituted</span></span>
-<span id="cb20-169"><a href="#cb20-169" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-170"><a href="#cb20-170" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"MoveByTimeRange"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb20-171"><a href="#cb20-171" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-172"><a href="#cb20-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-173"><a href="#cb20-173" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies runtime variable substitution to command name"</span><span class="op">,</span></span>
-<span id="cb20-174"><a href="#cb20-174" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-175"><a href="#cb20-175" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
-<span id="cb20-176"><a href="#cb20-176" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${runtime_cmd}"</span><span class="op">;</span></span>
-<span id="cb20-177"><a href="#cb20-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-178"><a href="#cb20-178" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-179"><a href="#cb20-179" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
-<span id="cb20-180"><a href="#cb20-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-181"><a href="#cb20-181" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
-<span id="cb20-182"><a href="#cb20-182" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"runtime_cmd"</span><span class="op">,</span> <span class="st">"SaveData"</span><span class="op">}};</span></span>
-<span id="cb20-183"><a href="#cb20-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-184"><a href="#cb20-184" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a><span class="co">// Sequence Execution Tests (using StubCommand infrastructure)</span></span>
+<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a><span class="co">// Since no concrete commands are registered yet, sequence execution with real commands</span></span>
+<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a><span class="co">// will produce "unknown command" errors. These tests verify the execution infrastructure.</span></span>
+<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence succeeds on empty command list"</span><span class="op">,</span> <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>name <span class="op">=</span> <span class="st">"Empty Sequence"</span><span class="op">;</span></span>
+<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{};</span></span>
+<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="op">-</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence fails on unknown command (stop_on_error=true)"</span><span class="op">,</span></span>
+<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
+<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistentCommand"</span><span class="op">;</span></span>
+<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
+<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence continues past unknown command (stop_on_error=false)"</span><span class="op">,</span></span>
+<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-138"><a href="#cb20-138" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd1<span class="op">;</span></span>
+<span id="cb20-139"><a href="#cb20-139" aria-hidden="true" tabindex="-1"></a>    cmd1<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistent1"</span><span class="op">;</span></span>
+<span id="cb20-140"><a href="#cb20-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-141"><a href="#cb20-141" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd2<span class="op">;</span></span>
+<span id="cb20-142"><a href="#cb20-142" aria-hidden="true" tabindex="-1"></a>    cmd2<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"NonExistent2"</span><span class="op">;</span></span>
+<span id="cb20-143"><a href="#cb20-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-144"><a href="#cb20-144" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-145"><a href="#cb20-145" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd1<span class="op">,</span> cmd2<span class="op">};</span></span>
+<span id="cb20-146"><a href="#cb20-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-147"><a href="#cb20-147" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-148"><a href="#cb20-148" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb20-149"><a href="#cb20-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-150"><a href="#cb20-150" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Both commands are unknown, but execution continues</span></span>
+<span id="cb20-151"><a href="#cb20-151" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-152"><a href="#cb20-152" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>executed_commands<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb20-153"><a href="#cb20-153" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-154"><a href="#cb20-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-155"><a href="#cb20-155" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies static variable substitution to parameters"</span><span class="op">,</span></span>
+<span id="cb20-156"><a href="#cb20-156" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-157"><a href="#cb20-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a sequence with static variables and verify substitution produces valid params</span></span>
+<span id="cb20-158"><a href="#cb20-158" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (The command itself will be unknown, but we can verify via the error message that</span></span>
+<span id="cb20-159"><a href="#cb20-159" aria-hidden="true" tabindex="-1"></a>    <span class="co">//  the command name is correctly resolved)</span></span>
+<span id="cb20-160"><a href="#cb20-160" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
+<span id="cb20-161"><a href="#cb20-161" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${operation}"</span><span class="op">;</span></span>
+<span id="cb20-162"><a href="#cb20-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-163"><a href="#cb20-163" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-164"><a href="#cb20-164" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>variables <span class="op">=</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;{{</span><span class="st">"operation"</span><span class="op">,</span> <span class="st">"MoveByTimeRange"</span><span class="op">}};</span></span>
+<span id="cb20-165"><a href="#cb20-165" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
+<span id="cb20-166"><a href="#cb20-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-167"><a href="#cb20-167" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-168"><a href="#cb20-168" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-169"><a href="#cb20-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-170"><a href="#cb20-170" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails because MoveByTimeRange is not yet registered, but the variable was substituted</span></span>
+<span id="cb20-171"><a href="#cb20-171" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-172"><a href="#cb20-172" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"MoveByTimeRange"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-173"><a href="#cb20-173" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-174"><a href="#cb20-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-175"><a href="#cb20-175" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies runtime variable substitution to command name"</span><span class="op">,</span></span>
+<span id="cb20-176"><a href="#cb20-176" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-177"><a href="#cb20-177" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
+<span id="cb20-178"><a href="#cb20-178" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${runtime_cmd}"</span><span class="op">;</span></span>
+<span id="cb20-179"><a href="#cb20-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-180"><a href="#cb20-180" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-181"><a href="#cb20-181" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
+<span id="cb20-182"><a href="#cb20-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-183"><a href="#cb20-183" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
+<span id="cb20-184"><a href="#cb20-184" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"runtime_cmd"</span><span class="op">,</span> <span class="st">"SaveData"</span><span class="op">}};</span></span>
 <span id="cb20-185"><a href="#cb20-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-186"><a href="#cb20-186" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails because SaveData is not registered, but the variable was substituted</span></span>
-<span id="cb20-187"><a href="#cb20-187" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-188"><a href="#cb20-188" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"SaveData"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb20-189"><a href="#cb20-189" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-190"><a href="#cb20-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-191"><a href="#cb20-191" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies both static and runtime variable substitution"</span><span class="op">,</span></span>
-<span id="cb20-192"><a href="#cb20-192" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-193"><a href="#cb20-193" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Static variable in one place, runtime in another</span></span>
-<span id="cb20-194"><a href="#cb20-194" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
-<span id="cb20-195"><a href="#cb20-195" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${static_name}"</span><span class="op">;</span></span>
-<span id="cb20-196"><a href="#cb20-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-197"><a href="#cb20-197" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> params_json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"source_key": "${runtime_key}"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb20-198"><a href="#cb20-198" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>parameters <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>params_json<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb20-199"><a href="#cb20-199" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-200"><a href="#cb20-200" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-201"><a href="#cb20-201" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>variables <span class="op">=</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;{{</span><span class="st">"static_name"</span><span class="op">,</span> <span class="st">"MoveByTimeRange"</span><span class="op">}};</span></span>
-<span id="cb20-202"><a href="#cb20-202" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
-<span id="cb20-203"><a href="#cb20-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-204"><a href="#cb20-204" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
-<span id="cb20-205"><a href="#cb20-205" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"runtime_key"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
-<span id="cb20-206"><a href="#cb20-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-207"><a href="#cb20-207" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb20-208"><a href="#cb20-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-209"><a href="#cb20-209" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails because MoveByTimeRange is not registered, but both vars were substituted</span></span>
-<span id="cb20-210"><a href="#cb20-210" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-211"><a href="#cb20-211" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"MoveByTimeRange"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb20-212"><a href="#cb20-212" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-213"><a href="#cb20-213" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-214"><a href="#cb20-214" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence reports correct failed_index for second command"</span><span class="op">,</span></span>
-<span id="cb20-215"><a href="#cb20-215" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-216"><a href="#cb20-216" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd1<span class="op">;</span></span>
-<span id="cb20-217"><a href="#cb20-217" aria-hidden="true" tabindex="-1"></a>    cmd1<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"Unknown1"</span><span class="op">;</span></span>
-<span id="cb20-218"><a href="#cb20-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-219"><a href="#cb20-219" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd2<span class="op">;</span></span>
-<span id="cb20-220"><a href="#cb20-220" aria-hidden="true" tabindex="-1"></a>    cmd2<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"Unknown2"</span><span class="op">;</span></span>
+<span id="cb20-186"><a href="#cb20-186" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-187"><a href="#cb20-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-188"><a href="#cb20-188" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails because SaveData is not registered, but the variable was substituted</span></span>
+<span id="cb20-189"><a href="#cb20-189" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-190"><a href="#cb20-190" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"SaveData"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-191"><a href="#cb20-191" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-192"><a href="#cb20-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-193"><a href="#cb20-193" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence applies both static and runtime variable substitution"</span><span class="op">,</span></span>
+<span id="cb20-194"><a href="#cb20-194" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-195"><a href="#cb20-195" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Static variable in one place, runtime in another</span></span>
+<span id="cb20-196"><a href="#cb20-196" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
+<span id="cb20-197"><a href="#cb20-197" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"${static_name}"</span><span class="op">;</span></span>
+<span id="cb20-198"><a href="#cb20-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-199"><a href="#cb20-199" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> params_json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"source_key": "${runtime_key}"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb20-200"><a href="#cb20-200" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>parameters <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>params_json<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb20-201"><a href="#cb20-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-202"><a href="#cb20-202" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-203"><a href="#cb20-203" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>variables <span class="op">=</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;{{</span><span class="st">"static_name"</span><span class="op">,</span> <span class="st">"MoveByTimeRange"</span><span class="op">}};</span></span>
+<span id="cb20-204"><a href="#cb20-204" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
+<span id="cb20-205"><a href="#cb20-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-206"><a href="#cb20-206" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
+<span id="cb20-207"><a href="#cb20-207" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb20-208"><a href="#cb20-208" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"runtime_key"</span><span class="op">,</span> <span class="st">"pred_w0"</span><span class="op">}};</span></span>
+<span id="cb20-209"><a href="#cb20-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-210"><a href="#cb20-210" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-211"><a href="#cb20-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-212"><a href="#cb20-212" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Substitution succeeded; execute fails because keys are missing in DataManager</span></span>
+<span id="cb20-213"><a href="#cb20-213" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-214"><a href="#cb20-214" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"Key not found"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-215"><a href="#cb20-215" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-216"><a href="#cb20-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-217"><a href="#cb20-217" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence reports correct failed_index for second command"</span><span class="op">,</span></span>
+<span id="cb20-218"><a href="#cb20-218" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-219"><a href="#cb20-219" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd1<span class="op">;</span></span>
+<span id="cb20-220"><a href="#cb20-220" aria-hidden="true" tabindex="-1"></a>    cmd1<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"Unknown1"</span><span class="op">;</span></span>
 <span id="cb20-221"><a href="#cb20-221" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-222"><a href="#cb20-222" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-223"><a href="#cb20-223" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd1<span class="op">,</span> cmd2<span class="op">};</span></span>
+<span id="cb20-222"><a href="#cb20-222" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd2<span class="op">;</span></span>
+<span id="cb20-223"><a href="#cb20-223" aria-hidden="true" tabindex="-1"></a>    cmd2<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"Unknown2"</span><span class="op">;</span></span>
 <span id="cb20-224"><a href="#cb20-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-225"><a href="#cb20-225" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-226"><a href="#cb20-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-227"><a href="#cb20-227" aria-hidden="true" tabindex="-1"></a>    <span class="co">// stop_on_error=true: should fail at index 0</span></span>
-<span id="cb20-228"><a href="#cb20-228" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb20-229"><a href="#cb20-229" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb20-230"><a href="#cb20-230" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-231"><a href="#cb20-231" aria-hidden="true" tabindex="-1"></a>    <span class="co">// stop_on_error=false: should report last failure</span></span>
-<span id="cb20-232"><a href="#cb20-232" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result2 <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
-<span id="cb20-233"><a href="#cb20-233" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result2<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb20-234"><a href="#cb20-234" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-235"><a href="#cb20-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-236"><a href="#cb20-236" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence with no parameters on command descriptor"</span><span class="op">,</span></span>
-<span id="cb20-237"><a href="#cb20-237" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-238"><a href="#cb20-238" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
-<span id="cb20-239"><a href="#cb20-239" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"SomeCommand"</span><span class="op">;</span></span>
-<span id="cb20-240"><a href="#cb20-240" aria-hidden="true" tabindex="-1"></a>    <span class="co">// No parameters set</span></span>
-<span id="cb20-241"><a href="#cb20-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-242"><a href="#cb20-242" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
-<span id="cb20-243"><a href="#cb20-243" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
+<span id="cb20-225"><a href="#cb20-225" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-226"><a href="#cb20-226" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd1<span class="op">,</span> cmd2<span class="op">};</span></span>
+<span id="cb20-227"><a href="#cb20-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-228"><a href="#cb20-228" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-229"><a href="#cb20-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-230"><a href="#cb20-230" aria-hidden="true" tabindex="-1"></a>    <span class="co">// stop_on_error=true: should fail at index 0</span></span>
+<span id="cb20-231"><a href="#cb20-231" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb20-232"><a href="#cb20-232" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb20-233"><a href="#cb20-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-234"><a href="#cb20-234" aria-hidden="true" tabindex="-1"></a>    <span class="co">// stop_on_error=false: should report last failure</span></span>
+<span id="cb20-235"><a href="#cb20-235" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result2 <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb20-236"><a href="#cb20-236" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result2<span class="op">.</span>failed_index <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb20-237"><a href="#cb20-237" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-238"><a href="#cb20-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-239"><a href="#cb20-239" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence with no parameters on command descriptor"</span><span class="op">,</span></span>
+<span id="cb20-240"><a href="#cb20-240" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-241"><a href="#cb20-241" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor cmd<span class="op">;</span></span>
+<span id="cb20-242"><a href="#cb20-242" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>command_name <span class="op">=</span> <span class="st">"SomeCommand"</span><span class="op">;</span></span>
+<span id="cb20-243"><a href="#cb20-243" aria-hidden="true" tabindex="-1"></a>    <span class="co">// No parameters set</span></span>
 <span id="cb20-244"><a href="#cb20-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-245"><a href="#cb20-245" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb20-246"><a href="#cb20-246" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-245"><a href="#cb20-245" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor seq<span class="op">;</span></span>
+<span id="cb20-246"><a href="#cb20-246" aria-hidden="true" tabindex="-1"></a>    seq<span class="op">.</span>commands <span class="op">=</span> <span class="op">{</span>cmd<span class="op">};</span></span>
 <span id="cb20-247"><a href="#cb20-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-248"><a href="#cb20-248" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-249"><a href="#cb20-249" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"SomeCommand"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb20-250"><a href="#cb20-250" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb20-251"><a href="#cb20-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-252"><a href="#cb20-252" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence JSON round-trip with variables"</span><span class="op">,</span></span>
-<span id="cb20-253"><a href="#cb20-253" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb20-254"><a href="#cb20-254" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify that a CommandSequenceDescriptor with variables serializes and</span></span>
-<span id="cb20-255"><a href="#cb20-255" aria-hidden="true" tabindex="-1"></a>    <span class="co">// deserializes correctly, and then executes with substitution</span></span>
-<span id="cb20-256"><a href="#cb20-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-257"><a href="#cb20-257" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json_str <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb20-258"><a href="#cb20-258" aria-hidden="true" tabindex="-1"></a><span class="vs">        "name": "Test Pipeline",</span></span>
-<span id="cb20-259"><a href="#cb20-259" aria-hidden="true" tabindex="-1"></a><span class="vs">        "variables": {"whisker": "w0"},</span></span>
-<span id="cb20-260"><a href="#cb20-260" aria-hidden="true" tabindex="-1"></a><span class="vs">        "commands": [</span></span>
-<span id="cb20-261"><a href="#cb20-261" aria-hidden="true" tabindex="-1"></a><span class="vs">            {</span></span>
-<span id="cb20-262"><a href="#cb20-262" aria-hidden="true" tabindex="-1"></a><span class="vs">                "command_name": "MoveByTimeRange",</span></span>
-<span id="cb20-263"><a href="#cb20-263" aria-hidden="true" tabindex="-1"></a><span class="vs">                "parameters": {</span></span>
-<span id="cb20-264"><a href="#cb20-264" aria-hidden="true" tabindex="-1"></a><span class="vs">                    "source_key": "pred_${whisker}",</span></span>
-<span id="cb20-265"><a href="#cb20-265" aria-hidden="true" tabindex="-1"></a><span class="vs">                    "dest_key": "gt_${whisker}"</span></span>
-<span id="cb20-266"><a href="#cb20-266" aria-hidden="true" tabindex="-1"></a><span class="vs">                },</span></span>
-<span id="cb20-267"><a href="#cb20-267" aria-hidden="true" tabindex="-1"></a><span class="vs">                "description": "Move whisker data"</span></span>
-<span id="cb20-268"><a href="#cb20-268" aria-hidden="true" tabindex="-1"></a><span class="vs">            }</span></span>
-<span id="cb20-269"><a href="#cb20-269" aria-hidden="true" tabindex="-1"></a><span class="vs">        ]</span></span>
-<span id="cb20-270"><a href="#cb20-270" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb20-271"><a href="#cb20-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-272"><a href="#cb20-272" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> seq <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>CommandSequenceDescriptor<span class="op">&gt;(</span>json_str<span class="op">);</span></span>
-<span id="cb20-273"><a href="#cb20-273" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>seq<span class="op">);</span></span>
+<span id="cb20-248"><a href="#cb20-248" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb20-249"><a href="#cb20-249" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb20-250"><a href="#cb20-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-251"><a href="#cb20-251" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-252"><a href="#cb20-252" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"SomeCommand"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-253"><a href="#cb20-253" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-254"><a href="#cb20-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-255"><a href="#cb20-255" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"executeSequence JSON round-trip with variables"</span><span class="op">,</span></span>
+<span id="cb20-256"><a href="#cb20-256" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][sequence]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-257"><a href="#cb20-257" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify that a CommandSequenceDescriptor with variables serializes and</span></span>
+<span id="cb20-258"><a href="#cb20-258" aria-hidden="true" tabindex="-1"></a>    <span class="co">// deserializes correctly, and then executes with substitution</span></span>
+<span id="cb20-259"><a href="#cb20-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-260"><a href="#cb20-260" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json_str <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb20-261"><a href="#cb20-261" aria-hidden="true" tabindex="-1"></a><span class="vs">        "name": "Test Pipeline",</span></span>
+<span id="cb20-262"><a href="#cb20-262" aria-hidden="true" tabindex="-1"></a><span class="vs">        "variables": {"whisker": "w0"},</span></span>
+<span id="cb20-263"><a href="#cb20-263" aria-hidden="true" tabindex="-1"></a><span class="vs">        "commands": [</span></span>
+<span id="cb20-264"><a href="#cb20-264" aria-hidden="true" tabindex="-1"></a><span class="vs">            {</span></span>
+<span id="cb20-265"><a href="#cb20-265" aria-hidden="true" tabindex="-1"></a><span class="vs">                "command_name": "MoveByTimeRange",</span></span>
+<span id="cb20-266"><a href="#cb20-266" aria-hidden="true" tabindex="-1"></a><span class="vs">                "parameters": {</span></span>
+<span id="cb20-267"><a href="#cb20-267" aria-hidden="true" tabindex="-1"></a><span class="vs">                    "source_key": "pred_${whisker}",</span></span>
+<span id="cb20-268"><a href="#cb20-268" aria-hidden="true" tabindex="-1"></a><span class="vs">                    "dest_key": "gt_${whisker}"</span></span>
+<span id="cb20-269"><a href="#cb20-269" aria-hidden="true" tabindex="-1"></a><span class="vs">                },</span></span>
+<span id="cb20-270"><a href="#cb20-270" aria-hidden="true" tabindex="-1"></a><span class="vs">                "description": "Move whisker data"</span></span>
+<span id="cb20-271"><a href="#cb20-271" aria-hidden="true" tabindex="-1"></a><span class="vs">            }</span></span>
+<span id="cb20-272"><a href="#cb20-272" aria-hidden="true" tabindex="-1"></a><span class="vs">        ]</span></span>
+<span id="cb20-273"><a href="#cb20-273" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
 <span id="cb20-274"><a href="#cb20-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-275"><a href="#cb20-275" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
-<span id="cb20-276"><a href="#cb20-276" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"start_frame"</span><span class="op">,</span> <span class="st">"1000"</span><span class="op">},</span> <span class="op">{</span><span class="st">"end_frame"</span><span class="op">,</span> <span class="st">"2000"</span><span class="op">}};</span></span>
+<span id="cb20-275"><a href="#cb20-275" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> seq <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>CommandSequenceDescriptor<span class="op">&gt;(</span>json_str<span class="op">);</span></span>
+<span id="cb20-276"><a href="#cb20-276" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>seq<span class="op">);</span></span>
 <span id="cb20-277"><a href="#cb20-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-278"><a href="#cb20-278" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">.</span>value<span class="op">(),</span> ctx<span class="op">);</span></span>
-<span id="cb20-279"><a href="#cb20-279" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-280"><a href="#cb20-280" aria-hidden="true" tabindex="-1"></a>    <span class="co">// MoveByTimeRange is not registered yet, but we can verify the error references</span></span>
-<span id="cb20-281"><a href="#cb20-281" aria-hidden="true" tabindex="-1"></a>    <span class="co">// the correctly substituted command name</span></span>
-<span id="cb20-282"><a href="#cb20-282" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb20-283"><a href="#cb20-283" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"MoveByTimeRange"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb20-284"><a href="#cb20-284" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb20-278"><a href="#cb20-278" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
+<span id="cb20-279"><a href="#cb20-279" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb20-280"><a href="#cb20-280" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>runtime_variables <span class="op">=</span> <span class="op">{{</span><span class="st">"start_frame"</span><span class="op">,</span> <span class="st">"1000"</span><span class="op">},</span> <span class="op">{</span><span class="st">"end_frame"</span><span class="op">,</span> <span class="st">"2000"</span><span class="op">}};</span></span>
+<span id="cb20-281"><a href="#cb20-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-282"><a href="#cb20-282" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> executeSequence<span class="op">(</span>seq<span class="op">.</span>value<span class="op">(),</span> ctx<span class="op">);</span></span>
+<span id="cb20-283"><a href="#cb20-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-284"><a href="#cb20-284" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Variable substitution in source_key succeeds; execute fails on missing keys</span></span>
+<span id="cb20-285"><a href="#cb20-285" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb20-286"><a href="#cb20-286" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"Key not found"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb20-287"><a href="#cb20-287" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-06-27 at 17:56:49 +0000</p>
+<p>Updated on 2026-06-27 at 19:38:14 +0000</p>
 
 
 </section>

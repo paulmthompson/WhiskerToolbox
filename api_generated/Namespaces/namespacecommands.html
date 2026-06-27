@@ -375,6 +375,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-register_core_commands" id="toc-function-register_core_commands" class="nav-link" data-scroll-target="#function-register_core_commands">function register_core_commands</a></li>
   <li><a href="#function-isinsidecommand" id="toc-function-isinsidecommand" class="nav-link" data-scroll-target="#function-isinsidecommand">function isInsideCommand</a></li>
   <li><a href="#function-warnifoutsidecommand" id="toc-function-warnifoutsidecommand" class="nav-link" data-scroll-target="#function-warnifoutsidecommand">function warnIfOutsideCommand</a></li>
+  <li><a href="#function-resolvepipelineoutputtimekey" id="toc-function-resolvepipelineoutputtimekey" class="nav-link" data-scroll-target="#function-resolvepipelineoutputtimekey">function resolvePipelineOutputTimeKey</a></li>
+  <li><a href="#function-storepipelineoutputmerged" id="toc-function-storepipelineoutputmerged" class="nav-link" data-scroll-target="#function-storepipelineoutputmerged">function storePipelineOutputMerged</a></li>
+  <li><a href="#function-storepipelineoutputreplace" id="toc-function-storepipelineoutputreplace" class="nav-link" data-scroll-target="#function-storepipelineoutputreplace">function storePipelineOutputReplace</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -517,11 +520,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html">commands::RunTransformsV2Pipeline</a></strong> <br>Runs a saved TransformsV2 pipeline on an entire <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> data object.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
 <td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html">commands::RunTransformsV2PipelineAtTime</a></strong> <br>Runs a saved TransformsV2 pipeline on one frame.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineAtTimeParams.html">commands::RunTransformsV2PipelineAtTimeParams</a></strong> <br>Parameters for <code>[RunTransformsV2PipelineAtTime](/api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.md)</code></td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineAtTimeParams.html">commands::RunTransformsV2PipelineAtTimeParams</a></strong> <br>Parameters for <code>[RunTransformsV2PipelineAtTime](/api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.md)</code></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineParams.html">commands::RunTransformsV2PipelineParams</a></strong> <br>Parameters for <code>[RunTransformsV2Pipeline](/api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.md)</code></td>
 </tr>
 <tr class="even">
 <td>class</td>
@@ -554,6 +565,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structcommands_1_1SynthesizeDataParams.html">commands::SynthesizeDataParams</a></strong></td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html">commands::UpsampleTimeFrame</a></strong> <br>Creates a new <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> by upsampling an existing one.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1UpsampleTimeFrameParams.html">commands::UpsampleTimeFrameParams</a></strong> <br>Parameters for <code>[UpsampleTimeFrame](/api_generated/Classes/classcommands_1_1UpsampleTimeFrame.md)</code></td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -665,6 +684,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-warnifoutsidecommand">warnIfOutsideCommand</a></strong>(char const * method_name)<br>Check whether a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> mutation is happening outside a command scope.</td>
 </tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-resolvepipelineoutputtimekey">resolvePipelineOutputTimeKey</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; input_key, std::string const &amp; output_time_key, std::string_view command_prefix, std::string &amp; error_message)<br>Resolve the <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> to use when storing pipeline output.</td>
+</tr>
+<tr class="odd">
+<td>std::optional&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-storepipelineoutputmerged">storePipelineOutputMerged</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; input_key, std::string const &amp; output_key, <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; output, std::string_view command_prefix)<br>Store pipeline output into <code>output_key</code>, merging when supported.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; std::string &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-storepipelineoutputreplace">storePipelineOutputReplace</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; output_key, <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; output, <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> const &amp; time_key, std::string_view command_prefix)<br>Store pipeline output into <code>output_key</code>, replacing any existing object.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -740,7 +771,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>CommandT</strong> Concrete <a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> subclass (must accept Params in its constructor)</li>
 <li><strong>Params</strong> reflect-cpp–annotated parameter struct</li>
 </ul>
-<p>The creator function deserializes the JSON string into <code>Params</code> via rfl::json::read, then constructs a <code>CommandT</code> from the parsed params. The parameter_schema field of <code>info</code> is automatically populated via <a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema<params>()</params></a>.</p>
+<p>The creator function deserializes the JSON string into <code>Params</code> via <code>rfl::json::read&lt;Params, rfl::DefaultIfMissing&gt;</code>, applying C++ default member initializers for omitted JSON fields (same pattern as TransformsV2 and DataSynthesizer). The parameter_schema field of <code>info</code> is automatically populated via <a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema<params>()</params></a>.</p>
 </section>
 <section id="function-executesequence" class="level3">
 <h3 class="anchored" data-anchor-id="function-executesequence">function executeSequence</h3>
@@ -907,8 +938,64 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>method_name</strong> Name of the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> method being called (for the warning message)</li>
 </ul>
 <p>Call this from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> mutating methods in debug builds. Prints a warning to stderr if the mutation is not inside a command.</p>
+</section>
+<section id="function-resolvepipelineoutputtimekey" class="level3">
+<h3 class="anchored" data-anchor-id="function-resolvepipelineoutputtimekey">function resolvePipelineOutputTimeKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TimeKey <span class="op">&gt;</span> resolvePipelineOutputTimeKey<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input_key<span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> output_time_key<span class="op">,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view command_prefix<span class="op">,</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="op">&amp;</span> error_message</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Resolve the <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> to use when storing pipeline output.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input_key</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key used as input to the pipeline</li>
+<li><strong>output_time_key</strong> When non-empty, must name an existing <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> in <code>dm</code></li>
+<li><strong>command_prefix</strong> Prefix for error messages (e.g.&nbsp;command name)</li>
+<li><strong>error_message</strong> Set on failure</li>
+</ul>
+<p><strong>Return</strong>: Resolved <a href="../../api_generated/Classes/classTimeKey.html">TimeKey</a> on success, or empty on failure</p>
+<p><strong>Precondition</strong>: <code>dm</code> is non-null</p>
+</section>
+<section id="function-storepipelineoutputmerged" class="level3">
+<h3 class="anchored" data-anchor-id="function-storepipelineoutputmerged">function storePipelineOutputMerged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> storePipelineOutputMerged<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input_key<span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> output_key<span class="op">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output<span class="op">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view command_prefix</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Store pipeline output into <code>output_key</code>, merging when supported.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>command_prefix</strong> Prefix for error messages (e.g.&nbsp;command name)</li>
+</ul>
+<p><strong>Precondition</strong>: <code>dm</code> is non-null</p>
+<p><strong>Postcondition</strong>: On success, <code>output_key</code> exists with updated or merged data</p>
+<p>Used by single-frame commands that accumulate results across repeated runs.</p>
+</section>
+<section id="function-storepipelineoutputreplace" class="level3">
+<h3 class="anchored" data-anchor-id="function-storepipelineoutputreplace">function storePipelineOutputReplace</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> storePipelineOutputReplace<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> output_key<span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output<span class="op">,</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">,</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view command_prefix</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Store pipeline output into <code>output_key</code>, replacing any existing object.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>command_prefix</strong> Prefix for error messages (e.g.&nbsp;command name)</li>
+</ul>
+<p><strong>Precondition</strong>: <code>dm</code> is non-null</p>
+<p><strong>Postcondition</strong>: On success, <code>output_key</code> exists with replaced data bound to <code>time_key</code></p>
+<p>Used by full-dataset commands that mirror TransformsV2 widget semantics.</p>
 <hr>
-<p>Updated on 2026-06-27 at 17:56:49 +0000</p>
+<p>Updated on 2026-06-27 at 19:38:14 +0000</p>
 
 
 </section>

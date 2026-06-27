@@ -385,7 +385,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#addinterval" id="toc-addinterval" class="nav-link" data-scroll-target="#addinterval">AddInterval</a></li>
   <li><a href="#loaddata" id="toc-loaddata" class="nav-link" data-scroll-target="#loaddata">LoadData</a></li>
   <li><a href="#runtransformsv2pipelineattime" id="toc-runtransformsv2pipelineattime" class="nav-link" data-scroll-target="#runtransformsv2pipelineattime">RunTransformsV2PipelineAtTime</a></li>
-  <li><a href="#runtransformpipeline-future" id="toc-runtransformpipeline-future" class="nav-link" data-scroll-target="#runtransformpipeline-future">RunTransformPipeline <em>(future)</em></a></li>
+  <li><a href="#runtransformsv2pipeline" id="toc-runtransformsv2pipeline" class="nav-link" data-scroll-target="#runtransformsv2pipeline">RunTransformsV2Pipeline</a></li>
+  <li><a href="#runtransformpipeline-removed-superseded-by-runtransformsv2pipeline" id="toc-runtransformpipeline-removed-superseded-by-runtransformsv2pipeline" class="nav-link" data-scroll-target="#runtransformpipeline-removed-superseded-by-runtransformsv2pipeline">RunTransformPipeline <em>(removed — superseded by RunTransformsV2Pipeline)</em></a></li>
   <li><a href="#foreachkey-meta-command" id="toc-foreachkey-meta-command" class="nav-link" data-scroll-target="#foreachkey-meta-command">ForEachKey (Meta-Command)</a></li>
   </ul></li>
   <li><a href="#triage-session" id="toc-triage-session" class="nav-link" data-scroll-target="#triage-session">Triage Session</a>
@@ -565,7 +566,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="relationship-to-existing-systems">Relationship to Existing Systems</h3>
 <ul>
 <li><strong>TransformsV2 operates at the element level</strong> — transform individual data points within a single data object. The Command Architecture operates at the <strong>DataManager level</strong> — move entire objects, save files, create intervals, manage state.</li>
-<li><strong><code>RunTransformsV2PipelineAtTime</code></strong> bridges Triage/command sequences to TransformsV2 for single-frame pipeline execution (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/267">#267</a>). A future full-series <code>RunTransformPipeline</code> command may cover entire data objects.</li>
+<li><strong><code>RunTransformsV2PipelineAtTime</code></strong> bridges Triage/command sequences to TransformsV2 for single-frame pipeline execution (<a href="https://github.com/paulmthompson/WhiskerToolbox/issues/267">#267</a>).</li>
+<li><strong><code>RunTransformsV2Pipeline</code></strong> runs a saved V2 pipeline over an entire data object, with I/O keys specified in command parameters (headless CLI and Triage).</li>
 <li><strong>EditorState</strong> is not replaced and is not part of the command architecture. EditorState manages view/UI concerns (display options, zoom, active selections) which already have their own persistence via <code>toJson()</code>/<code>fromJson()</code> and workspace save.</li>
 </ul>
 </section>
@@ -1004,10 +1006,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Run a saved V2 pipeline on one frame; subset, execute, merge or create output</td>
 </tr>
 <tr class="odd">
-<td><code>RunTransformPipeline</code></td>
+<td><code>RunTransformsV2Pipeline</code></td>
 <td>TransformsV2</td>
-<td>Future</td>
-<td>Full-series pipeline over an entire data object (not yet scoped)</td>
+<td>Done</td>
+<td>Run a saved V2 pipeline on an entire data object; replace output via <code>setData</code></td>
 </tr>
 </tbody>
 </table>
@@ -1040,9 +1042,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Single-frame bridge from Triage/command sequences to TransformsV2 <code>PipelineDescriptor</code> JSON. Loads the pipeline file, subsets the input key to one frame, runs <code>executePipeline</code>, then creates or merge-overwrites the output key.</p>
 <p>See <a href="../../developer/TransformsV2/Commands/RunTransformsV2PipelineAtTime.html">RunTransformsV2PipelineAtTime Command</a>.</p>
 </section>
-<section id="runtransformpipeline-future" class="level3">
-<h3 class="anchored" data-anchor-id="runtransformpipeline-future">RunTransformPipeline <em>(future)</em></h3>
-<p>Full-series pipeline execution over an entire data object. Not yet scoped as a GitHub issue.</p>
+<section id="runtransformsv2pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="runtransformsv2pipeline">RunTransformsV2Pipeline</h3>
+<p>Full-dataset bridge from command sequences and <code>DataManagerPipelineRunner</code> to TransformsV2 <code>PipelineDescriptor</code> JSON. Loads the pipeline file, runs <code>executePipeline</code> on the full input key, and replaces the output key. Supports optional <code>output_time_key</code> for container transforms such as <code>SincInterpolation</code>.</p>
+<p>See <a href="../../developer/TransformsV2/Commands/RunTransformsV2Pipeline.html">RunTransformsV2Pipeline Command</a>.</p>
+</section>
+<section id="runtransformpipeline-removed-superseded-by-runtransformsv2pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="runtransformpipeline-removed-superseded-by-runtransformsv2pipeline">RunTransformPipeline <em>(removed — superseded by RunTransformsV2Pipeline)</em></h3>
 </section>
 <section id="foreachkey-meta-command" class="level3">
 <h3 class="anchored" data-anchor-id="foreachkey-meta-command">ForEachKey (Meta-Command)</h3>

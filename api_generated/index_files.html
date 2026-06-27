@@ -369,6 +369,9 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/GetEntityIdsInRange_8test_8cpp.html#file-getentityidsinrange.test.cpp">cpp</a></strong> <br>Unit tests for getEntityIdsInRange free functions.</li>
 <li><strong>file <a href="../api_generated/Files/MoveByTimeRange_8cpp.html#file-movebytimerange.cpp">cpp</a></strong> <br>Implementation of the MoveByTimeRange command.</li>
 <li><strong>file <a href="../api_generated/Files/MoveByTimeRange_8hpp.html#file-movebytimerange.hpp">hpp</a></strong> <br>Command to move entities in a time range between same-type data objects.</li>
+<li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8cpp.html#file-upsampletimeframe.cpp">cpp</a></strong> <br>Implementation of UpsampleTimeFrame command.</li>
+<li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8hpp.html#file-upsampletimeframe.hpp">hpp</a></strong> <br>Command to create an upsampled <a href="../api_generated/Classes/classTimeFrame.html">TimeFrame</a> by linear clock interpolation.</li>
+<li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8test_8cpp.html#file-upsampletimeframe.test.cpp">cpp</a></strong> <br>Tests for UpsampleTimeFrame command.</li>
 <li><strong>file <a href="../api_generated/Files/register__core__commands_8cpp.html#file-register-core-commands.cpp">cpp</a></strong> <br>Registers all built-in commands with the CommandRegistry singleton.</li>
 <li><strong>file <a href="../api_generated/Files/register__core__commands_8hpp.html#file-register-core-commands.hpp">hpp</a></strong> <br>Registration function for all built-in commands (MoveByTimeRange, CopyByTimeRange, etc.)</li>
 <li><strong>dir <a href="../api_generated/Files/dir_5acfd4abb02b7c754a4d040da82ead14.html#dir-src/commands/core">src/Commands/Core</a></strong>
@@ -1984,9 +1987,14 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/register__transformsv2__commands_8hpp.html#file-register-transformsv2-commands.hpp">hpp</a></strong> <br>Registration function for TransformsV2-owned commands.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_fcd20dca42dab46d6809160e9adb1ea8.html#dir-src/transformsv2/commands">src/TransformsV2/Commands</a></strong>
 <ul>
+<li><strong>file <a href="../api_generated/Files/RunTransformsV2Pipeline_8cpp.html#file-runtransformsv2pipeline.cpp">cpp</a></strong> <br>Implementation of RunTransformsV2Pipeline command.</li>
+<li><strong>file <a href="../api_generated/Files/RunTransformsV2Pipeline_8hpp.html#file-runtransformsv2pipeline.hpp">hpp</a></strong> <br>Command to run a saved TransformsV2 pipeline on an entire data object.</li>
 <li><strong>file <a href="../api_generated/Files/RunTransformsV2PipelineAtTime_8cpp.html#file-runtransformsv2pipelineattime.cpp">cpp</a></strong> <br>Implementation of RunTransformsV2PipelineAtTime command.</li>
 <li><strong>file <a href="../api_generated/Files/RunTransformsV2PipelineAtTime_8hpp.html#file-runtransformsv2pipelineattime.hpp">hpp</a></strong> <br>Command to run a saved TransformsV2 pipeline on a single frame.</li>
 <li><strong>file <a href="../api_generated/Files/RunTransformsV2PipelineAtTimeUIHints_8hpp.html#file-runtransformsv2pipelineattimeuihints.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> for RunTransformsV2PipelineAtTime command parameters.</li>
+<li><strong>file <a href="../api_generated/Files/RunTransformsV2PipelineUIHints_8hpp.html#file-runtransformsv2pipelineuihints.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> for RunTransformsV2Pipeline command parameters.</li>
+<li><strong>file <a href="../api_generated/Files/TransformsV2PipelineOutput_8cpp.html#file-transformsv2pipelineoutput.cpp">cpp</a></strong> <br>Implementation of shared TransformsV2 pipeline output storage helpers.</li>
+<li><strong>file <a href="../api_generated/Files/TransformsV2PipelineOutput_8hpp.html#file-transformsv2pipelineoutput.hpp">hpp</a></strong> <br>Shared helpers for storing TransformsV2 pipeline command output in <a href="../api_generated/Classes/classDataManager.html">DataManager</a>.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_e6905a540f61e0e6f48365be37b1e826.html#dir-src/transformsv2/pipelinevaluestore">src/TransformsV2/PipelineValueStore</a></strong>
 <ul>
@@ -3979,7 +3987,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-06-27 at 17:56:54 +0000</p>
+<p>Updated on 2026-06-27 at 19:38:18 +0000</p>
 
 
 </section>
