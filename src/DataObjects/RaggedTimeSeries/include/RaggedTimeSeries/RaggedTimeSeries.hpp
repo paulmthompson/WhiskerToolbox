@@ -550,6 +550,10 @@ public:
      * target are left unchanged. Source EntityIds are preserved in the target.
      * The source is not modified.
      *
+     * Cross-time removal via @c clearByEntityIds applies only to registered
+     * EntityIds (non-sentinel). @c EntityId(0) is treated as anonymous and is not
+     * used for global identity cleanup.
+     *
      * @pre @p target must not be the same object as @c *this
      * @pre @c getTimeFrame() and @c target.getTimeFrame() must be non-null and refer to
      *      the same @c TimeFrame object (@c shared_ptr identity)
@@ -598,7 +602,16 @@ public:
             return std::size_t{0};
         }
 
-        target.clearByEntityIds(source_entity_ids, NotifyObservers::No);
+        std::unordered_set<EntityId> registered_source_entity_ids;
+        registered_source_entity_ids.reserve(source_entity_ids.size());
+        for (EntityId const entity_id: source_entity_ids) {
+            if (entity_id != EntityId(0)) {
+                registered_source_entity_ids.insert(entity_id);
+            }
+        }
+        if (!registered_source_entity_ids.empty()) {
+            target.clearByEntityIds(registered_source_entity_ids, NotifyObservers::No);
+        }
 
         std::vector<TimeFrameIndex> source_times;
         source_times.reserve(_storage.getTimeCount());

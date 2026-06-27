@@ -18,9 +18,11 @@
 #include "Commands/Core/SequenceExecution.hpp"
 
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
+#include "Entity/EntityId.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -159,6 +161,30 @@ void setupMaskInputData(DataManager & dm) {
                                           .value(),
                     .param_bindings = {}}};
     return descriptor;
+}
+
+[[nodiscard]] PipelineDescriptor makeSkeletonizeDescriptor() {
+    PipelineDescriptor descriptor;
+    descriptor.metadata = PipelineMetadata{.name = "Skeletonize Pipeline", .version = "1.0"};
+    descriptor.steps = std::vector<PipelineStepDescriptor>{
+            PipelineStepDescriptor{
+                    .step_id = "skeletonize",
+                    .transform_name = "SkeletonizeMask",
+                    .param_bindings = {}}};
+    return descriptor;
+}
+
+[[nodiscard]] Mask2D make_filled_square_mask(uint32_t const min_x,
+                                             uint32_t const min_y,
+                                             uint32_t const side_length) {
+    std::vector<Point2D<uint32_t>> points;
+    points.reserve(static_cast<size_t>(side_length) * static_cast<size_t>(side_length));
+    for (uint32_t y = 0; y < side_length; ++y) {
+        for (uint32_t x = 0; x < side_length; ++x) {
+            points.emplace_back(min_x + x, min_y + y);
+        }
+    }
+    return Mask2D(points);
 }
 
 }// namespace
@@ -392,6 +418,66 @@ TEST_CASE("createCommand deserializes RunTransformsV2PipelineAtTime",
     REQUIRE(cmd != nullptr);
     CHECK(cmd->commandName() == "RunTransformsV2PipelineAtTime");
     CHECK_FALSE(cmd->isUndoable());
+}
+
+TEST_CASE("RunTransformsV2PipelineAtTime accumulates frames in pre-existing empty MaskData output",
+          "[transforms][commands][RunTransformsV2PipelineAtTime][merge]") {
+    TempPipelineDirectory const temp;
+    auto const filepath = writePipelineJson(temp, makeSkeletonizeDescriptor());
+
+    auto dm = std::make_shared<DataManager>();
+    auto const time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 100, 200, 300, 400});
+    dm->setTime(TimeKey("camera_time"), time_frame);
+
+    auto input_masks = std::make_shared<MaskData>();
+    input_masks->setTimeFrame(time_frame);
+    input_masks->setImageSize(ImageSize{64, 64});
+    input_masks->addAtTime(
+            TimeFrameIndex(100), make_filled_square_mask(10, 10, 8), NotifyObservers::No);
+    input_masks->addAtTime(
+            TimeFrameIndex(300), make_filled_square_mask(20, 20, 8), NotifyObservers::No);
+    dm->setData<MaskData>("input_masks", input_masks, TimeKey("camera_time"));
+
+    dm->setData<MaskData>("output_masks", TimeKey("camera_time"));
+    auto const output_before = dm->getData<MaskData>("output_masks");
+    REQUIRE(output_before->getTimesWithData().empty());
+
+    RunTransformsV2PipelineAtTime cmd_at_100(RunTransformsV2PipelineAtTimeParams{
+            .input_key = "input_masks",
+            .output_key = "output_masks",
+            .time = 100,
+            .pipeline_path = filepath.string()});
+
+    RunTransformsV2PipelineAtTime cmd_at_300(RunTransformsV2PipelineAtTimeParams{
+            .input_key = "input_masks",
+            .output_key = "output_masks",
+            .time = 300,
+            .pipeline_path = filepath.string()});
+
+    CommandContext ctx;
+    ctx.data_manager = dm;
+
+    auto const first = cmd_at_100.execute(ctx);
+    INFO("First run error: " << first.error_message);
+    REQUIRE(first.success);
+
+    auto const second = cmd_at_300.execute(ctx);
+    INFO("Second run error: " << second.error_message);
+    REQUIRE(second.success);
+
+    auto const output = dm->getData<MaskData>("output_masks");
+    REQUIRE(output.get() == output_before.get());
+    REQUIRE(output->getAtTime(TimeFrameIndex(100)).size() == 1);
+    REQUIRE(output->getAtTime(TimeFrameIndex(300)).size() == 1);
+    CHECK(output->getTimesWithData().size() == 2);
+
+    auto const ids_at_100 = output->getEntityIdsAtTime(TimeFrameIndex(100));
+    auto const ids_at_300 = output->getEntityIdsAtTime(TimeFrameIndex(300));
+    REQUIRE(ids_at_100.size() == 1);
+    REQUIRE(ids_at_300.size() == 1);
+    CHECK(ids_at_100[0] != EntityId(0));
+    CHECK(ids_at_300[0] != EntityId(0));
+    CHECK(ids_at_100[0] != ids_at_300[0]);
 }
 
 TEST_CASE("executeSequence substitutes current_frame into RunTransformsV2PipelineAtTime",

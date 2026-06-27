@@ -27,6 +27,18 @@
 
 namespace {
 
+/// @brief Assign target identity to transient pipeline output before merge.
+/// @pre @p src_ptr is non-null and not registered in DataManager
+/// @post Source entries have registry-backed EntityIds for @p target_key
+template<typename DataT>
+void assignTargetIdentityToTransientSource(std::shared_ptr<DataT> const & src_ptr,
+                                           std::string const & target_key,
+                                           DataManager & dm) {
+    src_ptr->setIdentityContext(target_key, dm.getEntityRegistry());
+    src_ptr->rebuildAllEntityIds();
+}
+
+
 [[nodiscard]] std::optional<std::size_t>
 mergeOverwriteDataImpl(DataManager & dm,
                        std::string const & target_key,
@@ -92,6 +104,8 @@ mergeOverwriteDataImpl(DataManager & dm,
                                     target_key,
                                     target_time_key.str());
                         }
+                    } else {
+                        assignTargetIdentityToTransientSource(src_ptr, target_key, dm);
                     }
 
                     auto const merged =

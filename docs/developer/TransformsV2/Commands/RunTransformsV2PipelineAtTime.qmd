@@ -51,6 +51,11 @@ struct RunTransformsV2PipelineAtTimeParams {
    - Inherit the input object's `TimeKey` when creating a new key.
    - If `output_key` exists and the result type supports merge-overwrite
      (`MaskData`, `LineData`, `PointData`), call `mergeOverwriteData`.
+     Transient pipeline results are assigned the target key's identity context
+     before merge so each frame gets a distinct registry-backed `EntityId`.
+     Repeated runs at different `time` values therefore accumulate frames in a
+     pre-existing empty output key; re-running the same `time` overwrites only
+     that frame.
    - If `output_key` exists with an incompatible type, return an error.
    - Otherwise call `setData` to create or replace the output object.
 
