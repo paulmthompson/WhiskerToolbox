@@ -1,0 +1,85 @@
+---
+title: "RunTransformsV2Pipeline Command"
+---
+
+## Overview
+
+`RunTransformsV2Pipeline` runs a saved TransformsV2 `PipelineDescriptor` JSON file
+over an entire DataManager input key. I/O keys are specified in command parameters,
+not in the pipeline JSON. This mirrors the TransformsV2 widget execution path and
+is intended for headless batch workflows via `DataManagerPipelineRunner`.
+
+## Source Files
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/Commands/RunTransformsV2Pipeline.hpp` | Command + params struct |
+| `src/TransformsV2/Commands/RunTransformsV2Pipeline.cpp` | `execute()` implementation |
+| `src/TransformsV2/Commands/RunTransformsV2PipelineUIHints.hpp` | `ParameterUIHints` |
+| `src/TransformsV2/Commands/TransformsV2PipelineOutput.hpp` | Shared output storage helpers |
+
+## Parameters
+
+```cpp
+struct RunTransformsV2PipelineParams {
+    std::string input_key;
+    std::string output_key;
+    std::string pipeline_path;
+    std::string output_time_key;  // empty = inherit from input_key
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `input_key` | DataManager key of the full source object |
+| `output_key` | DataManager key where results are stored (always replaced) |
+| `pipeline_path` | Path to a library-format pipeline JSON file |
+| `output_time_key` | Optional TimeFrame key for output; leave empty to inherit from `input_key` |
+
+## Execution Flow
+
+1. Validate parameters; require `input_key` in DataManager.
+2. Resolve output `TimeKey` from `output_time_key` or inherit from `input_key`.
+3. `loadPipelineFromFile(pipeline_path)` builds a typed `TransformPipeline`.
+4. `executePipeline(full_input, pipeline)` runs transforms on the entire object.
+5. `setData(output_key, result, time_key)` replaces any existing output (widget semantics).
+
+Container transforms such as `SincInterpolation` change sample count without
+managing TimeFrames. Pair them with a pre-registered upsampled `TimeFrame` via
+`output_time_key` (often created by `UpsampleTimeFrame` in the same command sequence).
+
+Terminal `range_reduction` entries in the JSON are loaded but not applied by
+`executePipeline` (same behavior as the TransformsV2 widget).
+
+## CLI Example
+
+```json
+{
+  "commands": [
+    {
+      "command_name": "UpsampleTimeFrame",
+      "parameters": {
+        "source_time_key": "camera_time",
+        "output_time_key": "camera_time_4x",
+        "upsampling_factor": 4
+      }
+    },
+    {
+      "command_name": "RunTransformsV2Pipeline",
+      "parameters": {
+        "input_key": "lfp",
+        "output_key": "lfp_upsampled",
+        "output_time_key": "camera_time_4x",
+        "pipeline_path": "/path/to/sinc_upsample.json"
+      }
+    }
+  ]
+}
+```
+
+## Related
+
+- [RunTransformsV2PipelineAtTime](RunTransformsV2PipelineAtTime.qmd)
+- [Command Registration](../transforms_v2/command_registration.qmd)
+- [Pipeline Library](../transforms_v2/pipeline_library.qmd)
+- [DataManagerPipelineRunner](../../DataManagerPipelineRunner/index.qmd)

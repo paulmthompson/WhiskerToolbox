@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "name": "Sinc Upsample",
+    "version": "1.0"
+  },
+  "steps": [
+    {
+      "step_id": "upsample",
+      "transform_name": "SincInterpolation",
+      "parameters": {
+        "upsampling_factor": 4
+      }
+    }
+  ]
+}

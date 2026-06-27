@@ -1,0 +1,39 @@
+{
+  "commands": [
+    {
+      "command_name": "SynthesizeData",
+      "parameters": {
+        "output_key": "ramp",
+        "generator_name": "TriangleWave",
+        "output_type": "AnalogTimeSeries",
+        "time_key": "source_time",
+        "time_frame_mode": "create_new",
+        "parameters": {
+          "num_samples": 5,
+          "amplitude": 4.0,
+          "num_cycles": 1.0,
+          "cycle_length": 4,
+          "dc_offset": 0.0
+        }
+      }
+    },
+    {
+      "command_name": "UpsampleTimeFrame",
+      "parameters": {
+        "source_time_key": "source_time",
+        "output_time_key": "upsampled_time",
+        "upsampling_factor": 4,
+        "overwrite": true
+      }
+    },
+    {
+      "command_name": "RunTransformsV2Pipeline",
+      "parameters": {
+        "input_key": "ramp",
+        "output_key": "ramp_upsampled",
+        "output_time_key": "upsampled_time",
+        "pipeline_path": "@TEST_CONFIG_DIR@/sinc_upsample_pipeline.json"
+      }
+    }
+  ]
+}

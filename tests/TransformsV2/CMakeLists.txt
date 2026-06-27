@@ -26,6 +26,7 @@ add_executable(test_TransformsV2
         test_parameter_binding.test.cpp
         test_parameter_schema.test.cpp
         RunTransformsV2PipelineAtTime.test.cpp
+        RunTransformsV2Pipeline.test.cpp
         test_transform_lineage_integration.test.cpp
         test_tensor_column_builders.test.cpp
         test_nonanalog_column_builders.test.cpp

@@ -104,7 +104,8 @@ widget and enumerating its buttons, menu items, keyboard shortcuts, and drag-and
   entire objects, save files, create intervals, manage state.
 - **`RunTransformsV2PipelineAtTime`** bridges Triage/command sequences to TransformsV2 for
   single-frame pipeline execution ([#267](https://github.com/paulmthompson/WhiskerToolbox/issues/267)).
-  A future full-series `RunTransformPipeline` command may cover entire data objects.
+- **`RunTransformsV2Pipeline`** runs a saved V2 pipeline over an entire data object, with I/O
+  keys specified in command parameters (headless CLI and Triage).
 - **EditorState** is not replaced and is not part of the command architecture. EditorState
   manages view/UI concerns (display options, zoom, active selections) which already have their
   own persistence via `toJson()`/`fromJson()` and workspace save.
@@ -421,7 +422,7 @@ and [Command Introspection](command_introspection.qmd) for the full metadata tab
 | `LoadData` | Commands | Done | Load via `LoaderRegistry`; undoable via `deleteData()` |
 | `SynthesizeData` | DataSynthesizer | Done | Generate data via `GeneratorRegistry` |
 | `RunTransformsV2PipelineAtTime` | TransformsV2 | Done | Run a saved V2 pipeline on one frame; subset, execute, merge or create output |
-| `RunTransformPipeline` | TransformsV2 | Future | Full-series pipeline over an entire data object (not yet scoped) |
+| `RunTransformsV2Pipeline` | TransformsV2 | Done | Run a saved V2 pipeline on an entire data object; replace output via `setData` |
 
 ### MoveByTimeRange
 
@@ -464,9 +465,16 @@ creates or merge-overwrites the output key.
 
 See [RunTransformsV2PipelineAtTime Command](../TransformsV2/Commands/RunTransformsV2PipelineAtTime.qmd).
 
-### RunTransformPipeline *(future)*
+### RunTransformsV2Pipeline
 
-Full-series pipeline execution over an entire data object. Not yet scoped as a GitHub issue.
+Full-dataset bridge from command sequences and `DataManagerPipelineRunner` to TransformsV2
+`PipelineDescriptor` JSON. Loads the pipeline file, runs `executePipeline` on the full input
+key, and replaces the output key. Supports optional `output_time_key` for container transforms
+such as `SincInterpolation`.
+
+See [RunTransformsV2Pipeline Command](../TransformsV2/Commands/RunTransformsV2Pipeline.qmd).
+
+### RunTransformPipeline *(removed — superseded by RunTransformsV2Pipeline)*
 
 ### ForEachKey (Meta-Command)
 

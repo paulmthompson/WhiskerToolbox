@@ -125,9 +125,14 @@ set(TRANSFORM_V2_SOURCES
         register_transformsv2_commands.hpp
         register_transformsv2_commands.cpp
 
+        Commands/TransformsV2PipelineOutput.hpp
+        Commands/TransformsV2PipelineOutput.cpp
         Commands/RunTransformsV2PipelineAtTime.hpp
         Commands/RunTransformsV2PipelineAtTime.cpp
         Commands/RunTransformsV2PipelineAtTimeUIHints.hpp
+        Commands/RunTransformsV2Pipeline.hpp
+        Commands/RunTransformsV2Pipeline.cpp
+        Commands/RunTransformsV2PipelineUIHints.hpp
 )
 
 add_library(TransformsV2 STATIC ${TRANSFORM_V2_SOURCES})

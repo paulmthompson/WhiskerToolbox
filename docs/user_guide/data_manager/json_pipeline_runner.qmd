@@ -122,6 +122,30 @@ Relative `saves[].path` values are resolved against the directory containing the
 file. String variables in the top-level `variables` object can be referenced as `${name}` in
 load entries, commands, and saves.
 
+## TransformsV2 Pipelines
+
+Use `RunTransformsV2Pipeline` in `commands` to run a saved TransformsV2 pipeline library JSON
+over an entire data object. Input and output DataManager keys are specified in the command, not
+in the pipeline file:
+
+```json
+{
+  "commands": [
+    {
+      "command_name": "RunTransformsV2Pipeline",
+      "parameters": {
+        "input_key": "whisker_masks",
+        "output_key": "whisker_lines",
+        "pipeline_path": "/path/to/mask_to_line.json"
+      }
+    }
+  ]
+}
+```
+
+For transforms that change sample count (for example `SincInterpolation`), register an
+upsampled `TimeFrame` first (for example with `UpsampleTimeFrame`) and pass `output_time_key`.
+
 ## Useful Options
 
 ```bash

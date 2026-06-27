@@ -1,17 +1,14 @@
 /**
- * @file RunTransformsV2PipelineAtTime.cpp
- * @brief Implementation of RunTransformsV2PipelineAtTime command
+ * @file RunTransformsV2Pipeline.cpp
+ * @brief Implementation of RunTransformsV2Pipeline command
  */
 
-#include "Commands/RunTransformsV2PipelineAtTime.hpp"
+#include "Commands/RunTransformsV2Pipeline.hpp"
 
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/TransformsV2PipelineOutput.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/utils/DataManagerTemporalSubset.hpp"
-#include "TimeFrame/TimeFrameIndex.hpp"
-#include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
 
@@ -22,23 +19,22 @@ namespace commands {
 
 namespace {
 
-constexpr std::string_view kCommandName = "RunTransformsV2PipelineAtTime";
+constexpr std::string_view kCommandName = "RunTransformsV2Pipeline";
 
 }// namespace
 
-RunTransformsV2PipelineAtTime::RunTransformsV2PipelineAtTime(
-        RunTransformsV2PipelineAtTimeParams p)
+RunTransformsV2Pipeline::RunTransformsV2Pipeline(RunTransformsV2PipelineParams p)
     : _params(std::move(p)) {}
 
-std::string RunTransformsV2PipelineAtTime::commandName() const {
+std::string RunTransformsV2Pipeline::commandName() const {
     return std::string(kCommandName);
 }
 
-std::string RunTransformsV2PipelineAtTime::toJson() const {
+std::string RunTransformsV2Pipeline::toJson() const {
     return rfl::json::write(_params);
 }
 
-CommandResult RunTransformsV2PipelineAtTime::execute(CommandContext const & ctx) {
+CommandResult RunTransformsV2Pipeline::execute(CommandContext const & ctx) {
     if (!ctx.data_manager) {
         return CommandResult::error(
                 std::string(kCommandName) + " requires CommandContext::data_manager");
@@ -59,10 +55,22 @@ CommandResult RunTransformsV2PipelineAtTime::execute(CommandContext const & ctx)
                 std::string(kCommandName) + ": pipeline_path must not be empty");
     }
 
-    if (!ctx.data_manager->getDataVariant(_params.input_key).has_value()) {
+    auto const input_variant = ctx.data_manager->getDataVariant(_params.input_key);
+    if (!input_variant.has_value()) {
         return CommandResult::error(
                 std::string(kCommandName) + ": input_key '" + _params.input_key +
                 "' not found in DataManager");
+    }
+
+    std::string time_key_error;
+    auto const time_key = resolvePipelineOutputTimeKey(
+            *ctx.data_manager,
+            _params.input_key,
+            _params.output_time_key,
+            kCommandName,
+            time_key_error);
+    if (!time_key.has_value()) {
+        return CommandResult::error(time_key_error);
     }
 
     auto const pipeline_result =
@@ -73,37 +81,23 @@ CommandResult RunTransformsV2PipelineAtTime::execute(CommandContext const & ctx)
                 _params.pipeline_path + "': " +
                 pipeline_result.error()->what());// NOLINT(bugprone-unchecked-optional-access)
     }
-    auto const & pipeline = pipeline_result.value();
-
-    auto const time = TimeFrameIndex(_params.time);
-    std::string subset_error;
-    auto const subset = createTemporalSubset(
-            *ctx.data_manager,
-            _params.input_key,
-            TimeFrameInterval{time, time},
-            subset_error);
-    if (!subset.has_value()) {
-        if (subset_error.empty()) {
-            subset_error = "createTemporalSubset failed";
-        }
-        return CommandResult::error(std::string(kCommandName) + ": " + subset_error);
-    }
 
     DataTypeVariant output;
     try {
         output = WhiskerToolbox::Transforms::V2::executePipeline(
-                subset.value(), pipeline);
+                input_variant.value(),
+                pipeline_result.value());
     } catch (std::exception const & ex) {
         return CommandResult::error(
                 std::string(kCommandName) + ": pipeline execution failed: " +
                 std::string{ex.what()});
     }
 
-    if (auto const store_error = storePipelineOutputMerged(
+    if (auto const store_error = storePipelineOutputReplace(
                 *ctx.data_manager,
-                _params.input_key,
                 _params.output_key,
                 output,
+                time_key.value(),
                 kCommandName)) {
         return CommandResult::error(*store_error);
     }
