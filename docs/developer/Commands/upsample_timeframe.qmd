@@ -1,0 +1,65 @@
+---
+title: "UpsampleTimeFrame Command"
+description: "Command that creates an upsampled TimeFrame by linear clock interpolation"
+---
+
+## Overview
+
+`UpsampleTimeFrame` mirrors the DataManager widget's "Create New TimeFrame → Upsample"
+workflow. It calls `createUpsampledTimeFrame()` and registers the result in
+`DataManager` via `setTime()`. Only the TimeFrame is created; data objects are
+not modified.
+
+**Source files:**
+
+- `src/Commands/UpsampleTimeFrame.hpp` / `.cpp`
+- `src/Commands/UpsampleTimeFrame.test.cpp`
+- Registered in `src/Commands/register_core_commands.cpp`
+
+## Parameters
+
+```cpp
+struct UpsampleTimeFrameParams {
+    std::string source_time_key;
+    std::string output_time_key;
+    int64_t upsampling_factor = 2;
+    bool overwrite = false;
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `source_time_key` | Existing TimeFrame key to upsample |
+| `output_time_key` | New TimeFrame key to register |
+| `upsampling_factor` | Integer factor (must be > 0); output size is `(N-1) * factor + 1` (default: 2) |
+| `overwrite` | Replace `output_time_key` if it already exists (default: false) |
+
+## Execution Flow
+
+1. Validate non-empty keys and `upsampling_factor > 0`.
+2. Load source via `DataManager::getTime(source_time_key)`.
+3. Call `createUpsampledTimeFrame()` with linear clock interpolation.
+4. Register via `DataManager::setTime(output_time_key, result, overwrite)`.
+5. Return `CommandResult::ok({output_time_key})`.
+
+## Example JSON
+
+```json
+{
+    "command_name": "UpsampleTimeFrame",
+    "parameters": {
+        "source_time_key": "camera_time",
+        "output_time_key": "camera_time_4x",
+        "upsampling_factor": 4
+    }
+}
+```
+
+Omitted fields such as `overwrite` use their C++ defaults via `rfl::DefaultIfMissing`
+in `registerTypedCommand`.
+
+## Related Workflow
+
+After upsampling a TimeFrame, use TransformsV2 `SincInterpolation` (or similar)
+with `"output_time_key": "camera_time_4x"` to upsample analog data onto the new
+clock. See [TimeFrame roadmap](../TimeFrame/roadmap.md).

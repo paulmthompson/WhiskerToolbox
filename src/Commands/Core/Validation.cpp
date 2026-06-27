@@ -5,17 +5,18 @@
 
 #include "Validation.hpp"
 
-#include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "CommandContext.hpp"
 #include "CommandDescriptor.hpp"
 #include "CommandFactory.hpp"
 #include "CopyByTimeRange.hpp"
+#include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "ForEachKey.hpp"
 #include "MoveByTimeRange.hpp"
 #include "VariableSubstitution.hpp"
 
 #include "DataManager/DataManager.hpp"
 
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 namespace commands {
@@ -128,7 +129,7 @@ ValidationResult validateSequence(
             std::string foreach_variable;
             if (resolved_name == "ForEachKey") {
                 auto fe =
-                        rfl::json::read<ForEachKeyParams>(resolved_json);
+                        rfl::json::read<ForEachKeyParams, rfl::DefaultIfMissing>(resolved_json);
                 if (fe) {
                     foreach_variable = fe.value().variable;
                 }
@@ -177,7 +178,7 @@ ValidationResult validateSequence(
         // Checks 4 & 5: Data key existence and type compatibility
         if (ctx.data_manager) {
             if (resolved_name == "MoveByTimeRange") {
-                auto p = rfl::json::read<MoveByTimeRangeParams>(resolved_json);
+                auto p = rfl::json::read<MoveByTimeRangeParams, rfl::DefaultIfMissing>(resolved_json);
                 if (p) {
                     auto const & params = p.value();
                     validateMoveOrCopyKeys(
@@ -185,7 +186,7 @@ ValidationResult validateSequence(
                             prefix, *ctx.data_manager, result);
                 }
             } else if (resolved_name == "CopyByTimeRange") {
-                auto p = rfl::json::read<CopyByTimeRangeParams>(resolved_json);
+                auto p = rfl::json::read<CopyByTimeRangeParams, rfl::DefaultIfMissing>(resolved_json);
                 if (p) {
                     auto const & params = p.value();
                     validateMoveOrCopyKeys(
@@ -193,7 +194,7 @@ ValidationResult validateSequence(
                             prefix, *ctx.data_manager, result);
                 }
             } else if (resolved_name == "AddInterval") {
-                auto p = rfl::json::read<AddIntervalParams>(resolved_json);
+                auto p = rfl::json::read<AddIntervalParams, rfl::DefaultIfMissing>(resolved_json);
                 if (p) {
                     auto const & params = p.value();
                     if (!params.create_if_missing) {
@@ -212,7 +213,7 @@ ValidationResult validateSequence(
 
         // ForEachKey: recursively validate sub-commands
         if (resolved_name == "ForEachKey") {
-            auto p = rfl::json::read<ForEachKeyParams>(resolved_json);
+            auto p = rfl::json::read<ForEachKeyParams, rfl::DefaultIfMissing>(resolved_json);
             if (p) {
                 auto const & params = p.value();
                 CommandSequenceDescriptor sub_seq;

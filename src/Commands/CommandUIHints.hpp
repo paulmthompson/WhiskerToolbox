@@ -6,13 +6,14 @@
 #ifndef COMMAND_UI_HINTS_HPP
 #define COMMAND_UI_HINTS_HPP
 
+#include "CopyByTimeRange.hpp"
 #include "DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "DataObjects/Lines/ClearLineDataAtTime.hpp"
-#include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"
 #include "IO/SaveData.hpp"
 #include "MoveByTimeRange.hpp"
+#include "UpsampleTimeFrame.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -121,6 +122,25 @@ struct ParameterUIHints<commands::SaveDataParams> {
         }
         if (auto * f = schema.field("backup_suffix")) {
             f->tooltip = "Suffix appended to the previous target file when backing up";
+            f->is_advanced = true;
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<commands::UpsampleTimeFrameParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("source_time_key")) {
+            f->tooltip = "Existing TimeFrame key to upsample";
+        }
+        if (auto * f = schema.field("output_time_key")) {
+            f->tooltip = "New TimeFrame key to register with upsampled clock values";
+        }
+        if (auto * f = schema.field("upsampling_factor")) {
+            f->tooltip = "Integer upsampling factor (must be > 0; 4 produces 4 subdivisions per source interval)";
+        }
+        if (auto * f = schema.field("overwrite")) {
+            f->tooltip = "Replace an existing output TimeFrame key if it already exists";
             f->is_advanced = true;
         }
     }

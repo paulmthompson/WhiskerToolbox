@@ -18,6 +18,7 @@
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "MoveByTimeRange.hpp"
+#include "UpsampleTimeFrame.hpp"
 
 namespace commands {
 
@@ -118,6 +119,15 @@ void register_core_commands() {
              .category = "persistence",
              .supports_undo = true,
              .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries", "TensorData"}});
+
+    registerTypedCommand<UpsampleTimeFrame, UpsampleTimeFrameParams>(
+            reg,
+            "UpsampleTimeFrame",
+            {.name = "UpsampleTimeFrame",
+             .description = "Create an upsampled TimeFrame by linearly interpolating source clock values",
+             .category = "timeframe",
+             .supports_undo = false,
+             .supported_data_types = {}});
 }
 
 }// namespace commands

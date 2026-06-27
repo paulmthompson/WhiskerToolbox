@@ -23,7 +23,7 @@ TEST_CASE("getAvailableCommands returns all known commands", "[commands][introsp
             "MoveByTimeRange", "CopyByTimeRange", "AddInterval", "ForEachKey",
             "SaveData", "LoadData", "SynthesizeData", "AdvanceFrame",
             "SetEventAtTime", "ClearLineDataAtTime", "FlipEventAtTime",
-            "RunTransformsV2PipelineAtTime"};
+            "UpsampleTimeFrame", "RunTransformsV2PipelineAtTime"};
 
     REQUIRE(all.size() == expected_names.size());
 

@@ -61,8 +61,9 @@ void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo i
 Convenience template that:
 
 1. Extracts `parameter_schema` from `Params` via `extractParameterSchema<Params>()`.
-2. Wraps JSON deserialization (`rfl::json::read<Params>`) and `normalizeJsonNumbers` into a
-   `CommandCreator` lambda.
+2. Wraps JSON deserialization (`rfl::json::read<Params, rfl::DefaultIfMissing>`) and
+   `normalizeJsonNumbers` into a `CommandCreator` lambda. Omitted JSON fields receive
+   the C++ default member initializer from `Params` (same pattern as TransformsV2).
 3. Calls `reg.registerCommand(...)`.
 
 ## Adding a New Command

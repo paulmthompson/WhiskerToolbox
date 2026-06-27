@@ -3,10 +3,10 @@
  * @brief Unit tests for MoveByTimeRange, CopyByTimeRange, AddInterval, and ForEachKey commands
  */
 
-#include "Commands/DataObjects/DigitalTimeSeries/AddInterval.hpp"
+#include "Commands/CopyByTimeRange.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandFactory.hpp"
-#include "Commands/CopyByTimeRange.hpp"
+#include "Commands/DataObjects/DigitalTimeSeries/AddInterval.hpp"
 #include "Commands/ForEachKey.hpp"
 #include "Commands/MoveByTimeRange.hpp"
 
@@ -105,12 +105,27 @@ TEST_CASE("createCommand creates ForEachKey from valid params",
     REQUIRE(cmd->commandName() == "ForEachKey");
 }
 
-TEST_CASE("createCommand returns nullptr for invalid MoveByTimeRange params",
+TEST_CASE("createCommand applies DefaultIfMissing when unknown fields are present",
           "[commands][factory]") {
     auto const json = R"({"not_a_valid_field": 42})";
     auto const generic = rfl::json::read<rfl::Generic>(json).value();
     auto cmd = createCommand("MoveByTimeRange", generic);
-    REQUIRE(cmd == nullptr);
+    REQUIRE(cmd != nullptr);
+    REQUIRE(cmd->commandName() == "MoveByTimeRange");
+}
+
+TEST_CASE("MoveByTimeRange with DefaultIfMissing-filled params fails at execute time",
+          "[commands][factory]") {
+    auto const json = R"({"not_a_valid_field": 42})";
+    auto const generic = rfl::json::read<rfl::Generic>(json).value();
+    auto cmd = createCommand("MoveByTimeRange", generic);
+    REQUIRE(cmd != nullptr);
+
+    CommandContext ctx;
+    ctx.data_manager = std::make_shared<DataManager>();
+    auto const result = cmd->execute(ctx);
+    REQUIRE_FALSE(result.success);
+    REQUIRE(result.error_message == "Key not found");
 }
 
 // =============================================================================

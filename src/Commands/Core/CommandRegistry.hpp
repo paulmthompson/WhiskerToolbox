@@ -14,6 +14,7 @@
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 #include <cassert>
@@ -92,9 +93,11 @@ private:
 /// @brief Convenience helper to register a command with automatic JSON deserialization
 ///        and ParameterSchema extraction.
 ///
-/// The creator function deserializes the JSON string into @p Params via rfl::json::read,
-/// then constructs a @p CommandT from the parsed params. The parameter_schema field
-/// of @p info is automatically populated via extractParameterSchema<Params>().
+/// The creator function deserializes the JSON string into @p Params via
+/// `rfl::json::read<Params, rfl::DefaultIfMissing>`, applying C++ default member
+/// initializers for omitted JSON fields (same pattern as TransformsV2 and DataSynthesizer).
+/// The parameter_schema field of @p info is automatically populated via
+/// extractParameterSchema<Params>().
 ///
 /// @tparam CommandT  Concrete ICommand subclass (must accept Params in its constructor)
 /// @tparam Params    reflect-cpp–annotated parameter struct
@@ -108,7 +111,7 @@ void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo i
             std::move(name),
             [](std::string const & params_json) -> std::unique_ptr<ICommand> {
                 auto const json = normalizeJsonNumbers(params_json);
-                auto p = rfl::json::read<Params>(json);
+                auto p = rfl::json::read<Params, rfl::DefaultIfMissing>(json);
                 if (!p) {
                     return nullptr;
                 }

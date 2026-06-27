@@ -112,12 +112,13 @@ TEST_CASE("createCommand creates SaveData with format_options",
     REQUIRE(cmd != nullptr);
 }
 
-TEST_CASE("createCommand returns nullptr for invalid SaveData params",
+TEST_CASE("createCommand applies DefaultIfMissing when unknown fields are present",
           "[commands][SaveData][factory]") {
     auto const json = R"({"not_a_valid_field": 42})";
     auto const generic = rfl::json::read<rfl::Generic>(json).value();
     auto cmd = createCommand("SaveData", generic);
-    REQUIRE(cmd == nullptr);
+    REQUIRE(cmd != nullptr);
+    REQUIRE(cmd->commandName() == "SaveData");
 }
 
 TEST_CASE("isKnownCommandName recognizes SaveData",

@@ -80,6 +80,15 @@ TEST_CASE("CommandRegistry::create produces valid MoveByTimeRange", "[commands][
     REQUIRE(cmd->commandName() == "MoveByTimeRange");
 }
 
+TEST_CASE("CommandRegistry::create applies DefaultIfMissing for omitted fields",
+          "[commands][registry]") {
+    auto & reg = CommandRegistry::instance();
+    auto const json = R"({"interval_key":"tracked","start_frame":100,"end_frame":200})";
+    auto cmd = reg.create("AddInterval", json);
+    REQUIRE(cmd != nullptr);
+    REQUIRE(cmd->commandName() == "AddInterval");
+}
+
 TEST_CASE("CommandRegistry::availableCommands returns all registered", "[commands][registry]") {
     auto & reg = CommandRegistry::instance();
     auto const all = reg.availableCommands();

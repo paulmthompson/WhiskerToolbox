@@ -127,11 +127,10 @@ TEST_CASE("validateSequence resolves command name via variable substitution befo
 // Check 2: Deserialization — invalid parameter structs
 // =============================================================================
 
-TEST_CASE("validateSequence reports error for invalid params on known command",
+TEST_CASE("validateSequence passes deserialization when unknown fields use DefaultIfMissing",
           "[commands][validation]") {
     CommandDescriptor cmd;
     cmd.command_name = "MoveByTimeRange";
-    // Missing required fields
     cmd.parameters =
             rfl::json::read<rfl::Generic>(R"({"wrong_field":"value"})").value();
 
@@ -139,11 +138,11 @@ TEST_CASE("validateSequence reports error for invalid params on known command",
     seq.commands = {cmd};
 
     CommandContext ctx;
+    ctx.data_manager = std::make_shared<DataManager>();
     auto result = validateSequence(seq, ctx);
 
-    REQUIRE_FALSE(result.valid);
-    REQUIRE(result.errors.size() == 1);
-    CHECK(result.errors[0].find("deserialize") != std::string::npos);
+    REQUIRE(result.valid);
+    REQUIRE(result.errors.empty());
 }
 
 TEST_CASE("validateSequence passes deserialization for valid MoveByTimeRange params",

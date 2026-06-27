@@ -42,6 +42,8 @@ set(COMMAND_SOURCES
         CopyByTimeRange.cpp
         AdvanceFrame.hpp
         AdvanceFrame.cpp
+        UpsampleTimeFrame.hpp
+        UpsampleTimeFrame.cpp
         ForEachKey.hpp
         ForEachKey.cpp
 

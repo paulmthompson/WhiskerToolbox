@@ -19,6 +19,7 @@ add_executable(test_commands
         ${CMAKE_SOURCE_DIR}/src/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Commands.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/AdvanceFrame.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/UpsampleTimeFrame.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/Commands/DataObjects/DigitalTimeSeries/SetEventAtTime.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/DataObjects/Lines/ClearLineDataAtTime.test.cpp

@@ -10,6 +10,8 @@
 #include "Commands/Core/ICommand.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 
+#include "DataManager/DataManager.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <rfl.hpp>
@@ -206,13 +208,14 @@ TEST_CASE("executeSequence applies both static and runtime variable substitution
     seq.commands = {cmd};
 
     CommandContext ctx;
+    ctx.data_manager = std::make_shared<DataManager>();
     ctx.runtime_variables = {{"runtime_key", "pred_w0"}};
 
     auto result = executeSequence(seq, ctx);
 
-    // Fails because MoveByTimeRange is not registered, but both vars were substituted
+    // Substitution succeeded; execute fails because keys are missing in DataManager
     REQUIRE_FALSE(result.result.success);
-    REQUIRE(result.result.error_message.find("MoveByTimeRange") != std::string::npos);
+    REQUIRE(result.result.error_message.find("Key not found") != std::string::npos);
 }
 
 TEST_CASE("executeSequence reports correct failed_index for second command",
@@ -277,12 +280,12 @@ TEST_CASE("executeSequence JSON round-trip with variables",
     REQUIRE(seq);
 
     CommandContext ctx;
+    ctx.data_manager = std::make_shared<DataManager>();
     ctx.runtime_variables = {{"start_frame", "1000"}, {"end_frame", "2000"}};
 
     auto result = executeSequence(seq.value(), ctx);
 
-    // MoveByTimeRange is not registered yet, but we can verify the error references
-    // the correctly substituted command name
+    // Variable substitution in source_key succeeds; execute fails on missing keys
     REQUIRE_FALSE(result.result.success);
-    REQUIRE(result.result.error_message.find("MoveByTimeRange") != std::string::npos);
+    REQUIRE(result.result.error_message.find("Key not found") != std::string::npos);
 }
