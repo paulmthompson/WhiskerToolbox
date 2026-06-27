@@ -1128,6 +1128,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>The source is unchanged</li>
 </ul>
 <p>For every time present in the source, any existing target entries at that time are removed and replaced with the source entries. Times present only in the target are left unchanged. Source EntityIds are preserved in the target. The source is not modified.</p>
+<p>Cross-time removal via <code>clearByEntityIds</code> applies only to registered EntityIds (non-sentinel). <code>[EntityId(0)](/api_generated/Classes/structEntityId.md)</code> is treated as anonymous and is not used for global identity cleanup.</p>
 </section>
 <section id="function-getdatabyentityid" class="level3">
 <h3 class="anchored" data-anchor-id="function-getdatabyentityid">function getDataByEntityId</h3>
@@ -1699,7 +1700,7 @@ inline auto flattened_data() const</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>EntityRegistry <span class="op">*</span> _identity_registry <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Pointer to <a href="">EntityRegistry</a> for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management.</p>
 <hr>
-<p>Updated on 2026-06-26 at 23:45:53 +0000</p>
+<p>Updated on 2026-06-27 at 17:56:47 +0000</p>
 
 
 </section>
