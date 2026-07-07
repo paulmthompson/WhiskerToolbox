@@ -230,8 +230,8 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
  * @param master_time_frame The master time frame for coordinate conversion
  * @param start_time Start of range to generate (master @c TimeFrameIndex)
  * @param end_time End of range to generate (master @c TimeFrameIndex)
- * @return Vector of @c CachedAnalogVertex with @c x = absolute physical time (mapper
- *         origin 0); @c AnalogVertexCache::getVerticesForRange subtracts the live view origin.
+ * @return Vector of @c CachedAnalogVertex with @c x = integer absolute physical time;
+ *         @c AnalogVertexCache::getVerticesForRange subtracts the live view origin.
  */
 std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         AnalogTimeSeries const & series,

@@ -42,6 +42,7 @@
 #include <boost/circular_buffer.hpp>
 #include <glm/glm.hpp>
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -51,7 +52,7 @@ namespace DataViewer {
  * @brief A cached vertex with time index for range tracking
  */
 struct CachedAnalogVertex {
-    float x;                ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
+    int64_t x;              ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
     float y;                ///< Data value
     TimeFrameIndex time_idx;///< Series @c TimeFrameIndex for cache range bookkeeping
 };
@@ -306,7 +307,7 @@ public:
      *
      * Returns a flat float array suitable for GPU upload: [x0, y0, x1, y1, ...].
      * Each output @c x is @c CachedAnalogVertex::x minus @p x_origin_master_absolute_time
-     * (double-precision subtraction, then cast to @c float), matching
+     * (integer-to-double subtraction, then cast to @c float), matching
      * @c TimeSeriesMapper view-relative coordinates. @c y is copied from the cache.
      * Uses binary search to locate @p start in the buffer, then linearly scans forward
      * until a vertex with @c time_idx >= @p end is encountered.

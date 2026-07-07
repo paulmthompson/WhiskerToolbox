@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace DataViewerHelpers {
 
@@ -33,6 +34,22 @@ namespace {
             "",
             CorePlotting::LayoutTransform{0.0f, 1.0f},// center=0, half_height=1 (maps [-1,1])
             0};
+}
+
+/**
+ * @brief Return the physical-time scalar for a sample index in the data object's time frame.
+ *
+ * @pre @p query_time_frame is the coordinate system used for the range query.
+ * @post Returns an integer physical time comparable with @p query_time_frame coordinates.
+ */
+[[nodiscard]] int64_t physicalTimeAtDataIndex(
+        TimeFrame const * data_time_frame,
+        TimeFrame const & query_time_frame,
+        TimeFrameIndex const index_into_data_frame) {
+    if (data_time_frame != nullptr) {
+        return static_cast<int64_t>(data_time_frame->getTimeAtIndex(index_into_data_frame));
+    }
+    return static_cast<int64_t>(query_time_frame.getTimeAtIndex(index_into_data_frame));
 }
 
 }// anonymous namespace
@@ -256,21 +273,15 @@ std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
         return result;
     }
 
-    // Use local-space layout (Y=raw value, model matrix handles positioning)
-    auto const local_layout = makeLocalSpaceLayout();
+    auto const * series_tf = series.getTimeFrame().get();
+    auto mapped_range = series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, *master_time_frame);
 
-    // Store absolute physical time in x (mapper origin 0); view origin is applied in
-    // AnalogVertexCache::getVerticesForRange so incremental cache stays valid when the
-    // view slides ("play") and x_origin_master_absolute_time changes each frame.
-    auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
-            series, local_layout, *master_time_frame, 1.0f, start_time, end_time, 0);
-
-    // Materialize into CachedAnalogVertex format
-    for (auto const & vertex: mapped_range) {
+    // Materialize into CachedAnalogVertex format, preserving absolute time exactly.
+    for (auto const & point: mapped_range) {
         result.push_back(DataViewer::CachedAnalogVertex{
-                vertex.x,
-                vertex.y,
-                TimeFrameIndex{vertex.time_index}});
+                physicalTimeAtDataIndex(series_tf, *master_time_frame, point.time_frame_index),
+                point.value(),
+                point.time_frame_index});
     }
 
     return result;
