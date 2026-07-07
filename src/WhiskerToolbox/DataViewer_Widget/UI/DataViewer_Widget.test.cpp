@@ -167,6 +167,7 @@ private:
 
         m_data_manager->removeTime(TimeKey("time"));
         m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
 
         // Add test AnalogTimeSeries
@@ -234,7 +235,9 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
     // Create a fresh widget locally to validate destruction path
     auto data_manager = std::make_shared<DataManager>();
     // Provide a minimal timeframe so XAxis setup has bounds
-    data_manager->setTime(TimeKey("time"), std::make_shared<TimeFrame>());
+    auto timeframe = std::make_shared<TimeFrame>();
+    data_manager->setTime(TimeKey("time"), timeframe, true);
+    data_manager->setTime(TimeKey("master"), timeframe, true);
 
     // Create, show, process, then destroy
     {
@@ -519,6 +522,7 @@ protected:
 
         m_data_manager->removeTime(TimeKey("time"));
         m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         // Populate with 5 analog time series
         populateAnalogSeries(5);
@@ -942,12 +946,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
 
     // Set an initial center (time) and range width via state
     int const initial_time_index = 1000;
-    bool const invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_updatePlot",
-            Qt::DirectConnection,
-            Q_ARG(int, initial_time_index));
-    REQUIRE(invoked);
+    glw->updateCanvas(TimeFrameIndex(initial_time_index));
 
     int const initial_range_width = 2000;
     state->setTimeWidth(initial_range_width);
@@ -1169,6 +1168,7 @@ protected:
         m_time_key = TimeKey("time");
         m_data_manager->removeTime(TimeKey("time"));
         m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         // Populate with 5 digital event series
         populateEventSeries(5);
@@ -1286,6 +1286,7 @@ protected:
         m_time_key = TimeKey("time");
         m_data_manager->removeTime(TimeKey("time"));
         m_data_manager->setTime(TimeKey("time"), tf);
+        m_data_manager->setTime(TimeKey("master"), tf, true);
 
         // 3 analog series
         for (int i = 0; i < 3; ++i) {
@@ -1315,7 +1316,7 @@ protected:
         // "voltage_19" has suffix 19 meaning channel 19 when key_one_based=false.
         // "spikes_7"   has suffix  7 meaning channel  7 when key_one_based=false.
         constexpr int kNumSamples = 1000;
-        std::vector<float> zero_values(kNumSamples, 0.0f);
+        std::vector<float> const zero_values(kNumSamples, 0.0f);
         m_data_manager->setData<AnalogTimeSeries>(
                 "voltage_19",
                 std::make_shared<AnalogTimeSeries>(zero_values, zero_values.size()),
@@ -2001,7 +2002,7 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
     auto const & lanes = axis_state->lanes();
     REQUIRE(!lanes.empty());
 
-    bool found = std::any_of(lanes.begin(), lanes.end(), [](LaneAxisDescriptor const & lane) {
+    bool const found = std::any_of(lanes.begin(), lanes.end(), [](LaneAxisDescriptor const & lane) {
         return lane.lane_id == "my_lane";
     });
     REQUIRE(found);
@@ -2082,8 +2083,7 @@ private:
         auto new_timeframe = std::make_shared<TimeFrame>(t);
         auto time_key = TimeKey("master");
 
-        m_data_manager->removeTime(TimeKey("master"));
-        m_data_manager->setTime(TimeKey("master"), new_timeframe);
+        m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         // Add test analog data with 704 samples
         std::vector<float> analog_values(video_length);
@@ -2129,12 +2129,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
 
     // Set initial time to middle of video
     int const initial_time = 352;
-    bool const invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_updatePlot",
-            Qt::DirectConnection,
-            Q_ARG(int, initial_time));
-    REQUIRE(invoked);
+    glw->updateCanvas(TimeFrameIndex(initial_time));
     QApplication::processEvents();
 
     INFO("Testing short video (704 frames) extreme zoom regression");
@@ -2776,7 +2771,7 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     auto const analog = getAnalogKeys();
     auto const ev = getEventKeys();
     REQUIRE(analog.size() >= 2);
-    REQUIRE(ev.size() >= 1);
+    REQUIRE(!ev.empty());
 
     widget.openWidget();
     QApplication::processEvents();
@@ -3058,8 +3053,8 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     auto & widget = getWidget();
     auto const analog = getAnalogKeys();
     auto const ev = getEventKeys();
-    REQUIRE(analog.size() >= 1);
-    REQUIRE(ev.size() >= 1);
+    REQUIRE(!analog.empty());
+    REQUIRE(!ev.empty());
 
     widget.openWidget();
     QApplication::processEvents();
@@ -3102,7 +3097,7 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     auto const analog = getAnalogKeys();
     auto const ev = getEventKeys();
     REQUIRE(analog.size() >= 2);
-    REQUIRE(ev.size() >= 1);
+    REQUIRE(!ev.empty());
 
     widget.openWidget();
     QApplication::processEvents();
@@ -3142,7 +3137,7 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     auto const analog = getAnalogKeys();
     auto const ev = getEventKeys();
     REQUIRE(analog.size() >= 2);
-    REQUIRE(ev.size() >= 1);
+    REQUIRE(!ev.empty());
 
     widget.openWidget();
     QApplication::processEvents();
@@ -3183,8 +3178,8 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     // The fixture pre-populates "voltage_19" (AnalogTimeSeries) and "spikes_7"
     // (DigitalEventSeries) in the DataManager with 0-based numeric suffixes.
     auto & widget = getWidget();
-    std::string const ana_key = getZeroBasedAnalogKey(); // "voltage_19"
-    std::string const dig_key = getZeroBasedEventKey();  // "spikes_7"
+    std::string const ana_key = getZeroBasedAnalogKey();// "voltage_19"
+    std::string const dig_key = getZeroBasedEventKey(); // "spikes_7"
 
     widget.openWidget();
     QApplication::processEvents();
