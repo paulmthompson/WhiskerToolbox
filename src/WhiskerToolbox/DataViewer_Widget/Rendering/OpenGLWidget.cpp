@@ -1650,7 +1650,8 @@ void OpenGLWidget::computeAndApplyLayout() {
 }
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
-                                                std::vector<ChannelPosition> const & positions) {
+                                                std::vector<ChannelPosition> const & positions,
+                                                bool key_one_based) {
     // Build a transient ChannelPositionMap for rank derivation only
     ChannelPositionMap config_map;
     config_map[group_name] = positions;
@@ -1665,7 +1666,7 @@ void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
     }
 
     // Convert electrode Y positions to integer ranks
-    SortableRankMap const ranks = buildSwindaleSpikeSorterRanks(group_keys, config_map);
+    SortableRankMap const ranks = buildSwindaleSpikeSorterRanks(group_keys, config_map, key_one_based);
 
     // Write lane_order overrides via state.
     // setSeriesLaneOverride emits seriesLaneOverrideChanged, which already triggers

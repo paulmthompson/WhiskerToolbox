@@ -66,6 +66,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/SeriesOrderingDialog.hpp
         UI/SpikeToAnalogConfigDialog.cpp
         UI/SpikeToAnalogConfigDialog.hpp
+        UI/SpikeSorterKeyNumberingDialog.cpp
+        UI/SpikeSorterKeyNumberingDialog.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.cpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui

@@ -88,11 +88,13 @@
  *
  * @param keys Series keys to rank (typically visible analog series keys)
  * @param configs Parsed electrode position map (from `parseSwindaleSpikeSorterConfig`)
+ * @param key_one_based true when series key suffixes are 1-based (e.g. "voltage_1" = first channel)
  * @return `SortableRankMap` ready for consumption by `OrderingPolicyResolver`
  */
 [[nodiscard]] SortableRankMap buildSwindaleSpikeSorterRanks(
         std::vector<std::string> const & keys,
-        ChannelPositionMap const & configs);
+        ChannelPositionMap const & configs,
+        bool key_one_based = true);
 
 /**
  * @brief Order series keys by probe electrode position using a SpikeSorter config.
@@ -102,10 +104,12 @@
  *
  * @param keys Keys to order (typically visible analog series keys)
  * @param configs Parsed electrode position map
+ * @param key_one_based true when series key suffixes are 1-based (e.g. "voltage_1" = first channel)
  * @return Keys sorted by group, then by Y position, then by channel ID
  */
 [[nodiscard]] std::vector<std::string> orderKeysBySwindaleSpikeSorter(
         std::vector<std::string> const & keys,
-        ChannelPositionMap const & configs);
+        ChannelPositionMap const & configs,
+        bool key_one_based = true);
 
 #endif// DATAVIEWER_SWINDALE_SPIKE_SORTER_LOADER_HPP

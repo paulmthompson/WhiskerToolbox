@@ -1,0 +1,43 @@
+# Swindale SpikeSorter Loader
+
+`SwindaleSpikeSorterLoader` parses SpikeSorter electrode configuration files and converts electrode Y positions into stackable-series lane ranks for `DataViewer_Widget`.
+
+## Location
+
+- Source: `src/WhiskerToolbox/DataViewer_Widget/Ordering/SwindaleSpikeSorterLoader.hpp`
+- Source: `src/WhiskerToolbox/DataViewer_Widget/Ordering/SwindaleSpikeSorterLoader.cpp`
+- Channel identity helpers: `src/WhiskerToolbox/DataViewer_Widget/Ordering/ChannelPositionMetadata.hpp`
+
+## File format
+
+SpikeSorter `.cfg` files are whitespace-separated with columns:
+
+1. Row index (ignored)
+2. Channel number (1-based in file, converted to 0-based internally)
+3. X position (micrometers)
+4. Y position (micrometers)
+
+The first line is treated as a header and skipped.
+
+## Key numbering
+
+SpikeSorter channel numbers in the file are always 1-based. Series key suffixes in the data manager may be either:
+
+- **1-based** (`voltage_1` = first channel), or
+- **0-based** (`voltage_0` = first channel)
+
+`buildSwindaleSpikeSorterRanks(..., key_one_based)` controls this mapping via `extractChannelFromSeriesKey`. When loading through the UI, `SpikeSorterKeyNumberingDialog` offers auto-detect (suffix `0` implies 0-based), with manual override.
+
+## Ordering policy
+
+Within a group, ranks are assigned by:
+
+1. Ascending electrode Y (bottom = lowest Y)
+2. Channel ID tie-break when Y values are equal
+3. Lexicographic key tie-break
+
+Ranks are written to `DataViewerState` as explicit `lane_order` overrides and consumed by `OrderingPolicyResolver` / `StackedLayoutStrategy`.
+
+## Tests
+
+Unit tests live in `tests/WhiskerToolbox/DataViewer_Widget/SwindaleSpikeSorterLoader.test.cpp`, including a full poly2 fixture with 0-based `voltage_0`..`voltage_31` keys.

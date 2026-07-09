@@ -3,20 +3,40 @@
  * @brief Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.
  *
  * Reference:
- *   Swindale, N.V., Mitelut, C., Murphy, T.H., Spacek, M.A., 2017. 
- *   A Visual Guide to Sorting Electrophysiological Recordings Using “SpikeSorter.” 
+ *   Swindale, N.V., Mitelut, C., Murphy, T.H., Spacek, M.A., 2017.
+ *   A Visual Guide to Sorting Electrophysiological Recordings Using “SpikeSorter.”
  *   J Vis Exp 55217. https://doi.org/10.3791/55217
  */
 
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace {
+
+[[nodiscard]] bool parseConfigFloat(std::istringstream & input, float & value) {
+    std::string token;
+    if (!(input >> token)) {
+        return false;
+    }
+
+    while (!token.empty() && token.back() == ',') {
+        token.pop_back();
+    }
+    if (token.empty()) {
+        return false;
+    }
+
+    auto const * parse_begin = token.data();
+    auto const * parse_end = token.data() + token.size();
+    auto const parse_result = std::from_chars(parse_begin, parse_end, value);
+    return parse_result.ec == std::errc{} && parse_result.ptr == parse_end;
+}
 
 [[nodiscard]] float lookupChannelY(std::vector<ChannelPosition> const & config,
                                    int channel_id) {
@@ -26,6 +46,12 @@ namespace {
         }
     }
     return 0.0f;
+}
+
+[[nodiscard]] int channelIdForKey(std::string const & key,
+                                  std::string const & group,
+                                  bool key_one_based) {
+    return extractChannelFromSeriesKey(key, group, key_one_based).value_or(-1);
 }
 
 }// namespace
@@ -51,7 +77,7 @@ std::vector<ChannelPosition> parseSwindaleSpikeSorterConfig(std::string const & 
         float x = 0.0f;
         float y = 0.0f;
 
-        if (!(ls >> row >> ch >> x >> y)) {
+        if (!(ls >> row >> ch) || !parseConfigFloat(ls, x) || !parseConfigFloat(ls, y)) {
             continue;
         }
 
@@ -88,7 +114,8 @@ bool extractGroupAndChannelFromKey(
 
 SortableRankMap buildSwindaleSpikeSorterRanks(
         std::vector<std::string> const & keys,
-        ChannelPositionMap const & configs) {
+        ChannelPositionMap const & configs,
+        bool key_one_based) {
 
     struct RankedItem {
         std::string key;
@@ -102,11 +129,13 @@ SortableRankMap buildSwindaleSpikeSorterRanks(
 
     for (auto const & key: keys) {
         auto const identity = parseSeriesIdentity(key);
-        int const channel = identity.channel_id.value_or(-1);
+        int const channel = channelIdForKey(key, identity.group, key_one_based);
 
         float y_rank = 0.0f;
         if (auto cfg_it = configs.find(identity.group); cfg_it != configs.end()) {
-            y_rank = lookupChannelY(cfg_it->second, channel);
+            if (channel >= 0) {
+                y_rank = lookupChannelY(cfg_it->second, channel);
+            }
         }
 
         ranked_items.push_back(RankedItem{key, identity.group, channel, y_rank});
@@ -142,9 +171,10 @@ SortableRankMap buildSwindaleSpikeSorterRanks(
 
 std::vector<std::string> orderKeysBySwindaleSpikeSorter(
         std::vector<std::string> const & keys,
-        ChannelPositionMap const & configs) {
+        ChannelPositionMap const & configs,
+        bool key_one_based) {
 
-    auto const rank_map = buildSwindaleSpikeSorterRanks(keys, configs);
+    auto const rank_map = buildSwindaleSpikeSorterRanks(keys, configs, key_one_based);
 
     struct Item {
         std::string key;

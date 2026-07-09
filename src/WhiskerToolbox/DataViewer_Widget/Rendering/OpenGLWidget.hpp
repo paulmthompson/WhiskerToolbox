@@ -296,9 +296,11 @@ public:
      * 
      * @param group_name Group identifier (series keys should be "groupname_N")
      * @param positions Vector of channel positions for ordering
+     * @param key_one_based true when series key suffixes are 1-based (e.g. "voltage_1" = first channel)
      */
     void loadSpikeSorterConfiguration(std::string const & group_name,
-                                      std::vector<ChannelPosition> const & positions);
+                                      std::vector<ChannelPosition> const & positions,
+                                      bool key_one_based = true);
 
     /**
      * @brief Clear spike sorter configuration for a group

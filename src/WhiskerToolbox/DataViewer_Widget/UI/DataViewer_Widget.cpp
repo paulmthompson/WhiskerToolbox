@@ -5,6 +5,7 @@
 #include "Core/DataViewerStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Feature_Tree_Model.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
 #include "Ordering/SpikeToAnalogPairingLoader.hpp"
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "Rendering/OpenGLWidget.hpp"
@@ -12,6 +13,7 @@
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
 #include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
+#include "UI/SpikeSorterKeyNumberingDialog.hpp"
 #include "UI/SpikeToAnalogConfigDialog.hpp"
 
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
@@ -1248,8 +1250,21 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & gr
     auto positions = _parseSpikeSorterConfig(data.toStdString());
     if (positions.empty()) return;
 
+    std::vector<std::string> const group_keys = _findGroupAnalogKeys(group_name.toStdString());
+    bool const auto_detected_one_based = detectKeyOneBased(group_keys, group_name.toStdString());
+
+    SpikeSorterKeyNumberingDialog dialog(group_name, auto_detected_one_based, this);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    bool const key_one_based = dialog.keyOneBased(auto_detected_one_based);
+
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
-    ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
+    ui->openGLWidget->loadSpikeSorterConfiguration(
+            group_name.toStdString(),
+            positions,
+            key_one_based);
     ui->openGLWidget->updateCanvas();
 }
 
@@ -1374,8 +1389,14 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
         return;
     }
 
+    std::vector<std::string> const group_keys = _findGroupAnalogKeys(group_name.toStdString());
+    bool const key_one_based = detectKeyOneBased(group_keys, group_name.toStdString());
+
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
-    ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
+    ui->openGLWidget->loadSpikeSorterConfiguration(
+            group_name.toStdString(),
+            positions,
+            key_one_based);
     ui->openGLWidget->updateCanvas();
 }
 
