@@ -257,8 +257,9 @@ Selected trial indices are emitted via `trialsSelected(std::vector<uint32_t>)` a
 
 Uses the shared `RelativeTimeAxisWidget` with `RelativeTimeAxisState`. The axis is synchronized bidirectionally with the view state:
 
-- **User changes axis range** → view state updates → scene rebuilds (via `rangeChanged`)
+- **User changes axis range** (spinboxes or wheel) → `rangeChanged` updates `x_zoom`/`x_pan` via `LinePlotWidget::wireTimeAxis()` (visible-span editing, not `window_size`)
 - **User zooms/pans** → axis range updates silently via `setRangeSilent()` (no feedback loop)
+- **`rangeUpdated`** in `LinePlotState` only syncs `_data.time_axis` for serialization; it does not emit `stateChanged()` or mutate `alignment.window_size`
 
 See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details including the "Silent Update" pattern.
 

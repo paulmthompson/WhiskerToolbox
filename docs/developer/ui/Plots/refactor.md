@@ -25,8 +25,8 @@ here" but `markDirty()` emits it anyway.
 written to `_data.view_state` for serialization; it will be saved when the next 
 real state change calls `markDirty()`.
 
-**Fixed in:** EventPlotState (`setXZoom`, `setYZoom`, `setPan`)  
-**Check:** LinePlotState and any other plot state classes with the same pattern.
+**Fixed in:** EventPlotState (`setXZoom`, `setYZoom`, `setPan`), LinePlotState  
+**Check:** Any other plot state classes with the same pattern.
 
 ### 2. rangeUpdated handler emits stateChanged() causing rebuild on resize/pan
 
@@ -39,5 +39,5 @@ creates a cascade: resize → `paintGL` → `viewBoundsChanged` → `syncTimeAxi
 **Fix:** The `rangeUpdated` handler should only sync serialization data 
 (`_data.time_axis = ...`) without calling `markDirty()` or emitting `stateChanged()`.
 
-**Fixed in:** EventPlotState  
-**Check:** LinePlotState and any other state class connecting to `rangeUpdated`.
+**Fixed in:** EventPlotState, LinePlotState  
+**Check:** Any other state class connecting to `rangeUpdated` (e.g. HeatmapState).

@@ -4,6 +4,7 @@
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
@@ -51,9 +52,9 @@ LinePlotWidget::LinePlotWidget(std::shared_ptr<DataManager> data_manager,
     _vertical_range_controls = nullptr;
 
     QLayout * old_layout = layout();
-    
-        delete old_layout;
-    
+
+    delete old_layout;
+
     setLayout(vertical_layout);
 
     connect(_opengl_widget, &LinePlotOpenGLWidget::plotDoubleClicked,
@@ -101,7 +102,8 @@ void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        }, "LinePlotWidget");
+        },
+                                                     "LinePlotWidget");
     }
 }
 
@@ -150,6 +152,25 @@ void LinePlotWidget::wireTimeAxis() {
         vs.preserve_aspect_ratio = false;
         return vs;
     });
+
+    auto * time_axis_state = _state ? _state->relativeTimeAxisState() : nullptr;
+    if (time_axis_state) {
+        connect(time_axis_state, &RelativeTimeAxisState::rangeChanged,
+                this, [this](double min_range, double max_range) {
+                    if (!_state) {
+                        return;
+                    }
+                    double const range = max_range - min_range;
+                    if (range > 0.001) {
+                        auto const & vs = _state->viewState();
+                        double const full_range = vs.x_max - vs.x_min;
+                        _state->setXZoom(full_range / range);
+                        _state->setPan(((min_range + max_range) / 2.0) -
+                                               ((vs.x_min + vs.x_max) / 2.0),
+                                       vs.y_pan);
+                    }
+                });
+    }
 }
 
 void LinePlotWidget::wireVerticalAxis() {

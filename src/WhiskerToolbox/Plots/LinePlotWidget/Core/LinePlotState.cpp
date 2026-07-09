@@ -3,7 +3,6 @@
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
-#include "CorePlotting/CoordinateTransform/NumericSafety.hpp"
 
 #include <rfl/json.hpp>
 
@@ -13,8 +12,7 @@ LinePlotState::LinePlotState(QObject * parent)
     : EditorState(parent),
       _alignment_state(std::make_unique<PlotAlignmentState>(this)),
       _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this)),
-      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
-{
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this)) {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
 
@@ -56,24 +54,20 @@ LinePlotState::LinePlotState(QObject * parent)
                 emit stateChanged();
             });
 
-    // Sync relative time axis state to data when range changes
-    auto syncTimeAxisData = [this]() {
-        _data.time_axis = _relative_time_axis_state->data();
-        double const range = CorePlotting::safe_range(_data.time_axis.min_range,
-                                                      _data.time_axis.max_range);
-        if (std::abs(range - _data.alignment.window_size) > 0.01) {
-            _data.alignment.window_size = range;
-            _alignment_state->data().window_size = range;
-        }
-        markDirty();
-        emit stateChanged();
-    };
+    // Sync relative time axis state to data when range changes from user input
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeChanged,
-            this, syncTimeAxisData);
+            this, [this]() {
+                _data.time_axis = _relative_time_axis_state->data();
+            });
+    // rangeUpdated (from setRangeSilent) only syncs serialization data.
+    // setRangeSilent is called during view-only sync (zoom/pan) and must not
+    // overwrite window_size or trigger scene rebuilds.
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
-            this, syncTimeAxisData);
+            this, [this]() {
+                _data.time_axis = _relative_time_axis_state->data();
+            });
 
-    // Sync vertical axis state to data
+    // Sync vertical axis state to data when range changes from user input
     auto syncVerticalAxisData = [this]() {
         _data.vertical_axis = _vertical_axis_state->data();
         markDirty();
@@ -81,17 +75,18 @@ LinePlotState::LinePlotState(QObject * parent)
     };
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalAxisData);
+    // rangeUpdated (from setRangeSilent) only syncs serialization data.
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalAxisData);
+            this, [this]() {
+                _data.vertical_axis = _vertical_axis_state->data();
+            });
 }
 
-QString LinePlotState::getDisplayName() const
-{
+QString LinePlotState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
-void LinePlotState::setDisplayName(QString const & name)
-{
+void LinePlotState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -99,13 +94,11 @@ void LinePlotState::setDisplayName(QString const & name)
     }
 }
 
-QString LinePlotState::getAlignmentEventKey() const
-{
+QString LinePlotState::getAlignmentEventKey() const {
     return _alignment_state->getAlignmentEventKey();
 }
 
-void LinePlotState::setAlignmentEventKey(QString const & key)
-{
+void LinePlotState::setAlignmentEventKey(QString const & key) {
     _alignment_state->setAlignmentEventKey(key);
     // Sync to data for serialization
     _data.alignment = _alignment_state->data();
@@ -113,13 +106,11 @@ void LinePlotState::setAlignmentEventKey(QString const & key)
     emit stateChanged();
 }
 
-IntervalAlignmentType LinePlotState::getIntervalAlignmentType() const
-{
+IntervalAlignmentType LinePlotState::getIntervalAlignmentType() const {
     return _alignment_state->getIntervalAlignmentType();
 }
 
-void LinePlotState::setIntervalAlignmentType(IntervalAlignmentType type)
-{
+void LinePlotState::setIntervalAlignmentType(IntervalAlignmentType type) {
     _alignment_state->setIntervalAlignmentType(type);
     // Sync to data for serialization
     _data.alignment = _alignment_state->data();
@@ -127,13 +118,11 @@ void LinePlotState::setIntervalAlignmentType(IntervalAlignmentType type)
     emit stateChanged();
 }
 
-double LinePlotState::getOffset() const
-{
+double LinePlotState::getOffset() const {
     return _alignment_state->getOffset();
 }
 
-void LinePlotState::setOffset(double offset)
-{
+void LinePlotState::setOffset(double offset) {
     _alignment_state->setOffset(offset);
     // Sync to data for serialization
     _data.alignment = _alignment_state->data();
@@ -141,13 +130,11 @@ void LinePlotState::setOffset(double offset)
     emit stateChanged();
 }
 
-double LinePlotState::getWindowSize() const
-{
+double LinePlotState::getWindowSize() const {
     return _alignment_state->getWindowSize();
 }
 
-void LinePlotState::setWindowSize(double window_size)
-{
+void LinePlotState::setWindowSize(double window_size) {
     _alignment_state->setWindowSize(window_size);
     // Sync to data for serialization
     _data.alignment = _alignment_state->data();
@@ -155,10 +142,9 @@ void LinePlotState::setWindowSize(double window_size)
     emit stateChanged();
 }
 
-void LinePlotState::addPlotSeries(QString const & series_name, QString const & series_key)
-{
-    std::string name_str = series_name.toStdString();
-    std::string key_str = series_key.toStdString();
+void LinePlotState::addPlotSeries(QString const & series_name, QString const & series_key) {
+    std::string const name_str = series_name.toStdString();
+    std::string const key_str = series_key.toStdString();
 
     LinePlotOptions options;
     options.series_key = key_str;
@@ -170,9 +156,8 @@ void LinePlotState::addPlotSeries(QString const & series_name, QString const & s
     emit stateChanged();
 }
 
-void LinePlotState::removePlotSeries(QString const & series_name)
-{
-    std::string name_str = series_name.toStdString();
+void LinePlotState::removePlotSeries(QString const & series_name) {
+    std::string const name_str = series_name.toStdString();
     auto it = _data.plot_series.find(name_str);
     if (it != _data.plot_series.end()) {
         _data.plot_series.erase(it);
@@ -183,19 +168,17 @@ void LinePlotState::removePlotSeries(QString const & series_name)
     }
 }
 
-std::vector<QString> LinePlotState::getPlotSeriesNames() const
-{
+std::vector<QString> LinePlotState::getPlotSeriesNames() const {
     std::vector<QString> names;
     names.reserve(_data.plot_series.size());
-    for (auto const & [name, _] : _data.plot_series) {
+    for (auto const & [name, _]: _data.plot_series) {
         names.push_back(QString::fromStdString(name));
     }
     return names;
 }
 
-std::optional<LinePlotOptions> LinePlotState::getPlotSeriesOptions(QString const & series_name) const
-{
-    std::string name_str = series_name.toStdString();
+std::optional<LinePlotOptions> LinePlotState::getPlotSeriesOptions(QString const & series_name) const {
+    std::string const name_str = series_name.toStdString();
     auto it = _data.plot_series.find(name_str);
     if (it != _data.plot_series.end()) {
         return it->second;
@@ -203,9 +186,8 @@ std::optional<LinePlotOptions> LinePlotState::getPlotSeriesOptions(QString const
     return std::nullopt;
 }
 
-void LinePlotState::updatePlotSeriesOptions(QString const & series_name, LinePlotOptions const & options)
-{
-    std::string name_str = series_name.toStdString();
+void LinePlotState::updatePlotSeriesOptions(QString const & series_name, LinePlotOptions const & options) {
+    std::string const name_str = series_name.toStdString();
     auto it = _data.plot_series.find(name_str);
     if (it != _data.plot_series.end()) {
         it->second = options;
@@ -220,9 +202,8 @@ void LinePlotState::updatePlotSeriesOptions(QString const & series_name, LinePlo
     }
 }
 
-LineStyleState * LinePlotState::lineStyleStateForSeries(QString const & series_name)
-{
-    std::string name_str = series_name.toStdString();
+LineStyleState * LinePlotState::lineStyleStateForSeries(QString const & series_name) {
+    std::string const name_str = series_name.toStdString();
     auto it = _series_line_style_states.find(name_str);
     if (it != _series_line_style_states.end()) {
         return it->second.get();
@@ -230,9 +211,8 @@ LineStyleState * LinePlotState::lineStyleStateForSeries(QString const & series_n
     return nullptr;
 }
 
-void LinePlotState::_createLineStyleStateForSeries(QString const & series_name)
-{
-    std::string name_str = series_name.toStdString();
+void LinePlotState::_createLineStyleStateForSeries(QString const & series_name) {
+    std::string const name_str = series_name.toStdString();
 
     // Get current style from data (or default)
     auto data_it = _data.plot_series.find(name_str);
@@ -263,36 +243,29 @@ void LinePlotState::_createLineStyleStateForSeries(QString const & series_name)
 
 // === View State (Zoom / Pan / Bounds) ===
 
-void LinePlotState::setXZoom(double zoom)
-{
+void LinePlotState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void LinePlotState::setYZoom(double zoom)
-{
+void LinePlotState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void LinePlotState::setPan(double x_pan, double y_pan)
-{
+void LinePlotState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void LinePlotState::setXBounds(double x_min, double x_max)
-{
+void LinePlotState::setXBounds(double x_min, double x_max) {
     if (!std::isfinite(x_min) || !std::isfinite(x_max)) return;
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
@@ -305,8 +278,7 @@ void LinePlotState::setXBounds(double x_min, double x_max)
     }
 }
 
-void LinePlotState::setYBounds(double y_min, double y_max)
-{
+void LinePlotState::setYBounds(double y_min, double y_max) {
     if (!std::isfinite(y_min) || !std::isfinite(y_max)) return;
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
@@ -320,8 +292,7 @@ void LinePlotState::setYBounds(double y_min, double y_max)
     }
 }
 
-void LinePlotState::setColorByGroup(bool enabled)
-{
+void LinePlotState::setColorByGroup(bool enabled) {
     if (_data.color_by_group != enabled) {
         _data.color_by_group = enabled;
         markDirty();
@@ -330,16 +301,14 @@ void LinePlotState::setColorByGroup(bool enabled)
     }
 }
 
-std::string LinePlotState::toJson() const
-{
+std::string LinePlotState::toJson() const {
     // Include instance_id in serialization for restoration
     LinePlotStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool LinePlotState::fromJson(std::string const & json)
-{
+bool LinePlotState::fromJson(std::string const & json) {
     auto result = rfl::json::read<LinePlotStateData>(json);
     if (result) {
         _data = *result;
@@ -358,7 +327,7 @@ bool LinePlotState::fromJson(std::string const & json)
 
         // Recreate LineStyleState instances for each series
         _series_line_style_states.clear();
-        for (auto const & [name, _] : _data.plot_series) {
+        for (auto const & [name, _]: _data.plot_series) {
             _createLineStyleStateForSeries(QString::fromStdString(name));
         }
 
