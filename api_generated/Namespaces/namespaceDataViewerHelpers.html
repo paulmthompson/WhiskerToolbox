@@ -618,7 +618,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>start_time</strong> Start of range to generate (master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>)</li>
 <li><strong>end_time</strong> End of range to generate (master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>)</li>
 </ul>
-<p><strong>Return</strong>: Vector of <code>CachedAnalogVertex</code> with <code>x</code> = absolute physical time (mapper origin 0); <code>AnalogVertexCache::getVerticesForRange</code> subtracts the live view origin.</p>
+<p><strong>Return</strong>: Vector of <code>CachedAnalogVertex</code> with <code>x</code> = integer absolute physical time; <code>AnalogVertexCache::getVerticesForRange</code> subtracts the live view origin.</p>
 <p>This is the core vertex generation logic extracted for use by the cache.</p>
 </section>
 <section id="function-buildanalogseriesbatchcached" class="level3">
@@ -649,7 +649,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>For typical scrolling (scroll by 10-100 points out of 100K visible), this is ~26-130x faster than regenerating all vertices.</p>
 <hr>
-<p>Updated on 2026-06-27 at 19:38:14 +0000</p>
+<p>Updated on 2026-07-09 at 17:06:33 +0000</p>
 
 
 </section>

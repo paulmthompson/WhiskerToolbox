@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>WhiskerToolbox::Plots – Neuralyzer</title>
+<title>src/WhiskerToolbox/DataViewer_Widget/UI/SpikeSorterKeyNumberingDialog.cpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,6 +22,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -310,7 +345,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#whiskertoolboxplots" id="toc-whiskertoolboxplots" class="nav-link active" data-scroll-target="#whiskertoolboxplots">WhiskerToolbox::Plots</a></li>
+  <li><a href="#srcwhiskertoolboxdataviewer_widgetuispikesorterkeynumberingdialog.cpp" id="toc-srcwhiskertoolboxdataviewer_widgetuispikesorterkeynumberingdialog.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxdataviewer_widgetuispikesorterkeynumberingdialog.cpp">src/WhiskerToolbox/DataViewer_Widget/UI/SpikeSorterKeyNumberingDialog.cpp</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -320,7 +358,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">WhiskerToolbox::Plots</h1>
+<h1 class="title">src/WhiskerToolbox/DataViewer_Widget/UI/SpikeSorterKeyNumberingDialog.cpp</h1>
 </div>
 
 
@@ -337,12 +375,85 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="whiskertoolboxplots" class="level1">
-<h1>WhiskerToolbox::Plots</h1>
+<section id="srcwhiskertoolboxdataviewer_widgetuispikesorterkeynumberingdialog.cpp" class="level1">
+<h1>src/WhiskerToolbox/DataViewer_Widget/UI/SpikeSorterKeyNumberingDialog.cpp</h1>
+<p>Dialog for selecting series key numbering when loading a SpikeSorter config.</p>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"SpikeSorterKeyNumberingDialog.hpp"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QFormLayout&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QGroupBox&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>SpikeSorterKeyNumberingDialog<span class="op">::</span>SpikeSorterKeyNumberingDialog<span class="op">(</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> group_name<span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> auto_detected_one_based<span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QWidget</span> <span class="op">*</span> parent<span class="op">)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="ex">QDialog</span><span class="op">(</span>parent<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    setWindowTitle<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"SpikeSorter Key Numbering"</span><span class="op">));</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    setMinimumWidth<span class="op">(</span><span class="dv">420</span><span class="op">);</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> layout <span class="op">=</span> <span class="kw">new</span> <span class="ex">QVBoxLayout</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> intro <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Select how series key suffixes map to electrode channels for group </span><span class="sc">\"</span><span class="st">%1</span><span class="sc">\"</span><span class="st">."</span><span class="op">)</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    <span class="op">.</span>arg<span class="op">(</span>group_name<span class="op">),</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    intro<span class="op">-&gt;</span>setWordWrap<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>intro<span class="op">);</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> group_box <span class="op">=</span> <span class="kw">new</span> <span class="ex">QGroupBox</span><span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Series Key Numbering"</span><span class="op">),</span> <span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> form <span class="op">=</span> <span class="kw">new</span> <span class="ex">QFormLayout</span><span class="op">(</span>group_box<span class="op">);</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    _numbering_combo <span class="op">=</span> <span class="kw">new</span> <span class="ex">QComboBox</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    _numbering_combo<span class="op">-&gt;</span>addItem<span class="op">(</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Auto-detect  (%1)"</span><span class="op">)</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>                    <span class="op">.</span>arg<span class="op">(</span>auto_detected_one_based</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>                                 <span class="op">?</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"detected 1-based, e.g. voltage_1"</span><span class="op">)</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>                                 <span class="op">:</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"detected 0-based, e.g. voltage_0"</span><span class="op">)),</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>            <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>SpikeSorterKeyNumberingMode<span class="op">::</span>AutoDetect<span class="op">));</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    _numbering_combo<span class="op">-&gt;</span>addItem<span class="op">(</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"1-based  (first series = '_1')"</span><span class="op">),</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>            <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>SpikeSorterKeyNumberingMode<span class="op">::</span>OneBased<span class="op">));</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    _numbering_combo<span class="op">-&gt;</span>addItem<span class="op">(</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0-based  (first series = '_0')"</span><span class="op">),</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>            <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>SpikeSorterKeyNumberingMode<span class="op">::</span>ZeroBased<span class="op">));</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    _numbering_combo<span class="op">-&gt;</span>setToolTip<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">"SpikeSorter electrode files use 1-based channel numbers.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">"This setting controls how series key suffixes map to those channels.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Auto-detect treats suffix 0 as 0-based naming."</span><span class="op">));</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    form<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Key numbering:"</span><span class="op">),</span> _numbering_combo<span class="op">);</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>group_box<span class="op">);</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> buttons <span class="op">=</span> <span class="kw">new</span> <span class="ex">QDialogButtonBox</span><span class="op">(</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QDialogButtonBox::Ok</span> <span class="op">|</span> <span class="ex">QDialogButtonBox::Cancel</span><span class="op">,</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>buttons<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QDialogButtonBox::accepted</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span><span class="ex">QDialog::accept</span><span class="op">);</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>buttons<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QDialogButtonBox::rejected</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span><span class="ex">QDialog::reject</span><span class="op">);</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>buttons<span class="op">);</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>SpikeSorterKeyNumberingMode SpikeSorterKeyNumberingDialog<span class="op">::</span>numberingMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span>SpikeSorterKeyNumberingMode<span class="op">&gt;(</span>_numbering_combo<span class="op">-&gt;</span>currentData<span class="op">().</span>toInt<span class="op">());</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> SpikeSorterKeyNumberingDialog<span class="op">::</span>keyOneBased<span class="op">(</span><span class="dt">bool</span> auto_detected_one_based<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>numberingMode<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> SpikeSorterKeyNumberingMode<span class="op">::</span>OneBased<span class="op">:</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> SpikeSorterKeyNumberingMode<span class="op">::</span>ZeroBased<span class="op">:</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> SpikeSorterKeyNumberingMode<span class="op">::</span>AutoDetect<span class="op">:</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> auto_detected_one_based<span class="op">;</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-06-27 at 19:38:13 +0000</p>
+<p>Updated on 2026-07-09 at 17:06:37 +0000</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

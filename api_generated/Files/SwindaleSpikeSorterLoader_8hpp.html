@@ -410,11 +410,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-sortablerankmap">SortableRankMap</a></td>
-<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8hpp.html#function-buildswindalespikesorterranks">buildSwindaleSpikeSorterRanks</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs)<br>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</td>
+<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8hpp.html#function-buildswindalespikesorterranks">buildSwindaleSpikeSorterRanks</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs, bool key_one_based =true)<br>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8hpp.html#function-orderkeysbyswindalespikesorter">orderKeysBySwindaleSpikeSorter</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs)<br>Order series keys by probe electrode position using a SpikeSorter config.</td>
+<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8hpp.html#function-orderkeysbyswindalespikesorter">orderKeysBySwindaleSpikeSorter</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs, bool key_one_based =true)<br>Order series keys by probe electrode position using a SpikeSorter config.</td>
 </tr>
 </tbody>
 </table>
@@ -479,13 +479,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-buildswindalespikesorterranks">function buildSwindaleSpikeSorterRanks</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>SortableRankMap buildSwindaleSpikeSorterRanks<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> key_one_based <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>keys</strong> Series keys to rank (typically visible analog series keys)</li>
 <li><strong>configs</strong> Parsed electrode position map (from <code>parseSwindaleSpikeSorterConfig</code>)</li>
+<li><strong>key_one_based</strong> true when series key suffixes are 1-based (e.g.&nbsp;“voltage_1” = first channel)</li>
 </ul>
 <p><strong>Return</strong>: <code>SortableRankMap</code> ready for consumption by <code>OrderingPolicyResolver</code></p>
 <p>Assigns integer ranks to each key based on:</p>
@@ -501,13 +503,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-orderkeysbyswindalespikesorter">function orderKeysBySwindaleSpikeSorter</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> key_one_based <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Order series keys by probe electrode position using a SpikeSorter config.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>keys</strong> Keys to order (typically visible analog series keys)</li>
 <li><strong>configs</strong> Parsed electrode position map</li>
+<li><strong>key_one_based</strong> true when series key suffixes are 1-based (e.g.&nbsp;“voltage_1” = first channel)</li>
 </ul>
 <p><strong>Return</strong>: Keys sorted by group, then by Y position, then by channel ID</p>
 <p>Convenience wrapper around <code>buildSwindaleSpikeSorterRanks</code> that returns keys in sorted order rather than a rank map.</p>
@@ -532,15 +536,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> SortableRankMap buildSwindaleSpikeSorterRanks<span class="op">(</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">);</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">);</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_SWINDALE_SPIKE_SORTER_LOADER_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> key_one_based <span class="op">=</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> key_one_based <span class="op">=</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_SWINDALE_SPIKE_SORTER_LOADER_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-06-27 at 19:38:17 +0000</p>
+<p>Updated on 2026-07-09 at 17:06:37 +0000</p>
 
 
 </section>

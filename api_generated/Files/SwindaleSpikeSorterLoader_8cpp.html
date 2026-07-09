@@ -407,11 +407,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-sortablerankmap">SortableRankMap</a></td>
-<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#function-buildswindalespikesorterranks">buildSwindaleSpikeSorterRanks</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs)<br>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</td>
+<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#function-buildswindalespikesorterranks">buildSwindaleSpikeSorterRanks</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs, bool key_one_based =true)<br>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#function-orderkeysbyswindalespikesorter">orderKeysBySwindaleSpikeSorter</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs)<br>Order series keys by probe electrode position using a SpikeSorter config.</td>
+<td><strong><a href="../../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#function-orderkeysbyswindalespikesorter">orderKeysBySwindaleSpikeSorter</a></strong>(std::vector&lt; std::string &gt; const &amp; keys, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-channelpositionmap">ChannelPositionMap</a> const &amp; configs, bool key_one_based =true)<br>Order series keys by probe electrode position using a SpikeSorter config.</td>
 </tr>
 </tbody>
 </table>
@@ -457,13 +457,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-buildswindalespikesorterranks">function buildSwindaleSpikeSorterRanks</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SortableRankMap buildSwindaleSpikeSorterRanks<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> key_one_based <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a <code>SortableRankMap</code> from a <code>ChannelPositionMap</code> for a set of series keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>keys</strong> Series keys to rank (typically visible analog series keys)</li>
 <li><strong>configs</strong> Parsed electrode position map (from <code>parseSwindaleSpikeSorterConfig</code>)</li>
+<li><strong>key_one_based</strong> true when series key suffixes are 1-based (e.g.&nbsp;“voltage_1” = first channel)</li>
 </ul>
 <p><strong>Return</strong>: <code>SortableRankMap</code> ready for consumption by <code>OrderingPolicyResolver</code></p>
 <p>Assigns integer ranks to each key based on:</p>
@@ -479,13 +481,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-orderkeysbyswindalespikesorter">function orderKeysBySwindaleSpikeSorter</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> key_one_based <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Order series keys by probe electrode position using a SpikeSorter config.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>keys</strong> Keys to order (typically visible analog series keys)</li>
 <li><strong>configs</strong> Parsed electrode position map</li>
+<li><strong>key_one_based</strong> true when series key suffixes are 1-based (e.g.&nbsp;“voltage_1” = first channel)</li>
 </ul>
 <p><strong>Return</strong>: Keys sorted by group, then by Y position, then by channel ID</p>
 <p>Convenience wrapper around <code>buildSwindaleSpikeSorterRanks</code> that returns keys in sorted order rather than a rank map.</p>
@@ -497,176 +501,206 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Ordering/SwindaleSpikeSorterLoader.hpp"</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;limits&gt;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;sstream&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> lookupChannelY<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> config<span class="op">,</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                                   <span class="dt">int</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> position<span class="op">:</span> config<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>position<span class="op">.</span>channel_id <span class="op">==</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> position<span class="op">.</span>y<span class="op">;</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> parseSwindaleSpikeSorterConfig<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> text<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> out<span class="op">;</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>istringstream ss<span class="op">(</span>text<span class="op">);</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string line<span class="op">;</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> first <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="bu">std::</span>getline<span class="op">(</span>ss<span class="op">,</span> line<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>line<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>first<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>            first <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span><span class="co">// skip header row</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;charconv&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;limits&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;sstream&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> parseConfigFloat<span class="op">(</span><span class="bu">std::</span>istringstream <span class="op">&amp;</span> input<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> value<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string token<span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!(</span>input <span class="op">&gt;&gt;</span> token<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!</span>token<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> token<span class="op">.</span>back<span class="op">()</span> <span class="op">==</span> <span class="ch">','</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        token<span class="op">.</span>pop_back<span class="op">();</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>token<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> parse_begin <span class="op">=</span> token<span class="op">.</span>data<span class="op">();</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> parse_end <span class="op">=</span> token<span class="op">.</span>data<span class="op">()</span> <span class="op">+</span> token<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> parse_result <span class="op">=</span> <span class="bu">std::</span>from_chars<span class="op">(</span>parse_begin<span class="op">,</span> parse_end<span class="op">,</span> value<span class="op">);</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> parse_result<span class="op">.</span>ec <span class="op">==</span> <span class="bu">std::</span>errc<span class="op">{}</span> <span class="op">&amp;&amp;</span> parse_result<span class="op">.</span>ptr <span class="op">==</span> parse_end<span class="op">;</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> lookupChannelY<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> config<span class="op">,</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>                                   <span class="dt">int</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> position<span class="op">:</span> config<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>position<span class="op">.</span>channel_id <span class="op">==</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> position<span class="op">.</span>y<span class="op">;</span></span>
 <span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>istringstream ls<span class="op">(</span>line<span class="op">);</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> row <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> ch <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> x <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!(</span>ls <span class="op">&gt;&gt;</span> row <span class="op">&gt;&gt;</span> ch <span class="op">&gt;&gt;</span> x <span class="op">&gt;&gt;</span> y<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>        <span class="co">// SpikeSorter uses 1-based channel numbers; convert to 0-based</span></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>ch <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>            ch <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>        ChannelPosition p<span class="op">;</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>channel_id <span class="op">=</span> ch<span class="op">;</span></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>x <span class="op">=</span> x<span class="op">;</span></span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>y <span class="op">=</span> y<span class="op">;</span></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>        out<span class="op">.</span>push_back<span class="op">(</span>p<span class="op">);</span></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out<span class="op">;</span></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> extractGroupAndChannelFromKey<span class="op">(</span></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="op">&amp;</span> group<span class="op">,</span></span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="op">&amp;</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> identity <span class="op">=</span> parseSeriesIdentity<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>identity<span class="op">.</span>channel_id<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>        group <span class="op">=</span> identity<span class="op">.</span>group<span class="op">;</span></span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>        channel_id <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int</span> channelIdForKey<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>                                  <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> group<span class="op">,</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>                                  <span class="dt">bool</span> key_one_based<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> extractChannelFromSeriesKey<span class="op">(</span>key<span class="op">,</span> group<span class="op">,</span> key_one_based<span class="op">).</span>value_or<span class="op">(-</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> parseSwindaleSpikeSorterConfig<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> text<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ChannelPosition<span class="op">&gt;</span> out<span class="op">;</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>istringstream ss<span class="op">(</span>text<span class="op">);</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string line<span class="op">;</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> first <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="bu">std::</span>getline<span class="op">(</span>ss<span class="op">,</span> line<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>line<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>first<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>            first <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span><span class="co">// skip header row</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>istringstream ls<span class="op">(</span>line<span class="op">);</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> row <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> ch <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> x <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!(</span>ls <span class="op">&gt;&gt;</span> row <span class="op">&gt;&gt;</span> ch<span class="op">)</span> <span class="op">||</span> <span class="op">!</span>parseConfigFloat<span class="op">(</span>ls<span class="op">,</span> x<span class="op">)</span> <span class="op">||</span> <span class="op">!</span>parseConfigFloat<span class="op">(</span>ls<span class="op">,</span> y<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>    group <span class="op">=</span> identity<span class="op">.</span>group<span class="op">;</span></span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>    channel_id <span class="op">=</span> <span class="op">*</span>identity<span class="op">.</span>channel_id<span class="op">;</span></span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>        <span class="co">// SpikeSorter uses 1-based channel numbers; convert to 0-based</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>ch <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>            ch <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>SortableRankMap buildSwindaleSpikeSorterRanks<span class="op">(</span></span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> RankedItem <span class="op">{</span></span>
-<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string key<span class="op">;</span></span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string group<span class="op">;</span></span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> channel<span class="op">;</span></span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y_rank<span class="op">;</span></span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>RankedItem<span class="op">&gt;</span> ranked_items<span class="op">;</span></span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>    ranked_items<span class="op">.</span>reserve<span class="op">(</span>keys<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">:</span> keys<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> identity <span class="op">=</span> parseSeriesIdentity<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> channel <span class="op">=</span> identity<span class="op">.</span>channel_id<span class="op">.</span>value_or<span class="op">(-</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y_rank <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> cfg_it <span class="op">=</span> configs<span class="op">.</span>find<span class="op">(</span>identity<span class="op">.</span>group<span class="op">);</span> cfg_it <span class="op">!=</span> configs<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>            y_rank <span class="op">=</span> lookupChannelY<span class="op">(</span>cfg_it<span class="op">-&gt;</span>second<span class="op">,</span> channel<span class="op">);</span></span>
-<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>        ranked_items<span class="op">.</span>push_back<span class="op">(</span>RankedItem<span class="op">{</span>key<span class="op">,</span> identity<span class="op">.</span>group<span class="op">,</span> channel<span class="op">,</span> y_rank<span class="op">});</span></span>
-<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>        ChannelPosition p<span class="op">;</span></span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>channel_id <span class="op">=</span> ch<span class="op">;</span></span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>x <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>        p<span class="op">.</span>y <span class="op">=</span> y<span class="op">;</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>        out<span class="op">.</span>push_back<span class="op">(</span>p<span class="op">);</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out<span class="op">;</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> extractGroupAndChannelFromKey<span class="op">(</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="op">&amp;</span> group<span class="op">,</span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="op">&amp;</span> channel_id<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> identity <span class="op">=</span> parseSeriesIdentity<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>identity<span class="op">.</span>channel_id<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>        group <span class="op">=</span> identity<span class="op">.</span>group<span class="op">;</span></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>        channel_id <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>    group <span class="op">=</span> identity<span class="op">.</span>group<span class="op">;</span></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>    channel_id <span class="op">=</span> <span class="op">*</span>identity<span class="op">.</span>channel_id<span class="op">;</span></span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>stable_sort<span class="op">(</span>ranked_items<span class="op">.</span>begin<span class="op">(),</span> ranked_items<span class="op">.</span>end<span class="op">(),</span></span>
-<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;</span>configs<span class="op">](</span>RankedItem <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> RankedItem <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>group <span class="op">!=</span> b<span class="op">.</span>group<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">return</span> a<span class="op">.</span>group <span class="op">&lt;</span> b<span class="op">.</span>group<span class="op">;</span></span>
-<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
-<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>                         <span class="dt">bool</span> <span class="at">const</span> group_has_config <span class="op">=</span> configs<span class="op">.</span>contains<span class="op">(</span>a<span class="op">.</span>group<span class="op">);</span></span>
-<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>group_has_config<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>y_rank <span class="op">!=</span> b<span class="op">.</span>y_rank<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>                                 <span class="cf">return</span> a<span class="op">.</span>y_rank <span class="op">&lt;</span> b<span class="op">.</span>y_rank<span class="op">;</span></span>
-<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
-<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
-<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>channel <span class="op">!=</span> b<span class="op">.</span>channel<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">return</span> a<span class="op">.</span>channel <span class="op">&lt;</span> b<span class="op">.</span>channel<span class="op">;</span></span>
-<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
-<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">return</span> a<span class="op">.</span>key <span class="op">&lt;</span> b<span class="op">.</span>key<span class="op">;</span></span>
-<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
-<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>    SortableRankMap ranks<span class="op">;</span></span>
-<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> index <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>ranked_items<span class="op">.</span>size<span class="op">());</span> <span class="op">++</span>index<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>        ranks<span class="op">[</span>ranked_items<span class="op">[</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>index<span class="op">)].</span>key<span class="op">]</span> <span class="op">=</span> index<span class="op">;</span></span>
-<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ranks<span class="op">;</span></span>
-<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
-<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
-<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> rank_map <span class="op">=</span> buildSwindaleSpikeSorterRanks<span class="op">(</span>keys<span class="op">,</span> configs<span class="op">);</span></span>
-<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> Item <span class="op">{</span></span>
-<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string key<span class="op">;</span></span>
-<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> rank<span class="op">;</span></span>
-<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> insertion_index<span class="op">;</span></span>
-<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Item<span class="op">&gt;</span> items<span class="op">;</span></span>
-<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>    items<span class="op">.</span>reserve<span class="op">(</span>keys<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> insertion_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">:</span> keys<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> rank <span class="op">=</span> rank_map<span class="op">.</span>contains<span class="op">(</span>key<span class="op">)</span> <span class="op">?</span> rank_map<span class="op">.</span>at<span class="op">(</span>key<span class="op">)</span> <span class="op">:</span> <span class="bu">std::</span>numeric_limits<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;::</span>max<span class="op">();</span></span>
-<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>        items<span class="op">.</span>push_back<span class="op">(</span>Item<span class="op">{</span>key<span class="op">,</span> rank<span class="op">,</span> insertion_index<span class="op">++});</span></span>
-<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>SortableRankMap buildSwindaleSpikeSorterRanks<span class="op">(</span></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> key_one_based<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> RankedItem <span class="op">{</span></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string key<span class="op">;</span></span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string group<span class="op">;</span></span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> channel<span class="op">;</span></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y_rank<span class="op">;</span></span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>RankedItem<span class="op">&gt;</span> ranked_items<span class="op">;</span></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    ranked_items<span class="op">.</span>reserve<span class="op">(</span>keys<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">:</span> keys<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> identity <span class="op">=</span> parseSeriesIdentity<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> channel <span class="op">=</span> channelIdForKey<span class="op">(</span>key<span class="op">,</span> identity<span class="op">.</span>group<span class="op">,</span> key_one_based<span class="op">);</span></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> y_rank <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> cfg_it <span class="op">=</span> configs<span class="op">.</span>find<span class="op">(</span>identity<span class="op">.</span>group<span class="op">);</span> cfg_it <span class="op">!=</span> configs<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>channel <span class="op">&gt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>                y_rank <span class="op">=</span> lookupChannelY<span class="op">(</span>cfg_it<span class="op">-&gt;</span>second<span class="op">,</span> channel<span class="op">);</span></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>        ranked_items<span class="op">.</span>push_back<span class="op">(</span>RankedItem<span class="op">{</span>key<span class="op">,</span> identity<span class="op">.</span>group<span class="op">,</span> channel<span class="op">,</span> y_rank<span class="op">});</span></span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>stable_sort<span class="op">(</span>ranked_items<span class="op">.</span>begin<span class="op">(),</span> ranked_items<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;</span>configs<span class="op">](</span>RankedItem <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> RankedItem <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>group <span class="op">!=</span> b<span class="op">.</span>group<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">return</span> a<span class="op">.</span>group <span class="op">&lt;</span> b<span class="op">.</span>group<span class="op">;</span></span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>                         <span class="dt">bool</span> <span class="at">const</span> group_has_config <span class="op">=</span> configs<span class="op">.</span>contains<span class="op">(</span>a<span class="op">.</span>group<span class="op">);</span></span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>group_has_config<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>y_rank <span class="op">!=</span> b<span class="op">.</span>y_rank<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>                                 <span class="cf">return</span> a<span class="op">.</span>y_rank <span class="op">&lt;</span> b<span class="op">.</span>y_rank<span class="op">;</span></span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>channel <span class="op">!=</span> b<span class="op">.</span>channel<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">return</span> a<span class="op">.</span>channel <span class="op">&lt;</span> b<span class="op">.</span>channel<span class="op">;</span></span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>                         <span class="op">}</span></span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">return</span> a<span class="op">.</span>key <span class="op">&lt;</span> b<span class="op">.</span>key<span class="op">;</span></span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
 <span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>stable_sort<span class="op">(</span>items<span class="op">.</span>begin<span class="op">(),</span> items<span class="op">.</span>end<span class="op">(),</span> <span class="op">[](</span>Item <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Item <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>rank <span class="op">!=</span> b<span class="op">.</span>rank<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> a<span class="op">.</span>rank <span class="op">&lt;</span> b<span class="op">.</span>rank<span class="op">;</span></span>
-<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>key <span class="op">!=</span> b<span class="op">.</span>key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> a<span class="op">.</span>key <span class="op">&lt;</span> b<span class="op">.</span>key<span class="op">;</span></span>
-<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> a<span class="op">.</span>insertion_index <span class="op">&lt;</span> b<span class="op">.</span>insertion_index<span class="op">;</span></span>
-<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>    result<span class="op">.</span>reserve<span class="op">(</span>items<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> it<span class="op">:</span> items<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>push_back<span class="op">(</span>it<span class="op">.</span>key<span class="op">);</span></span>
-<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>    SortableRankMap ranks<span class="op">;</span></span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> index <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>ranked_items<span class="op">.</span>size<span class="op">());</span> <span class="op">++</span>index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>        ranks<span class="op">[</span>ranked_items<span class="op">[</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>index<span class="op">)].</span>key<span class="op">]</span> <span class="op">=</span> index<span class="op">;</span></span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ranks<span class="op">;</span></span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> orderKeysBySwindaleSpikeSorter<span class="op">(</span></span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> keys<span class="op">,</span></span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>        ChannelPositionMap <span class="at">const</span> <span class="op">&amp;</span> configs<span class="op">,</span></span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> key_one_based<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> rank_map <span class="op">=</span> buildSwindaleSpikeSorterRanks<span class="op">(</span>keys<span class="op">,</span> configs<span class="op">,</span> key_one_based<span class="op">);</span></span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> Item <span class="op">{</span></span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string key<span class="op">;</span></span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> rank<span class="op">;</span></span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> insertion_index<span class="op">;</span></span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Item<span class="op">&gt;</span> items<span class="op">;</span></span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>    items<span class="op">.</span>reserve<span class="op">(</span>keys<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> insertion_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">:</span> keys<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> rank <span class="op">=</span> rank_map<span class="op">.</span>contains<span class="op">(</span>key<span class="op">)</span> <span class="op">?</span> rank_map<span class="op">.</span>at<span class="op">(</span>key<span class="op">)</span> <span class="op">:</span> <span class="bu">std::</span>numeric_limits<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;::</span>max<span class="op">();</span></span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>        items<span class="op">.</span>push_back<span class="op">(</span>Item<span class="op">{</span>key<span class="op">,</span> rank<span class="op">,</span> insertion_index<span class="op">++});</span></span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>stable_sort<span class="op">(</span>items<span class="op">.</span>begin<span class="op">(),</span> items<span class="op">.</span>end<span class="op">(),</span> <span class="op">[](</span>Item <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Item <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>rank <span class="op">!=</span> b<span class="op">.</span>rank<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> a<span class="op">.</span>rank <span class="op">&lt;</span> b<span class="op">.</span>rank<span class="op">;</span></span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>a<span class="op">.</span>key <span class="op">!=</span> b<span class="op">.</span>key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> a<span class="op">.</span>key <span class="op">&lt;</span> b<span class="op">.</span>key<span class="op">;</span></span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> a<span class="op">.</span>insertion_index <span class="op">&lt;</span> b<span class="op">.</span>insertion_index<span class="op">;</span></span>
+<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-195"><a href="#cb5-195" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb5-196"><a href="#cb5-196" aria-hidden="true" tabindex="-1"></a>    result<span class="op">.</span>reserve<span class="op">(</span>items<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb5-197"><a href="#cb5-197" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> it<span class="op">:</span> items<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-198"><a href="#cb5-198" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>push_back<span class="op">(</span>it<span class="op">.</span>key<span class="op">);</span></span>
+<span id="cb5-199"><a href="#cb5-199" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-200"><a href="#cb5-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-201"><a href="#cb5-201" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb5-202"><a href="#cb5-202" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-06-27 at 19:38:17 +0000</p>
+<p>Updated on 2026-07-09 at 17:06:37 +0000</p>
 
 
 </section>

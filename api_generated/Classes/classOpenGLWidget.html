@@ -640,7 +640,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classOpenGLWidget.html#function-loadspikesorterconfiguration">loadSpikeSorterConfiguration</a></strong>(std::string const &amp; group_name, std::vector&lt; <a href="../../api_generated/Classes/structChannelPosition.html">ChannelPosition</a> &gt; const &amp; positions)<br>Load spike sorter configuration for a group of analog series.</td>
+<td><strong><a href="../../api_generated/Classes/classOpenGLWidget.html#function-loadspikesorterconfiguration">loadSpikeSorterConfiguration</a></strong>(std::string const &amp; group_name, std::vector&lt; <a href="../../api_generated/Classes/structChannelPosition.html">ChannelPosition</a> &gt; const &amp; positions, bool key_one_based =true)<br>Load spike sorter configuration for a group of analog series.</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -1043,13 +1043,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-loadspikesorterconfiguration">function loadSpikeSorterConfiguration</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loadSpikeSorterConfiguration<span class="op">(</span></span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> group_name<span class="op">,</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ChannelPosition <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> positions</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ChannelPosition <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> positions<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> key_one_based <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load spike sorter configuration for a group of analog series.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>group_name</strong> Group identifier (series keys should be “groupname_N”)</li>
 <li><strong>positions</strong> Vector of channel positions for ordering</li>
+<li><strong>key_one_based</strong> true when series key suffixes are 1-based (e.g.&nbsp;“voltage_1” = first channel)</li>
 </ul>
 <p>Applies custom ordering to analog series within a group based on physical electrode positions from spike sorting software. Series are ordered by Y position (ascending) for vertical stacking.</p>
 </section>
@@ -1221,7 +1223,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QEvent</span> <span class="op">*</span> event</span>
 <span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-06-27 at 19:38:12 +0000</p>
+<p>Updated on 2026-07-09 at 17:06:31 +0000</p>
 
 
 </section>
