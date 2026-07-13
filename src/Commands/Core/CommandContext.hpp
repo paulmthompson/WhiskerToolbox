@@ -1,6 +1,6 @@
 /**
  * @file CommandContext.hpp
- * @brief Runtime context provided to commands during execution
+ * @brief Runtime context provided to commands during execution.
  */
 
 #ifndef COMMAND_CONTEXT_HPP
@@ -18,24 +18,46 @@ namespace commands {
 
 class CommandRecorder;
 
-/// @brief Runtime context provided to every command at execution time.
-///        This is not serialized — it is the environment that commands run in.
+/**
+ * @brief Runtime context provided to every command at execution time.
+ *
+ * This struct is not serialized — it is the environment that commands run in.
+ */
 struct CommandContext {
+    /**
+     * @brief Shared DataManager that commands read from and mutate.
+     *
+     * Must be non-null for most commands.
+     */
     std::shared_ptr<DataManager> data_manager;
 
-    /// Optional visualization time (e.g. from `EditorRegistry::timeController()`).
-    /// Commands such as `AdvanceFrame` require this to be non-null.
+    /**
+     * @brief Optional visualization time controller.
+     *
+     * Typically sourced from `EditorRegistry::timeController()`.
+     * Commands such as `AdvanceFrame` require this to be non-null.
+     */
     TimeController * time_controller = nullptr;
 
-    /// Runtime-resolved values (current_frame, mark_frame, etc.)
-    /// Used for ${variable} substitution in command parameters
+    /**
+     * @brief Runtime-resolved values for ${variable} substitution in command parameters.
+     *
+     * Examples include `current_frame` and `mark_frame`.
+     */
     std::map<std::string, std::string> runtime_variables;
 
-    /// Optional progress reporting
+    /**
+     * @brief Optional progress callback invoked during long-running commands.
+     *
+     * Receives values in the range [0.0, 1.0].
+     */
     std::function<void(float)> on_progress;
 
-    /// Optional recorder for capturing executed command descriptors.
-    /// Used by executeSequence() as a fallback when no explicit recorder is passed.
+    /**
+     * @brief Optional recorder for capturing executed command descriptors.
+     *
+     * Used by executeSequence() as a fallback when no explicit recorder is passed.
+     */
     CommandRecorder * recorder = nullptr;
 };
 
