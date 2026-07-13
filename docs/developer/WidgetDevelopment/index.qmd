@@ -491,6 +491,8 @@ When your widget has a settings struct (thresholds, modes, algorithm parameters)
   TransformsV2_Widget), and improvement patterns
 - [ParameterSchema Library](../ParameterSchema/index.qmd) — Schema extraction, field descriptors, constraints
 - [AutoParam System](../ui/autoparam.qmd) — The Qt widget that renders the form
+- [Registry Patterns](../architecture/registry_patterns.qmd) — Choosing a registry that exposes
+  serializable parameters and generated forms
 
 ### The Flow
 
