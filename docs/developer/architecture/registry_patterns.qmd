@@ -89,6 +89,7 @@ requires that interface.
 | Pattern | Registration timing | Stored artifact | Parameter and UI path | Best fit |
 |---|---|---|---|---|
 | Legacy DataManager transforms | Constructor list | Live polymorphic operation | Separate `ParameterFactory` and custom widget | Existing legacy transform workflow |
+| Format loader registry | Explicit bootstrap | Live format-loader plugins | Capability metadata can carry a schema | File-format import and export |
 | ML model registry | Constructor list | Factory for a fresh model | Polymorphic parameter base and manual panels | Stateful ML models with task filtering |
 | TransformsV2 element registry | Static RAII | Typed transforms, metadata, executors, adapters | Automatic JSON adapters and lazy schema cache | Typed, composable data pipelines |
 | Data synthesizer registry | Static RAII | JSON-facing generator function and metadata | Schema stored in generator metadata | Data creation from parameters alone |
@@ -136,6 +137,57 @@ resolve a DataManager key to a data object.
 This pattern is maintained for the existing Data Transform widget. Do not extend
 it for a new feature merely to reuse its UI unless the feature must participate in
 that legacy workflow. See [Data Transform Widget](../ui/data_transform/data_transform_widget.qmd).
+
+## Format loader registry
+
+[`LoaderRegistry`](../../../src/IO/core/LoaderRegistry.hpp) is a process-wide
+plugin collection for file-format loaders. It owns `IFormatLoader` implementations
+and tries them in registration order for a requested `(format, DM_DataType)` pair.
+Unlike static registrars, loader registration is explicit:
+[`registerAllLoaders()`](../../../src/IO/core/LoaderRegistration.cpp) adds internal
+format loaders and any format loaders enabled by the build configuration.
+
+The registry is not itself a generic JSON-to-typed-parameter adapter. The full JSON
+configuration is passed to each loader's `load()` or `save()` method. A loader can,
+however, advertise each supported format/data-type capability as `LoaderInfo` or
+`SaverInfo`; that metadata contains a `ParameterSchema`. Consumers can use the
+advertised schema to build an `AutoParamWidget` for format-specific options.
+
+### Strengths
+
+- The registry owns distinct format plugins behind a focused `IFormatLoader`
+  interface.
+- Capability metadata supports runtime discovery of available load/save formats,
+  including batch-loading support.
+- Explicit bootstrap supports optional dependencies such as HDF5 and OpenCV
+  without static-initialization or whole-archive requirements.
+- The format plugin remains responsible for interpreting its own configuration
+  schema and file semantics.
+
+### Costs
+
+- Registration order determines which compatible loader is tried first; the
+  registry has no duplicate `(format, data type)` conflict policy.
+- The registry passes untyped JSON to loaders, so parsing and validation are not
+  automatically unified across loader implementations.
+- Every application composition root must initialize the loader catalogue before
+  using it.
+
+Use this pattern when implementations are selected by an external file format and
+data type, rather than by a typed operation signature. Keep a loader's schema in
+its capability metadata so import/export UI can remain schema-driven. See
+[File IO](../DataManager/file_io.qmd) and the
+[AutoParamWidget IO Migration Roadmap](../IO/AutoParamWidget_Migration_Roadmap.qmd).
+
+### Future direction
+
+The IO migration roadmap is the reference design for making `LoaderRegistry`
+capabilities the source of truth for the import and export UI. It replaces
+format-specific widget factories with a generic flow: query `LoaderInfo` or
+`SaverInfo`, load the selected capability's schema into `AutoParamWidget`, and
+send the resulting JSON to `tryLoad()` or `trySave()`. Keep this registry section
+and that roadmap aligned when the refactor changes registration or metadata
+ownership.
 
 ## ML model registry
 
@@ -321,13 +373,16 @@ semantics.
 2. **Named operations needed by several composition roots:** prefer an
    explicit-dispatcher typed registry like `CommandRegistry` when predictable
    startup and straightforward linking matter more than automatic discovery.
-3. **Library-owned extensions that must be discovered without editing a central
+3. **File-format plugins selected by format and data type:** use an explicitly
+   bootstrapped plugin registry like `LoaderRegistry`; expose capability metadata
+   and a parameter schema rather than placing format rules in the UI.
+4. **Library-owned extensions that must be discovered without editing a central
    composition root:** use a static typed registry like `GeneratorRegistry`, and
    document/link the library with whole-archive retention.
-4. **Typed pipeline composition, compatibility queries, or optimized dynamic
+5. **Typed pipeline composition, compatibility queries, or optimized dynamic
    execution:** use the richer `ElementRegistry` only when those capabilities are
    actual requirements.
-5. **Stateful trained objects:** use a factory registry like `MLModelRegistry`;
+6. **Stateful trained objects:** use a factory registry like `MLModelRegistry`;
    keep parameter-schema support as a separate adapter layer.
 
 For all new schema-driven registries, use stable machine-facing keys for lookup and
