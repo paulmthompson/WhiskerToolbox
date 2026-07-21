@@ -10,7 +10,7 @@ LibTorch and optional ExecuTorch are fetched under [`external/`](../../external/
 | Cache variable | Default | Role |
 |----------------|---------|------|
 | `NEURALYZER_LIBTORCH_VERSION` | `2.9.0` | Which libtorch release to download |
-| `NEURALYZER_LIBTORCH_CUDA_TAG` | `cu126` | PyTorch CUDA folder when `ENABLE_NEURALYZER_CUDA` is ON |
+| `NEURALYZER_LIBTORCH_CUDA_TAG` | `cu126` | PyTorch CUDA folder when `ENABLE_NEURALYZER_CUDA` is ON (`cu128`, `cu130` also supported for libtorch 2.9.0) |
 | `NEURALYZER_EXECUTORCH_GIT_TAG` | `v1.0.1` | ExecuTorch git tag |
 
 `NEURALYZER_CUDA_VERSION` (e.g. `12.6`) is set from the manifest when your `(libtorch version, CUDA tag)` pair is resolved — it is not a separate user-facing pin.
@@ -27,9 +27,11 @@ cmake --preset my-clang-release -DNEURALYZER_LIBTORCH_VERSION=2.5.1 -DNEURALYZER
 
 - [CPU](https://download.pytorch.org/libtorch/cpu/)
 - [cu126](https://download.pytorch.org/libtorch/cu126/)
+- [cu128](https://download.pytorch.org/libtorch/cu128/)
+- [cu130](https://download.pytorch.org/libtorch/cu130/)
 - [cu121](https://download.pytorch.org/libtorch/cu121/)
 
-When you add a new libtorch version, add a new `elseif(VERSION_EQUAL …)` section. When you add CUDA support for that version, add a nested `if(CUDA_TAG STREQUAL …)` with Linux/Windows CUDA URLs and append matching entries to `NEURALYZER_LIBTORCH_VERIFY_VERSIONS` and `NEURALYZER_LIBTORCH_VERIFY_CUDA_TAGS`.
+When you add a new libtorch version, add a new `elseif(VERSION_EQUAL …)` section and list it in `NEURALYZER_LIBTORCH_MANIFEST_VERSIONS`. When you add a CUDA tag for that version, add the `if(CUDA_TAG …)` URL block and append the tag to `NEURALYZER_LIBTORCH_MANIFEST_<version>_CUDA_TAGS` (e.g. `NEURALYZER_LIBTORCH_MANIFEST_2_9_0_CUDA_TAGS`).
 
 ## Verify
 

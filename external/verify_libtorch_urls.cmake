@@ -4,7 +4,7 @@
 # Current pins (from cache defaults or -D overrides):
 #   cmake -P external/verify_libtorch_urls.cmake
 #
-# Every entry in NEURALYZER_LIBTORCH_VERIFY_CONFIGS:
+# Every (libtorch version, CUDA tag) in the manifest registry:
 #   cmake -DNEURALYZER_VERIFY_ALL_LIBTORCH_CONFIGS=ON -P external/verify_libtorch_urls.cmake
 
 cmake_minimum_required(VERSION 3.25)
@@ -32,25 +32,24 @@ function(_neuralyzer_probe_url url)
 endfunction()
 
 if(NEURALYZER_VERIFY_ALL_LIBTORCH_CONFIGS)
-    list(LENGTH NEURALYZER_LIBTORCH_VERIFY_VERSIONS _verify_count)
-    list(LENGTH NEURALYZER_LIBTORCH_VERIFY_CUDA_TAGS _cuda_count)
-    if(NOT _verify_count EQUAL _cuda_count)
-        message(FATAL_ERROR
-            "NEURALYZER_LIBTORCH_VERIFY_VERSIONS and VERIFY_CUDA_TAGS length mismatch")
-    endif()
-    math(EXPR _last_index "${_verify_count} - 1")
-    foreach(_index RANGE 0 ${_last_index})
-        list(GET NEURALYZER_LIBTORCH_VERIFY_VERSIONS ${_index} _version)
-        list(GET NEURALYZER_LIBTORCH_VERIFY_CUDA_TAGS ${_index} _cuda_tag)
-        set(NEURALYZER_LIBTORCH_VERSION "${_version}")
-        set(NEURALYZER_LIBTORCH_CUDA_TAG "${_cuda_tag}")
-        neuralyzer_resolve_libtorch_manifest()
-        message(STATUS "=== libtorch ${_version}, CUDA tag ${_cuda_tag} ===")
-        foreach(_url IN LISTS NEURALYZER_LIBTORCH_URLS_FOR_VERIFY)
-            _neuralyzer_probe_url("${_url}")
+    foreach(_version IN LISTS NEURALYZER_LIBTORCH_MANIFEST_VERSIONS)
+        string(REPLACE "." "_" _version_id "${_version}")
+        set(_cuda_tags_var "NEURALYZER_LIBTORCH_MANIFEST_${_version_id}_CUDA_TAGS")
+        if(NOT DEFINED ${_cuda_tags_var})
+            message(FATAL_ERROR
+                "Missing ${_cuda_tags_var} for libtorch ${_version} (listed in MANIFEST_VERSIONS)")
+        endif()
+        foreach(_cuda_tag IN LISTS ${_cuda_tags_var})
+            set(NEURALYZER_LIBTORCH_VERSION "${_version}")
+            set(NEURALYZER_LIBTORCH_CUDA_TAG "${_cuda_tag}")
+            neuralyzer_resolve_libtorch_manifest()
+            message(STATUS "=== libtorch ${_version}, CUDA tag ${_cuda_tag} ===")
+            foreach(_url IN LISTS NEURALYZER_LIBTORCH_URLS_FOR_VERIFY)
+                _neuralyzer_probe_url("${_url}")
+            endforeach()
         endforeach()
     endforeach()
-    message(STATUS "All NEURALYZER_LIBTORCH_VERIFY_VERSIONS entries responded OK.")
+    message(STATUS "All manifest libtorch/CUDA combinations responded OK.")
 else()
     neuralyzer_resolve_libtorch_manifest()
     message(STATUS "Verifying libtorch ${NEURALYZER_LIBTORCH_VERSION}, "
